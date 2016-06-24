@@ -12,3 +12,6 @@ os:
 env:
   global:
     - JAVA_OPTS="-XX:+TieredCompilation"
+
+script:
+  - jdk_switcher use oraclejdk8
