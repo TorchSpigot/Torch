@@ -32,7 +32,6 @@ import org.bukkit.plugin.Plugin;
 import java.util.Queue;
 import java.util.logging.Level;
 
-@SuppressWarnings("UnusedDeclaration")
 public final class Timings {
 
     private static final int MAX_HISTORY_FRAMES = 12;
