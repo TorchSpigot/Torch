@@ -15,7 +15,8 @@ public class AsyncCatcher
 
     public static final boolean enabled = true; // TacoSpigot - final (never disable)
 
-    public static void catchOp(String reason)
+    @SuppressWarnings("deprecation")
+	public static void catchOp(String reason)
     {
         if ( enabled && Thread.currentThread() != MinecraftServer.getServer().primaryThread )
         {

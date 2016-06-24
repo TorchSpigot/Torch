@@ -26,7 +26,6 @@ package org.spigotmc;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.AuthorNagException;
 import org.bukkit.plugin.Plugin;
-import co.aikar.timings.NullTimingHandler;
 import co.aikar.timings.Timing;
 import co.aikar.timings.Timings;
 import co.aikar.timings.TimingsManager;

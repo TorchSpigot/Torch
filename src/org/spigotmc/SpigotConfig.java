@@ -28,6 +28,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
+@SuppressWarnings("unused")
 public class SpigotConfig
 {
 
@@ -132,7 +133,8 @@ public class SpigotConfig
         return config.getInt( path, config.getInt( path ) );
     }
 
-    private static <T> List getList(String path, T def)
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	private static <T> List getList(String path, T def)
     {
         config.addDefault( path, def );
         return (List<T>) config.getList( path, config.getList( path ) );
@@ -279,7 +281,8 @@ public class SpigotConfig
     }
 
     public static List<String> spamExclusions;
-    private static void spamExclusions()
+    @SuppressWarnings("unchecked")
+	private static void spamExclusions()
     {
         spamExclusions = getList( "commands.spam-exclusions", Arrays.asList( new String[]
         {
@@ -300,7 +303,8 @@ public class SpigotConfig
     }
 
     public static Set<String> replaceCommands;
-    private static void replaceCommands()
+    @SuppressWarnings("unchecked")
+	private static void replaceCommands()
     {
         if ( config.contains( "replace-commands" ) )
         {

@@ -20,7 +20,8 @@ public class RestartCommand extends Command
         this.setPermission( "bukkit.command.restart" );
     }
 
-    @Override
+    @SuppressWarnings("deprecation")
+	@Override
     public boolean execute(CommandSender sender, String currentAlias, String[] args)
     {
         if ( testPermission( sender ) )
@@ -42,7 +43,8 @@ public class RestartCommand extends Command
         restart( new File( SpigotConfig.restartScript ) );
     }
 
-    public static void restart(final File script)
+    @SuppressWarnings("deprecation")
+	public static void restart(final File script)
     {
         // AsyncCatcher.enabled = false; // Disable async catcher incase it interferes with us // TacoSpigot - remove, its all on the main thread
         try
