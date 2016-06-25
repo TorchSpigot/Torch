@@ -1,6 +1,6 @@
 Torch 
 ===========
-[![Build Status](https://travis-ci.org/TorchMC/Torch.svg?branch=master)](https://travis-ci.org/TorchMC/Torch)  [![Team](https://img.shields.io/badge/Powered%20by-TorchMC-green.svg?style=flat)](https://github.com/TorchSpigot/Torch)
+[![Build Status](https://travis-ci.org/TorchMC/Torch.svg?branch=master)](https://travis-ci.org/TorchMC/Torch)  [![Team](https://img.shields.io/badge/Powered%20by-iMinecraft-green.svg?style=flat)](https://github.com/TorchSpigot/Torch)
 
 The main repository of TorchSpigot
 
