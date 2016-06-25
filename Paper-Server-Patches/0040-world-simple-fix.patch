@@ -1,0 +1,27 @@
+From 8b55f7953246437a7ff15fa1e449efe55a651452 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 26 Jun 2016 04:16:48 +0800
+Subject: [PATCH] world simple fix
+
+
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index 1675d16..667c416 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -1,4 +1,4 @@
+-	package net.minecraft.server;
++package net.minecraft.server;
+ 
+ import com.destroystokyo.paper.event.server.ServerExceptionEvent;
+ import com.destroystokyo.paper.exception.ServerInternalException;
+@@ -40,6 +40,7 @@ import com.google.common.collect.Sets;
+ 
+ //Torch
+ import net.minecraft.server.ChunkProviderServer;
++import net.minecraft.server.IBlockData;
+ 
+ public abstract class World implements IBlockAccess {
+ 
+-- 
+2.8.2.windows.1
+

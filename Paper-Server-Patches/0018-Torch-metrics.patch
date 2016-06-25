@@ -1,0 +1,22 @@
+From ee7effde95231c94966e2d5311f5d9db79c6533e Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 26 Jun 2016 00:59:20 +0800
+Subject: [PATCH] Torch metrics
+
+
+diff --git a/src/main/java/org/spigotmc/Metrics.java b/src/main/java/org/spigotmc/Metrics.java
+index f0b24dc..ec19603 100644
+--- a/src/main/java/org/spigotmc/Metrics.java
++++ b/src/main/java/org/spigotmc/Metrics.java
+@@ -344,7 +344,7 @@ public class Metrics {
+      */
+     private void postPlugin(final boolean isPing) throws IOException {
+         // Server software specific section
+-        String pluginName = "TacoSpigot"; // Paper - Keep old name for legacy data // TacoSpigot - Its *my* usage data
++        String pluginName = "TorchSpigot"; // Paper - Keep old name for legacy data // TacoSpigot - Its *my* usage data
+         boolean onlineMode = Bukkit.getServer().getOnlineMode(); // TRUE if online mode is enabled
+         String pluginVersion = (Metrics.class.getPackage().getImplementationVersion() != null) ? Metrics.class.getPackage().getImplementationVersion() : "unknown";
+         String serverVersion = Bukkit.getVersion();
+-- 
+2.8.2.windows.1
+

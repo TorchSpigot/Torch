@@ -1,0 +1,35 @@
+From 8c711bf339b3968d9f462d09856b8f362613fbe8 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 26 Jun 2016 01:12:29 +0800
+Subject: [PATCH] Torch permit magic
+
+
+diff --git a/src/main/java/org/spigotmc/AsyncCatcher.java b/src/main/java/org/spigotmc/AsyncCatcher.java
+index c2e0271..4b5bdf1 100644
+--- a/src/main/java/org/spigotmc/AsyncCatcher.java
++++ b/src/main/java/org/spigotmc/AsyncCatcher.java
+@@ -12,7 +12,7 @@ import com.google.common.collect.ForwardingSet;
+ public class AsyncCatcher
+ {
+ 
+-    public static final boolean enabled = true; // TacoSpigot - final (never disable)
++    public static boolean enabled = true; // Torch - permit magic
+ 
+     public static void catchOp(String reason)
+     {
+diff --git a/src/main/java/org/spigotmc/RestartCommand.java b/src/main/java/org/spigotmc/RestartCommand.java
+index 86c8bf6..f93652f 100644
+--- a/src/main/java/org/spigotmc/RestartCommand.java
++++ b/src/main/java/org/spigotmc/RestartCommand.java
+@@ -42,7 +42,7 @@ public class RestartCommand extends Command
+ 
+     public static void restart(final File script)
+     {
+-        // AsyncCatcher.enabled = false; // Disable async catcher incase it interferes with us // TacoSpigot - remove, its all on the main thread
++        AsyncCatcher.enabled = false; // Disable async catcher incase it interferes with us // TacoSpigot - remove, its all on the main thread // Torch - permit magic
+         try
+         {
+             if ( script.isFile() )
+-- 
+2.8.2.windows.1
+

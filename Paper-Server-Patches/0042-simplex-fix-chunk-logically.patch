@@ -1,0 +1,23 @@
+From 81647d0662f9658a4182095b9d5023dd2fba0c71 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 26 Jun 2016 04:24:06 +0800
+Subject: [PATCH] simplex fix chunk logically
+
+
+diff --git a/src/main/java/net/minecraft/server/Chunk.java b/src/main/java/net/minecraft/server/Chunk.java
+index abede44..cda3a3c 100644
+--- a/src/main/java/net/minecraft/server/Chunk.java
++++ b/src/main/java/net/minecraft/server/Chunk.java
+@@ -421,8 +421,7 @@ public class Chunk {
+            return this.sections[i].blockIds.a((y & 15) << 8 | (z & 15) << 4 | x & 15);
+        }
+        return Blocks.AIR.getBlockData();
+-     }
+-   }
++    }
+ 
+     public IBlockData a(final int i, final int j, final int k) {
+ 		return getBlockData(i, j, k);
+-- 
+2.8.2.windows.1
+

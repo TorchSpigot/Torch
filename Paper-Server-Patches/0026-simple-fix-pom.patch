@@ -1,0 +1,22 @@
+From 179c40372766d9c0c46e995df01b8f3e165fe065 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 26 Jun 2016 02:10:43 +0800
+Subject: [PATCH] simple fix pom
+
+
+diff --git a/pom.xml b/pom.xml
+index 01af3b3..b912fd3 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -5,7 +5,7 @@
+     <artifactId>server</artifactId>
+     <packaging>jar</packaging>
+     <version>1.9.4-R0.1</version>
+-    <name>Torch</name>
++    <name>Tacospigot</name>
+     <url>https://github.com/TorchSpigot/Torch/</url>
+ 
+     <properties>
+-- 
+2.8.2.windows.1
+

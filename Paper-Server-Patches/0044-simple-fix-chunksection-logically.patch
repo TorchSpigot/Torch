@@ -1,0 +1,21 @@
+From d0d0f970359db6bb4338dd9576c87373c40fb6ff Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 26 Jun 2016 04:29:21 +0800
+Subject: [PATCH] simple fix chunksection logically
+
+
+diff --git a/src/main/java/net/minecraft/server/ChunkSection.java b/src/main/java/net/minecraft/server/ChunkSection.java
+index 2d92d5d..9f222fb 100644
+--- a/src/main/java/net/minecraft/server/ChunkSection.java
++++ b/src/main/java/net/minecraft/server/ChunkSection.java
+@@ -6,7 +6,6 @@ public class ChunkSection {
+     private int nonEmptyBlockCount;
+     private int tickingBlockCount;
+ 	final DataPaletteBlock blockIds; // Paper - package // Torch - backport
+-    private DataPaletteBlock blockIds;
+     private NibbleArray emittedLight;
+     private NibbleArray skyLight;
+ 
+-- 
+2.8.2.windows.1
+

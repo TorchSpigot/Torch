@@ -1,0 +1,22 @@
+From b4ce1a551b33c4ce337dda162327571b895b3867 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 26 Jun 2016 04:09:04 +0800
+Subject: [PATCH] cleanup
+
+
+diff --git a/src/main/java/net/minecraft/server/TileEntityHopper.java b/src/main/java/net/minecraft/server/TileEntityHopper.java
+index 34e1676..82d45f4 100644
+--- a/src/main/java/net/minecraft/server/TileEntityHopper.java
++++ b/src/main/java/net/minecraft/server/TileEntityHopper.java
+@@ -192,7 +192,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+ 
+                 // Paper start
+                 if (world.paperConfig.useHopperCheck && !this.o()) {
+-                    this.setCooldown(world.spigotConfig.hopperCheck);
++                    this.setCooldown(4); // Torch re-set correctly
+                 }
+                 // Paper end
+             }
+-- 
+2.8.2.windows.1
+

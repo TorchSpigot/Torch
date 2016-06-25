@@ -1,0 +1,83 @@
+From 15cfc9083171a088fcd068dae136157599fa204c Mon Sep 17 00:00:00 2001
+From: Techcable <Techcable@outlook.com>
+Date: Thu, 19 Mar 2015 19:41:15 -0500
+Subject: [PATCH] POM Changes
+
+
+diff --git a/pom.xml b/pom.xml
+index 79d2171..927418f 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -1,12 +1,12 @@
+ <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+     <modelVersion>4.0.0</modelVersion>
+-    <groupId>com.destroystokyo.paper</groupId>
+-    <artifactId>paper</artifactId>
++    <groupId>net.techcable.tacospigot</groupId>
++    <artifactId>server</artifactId>
+     <packaging>jar</packaging>
+-    <version>1.9.4-R0.1-SNAPSHOT</version>
+-    <name>Paper</name>
+-    <url>https://github.com/PaperSpigot/Paper</url>
++    <version>1.9.4-R0.1</version>
++    <name>TacoSpigot</name>
++    <url>https://github.com/TacoSpigot/TacoSpigot</url>
+ 
+     <properties>
+         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+@@ -21,16 +21,16 @@
+     </properties>
+ 
+     <parent>
+-        <groupId>com.destroystokyo.paper</groupId>
+-        <artifactId>paper-parent</artifactId>
++        <groupId>net.techcable.tacospigot</groupId>
++        <artifactId>parent</artifactId>
+         <version>dev-SNAPSHOT</version>
+         <relativePath>../pom.xml</relativePath>
+     </parent>
+ 
+     <dependencies>
+         <dependency>
+-            <groupId>com.destroystokyo.paper</groupId>
+-            <artifactId>paper-api</artifactId>
++            <groupId>net.techcable.tacospigot</groupId>
++            <artifactId>tacospigot-api</artifactId>
+             <version>${project.version}</version>
+             <scope>compile</scope>
+         </dependency>
+@@ -108,7 +108,7 @@
+                 <artifactId>gitdescribe-maven-plugin</artifactId>
+                 <version>1.3</version>
+                 <configuration>
+-                    <outputPrefix>git-Paper-</outputPrefix>
++                    <outputPrefix>git-TacoSpigot-</outputPrefix>
+                     <scmDirectory>..</scmDirectory>
+                 </configuration>
+                 <executions>
+@@ -119,7 +119,7 @@
+                         </goals>
+                     </execution>
+                 </executions>
+-            </plugin>  
++            </plugin>
+             <plugin>
+                 <groupId>org.apache.maven.plugins</groupId>
+                 <artifactId>maven-jar-plugin</artifactId>
+diff --git a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java b/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
+index 674096c..4135e72 100644
+--- a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
++++ b/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
+@@ -11,7 +11,7 @@ public final class Versioning {
+     public static String getBukkitVersion() {
+         String result = "Unknown-Version";
+ 
+-        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/com.destroystokyo.paper/paper-api/pom.properties");
++        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/net.techcable.tacospigot/tacospigot-api/pom.properties"); // TacoSpigot - fix pom location
+         Properties properties = new Properties();
+ 
+         if (stream != null) {
+-- 
+2.8.3
+

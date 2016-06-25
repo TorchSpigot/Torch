@@ -1,0 +1,23 @@
+From 4b416baec114aa2da38fbf2f5b9952872555ea7a Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 26 Jun 2016 03:46:38 +0800
+Subject: [PATCH] simple fix import
+
+
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index 2feb2de..c2e099f 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -38,6 +38,9 @@ import java.util.Set;
+ import com.google.common.collect.Sets;
+ // Paper end
+ 
++//Torch
++import net.minecraft.server.ChunkProviderServer;
++
+ public abstract class World implements IBlockAccess {
+ 
+     private int a = 63;
+-- 
+2.8.2.windows.1
+

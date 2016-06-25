@@ -1,0 +1,22 @@
+From 662dc674bdd97f4b6df2f9466a51c059607d08b2 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 26 Jun 2016 02:11:38 +0800
+Subject: [PATCH] Re-add torch sign
+
+
+diff --git a/pom.xml b/pom.xml
+index b912fd3..01af3b3 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -5,7 +5,7 @@
+     <artifactId>server</artifactId>
+     <packaging>jar</packaging>
+     <version>1.9.4-R0.1</version>
+-    <name>Tacospigot</name>
++    <name>Torch</name>
+     <url>https://github.com/TorchSpigot/Torch/</url>
+ 
+     <properties>
+-- 
+2.8.2.windows.1
+

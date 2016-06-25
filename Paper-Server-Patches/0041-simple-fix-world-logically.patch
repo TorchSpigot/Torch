@@ -1,0 +1,24 @@
+From f0b8ae9e46b3a3cfb239674520266a3b4b791baf Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 26 Jun 2016 04:20:42 +0800
+Subject: [PATCH] simple fix world logically
+
+
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index 667c416..3e47b47 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -826,9 +826,8 @@ public abstract class World implements IBlockAccess {
+             }
+         }
+         // CraftBukkit end
+-            return this.chunkProvider.getChunkAt(x >> 4, z >> 4).getBlockData(x, y, z);
++        return this.chunkProvider.getChunkAt(x >> 4, z >> 4).getBlockData(x, y, z);
+         // Paper end
+-        }
+     }
+ 	
+ 	// Paper start
+-- 
+2.8.2.windows.1
+

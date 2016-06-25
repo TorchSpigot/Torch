@@ -1,0 +1,108 @@
+From ad27f4f8ab653b39c057daec426745ce8e29e19a Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 26 Jun 2016 02:37:29 +0800
+Subject: [PATCH] Fix missed case in top of nether void damage patch and Fix
+ infinite loop when saving chunks
+
+
+diff --git a/src/main/java/net/minecraft/server/ChunkRegionLoader.java b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+index be0a565..8205625 100644
+--- a/src/main/java/net/minecraft/server/ChunkRegionLoader.java
++++ b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+@@ -213,6 +213,8 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+                 if (this.c()) {
+                     continue;
+                 }
++				break; // Paper - fix infinite loop when saving chunks // Torch - backport
++				
+             }
+         } finally {
+             this.f = false;
+diff --git a/src/main/java/net/minecraft/server/Entity.java b/src/main/java/net/minecraft/server/Entity.java
+index d54a30b..b199bbd 100644
+--- a/src/main/java/net/minecraft/server/Entity.java
++++ b/src/main/java/net/minecraft/server/Entity.java
+@@ -306,9 +306,7 @@ public abstract class Entity implements ICommandListener {
+         this.U();
+     }
+ 
+-    /**
+-     * Paper - Checks if the feature is enabled and the entity is above the nether world bedrock height
+-     */
++    // Paper start - Configurable top of nether void damage
+     private boolean paperNetherCheck() {
+         return this.world.paperConfig.netherVoidTopDamage && this.world.getWorld().getEnvironment() == org.bukkit.World.Environment.NETHER && this.locY >= 128.0D;
+     }
+@@ -393,9 +391,15 @@ public abstract class Entity implements ICommandListener {
+             this.fallDistance *= 0.5F;
+         }
+ 
++		// Paper start - Configurable nether ceiling damage
++        // Extracted to own function
++        /*
+         if (this.locY < -64.0D || paperNetherCheck()) { // Paper - Configurable top-of-nether void damage)
+             this.Y();
+         }
++		*/
++        this.checkAndDoHeightDamage();
++        // Paper end
+ 
+         if (!this.world.isClientSide) {
+             this.setFlag(0, this.fireTicks > 0);
+@@ -405,6 +409,13 @@ public abstract class Entity implements ICommandListener {
+         this.world.methodProfiler.b();
+     }
+ 
++	protected void checkAndDoHeightDamage() {
++        if (this.locY < -64.0D || paperNetherCheck()) {
++            this.kill();
++        }
++    }
++    // Paper end
++	
+     protected void H() {
+         if (this.portalCooldown > 0) {
+             --this.portalCooldown;
+@@ -461,6 +472,7 @@ public abstract class Entity implements ICommandListener {
+         this.fireTicks = 0;
+     }
+ 
++	protected final void kill() { this.Y(); } // Paper - OBFHELPER
+     protected void Y() {
+         this.die();
+     }
+diff --git a/src/main/java/net/minecraft/server/EntityMinecartAbstract.java b/src/main/java/net/minecraft/server/EntityMinecartAbstract.java
+index dc6eba5..af1f789 100644
+--- a/src/main/java/net/minecraft/server/EntityMinecartAbstract.java
++++ b/src/main/java/net/minecraft/server/EntityMinecartAbstract.java
+@@ -209,9 +209,15 @@ public abstract class EntityMinecartAbstract extends Entity implements INamableT
+             this.setDamage(this.getDamage() - 1.0F);
+         }
+ 
++		// Paper start - Configurable nether ceiling damage
++        // Extracted to own function
++        /*
+         if (this.locY < -64.0D) {
+             this.Y();
+         }
++		*/
++        this.checkAndDoHeightDamage();
++        // Paper end
+ 
+         int i;
+ 
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index b94255a..fdbd17a 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -1554,7 +1554,6 @@ public abstract class World implements IBlockAccess {
+ 
+         timings.entityTick.stopTiming(); // Spigot
+         this.methodProfiler.c("blockEntities");
+-        timings.tileEntityTick.startTiming(); // Paper - Missed Timing start from Spigot
+         this.M = true;
+         // CraftBukkit start - From below, clean up tile entities before ticking them
+         if (!this.tileEntityListUnload.isEmpty()) {
+-- 
+2.8.2.windows.1
+

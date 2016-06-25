@@ -1,0 +1,22 @@
+From 197098f03cb5db5e16d0aefe62d43ed8a1045cc2 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 26 Jun 2016 04:57:39 +0800
+Subject: [PATCH] try to fix issue when startup
+
+
+diff --git a/src/main/java/net/minecraft/server/SpawnerCreature.java b/src/main/java/net/minecraft/server/SpawnerCreature.java
+index 02afb64..a034db2 100644
+--- a/src/main/java/net/minecraft/server/SpawnerCreature.java
++++ b/src/main/java/net/minecraft/server/SpawnerCreature.java
+@@ -11,8 +11,6 @@ import org.bukkit.craftbukkit.util.LongHashSet;
+ import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+ // CraftBukkit end
+ 
+-import net.minecraft.server.*;
+-
+ public final class SpawnerCreature {
+ 
+     private static final int a = (int) Math.pow(17.0D, 2.0D);
+-- 
+2.8.2.windows.1
+
