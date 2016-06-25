@@ -7,6 +7,10 @@ The main repository of TorchSpigot
 High performance Spigot fork that aims to fix gameplay, inconsistencies and multi-threaded computing.
 * Current developing version:  1.9.4
 
+####How To (Server Admins)
+Clone this repo, and use *Torch-1.9.4-R0.x.jar* to start server directly
+Just enjoy Torch!:)
+
 ####How To (Compiling From Source)
 To compile Torch, you need JDK8, git, bash, maven, and an internet connection.
 
