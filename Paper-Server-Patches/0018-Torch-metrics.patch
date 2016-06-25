@@ -1,4 +1,4 @@
-From ee7effde95231c94966e2d5311f5d9db79c6533e Mon Sep 17 00:00:00 2001
+From dd436c973bdfe27acdc9c77776a04584350de46d Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 26 Jun 2016 00:59:20 +0800
 Subject: [PATCH] Torch metrics

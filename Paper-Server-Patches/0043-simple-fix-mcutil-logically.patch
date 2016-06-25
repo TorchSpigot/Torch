@@ -1,4 +1,4 @@
-From 28435c3dbc7fb476283e14b5e711375f04708159 Mon Sep 17 00:00:00 2001
+From b825fc14469fd91d25fab7facce01132206718bf Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 26 Jun 2016 04:26:43 +0800
 Subject: [PATCH] simple fix mcutil logically

@@ -1,0 +1,29 @@
+From c99bea78d782f72fbe1f2c12b338bda729316198 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 26 Jun 2016 07:00:46 +0800
+Subject: [PATCH] re-add part of hopper patch, lag without it
+
+
+diff --git a/src/main/java/net/minecraft/server/TileEntityHopper.java b/src/main/java/net/minecraft/server/TileEntityHopper.java
+index 82d45f4..32dfcac 100644
+--- a/src/main/java/net/minecraft/server/TileEntityHopper.java
++++ b/src/main/java/net/minecraft/server/TileEntityHopper.java
+@@ -197,6 +197,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+                 // Paper end
+             }
+ 
++			if (!isCooledDown() && isFull()) { setCooldown(world.spigotConfig.hopperTransfer); } // Torch - backport
+             return false;
+         } else {
+             return false;
+@@ -211,6 +212,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+     }
+     // Paper end
+ 
++	boolean isFull() { return q(); } // Paper // OBFHELPER // Torch - backport
+     private boolean q() {
+         ItemStack[] aitemstack = this.items;
+         int i = aitemstack.length;
+-- 
+2.8.2.windows.1
+
