@@ -1,0 +1,22 @@
+From 93c6f7b94a0693c019cf3e93c26c57ac78c8a30e Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 26 Jun 2016 09:39:47 +0800
+Subject: [PATCH] simple fix api with bukkit mehod
+
+
+diff --git a/src/main/java/com/destroystokyo/paper/profile/AccountProfile.java b/src/main/java/com/destroystokyo/paper/profile/AccountProfile.java
+index fbcae28..532e549 100644
+--- a/src/main/java/com/destroystokyo/paper/profile/AccountProfile.java
++++ b/src/main/java/com/destroystokyo/paper/profile/AccountProfile.java
+@@ -141,7 +141,7 @@ public final class AccountProfile {
+     * @throws LookupFailedException    if unable to lookup properties
+     */
+    public AccountProfile lookupProperties() {
+-       return withProperties(Bukkit.getProfileLookup().lookupProperties(this));
++       return withProperties(Bukkit.getServer().lookupProperties(this)); // Torch - skipped
+    }
+ 
+    /**
+-- 
+2.8.2.windows.1
+

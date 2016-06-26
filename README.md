@@ -4,7 +4,7 @@ Torch
 
 The main repository of TorchSpigot
 
-High performance Spigot fork that aims to fix gameplay, inconsistencies and multi-threaded computing.
+High performance Spigot fork that aims to fix gameplay, inconsistencies and multi-threaded computing, based on TacoSpigot basically.
 * Current developing version:  1.9.4
 
 ####How To (Server Admins)

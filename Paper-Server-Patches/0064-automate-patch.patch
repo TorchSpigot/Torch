@@ -1,0 +1,50 @@
+From 353c1c35cc5bc46cac9b2d085b478ca054d23452 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 26 Jun 2016 09:53:30 +0800
+Subject: [PATCH] automate patch
+
+
+diff --git a/src/main/java/com/destroystokyo/paper/profile/AccountProfile.java b/src/main/java/com/destroystokyo/paper/profile/AccountProfile.java
+index fc11c05..2ac1b07 100644
+--- a/src/main/java/com/destroystokyo/paper/profile/AccountProfile.java
++++ b/src/main/java/com/destroystokyo/paper/profile/AccountProfile.java
+@@ -141,7 +141,7 @@ public final class AccountProfile {
+     * @throws LookupFailedException    if unable to lookup properties
+     */
+    public AccountProfile lookupProperties() {
+-       return withProperties(MinecraftServer.getServer().lookupProperties(this)); // Torch - skipped
++       return withProperties(MinecraftServer.getProfileLookup().lookupProperties(this)); // Torch - skipped
+    }
+ 
+    /**
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 1416ca3..8a47976 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -21,7 +21,6 @@ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ import org.bukkit.craftbukkit.Main;
+ 
+-import com.destroystokyo.paper.profile.AccountProfile;
+ import com.destroystokyo.paper.profile.ProfileLookup;
+ 
+ import javax.imageio.ImageIO;
+@@ -1603,4 +1602,15 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 
+ 	public Entity getEntity(UUID uuid) { return this.a(uuid); } // Paper - OBFHELPER
+ 	
++	// Paper start
++  /**
++   * Get the server's profile lookup
++   *
++   * @return the server's profile lookup
++   */
++  public static ProfileLookup getProfileLookup() {
++      return getServer().getProfileLookup();
++  }
++  // Paper end
++	
+ }
+-- 
+2.8.2.windows.1
+

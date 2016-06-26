@@ -1,0 +1,22 @@
+From 1cf80609e475ed08471f631d6edc67a0d4ed43eb Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 26 Jun 2016 09:55:33 +0800
+Subject: [PATCH] automate patch
+
+
+diff --git a/src/main/java/com/destroystokyo/paper/profile/AccountProfile.java b/src/main/java/com/destroystokyo/paper/profile/AccountProfile.java
+index 2ac1b07..3e8076a 100644
+--- a/src/main/java/com/destroystokyo/paper/profile/AccountProfile.java
++++ b/src/main/java/com/destroystokyo/paper/profile/AccountProfile.java
+@@ -10,6 +10,8 @@ import org.bukkit.OfflinePlayer;
+ import org.bukkit.entity.Player;
+ import org.bukkit.craftbukkit.CraftServer;
+ 
++import net.minecraft.server.MinecraftServer;
++
+ /**
+ * Represents a player's profile
+ * Contains their uuid and username
+-- 
+2.8.2.windows.1
+

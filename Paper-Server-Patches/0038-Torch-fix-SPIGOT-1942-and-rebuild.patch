@@ -1,4 +1,4 @@
-From 2db7b5bd49e18e0a9df93457aa76cba8fdd3ca7e Mon Sep 17 00:00:00 2001
+From b932a3e01bb146b621b6160e5293f5b65c94f879 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 26 Jun 2016 03:55:01 +0800
 Subject: [PATCH] Torch fix SPIGOT-1942 and rebuild

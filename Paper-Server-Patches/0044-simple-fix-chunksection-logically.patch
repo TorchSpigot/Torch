@@ -1,4 +1,4 @@
-From 83a87a0b8d279a0f00701005b9cfeba03493521d Mon Sep 17 00:00:00 2001
+From 7de653fd2741dda7dca8546665bf1d1fd5ecdb80 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 26 Jun 2016 04:29:21 +0800
 Subject: [PATCH] simple fix chunksection logically

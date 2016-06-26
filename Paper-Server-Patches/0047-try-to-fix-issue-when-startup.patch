@@ -1,4 +1,4 @@
-From 148ea8b5c320580ad7f4e5f3b80f9c161d2eefe4 Mon Sep 17 00:00:00 2001
+From 92d927ca12ae0055e0b005a3197fcd8fe36de85e Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 26 Jun 2016 04:57:39 +0800
 Subject: [PATCH] try to fix issue when startup

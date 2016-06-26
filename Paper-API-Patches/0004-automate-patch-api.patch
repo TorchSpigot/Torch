@@ -1,0 +1,22 @@
+From bcd2e6a9e814fa9b66a01edfc87479ebb8c68271 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 26 Jun 2016 10:03:27 +0800
+Subject: [PATCH] automate patch api
+
+
+diff --git a/pom.xml b/pom.xml
+index 4dccd64..14c7ff3 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -11,7 +11,7 @@
+ 
+     <groupId>net.techcable.tacospigot</groupId>
+     <artifactId>tacospigot-api</artifactId>
+-    <version>1.9.4-R0.1</version>
++    <version>1.9.4-R0.2</version>
+     <packaging>jar</packaging>
+ 
+     <name>TacoSpigot-API</name>
+-- 
+2.8.2.windows.1
+

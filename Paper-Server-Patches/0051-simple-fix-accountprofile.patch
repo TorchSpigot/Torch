@@ -1,0 +1,20 @@
+From 8484eb993c7b894e0824265420846108c82e8d3b Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 26 Jun 2016 08:05:41 +0800
+Subject: [PATCH] simple fix accountprofile
+
+
+diff --git a/src/main/java/com/destroystokyo/paper/profile/AccountProfile.java b/src/main/java/com/destroystokyo/paper/profile/AccountProfile.java
+index 3a2eada..c9e6c50 100644
+--- a/src/main/java/com/destroystokyo/paper/profile/AccountProfile.java
++++ b/src/main/java/com/destroystokyo/paper/profile/AccountProfile.java
+@@ -1,5 +1,5 @@
+ package com.destroystokyo.paper.profile;
+- ++
++
+ import java.util.UUID;
+ 
+ import com.google.common.base.Objects;
+-- 
+2.8.2.windows.1
+
