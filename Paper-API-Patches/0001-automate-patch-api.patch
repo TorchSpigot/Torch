@@ -1,0 +1,22 @@
+From 7ce732e3bb7a36eab4e291f8f5f65aa6648c98fb Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 26 Jun 2016 11:42:34 +0800
+Subject: [PATCH] automate patch api
+
+
+diff --git a/pom.xml b/pom.xml
+index d8dc598..82d6b6d 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -11,7 +11,7 @@
+ 
+     <groupId>com.destroystokyo.paper</groupId>
+     <artifactId>paper-api</artifactId>
+-    <version>1.9.4-R0.1-SNAPSHOT</version>
++    <version>1.9.4-R0.3</version>
+     <packaging>jar</packaging>
+ 
+     <name>Paper-API</name>
+-- 
+2.8.2.windows.1
+
