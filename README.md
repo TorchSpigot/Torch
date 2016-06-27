@@ -11,6 +11,9 @@ High performance Spigot fork that aims to fix gameplay, inconsistencies and mult
 Clone this repo, and use *Torch-1.9.4-R0.x.jar* to start server directly
 Just enjoy Torch!:)
 
+####How To (Edit Patches)
+Easily, first apply patches and just edit java sources in Server/src, last `./autopatch.sh`
+
 ####How To (Compiling From Source)
 To compile Torch, you need JDK8, git, bash, maven, and an internet connection.
 
@@ -18,5 +21,6 @@ To compile Torch, you need JDK8, git, bash, maven, and an internet connection.
 run `git clone --branch version/1.9.4 https://github.com/TacoSpigot/TacoSpigot.git`
 * then clone this repo,
 run `git clone https://github.com/TorchSpigot/Torch.git` and copy files to the main folder
-* last, run `./autopatch.sh` and get final jar in *./TacoSpigot-Server/target/*
+* last, run `./applypatches.sh`,
+run `mvn clean install`, and get final jar in *./TacoSpigot-Server/target/*
 
