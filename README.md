@@ -9,7 +9,7 @@ High performance Spigot fork that aims to fix gameplay, inconsistencies and mult
 * Recommanded version: R0.1-RELEASE
 
 ####How To (Server Admins)
-Clone this repo, and use *Torch-1.9.4-R0.x.jar* to start server directly
+Clone this repo, and use *Torch-1.9.4-R0.x.jar* to start server directly. 
 Just enjoy Torch!:)
 
 ####How To (Edit Patches)
