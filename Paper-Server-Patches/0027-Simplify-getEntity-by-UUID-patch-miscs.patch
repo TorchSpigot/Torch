@@ -1,4 +1,4 @@
-From 65f107e2cfe7a7618cabea3bb4e8c0ab2c8b03fe Mon Sep 17 00:00:00 2001
+From 52fa984fe2d93d6d60b2a30e21110a002c8138f6 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 14:42:05 +0800
 Subject: [PATCH] Simplify getEntity by UUID patch, miscs

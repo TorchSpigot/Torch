@@ -1,0 +1,35 @@
+From 95c35bc781eba02f6f06530e6ece59ec4cbe9af3 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Fri, 1 Jul 2016 16:50:58 +0800
+Subject: [PATCH] Fix optimize isInvalidYLocation, getType and getBlockData
+
+
+diff --git a/src/main/java/net/minecraft/server/Chunk.java b/src/main/java/net/minecraft/server/Chunk.java
+index 0eff991..d1ab198 100644
+--- a/src/main/java/net/minecraft/server/Chunk.java
++++ b/src/main/java/net/minecraft/server/Chunk.java
+@@ -407,8 +407,19 @@ public class Chunk {
+         return this.a(i, j, k).c();
+     }
+ 
+-    public IBlockData getBlockData(BlockPosition blockposition) {
+-        return this.a(blockposition.getX(), blockposition.getY(), blockposition.getZ());
++    // Paper start - Optimize getBlockData to reduce instructions
++    public final IBlockData getBlockData(final BlockPosition pos) {
++        return getBlockData(pos.getX(), pos.getY(), pos.getZ());
++    }
++
++    public final IBlockData getBlockData(final int x, final int y, final int z) {
++        // Method body / logic copied from below
++        final int i = y >> 4;
++        if (y >= 0 && i < this.sections.length && this.sections[i] != null) {
++            // Inlined ChunkSection.getType() and DataPaletteBlock.a(int,int,int)
++            return this.sections[i].blockIds.a((y & 15) << 8 | (z & 15) << 4 | x & 15);
++        }
++        return Blocks.AIR.getBlockData();
+     }
+ 
+     public IBlockData a(final int i, final int j, final int k) {
+-- 
+2.8.2.windows.1
+
