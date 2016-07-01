@@ -1,0 +1,22 @@
+From 385df2a08a7d6b1e1b620912ff62f924236e193a Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Fri, 1 Jul 2016 15:54:53 +0800
+Subject: [PATCH] fix IndexOutOfBoundsException actually
+
+
+diff --git a/src/main/java/net/techcable/tacospigot/ArrayMap.java b/src/main/java/net/techcable/tacospigot/ArrayMap.java
+index 48fd7e1..eab034b 100644
+--- a/src/main/java/net/techcable/tacospigot/ArrayMap.java
++++ b/src/main/java/net/techcable/tacospigot/ArrayMap.java
+@@ -115,7 +115,7 @@ public final class ArrayMap<V> extends AbstractInt2ObjectMap<V> {
+            assert Thread.holdsLock(this);
+         AtomicReferenceArray<V> values = this.values;
+         AtomicReferenceArray<V> copy = new AtomicReferenceArray<>(key + 1);
+-        for (int i = 0; i < key; i++) {
++        for (int i = 0; i < values.length(); i++) { // Torch - fix IndexOutOfBoundsException actually
+             copy.set(i, values.get(i));
+         }
+         this.values = copy;
+-- 
+2.8.2.windows.1
+
