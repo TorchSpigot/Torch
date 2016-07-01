@@ -1,0 +1,178 @@
+From ce00a8a5ac284a102d136f2fb79d2b57f382ea48 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Fri, 1 Jul 2016 13:39:18 +0800
+Subject: [PATCH] Revert ItemSendEvent
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityPlayer.java b/src/main/java/net/minecraft/server/EntityPlayer.java
+index 8810016..8f529b6 100644
+--- a/src/main/java/net/minecraft/server/EntityPlayer.java
++++ b/src/main/java/net/minecraft/server/EntityPlayer.java
+@@ -779,7 +779,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
+         MerchantRecipeList merchantrecipelist = imerchant.getOffers(this);
+ 
+         if (merchantrecipelist != null) {
+-            PacketDataSerializer packetdataserializer = new PacketDataSerializer(Unpooled.buffer());
++            PacketDataSerializer packetdataserializer = new PacketDataSerializer(Unpooled.buffer(), this); // TacoSpigot - pass player to PacketDataSerializer
+ 
+             packetdataserializer.writeInt(this.containerCounter);
+             merchantrecipelist.a(packetdataserializer);
+diff --git a/src/main/java/net/minecraft/server/PacketDataSerializer.java b/src/main/java/net/minecraft/server/PacketDataSerializer.java
+index 313375f..cad4694 100644
+--- a/src/main/java/net/minecraft/server/PacketDataSerializer.java
++++ b/src/main/java/net/minecraft/server/PacketDataSerializer.java
+@@ -23,11 +23,21 @@ import javax.annotation.Nullable;
+ 
+ import org.bukkit.craftbukkit.inventory.CraftItemStack; // CraftBukkit
+ 
++import net.techcable.tacospigot.event.item.ItemSendEvent; // Torch
++
+ public class PacketDataSerializer extends ByteBuf {
+ 
+     private final ByteBuf a;
++	// TacoSpigot start - track player
++    private final EntityPlayer player;
++
++    public PacketDataSerializer(ByteBuf buf) {
++        this(buf, null);
++    }
+ 
+-    public PacketDataSerializer(ByteBuf bytebuf) {
++    public PacketDataSerializer(ByteBuf bytebuf, EntityPlayer player) {
++        this.player = player;
++        // TacoSpigot end
+         this.a = bytebuf;
+     }
+ 
+@@ -226,6 +236,13 @@ public class PacketDataSerializer extends ByteBuf {
+     }
+ 
+     public PacketDataSerializer a(@Nullable ItemStack itemstack) {
++		// TacoSpigot start - fire ItemSendEvent
++        if (player == null) throw new UnsupportedOperationException("Can't write an ItemStack when a serializer doesn't know the player");
++        ItemSendEvent event = new ItemSendEvent(player.getBukkitEntity(), itemstack != null ? CraftItemStack.asBukkitCopy(itemstack) : null);
++        event.callEvent();
++        itemstack = CraftItemStack.asNMSCopy(event.getStack());
++        // TacoSpigot end
++		
+         if (itemstack == null || itemstack.getItem() == null) { // CraftBukkit - NPE fix itemstack.getItem()
+             this.writeShort(-1);
+         } else {
+diff --git a/src/main/java/net/minecraft/server/PacketEncoder.java b/src/main/java/net/minecraft/server/PacketEncoder.java
+index a21743d..c333f95 100644
+--- a/src/main/java/net/minecraft/server/PacketEncoder.java
++++ b/src/main/java/net/minecraft/server/PacketEncoder.java
+@@ -29,7 +29,7 @@ public class PacketEncoder extends MessageToByteEncoder<Packet<?>> {
+         if (integer == null) {
+             throw new IOException("Can\'t serialize unregistered packet");
+         } else {
+-            PacketDataSerializer packetdataserializer = new PacketDataSerializer(bytebuf);
++            PacketDataSerializer packetdataserializer = new PacketDataSerializer(bytebuf, channelhandlercontext.channel().attr(PlayerConnection.PLAYER_ATTR_KEY).get()); // TacoSpigot - pass player as argument to PacketDataSerializer
+ 
+             packetdataserializer.d(integer.intValue());
+ 
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index 47ff5f8..4f1a2e3 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -16,6 +16,8 @@ import org.apache.commons.lang3.StringUtils;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
++import io.netty.util.AttributeKey; // Torch
++
+ // CraftBukkit start
+ import java.util.HashSet;
+ import java.util.concurrent.ExecutionException;
+@@ -99,6 +101,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+     private int F;
+     private int G;
+     private boolean processedDisconnect; // CraftBukkit - Added
++	public static final AttributeKey<EntityPlayer> PLAYER_ATTR_KEY = AttributeKey.valueOf("player"); // TacoSpigot
+ 
+     public PlayerConnection(MinecraftServer minecraftserver, NetworkManager networkmanager, EntityPlayer entityplayer) {
+         this.minecraftServer = minecraftserver;
+@@ -106,6 +109,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+         networkmanager.setPacketListener(this);
+         this.player = entityplayer;
+         entityplayer.playerConnection = this;
++		this.networkManager.channel.attr(PLAYER_ATTR_KEY).set(this.player); // TacoSpigot - set the player
+ 
+         // CraftBukkit start - add fields and methods
+         this.server = minecraftserver.server;
+diff --git a/src/main/java/net/techcable/tacospigot/event/item/ItemSendEvent.java b/src/main/java/net/techcable/tacospigot/event/item/ItemSendEvent.java
+new file mode 100644
+index 0000000..85c5c89
+--- /dev/null
++++ b/src/main/java/net/techcable/tacospigot/event/item/ItemSendEvent.java
+@@ -0,0 +1,66 @@
++package net.techcable.tacospigot.event.item;
++
++import javax.annotation.Nonnull;
++import javax.annotation.Nullable;
++
++import org.bukkit.entity.Player;
++import org.bukkit.event.Event;
++import org.bukkit.event.HandlerList;
++import org.bukkit.inventory.ItemStack;
++
++import static com.google.common.base.Preconditions.*;
++
++/**
++ * Fired when an item (possibly empty) is sent to a player
++ * <p>Modifying the event's item only changes what the player sees, not what is actually on the server.</p>
++ */
++public class ItemSendEvent extends Event {
++    private final Player player;
++    private ItemStack stack;
++
++    public ItemSendEvent(@Nonnull Player player, @Nullable ItemStack stack) {
++        this.player = checkNotNull(player, "Null player");
++        this.stack = stack;
++    }
++
++    /**
++     * Get the stack that is being sent, or null if an empty item is being sent
++     *
++     * @return the stack that is being sent, or null if none
++     */
++    @Nullable
++    public ItemStack getStack() {
++        return stack;
++    }
++
++    /**
++     * Set the stack that should be sent, or null to send an empty item
++     *
++     * @param stack the stack that should be being sent, or null if nothing should be sent
++     */
++    public void setStack(@Nullable ItemStack stack) {
++        this.stack = stack;
++    }
++
++    /**
++     * Get the player the item is being sent to
++     *
++     * @return the player
++     */
++    @Nonnull
++    public Player getPlayer() {
++        return player;
++    }
++
++    // Event boilerplate
++    private static final HandlerList handlerList = new HandlerList();
++
++    public HandlerList getHandlerList() {
++        return handlerList;
++    }
++
++    @Override
++    public HandlerList getHandlers() {
++        return getHandlerList();
++    }
++}
+\ No newline at end of file
+-- 
+2.8.2.windows.1
+

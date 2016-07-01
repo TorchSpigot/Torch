@@ -1,0 +1,35 @@
+From acf7041a8153a84689795ddd99cd0b4d286a9629 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Fri, 1 Jul 2016 13:34:37 +0800
+Subject: [PATCH] Permit FastAsyncWorldEdit to use magic
+
+
+diff --git a/src/main/java/org/spigotmc/AsyncCatcher.java b/src/main/java/org/spigotmc/AsyncCatcher.java
+index c2e0271..63a054b 100644
+--- a/src/main/java/org/spigotmc/AsyncCatcher.java
++++ b/src/main/java/org/spigotmc/AsyncCatcher.java
+@@ -12,7 +12,7 @@ import com.google.common.collect.ForwardingSet;
+ public class AsyncCatcher
+ {
+ 
+-    public static final boolean enabled = true; // TacoSpigot - final (never disable)
++    public static boolean enabled = true; // Torch - Permit FastAsyncWorldEdit to use magic
+ 
+     public static void catchOp(String reason)
+     {
+diff --git a/src/main/java/org/spigotmc/RestartCommand.java b/src/main/java/org/spigotmc/RestartCommand.java
+index 86c8bf6..429c258 100644
+--- a/src/main/java/org/spigotmc/RestartCommand.java
++++ b/src/main/java/org/spigotmc/RestartCommand.java
+@@ -42,7 +42,7 @@ public class RestartCommand extends Command
+ 
+     public static void restart(final File script)
+     {
+-        // AsyncCatcher.enabled = false; // Disable async catcher incase it interferes with us // TacoSpigot - remove, its all on the main thread
++        AsyncCatcher.enabled = false; // Disable async catcher incase it interferes with us
+         try
+         {
+             if ( script.isFile() )
+-- 
+2.8.2.windows.1
+
