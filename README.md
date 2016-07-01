@@ -9,14 +9,11 @@ High performance Spigot fork that aims to fix gameplay, inconsistencies and mult
 * Recommanded(stable) version: R0.1-RELEASE
 
 ####How To (Server Admins)
-Clone this repo, and use *Torch-1.9.4-R0.x.jar* to start server directly. 
-Just enjoy Torch!:)
-
-####How To (Edit Patches)
-Easily, first apply patches and just edit java sources in Server/src, last `./autopatch.sh`
+Clone this repo, and use *Torch-1.9.4-R0.x.jar*  to start server directly.
+* Just enjoy Torch!:)
 
 ####How To (Compiling From Source)
-To compile Torch, you need JDK8, git, bash, maven, and an internet connection.
+To compile Torch, you need JDK8(or above), git, bash, maven, and an internet connection.
 
 * First clone and build *[TacoSpigot](https://github.com/TacoSpigot/TacoSpigot/)*,
 run `git clone --branch version/1.9.4 https://github.com/TacoSpigot/TacoSpigot.git`
