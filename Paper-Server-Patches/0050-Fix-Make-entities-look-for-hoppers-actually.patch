@@ -1,0 +1,33 @@
+From 21fff6a8179cb3378997a11723ab627ab654cf50 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Fri, 1 Jul 2016 18:08:47 +0800
+Subject: [PATCH] Fix Make entities look for hoppers actually
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityItem.java b/src/main/java/net/minecraft/server/EntityItem.java
+index 9e0c169..be0776b 100644
+--- a/src/main/java/net/minecraft/server/EntityItem.java
++++ b/src/main/java/net/minecraft/server/EntityItem.java
+@@ -6,7 +6,6 @@ import javax.annotation.Nullable;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ import org.bukkit.event.player.PlayerPickupItemEvent; // CraftBukkit
+-import net.techcable.tacospigot.HopperPusher; // TacoSpigot
+ 
+ import com.destroystokyo.paper.HopperPusher; // Paper
+ 
+diff --git a/src/main/java/net/minecraft/server/EntityMinecartContainer.java b/src/main/java/net/minecraft/server/EntityMinecartContainer.java
+index c5a27f4..d7b798f 100644
+--- a/src/main/java/net/minecraft/server/EntityMinecartContainer.java
++++ b/src/main/java/net/minecraft/server/EntityMinecartContainer.java
+@@ -13,7 +13,6 @@ import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+ import org.bukkit.entity.HumanEntity;
+ import org.bukkit.inventory.InventoryHolder;
+ // CraftBukkit end
+-import net.techcable.tacospigot.HopperPusher; // TacoSpigot
+ import com.destroystokyo.paper.HopperPusher; // Paper
+ 
+ // Paper start - push into hoppers
+-- 
+2.8.2.windows.1
+

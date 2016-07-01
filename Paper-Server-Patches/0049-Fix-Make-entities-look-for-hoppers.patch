@@ -1,0 +1,22 @@
+From 58252416093ae422bd2b0ea7b5b9a8a05a91140b Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Fri, 1 Jul 2016 18:06:09 +0800
+Subject: [PATCH] Fix Make entities look for hoppers
+
+
+diff --git a/src/main/java/net/minecraft/server/TileEntityHopper.java b/src/main/java/net/minecraft/server/TileEntityHopper.java
+index b40c066..331e54f 100644
+--- a/src/main/java/net/minecraft/server/TileEntityHopper.java
++++ b/src/main/java/net/minecraft/server/TileEntityHopper.java
+@@ -599,8 +599,6 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+     // Paper end
+ 
+     // Paper start - add option to searchForEntities
+-    }
+-
+     public static IInventory b(World world, double d0, double d1, double d2) {
+ 		return getInventory(world, d0, d1, d2, true);
+     }
+-- 
+2.8.2.windows.1
+
