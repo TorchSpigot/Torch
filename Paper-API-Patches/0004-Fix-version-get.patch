@@ -1,0 +1,33 @@
+From c0974320c3a931950fd430634832c7d78005220c Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 12:52:09 +0800
+Subject: [PATCH] Fix version get
+
+
+diff --git a/src/main/java/org/bukkit/command/defaults/VersionCommand.java b/src/main/java/org/bukkit/command/defaults/VersionCommand.java
+index 32177d3..a0a9695 100644
+--- a/src/main/java/org/bukkit/command/defaults/VersionCommand.java
++++ b/src/main/java/org/bukkit/command/defaults/VersionCommand.java
+@@ -192,8 +192,8 @@ public class VersionCommand extends BukkitCommand {
+         String version = Bukkit.getVersion();
+         if (version == null) version = "Custom";
+         // TacoSpigot start
+-        if (version.startsWith("git-TacoSpigot-")) {
+-            String[] parts = version.substring("git-TacoSpigot-".length()).split("[-\\s]");
++        if (version.startsWith("git-TorchSpigot-")) {
++            String[] parts = version.substring("git-TorchSpigot-".length()).split("[-\\s]");
+             // TacoSpigot end
+             int distance = getDistance(null, parts[0]);
+             switch (distance) {
+@@ -253,7 +253,7 @@ public class VersionCommand extends BukkitCommand {
+         } catch (NumberFormatException ex) {
+             */
+             verInfo = verInfo.replace("\"", "");
+-            return getFromRepo("TacoSpigot/TacoSpigot", verInfo); // 'PaperMC/Paper' -> 'TacoSpigot/TacoSpigot'
++            return getFromRepo("TorchSpigot/Torch", verInfo); // 'PaperMC/Paper' -> 'TacoSpigot/TacoSpigot'
+         //}
+         // TacoSpigot end
+             /*
+-- 
+2.8.2.windows.1
+
