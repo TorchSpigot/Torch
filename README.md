@@ -6,7 +6,7 @@ The main repository of TorchSpigot
 
 High performance Spigot fork that aims to fix gameplay, inconsistencies and multi-threaded computing, based on TacoSpigot basically.
 * Current developing version:  1.9.4
-* Recommanded(stable) version: R0.4-RELEASE
+* Recommanded(stable) version: R0.5-RELEASE
 
 (If you're running a previous 1.9.4 Beta, upgrading is highly recommended.)
 
