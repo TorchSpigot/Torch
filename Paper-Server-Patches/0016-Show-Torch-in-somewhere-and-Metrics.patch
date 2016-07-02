@@ -1,11 +1,11 @@
-From 2ad76218eefc301896a0764f5cdd0db6e3111f55 Mon Sep 17 00:00:00 2001
+From 5298578e3a34dde2cd19819e4517e6b7440aea13 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 28 Jun 2016 17:18:45 +0800
 Subject: [PATCH] Show Torch in somewhere and Metrics
 
 
 diff --git a/pom.xml b/pom.xml
-index 927418f..ad99f1e 100644
+index 927418f..0fa2170 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -4,9 +4,9 @@
@@ -15,7 +15,7 @@ index 927418f..ad99f1e 100644
 -    <version>1.9.4-R0.1</version>
 -    <name>TacoSpigot</name>
 -    <url>https://github.com/TacoSpigot/TacoSpigot</url>
-+    <version>1.9.4-R0.7</version>
++    <version>1.9.4-R0.8</version>
 +    <name>Torch</name>
 +    <url>https://github.com/TorchSpigot/Torch</url>
  

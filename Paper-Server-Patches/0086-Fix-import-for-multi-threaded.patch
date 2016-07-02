@@ -1,0 +1,33 @@
+From bee666f6682d563f216e6797299abce9e33c25b1 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 16:27:34 +0800
+Subject: [PATCH] Fix import for multi threaded
+
+
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index 584472a..b11d273 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -15,6 +15,7 @@ import java.util.List;
+ import java.util.Random;
+ import java.util.UUID;
+ import javax.annotation.Nullable;
++import java.util.concurrent.RecursiveTask;
+ 
+ // CraftBukkit start
+ import com.google.common.collect.Maps;
+diff --git a/src/main/java/org/spigotmc/ActivationRange.java b/src/main/java/org/spigotmc/ActivationRange.java
+index 09a80c8..0907a69 100644
+--- a/src/main/java/org/spigotmc/ActivationRange.java
++++ b/src/main/java/org/spigotmc/ActivationRange.java
+@@ -2,6 +2,7 @@ package org.spigotmc;
+ 
+ import java.util.List;
+ import java.util.Set;
++import java.util.concurrent.RecursiveAction;
+ 
+ import co.aikar.timings.MinecraftTimings;
+ import net.minecraft.server.AxisAlignedBB;
+-- 
+2.8.2.windows.1
+
