@@ -1,4 +1,4 @@
-From d199abc8c6db774c3e0e3a6ed6d156aa234a0bdc Mon Sep 17 00:00:00 2001
+From b3115bbdb9d26bc0590c7ce5f689c640eb49fb29 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 12:52:09 +0800
 Subject: [PATCH] Fix version get
