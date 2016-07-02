@@ -1,0 +1,22 @@
+From 4d0afaef5359c00c3e26e4d073f444077467eb88 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 13:58:51 +0800
+Subject: [PATCH] SPIGOT-1283: Copy data directory on world import in case its
+ required
+
+
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 3e9f52c..b3ef690 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -300,6 +300,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+                             // Migrate world data too.
+                             try {
+                                 com.google.common.io.Files.copy(new File(new File(s), "level.dat"), new File(new File(name), "level.dat"));
++								org.apache.commons.io.FileUtils.copyDirectory(new File(new File(s), "data"), new File(new File(name), "data"));
+                             } catch (IOException exception) {
+                                 MinecraftServer.LOGGER.warn("Unable to migrate world data.");
+                             }
+-- 
+2.8.2.windows.1
+

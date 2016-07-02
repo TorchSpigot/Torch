@@ -1,0 +1,39 @@
+From 37ef6635791328e3478e76972db193011f0efef9 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 14:01:33 +0800
+Subject: [PATCH] SPIGOT-1288: Sounds played for cancelled BlockPlaceEvent
+
+
+diff --git a/src/main/java/net/minecraft/server/ItemBlock.java b/src/main/java/net/minecraft/server/ItemBlock.java
+index 6dbad10..5549773 100644
+--- a/src/main/java/net/minecraft/server/ItemBlock.java
++++ b/src/main/java/net/minecraft/server/ItemBlock.java
+@@ -36,7 +36,7 @@ public class ItemBlock extends Item {
+ 
+                 SoundEffectType soundeffecttype = this.a.w();
+ 
+-                world.a(entityhuman, blockposition, soundeffecttype.e(), SoundCategory.BLOCKS, (soundeffecttype.a() + 1.0F) / 2.0F, soundeffecttype.b() * 0.8F);
++                // world.a(entityhuman, blockposition, soundeffecttype.e(), SoundCategory.BLOCKS, (soundeffecttype.a() + 1.0F) / 2.0F, soundeffecttype.b() * 0.8F); // CraftBukkit - SPIGOT-1288
+                 --itemstack.count;
+             }
+ 
+diff --git a/src/main/java/net/minecraft/server/ItemStack.java b/src/main/java/net/minecraft/server/ItemStack.java
+index c95af5a..2ac3cef 100644
+--- a/src/main/java/net/minecraft/server/ItemStack.java
++++ b/src/main/java/net/minecraft/server/ItemStack.java
+@@ -226,6 +226,12 @@ public final class ItemStack {
+                         }
+                     }
+                 }
++				
++				// SPIGOT-1288 - play sound stripped from ItemBlock
++                if (this.getItem() instanceof ItemBlock) {
++                    SoundEffectType soundeffecttype = ((ItemBlock) this.getItem()).d().w(); // PAIL: rename
++                    world.a(entityhuman, blockposition, soundeffecttype.e(), SoundCategory.BLOCKS, (soundeffecttype.a() + 1.0F) / 2.0F, soundeffecttype.b() * 0.8F);
++                }
+ 
+                 entityhuman.b(StatisticList.b(this.item));
+             }
+-- 
+2.8.2.windows.1
+

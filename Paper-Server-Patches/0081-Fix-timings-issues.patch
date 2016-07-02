@@ -1,0 +1,69 @@
+From 3fcfb6735e1d5ddb291ab12b1071e0be92563284 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 14:15:46 +0800
+Subject: [PATCH] Fix timings issues
+
+
+diff --git a/src/main/java/net/minecraft/server/Chunk.java b/src/main/java/net/minecraft/server/Chunk.java
+index d433e87..907c02d 100644
+--- a/src/main/java/net/minecraft/server/Chunk.java
++++ b/src/main/java/net/minecraft/server/Chunk.java
+@@ -1041,7 +1041,7 @@ public class Chunk {
+             }
+         }
+         // CraftBukkit end
+-        world.timings.syncChunkLoadPostTimer.startTiming(); // Spigot
++        // world.timings.syncChunkLoadPostTimer.startTiming(); // Spigot
+         Chunk chunk = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.locX, this.locZ - 1); // Paper
+         Chunk chunk1 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.locX + 1, this.locZ); // Paper
+         Chunk chunk2 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.locX, this.locZ + 1); // Paper
+@@ -1066,7 +1066,7 @@ public class Chunk {
+                 chunk4.a(chunkgenerator);
+             }
+         }
+-        world.timings.syncChunkLoadPostTimer.stopTiming(); // Spigot
++        // world.timings.syncChunkLoadPostTimer.stopTiming(); // Spigot
+ 
+     }
+ 
+diff --git a/src/main/java/net/minecraft/server/ChunkRegionLoader.java b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+index f743681..bb505fa 100644
+--- a/src/main/java/net/minecraft/server/ChunkRegionLoader.java
++++ b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+@@ -395,7 +395,7 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+             }
+         }
+         world.timings.syncChunkLoadTileEntitiesTimer.stopTiming(); // Spigot
+-        world.timings.syncChunkLoadTileTicksTimer.startTiming(); // Spigot
++        // world.timings.syncChunkLoadTileTicksTimer.startTiming(); // Spigot
+ 
+         if (nbttagcompound.hasKeyOfType("TileTicks", 9)) {
+             NBTTagList nbttaglist3 = nbttagcompound.getList("TileTicks", 10);
+@@ -415,7 +415,7 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+                 }
+             }
+         }
+-        world.timings.syncChunkLoadTileTicksTimer.stopTiming(); // Spigot
++        // world.timings.syncChunkLoadTileTicksTimer.stopTiming(); // Spigot
+ 
+         // return chunk; // CraftBukkit
+     }
+diff --git a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOProvider.java b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOProvider.java
+index e5c6a1e..e53d88b 100644
+--- a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOProvider.java
++++ b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOProvider.java
+@@ -44,9 +44,9 @@ class ChunkIOProvider implements AsynchronousExecutor.CallBackProvider<QueuedChu
+         chunk.addEntities();
+ 
+         if (queuedChunk.provider.chunkGenerator != null) {
+-            queuedChunk.provider.world.timings.syncChunkLoadStructuresTimer.startTiming(); // Spigot
++            // queuedChunk.provider.world.timings.syncChunkLoadStructuresTimer.startTiming(); // Spigot
+             queuedChunk.provider.chunkGenerator.recreateStructures(chunk, queuedChunk.x, queuedChunk.z);
+-            queuedChunk.provider.world.timings.syncChunkLoadStructuresTimer.stopTiming(); // Spigot
++            // queuedChunk.provider.world.timings.syncChunkLoadStructuresTimer.stopTiming(); // Spigot
+         }
+ 
+         chunk.loadNearby(queuedChunk.provider, queuedChunk.provider.chunkGenerator, false);
+-- 
+2.8.2.windows.1
+

@@ -1,0 +1,21 @@
+From 6577a82e2be58187bea45f2b4705503b78f015e7 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 14:00:06 +0800
+Subject: [PATCH] Fix missed SPIGOT-1284
+
+
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index b3ef690..7f31070 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -807,7 +807,6 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 
+         MinecraftTimings.bukkitSchedulerTimer.startTiming(); // Paper
+         // CraftBukkit start
+-        this.server.getScheduler().mainThreadHeartbeat(this.ticks);
+         MinecraftTimings.bukkitSchedulerTimer.stopTiming(); // Paper
+ 
+         // Run tasks that are waiting on processing
+-- 
+2.8.2.windows.1
+

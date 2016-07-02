@@ -1,4 +1,4 @@
-From 45c45ea3ba777cd9644230b641a224f6a0c9b789 Mon Sep 17 00:00:00 2001
+From 420654ae4e343c6de967a7c520ea0f161e48853d Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 14:31:35 +0800
 Subject: [PATCH] Fix the IndexOutOfBoundsException
