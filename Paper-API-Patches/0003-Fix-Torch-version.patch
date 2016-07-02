@@ -1,0 +1,22 @@
+From c5339d54c045770c3355ad8ab76b4a099758b0d6 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 08:40:36 +0800
+Subject: [PATCH] Fix Torch version
+
+
+diff --git a/pom.xml b/pom.xml
+index 4dccd64..aa42825 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -11,7 +11,7 @@
+ 
+     <groupId>net.techcable.tacospigot</groupId>
+     <artifactId>tacospigot-api</artifactId>
+-    <version>1.9.4-R0.1</version>
++    <version>1.9.4-R0.4</version>
+     <packaging>jar</packaging>
+ 
+     <name>TacoSpigot-API</name>
+-- 
+2.8.2.windows.1
+

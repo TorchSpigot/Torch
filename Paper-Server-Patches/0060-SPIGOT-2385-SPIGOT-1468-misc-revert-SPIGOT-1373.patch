@@ -1,0 +1,124 @@
+From 8b093258976a734d8deec11534db47c252f80045 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 08:14:46 +0800
+Subject: [PATCH] SPIGOT-2385, SPIGOT-1468 ,misc revert SPIGOT-1373
+
+
+diff --git a/src/main/java/net/minecraft/server/ChunkRegionLoader.java b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+index 775b2cb..6e157f3 100644
+--- a/src/main/java/net/minecraft/server/ChunkRegionLoader.java
++++ b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+@@ -71,13 +71,15 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+         NBTTagCompound nbttagcompound = (NBTTagCompound) this.b.get(chunkcoordintpair);
+ 
+         if (nbttagcompound == null) {
+-            DataInputStream datainputstream = RegionFileCache.c(this.d, i, j);
++            // CraftBukkit start
++            nbttagcompound = RegionFileCache.c(this.d, i, j);
+ 
+-            if (datainputstream == null) {
++            if (nbttagcompound == null) {
+                 return null;
+             }
+ 
+-            nbttagcompound = this.e.a((DataConverterType) DataConverterTypes.CHUNK, NBTCompressedStreamTools.a(datainputstream));
++            nbttagcompound = this.e.a((DataConverterType) DataConverterTypes.CHUNK, nbttagcompound);
++            // CraftBukkit end
+         }
+ 
+         return this.a(world, i, j, nbttagcompound);
+diff --git a/src/main/java/net/minecraft/server/EntityEnderPearl.java b/src/main/java/net/minecraft/server/EntityEnderPearl.java
+index 10e4577..4db52ec 100644
+--- a/src/main/java/net/minecraft/server/EntityEnderPearl.java
++++ b/src/main/java/net/minecraft/server/EntityEnderPearl.java
+@@ -4,6 +4,7 @@ package net.minecraft.server;
+ import org.bukkit.Bukkit;
+ import org.bukkit.craftbukkit.event.CraftEventFactory;
+ import org.bukkit.event.player.PlayerTeleportEvent;
++import org.bukkit.event.entity.CreatureSpawnEvent;
+ // CraftBukkit end
+ 
+ public class EntityEnderPearl extends EntityProjectile {
+@@ -72,7 +73,7 @@ public class EntityEnderPearl extends EntityProjectile {
+ 
+                             entityendermite.a(true);
+                             entityendermite.setPositionRotation(entityliving.locX, entityliving.locY, entityliving.locZ, entityliving.yaw, entityliving.pitch);
+-                            this.world.addEntity(entityendermite);
++                            this.world.addEntity(entityendermite, CreatureSpawnEvent.SpawnReason.ENDER_PEARL);
+                         }
+ 
+                         if (entityliving.isPassenger()) {
+diff --git a/src/main/java/net/minecraft/server/PathfinderGoalTempt.java b/src/main/java/net/minecraft/server/PathfinderGoalTempt.java
+index 773c915..6e042bf 100644
+--- a/src/main/java/net/minecraft/server/PathfinderGoalTempt.java
++++ b/src/main/java/net/minecraft/server/PathfinderGoalTempt.java
+@@ -11,7 +11,7 @@ import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
+ 
+ public class PathfinderGoalTempt extends PathfinderGoal {
+ 
+-    private Entity a;
++    private EntityCreature a;
+     private double b;
+     private double c;
+     private double d;
+@@ -24,11 +24,11 @@ public class PathfinderGoalTempt extends PathfinderGoal {
+     private Set<Item> k;
+     private boolean l;
+ 
+-    public PathfinderGoalTempt(Entity entitycreature, double d0, Item item, boolean flag) {
++    public PathfinderGoalTempt(EntityCreature entitycreature, double d0, Item item, boolean flag) {
+         this(entitycreature, d0, flag, Sets.newHashSet(new Item[] { item}));
+     }
+ 
+-    public PathfinderGoalTempt(Entity entitycreature, double d0, boolean flag, Set<Item> set) {
++    public PathfinderGoalTempt(EntityCreature entitycreature, double d0, boolean flag, Set<Item> set) {
+         this.a = entitycreature;
+         this.b = d0;
+         this.k = set;
+@@ -45,18 +45,7 @@ public class PathfinderGoalTempt extends PathfinderGoal {
+             return false;
+         } else {
+             this.h = this.a.world.findNearbyPlayer(this.a, 10.0D);
+-            // CraftBukkit start
+-            // PAIL: rename
+-			boolean tempt = this.h == null ? false : this.a(this.h.getItemInMainHand()) || this.a(this.h.getItemInOffHand());
+-            if (tempt) {
+-                EntityTargetLivingEntityEvent event = CraftEventFactory.callEntityTargetLivingEvent(this.a, this.h, EntityTargetEvent.TargetReason.TEMPT);
+-                if (event.isCancelled()) {
+-                    return false;
+-                }
+-                this.h = ((CraftLivingEntity) event.getTarget()).getHandle();
+-            }
+-            return tempt;
+-            // CraftBukkit end
++            return this.h == null ? false : this.a(this.h.getItemInMainHand()) || this.a(this.h.getItemInOffHand());
+         }
+     }
+ 
+diff --git a/src/main/java/net/minecraft/server/RegionFileCache.java b/src/main/java/net/minecraft/server/RegionFileCache.java
+index 9744e72..53e3463 100644
+--- a/src/main/java/net/minecraft/server/RegionFileCache.java
++++ b/src/main/java/net/minecraft/server/RegionFileCache.java
+@@ -80,10 +80,17 @@ public class RegionFileCache {
+         RegionFileCache.a.clear();
+     }
+ 
+-    public static DataInputStream c(File file, int i, int j) {
++    // CraftBukkit start - call sites hoisted for synchronization
++    public static synchronized NBTTagCompound c(File file, int i, int j) throws IOException {
+         RegionFile regionfile = a(file, i, j);
+ 
+-        return regionfile.a(i & 31, j & 31);
++        DataInputStream datainputstream = regionfile.a(i & 31, j & 31);
++
++        if (datainputstream == null) {
++            return null;
++        }
++
++        return NBTCompressedStreamTools.a(datainputstream);
+     }
+ 
+     public static DataOutputStream d(File file, int i, int j) {
+-- 
+2.8.2.windows.1
+
