@@ -1,0 +1,22 @@
+From 614e36026baf102f3b176c59c368eab061d95446 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 19:47:29 +0800
+Subject: [PATCH] Fix missed DataPalleteBlock actually
+
+
+diff --git a/src/main/java/net/minecraft/server/DataPaletteBlock.java b/src/main/java/net/minecraft/server/DataPaletteBlock.java
+index 4fad127..4f4e7af 100644
+--- a/src/main/java/net/minecraft/server/DataPaletteBlock.java
++++ b/src/main/java/net/minecraft/server/DataPaletteBlock.java
+@@ -38,7 +38,7 @@ public class DataPaletteBlock implements DataPaletteExpandable {
+     }
+ 
+     public int a(int i, IBlockData iblockdata) {
+-        // DataBits databits = this.b; // Paper - nope
++        DataBits databits = this.b; // Paper - nope
+         DataPalette datapalette = this.c;
+ 
+         this.b(i);
+-- 
+2.8.2.windows.1
+

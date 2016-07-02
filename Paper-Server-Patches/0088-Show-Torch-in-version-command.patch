@@ -1,11 +1,11 @@
-From 7f813278861c4d0e6c01c79baac4f5e631ff7e0e Mon Sep 17 00:00:00 2001
+From 8847340d996de82a8bce52255971e7db1daf981a Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 16:38:13 +0800
 Subject: [PATCH] Show Torch in version command
 
 
 diff --git a/pom.xml b/pom.xml
-index 0fa2170..735d08f 100644
+index 4e6c2e3..2a507b6 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -108,7 +108,7 @@

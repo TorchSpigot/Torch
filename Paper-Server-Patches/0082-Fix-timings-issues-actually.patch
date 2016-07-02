@@ -1,4 +1,4 @@
-From a99e202d23b8a930d304aa7446f79d49d3fcf1f1 Mon Sep 17 00:00:00 2001
+From 9d2bd7d80770d36dea96a46250c8744565aaa848 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 14:20:34 +0800
 Subject: [PATCH] Fix timings issues actually

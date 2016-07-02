@@ -1,0 +1,30 @@
+From a5902e4727c6606178f5b8b23d4f54c1fc5913f8 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 19:40:28 +0800
+Subject: [PATCH] Fix optimize DataPalleteBlock and getType actually
+
+
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index 65a3d57..5ddd1aa 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -808,7 +808,7 @@ public abstract class World implements IBlockAccess {
+         if (captureTreeGeneration) return findCaptured(blockposition); // use seperate findCaptured() method
+         Chunk chunk = this.getChunkIfLoaded(blockposition);
+         if (chunk != null) {
+-            return chunk.getBlockData(x, y, z);
++            return blockposition.isValidLocation() ? chunk.getBlockData(blockposition) : Blocks.AIR.getBlockData();
+         }
+         return null;
+     }
+@@ -828,7 +828,6 @@ public abstract class World implements IBlockAccess {
+         final int z = blockposition.getZ();
+ 		Iterator<BlockState> it = capturedBlockStates.iterator();
+         while (it.hasNext()) {
+-			Iterator<BlockState> it = capturedBlockStates.iterator();
+             final IBlockData previous = getCapturedBlockType(x, y, z);
+             if (previous != null) {
+                 return previous;
+-- 
+2.8.2.windows.1
+
