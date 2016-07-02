@@ -1,0 +1,35 @@
+From de2f1f778d04ae48a557d609b3854507827b5121 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 09:27:47 +0800
+Subject: [PATCH] Fix async method
+
+
+diff --git a/src/main/java/net/minecraft/server/Chunk.java b/src/main/java/net/minecraft/server/Chunk.java
+index a0fbe66..03dad67 100644
+--- a/src/main/java/net/minecraft/server/Chunk.java
++++ b/src/main/java/net/minecraft/server/Chunk.java
+@@ -630,7 +630,7 @@ public class Chunk {
+             // Chunk.e.warn("Wrong location! (" + i + ", " + j + ") should be (" + this.locX + ", " + this.locZ + "), " + entity, new Object[] { entity});
+             Bukkit.getLogger().warning("Entity is at " + entity.locX + "," + entity.locZ + " (chunk " + i + "," + j + ") but was stored in chunk " + this.locX + "," + this.locZ);
+             // CraftBukkit end
+-			new Exception("Stack trace").printStackTrace();
++			// new Exception("Stack trace").printStackTrace();
+             entity.die();
+         }
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java
+index 9aaca21..3a3b0b0 100644
+--- a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java
++++ b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java
+@@ -15,7 +15,7 @@ public class ChunkIOExecutor {
+     private static final AsynchronousExecutor<QueuedChunk, Chunk, Runnable, RuntimeException> instance = new AsynchronousExecutor<QueuedChunk, Chunk, Runnable, RuntimeException>(new ChunkIOProvider(), BASE_THREADS);
+ 
+     public static Chunk syncChunkLoad(World world, ChunkRegionLoader loader, ChunkProviderServer provider, int x, int z) {
+-        return MCUtil.ensureMain("Async Chunk Load", () -> instance.getSkipQueue(new QueuedChunk(x, z, loader, world, provider))); // Paper
++        return instance.getSkipQueue(new QueuedChunk(x, z, loader, world, provider)); // Torch - permit async
+     }
+ 
+     public static void queueChunkLoad(World world, ChunkRegionLoader loader, ChunkProviderServer provider, int x, int z, Runnable runnable) {
+-- 
+2.8.2.windows.1
+
