@@ -1,0 +1,22 @@
+From d70f8903f65e99aee8a4c623b610a1498bc2f2fa Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 21:47:24 +0800
+Subject: [PATCH] Fix add Profile API
+
+
+diff --git a/src/main/java/com/destroystokyo/paper/profile/PlayerTextures.java b/src/main/java/com/destroystokyo/paper/profile/PlayerTextures.java
+index 767e783..e8215d1 100644
+--- a/src/main/java/com/destroystokyo/paper/profile/PlayerTextures.java
++++ b/src/main/java/com/destroystokyo/paper/profile/PlayerTextures.java
+@@ -17,7 +17,7 @@ import com.google.gson.JsonParser;
+ /**
+  * A player's texture data, including skin and cape.
+  */
+- ++public final class PlayerTextures {
++public final class PlayerTextures {
+     private final AccountProfile profile;
+     private final TextureData skinData, capeData;
+ 
+-- 
+2.8.2.windows.1
+

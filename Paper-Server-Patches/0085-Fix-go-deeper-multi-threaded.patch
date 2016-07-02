@@ -1,4 +1,4 @@
-From 5c6663c34e717894335a5a6bc6957f82a9894b4a Mon Sep 17 00:00:00 2001
+From 98abfed548fc1cd3d59c62af17b4b5c1ba31e9f3 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 16:20:53 +0800
 Subject: [PATCH] Fix go deeper multi threaded
