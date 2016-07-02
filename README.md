@@ -1,12 +1,12 @@
 Torch 
 ===========
-[![Build Status](https://travis-ci.org/TorchMC/Torch.svg?branch=master)](https://travis-ci.org/TorchMC/Torch)  [![Team](https://img.shields.io/badge/Powered%20by-iMinecraft-green.svg?style=flat)](https://github.com/TorchSpigot/Torch)
+[![Build Status](https://travis-ci.org/TorchMC/Torch.svg?branch=master)](https://travis-ci.org/TorchMC/Torch)  [![Team](https://img.shields.io/badge/Powered%20by-iMinecraft-green.svg?style=flat)](https://github.com/TorchSpigot/Torch) [![MCStats](https://img.shields.io/badge/MCStats-TorchSpigot-blue.svg?style=flat)](http://mcstats.org/plugin/TorchSpigot)
 
 The main repository of TorchSpigot
 
 High performance Spigot fork that aims to fix gameplay, inconsistencies and multi-threaded computing, based on TacoSpigot basically.
 * Current developing version:  1.9.4
-* Recommanded(stable) version: R0.8-RELEASE
+* Recommanded(stable) version: R0.8.1-RELEASE
 
 (If you're running a previous 1.9.4 Beta, upgrading is highly recommended.)
 
