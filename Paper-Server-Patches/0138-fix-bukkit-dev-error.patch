@@ -1,0 +1,21 @@
+From bf561ea7e10937c0d21cdb44c3046a8d88c5684e Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 11 Jul 2016 18:17:46 +0800
+Subject: [PATCH] fix bukkit dev error
+
+
+diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
+index 73816a0..d529308 100644
+--- a/src/main/java/org/bukkit/entity/Player.java
++++ b/src/main/java/org/bukkit/entity/Player.java
+@@ -25,7 +25,6 @@ import org.bukkit.scoreboard.Scoreboard;
+  * Represents a player, connected or not
+  */
+ public interface Player extends HumanEntity, Conversable, CommandSender, OfflinePlayer, PluginMessageRecipient {
+-
+     /**
+      * Gets the "friendly" name to display of this player. This may include
+      * color.
+-- 
+2.8.2.windows.1
+

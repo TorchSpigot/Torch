@@ -1,0 +1,2061 @@
+From f5738f44691e841a898b49bb0c57bdf2c43f2f38 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 11 Jul 2016 17:48:17 +0800
+Subject: [PATCH] Add DamageCause.HOT_FLOOR for Bukkit
+
+
+diff --git a/src/main/java/org/bukkit/bukkit/enchantments/EnchantmentTarget.java b/src/main/java/org/bukkit/bukkit/enchantments/EnchantmentTarget.java
+new file mode 100644
+index 0000000..dee2350
+--- /dev/null
++++ b/src/main/java/org/bukkit/bukkit/enchantments/EnchantmentTarget.java
+@@ -0,0 +1,182 @@
++package org.bukkit.enchantments;
++
++import org.bukkit.Material;
++import org.bukkit.inventory.ItemStack;
++
++/**
++ * Represents the applicable target for a {@link Enchantment}
++ */
++public enum EnchantmentTarget {
++    /**
++     * Allows the Enchantment to be placed on all items
++     */
++    ALL {
++        @Override
++        public boolean includes(Material item) {
++            return true;
++        }
++    },
++
++    /**
++     * Allows the Enchantment to be placed on armor
++     */
++    ARMOR {
++        @Override
++        public boolean includes(Material item) {
++            return ARMOR_FEET.includes(item)
++                || ARMOR_LEGS.includes(item)
++                || ARMOR_HEAD.includes(item)
++                || ARMOR_TORSO.includes(item);
++        }
++    },
++
++    /**
++     * Allows the Enchantment to be placed on feet slot armor
++     */
++    ARMOR_FEET {
++        @Override
++        public boolean includes(Material item) {
++            return item.equals(Material.LEATHER_BOOTS)
++                || item.equals(Material.CHAINMAIL_BOOTS)
++                || item.equals(Material.IRON_BOOTS)
++                || item.equals(Material.DIAMOND_BOOTS)
++                || item.equals(Material.GOLD_BOOTS);
++        }
++    },
++
++    /**
++     * Allows the Enchantment to be placed on leg slot armor
++     */
++    ARMOR_LEGS {
++        @Override
++        public boolean includes(Material item) {
++            return item.equals(Material.LEATHER_LEGGINGS)
++                || item.equals(Material.CHAINMAIL_LEGGINGS)
++                || item.equals(Material.IRON_LEGGINGS)
++                || item.equals(Material.DIAMOND_LEGGINGS)
++                || item.equals(Material.GOLD_LEGGINGS);
++        }
++    },
++
++    /**
++     * Allows the Enchantment to be placed on torso slot armor
++     */
++    ARMOR_TORSO {
++        @Override
++        public boolean includes(Material item) {
++            return item.equals(Material.LEATHER_CHESTPLATE)
++                || item.equals(Material.CHAINMAIL_CHESTPLATE)
++                || item.equals(Material.IRON_CHESTPLATE)
++                || item.equals(Material.DIAMOND_CHESTPLATE)
++                || item.equals(Material.GOLD_CHESTPLATE);
++        }
++    },
++
++    /**
++     * Allows the Enchantment to be placed on head slot armor
++     */
++    ARMOR_HEAD {
++        @Override
++        public boolean includes(Material item) {
++            return item.equals(Material.LEATHER_HELMET)
++                || item.equals(Material.CHAINMAIL_HELMET)
++                || item.equals(Material.DIAMOND_HELMET)
++                || item.equals(Material.IRON_HELMET)
++                || item.equals(Material.GOLD_HELMET);
++        }
++    },
++
++    /**
++     * Allows the Enchantment to be placed on weapons (swords)
++     */
++    WEAPON {
++        @Override
++        public boolean includes(Material item) {
++            return item.equals(Material.WOOD_SWORD)
++                || item.equals(Material.STONE_SWORD)
++                || item.equals(Material.IRON_SWORD)
++                || item.equals(Material.DIAMOND_SWORD)
++                || item.equals(Material.GOLD_SWORD);
++        }
++    },
++
++    /**
++     * Allows the Enchantment to be placed on tools (spades, pickaxe, hoes,
++     * axes)
++     */
++    TOOL {
++        @Override
++        public boolean includes(Material item) {
++            return item.equals(Material.WOOD_SPADE)
++                || item.equals(Material.STONE_SPADE)
++                || item.equals(Material.IRON_SPADE)
++                || item.equals(Material.DIAMOND_SPADE)
++                || item.equals(Material.GOLD_SPADE)
++                || item.equals(Material.WOOD_PICKAXE)
++                || item.equals(Material.STONE_PICKAXE)
++                || item.equals(Material.IRON_PICKAXE)
++                || item.equals(Material.DIAMOND_PICKAXE)
++                || item.equals(Material.GOLD_PICKAXE)
++                || item.equals(Material.WOOD_HOE)         // NOTE: No vanilla enchantments for this
++                || item.equals(Material.STONE_HOE)        // NOTE: No vanilla enchantments for this
++                || item.equals(Material.IRON_HOE)         // NOTE: No vanilla enchantments for this
++                || item.equals(Material.DIAMOND_HOE)      // NOTE: No vanilla enchantments for this
++                || item.equals(Material.GOLD_HOE)         // NOTE: No vanilla enchantments for this
++                || item.equals(Material.WOOD_AXE)
++                || item.equals(Material.STONE_AXE)
++                || item.equals(Material.IRON_AXE)
++                || item.equals(Material.DIAMOND_AXE)
++                || item.equals(Material.GOLD_AXE)
++                || item.equals(Material.SHEARS)           // NOTE: No vanilla enchantments for this
++                || item.equals(Material.FLINT_AND_STEEL); // NOTE: No vanilla enchantments for this
++        }
++    },
++
++    /**
++     * Allows the Enchantment to be placed on bows.
++     */
++    BOW {
++        @Override
++        public boolean includes(Material item) {
++            return item.equals(Material.BOW);
++        }
++    },
++
++    /**
++     * Allows the Enchantment to be placed on fishing rods.
++     */
++    FISHING_ROD {
++        @Override
++        public boolean includes(Material item) {
++            return item.equals(Material.FISHING_ROD);
++        }
++    },
++
++    /**
++     * Allows the enchantment to be placed on items with durability.
++     */
++    BREAKABLE {
++        @Override
++        public boolean includes(Material item) {
++            return item.getMaxDurability() > 0 && item.getMaxStackSize() == 1;
++        }
++    };
++
++    /**
++     * Check whether this target includes the specified item.
++     *
++     * @param item The item to check
++     * @return True if the target includes the item
++     */
++    public abstract boolean includes(Material item);
++
++    /**
++     * Check whether this target includes the specified item.
++     *
++     * @param item The item to check
++     * @return True if the target includes the item
++     */
++    public boolean includes(ItemStack item) {
++        return includes(item.getType());
++    }
++}
+diff --git a/src/main/java/org/bukkit/bukkit/event/entity/EntityDamageEvent.java b/src/main/java/org/bukkit/bukkit/event/entity/EntityDamageEvent.java
+new file mode 100644
+index 0000000..09ce0ae
+--- /dev/null
++++ b/src/main/java/org/bukkit/bukkit/event/entity/EntityDamageEvent.java
+@@ -0,0 +1,436 @@
++package org.bukkit.event.entity;
++
++import java.util.EnumMap;
++import java.util.Map;
++import org.bukkit.Material;
++
++import org.apache.commons.lang.Validate;
++import org.bukkit.entity.Entity;
++import org.bukkit.entity.Player;
++import org.bukkit.event.Cancellable;
++import org.bukkit.event.HandlerList;
++import org.bukkit.util.NumberConversions;
++
++import com.google.common.base.Function;
++import com.google.common.base.Functions;
++import com.google.common.collect.ImmutableMap;
++
++/**
++ * Stores data for damage events
++ */
++public class EntityDamageEvent extends EntityEvent implements Cancellable {
++    private static final HandlerList handlers = new HandlerList();
++    private static final DamageModifier[] MODIFIERS = DamageModifier.values();
++    private static final Function<? super Double, Double> ZERO = Functions.constant(-0.0);
++    private final Map<DamageModifier, Double> modifiers;
++    private final Map<DamageModifier, ? extends Function<? super Double, Double>> modifierFunctions;
++    private final Map<DamageModifier, Double> originals;
++    private boolean cancelled;
++    private final DamageCause cause;
++
++    @Deprecated
++    public EntityDamageEvent(final Entity damagee, final DamageCause cause, final int damage) {
++        this(damagee, cause, (double) damage);
++    }
++
++    @Deprecated
++    public EntityDamageEvent(final Entity damagee, final DamageCause cause, final double damage) {
++        this(damagee, cause, new EnumMap<DamageModifier, Double>(ImmutableMap.of(DamageModifier.BASE, damage)), new EnumMap<DamageModifier, Function<? super Double, Double>>(ImmutableMap.of(DamageModifier.BASE, ZERO)));
++    }
++
++    public EntityDamageEvent(final Entity damagee, final DamageCause cause, final Map<DamageModifier, Double> modifiers, final Map<DamageModifier, ? extends Function<? super Double, Double>> modifierFunctions) {
++        super(damagee);
++        Validate.isTrue(modifiers.containsKey(DamageModifier.BASE), "BASE DamageModifier missing");
++        Validate.isTrue(!modifiers.containsKey(null), "Cannot have null DamageModifier");
++        Validate.noNullElements(modifiers.values(), "Cannot have null modifier values");
++        Validate.isTrue(modifiers.keySet().equals(modifierFunctions.keySet()), "Must have a modifier function for each DamageModifier");
++        Validate.noNullElements(modifierFunctions.values(), "Cannot have null modifier function");
++        this.originals = new EnumMap<DamageModifier, Double>(modifiers);
++        this.cause = cause;
++        this.modifiers = modifiers;
++        this.modifierFunctions = modifierFunctions;
++    }
++
++    public boolean isCancelled() {
++        return cancelled;
++    }
++
++    public void setCancelled(boolean cancel) {
++        cancelled = cancel;
++    }
++
++    /**
++     * Gets the original damage for the specified modifier, as defined at this
++     * event's construction.
++     *
++     * @param type the modifier
++     * @return the original damage
++     * @throws IllegalArgumentException if type is null
++     */
++    public double getOriginalDamage(DamageModifier type) throws IllegalArgumentException {
++        final Double damage = originals.get(type);
++        if (damage != null) {
++            return damage;
++        }
++        if (type == null) {
++            throw new IllegalArgumentException("Cannot have null DamageModifier");
++        }
++        return 0;
++    }
++
++    /**
++     * Sets the damage for the specified modifier.
++     *
++     * @param type the damage modifier
++     * @param damage the scalar value of the damage's modifier
++     * @see #getFinalDamage()
++     * @throws IllegalArgumentException if type is null
++     * @throws UnsupportedOperationException if the caller does not support
++     *     the particular DamageModifier, or to rephrase, when {@link
++     *     #isApplicable(DamageModifier)} returns false
++     */
++    public void setDamage(DamageModifier type, double damage) throws IllegalArgumentException, UnsupportedOperationException {
++        if (!modifiers.containsKey(type)) {
++            throw type == null ? new IllegalArgumentException("Cannot have null DamageModifier") : new UnsupportedOperationException(type + " is not applicable to " + getEntity());
++        }
++        modifiers.put(type, damage);
++    }
++
++    /**
++     * Gets the damage change for some modifier
++     *
++     * @param type the damage modifier
++     * @return The raw amount of damage caused by the event
++     * @throws IllegalArgumentException if type is null
++     * @see DamageModifier#BASE
++     */
++    public double getDamage(DamageModifier type) throws IllegalArgumentException {
++        Validate.notNull(type, "Cannot have null DamageModifier");
++        final Double damage = modifiers.get(type);
++        return damage == null ? 0 : damage;
++    }
++
++    /**
++     * This checks to see if a particular modifier is valid for this event's
++     * caller, such that, {@link #setDamage(DamageModifier, double)} will not
++     * throw an {@link UnsupportedOperationException}.
++     * <p>
++     * {@link DamageModifier#BASE} is always applicable.
++     *
++     * @param type the modifier
++     * @return true if the modifier is supported by the caller, false otherwise
++     * @throws IllegalArgumentException if type is null
++     */
++    public boolean isApplicable(DamageModifier type) throws IllegalArgumentException {
++        Validate.notNull(type, "Cannot have null DamageModifier");
++        return modifiers.containsKey(type);
++    }
++
++    /**
++     * Gets the raw amount of damage caused by the event
++     *
++     * @return The raw amount of damage caused by the event
++     * @see DamageModifier#BASE
++     */
++    public double getDamage() {
++        return getDamage(DamageModifier.BASE);
++    }
++
++    /**
++     * Gets the amount of damage caused by the event after all damage
++     * reduction is applied.
++     *
++     * @return the amount of damage caused by the event
++     */
++    public final double getFinalDamage() {
++        double damage = 0;
++        for (DamageModifier modifier : MODIFIERS) {
++            damage += getDamage(modifier);
++        }
++        return damage;
++    }
++
++    /**
++     * This method exists for legacy reasons to provide backwards
++     * compatibility. It will not exist at runtime and should not be used
++     * under any circumstances.
++     * 
++     * @return the (rounded) damage
++     */
++    @Deprecated
++    public int _INVALID_getDamage() {
++        return NumberConversions.ceil(getDamage());
++    }
++
++    /**
++     * Sets the raw amount of damage caused by the event.
++     * <p>
++     * For compatibility this also recalculates the modifiers and scales
++     * them by the difference between the modifier for the previous damage
++     * value and the new one.
++     *
++     * @param damage The raw amount of damage caused by the event
++     */
++    public void setDamage(double damage) {
++        // These have to happen in the same order as the server calculates them, keep the enum sorted
++        double remaining = damage;
++        double oldRemaining = getDamage(DamageModifier.BASE);
++        for (DamageModifier modifier : MODIFIERS) {
++            if (!isApplicable(modifier)) {
++                continue;
++            }
++
++            Function<? super Double, Double> modifierFunction = modifierFunctions.get(modifier);
++            double newVanilla = modifierFunction.apply(remaining);
++            double oldVanilla = modifierFunction.apply(oldRemaining);
++            double difference = oldVanilla - newVanilla;
++
++            // Don't allow value to cross zero, assume zero values should be negative
++            double old = getDamage(modifier);
++            if (old > 0) {
++                setDamage(modifier, Math.max(0, old - difference));
++            } else {
++                setDamage(modifier, Math.min(0, old - difference));
++            }
++            remaining += newVanilla;
++            oldRemaining += oldVanilla;
++        }
++
++        setDamage(DamageModifier.BASE, damage);
++    }
++
++    /**
++     * This method exists for legacy reasons to provide backwards
++     * compatibility. It will not exist at runtime and should not be used
++     * under any circumstances.
++     * 
++     * @param damage the new damage value
++     */
++    @Deprecated
++    public void _INVALID_setDamage(int damage) {
++        setDamage(damage);
++    }
++
++    /**
++     * Gets the cause of the damage.
++     *
++     * @return A DamageCause value detailing the cause of the damage.
++     */
++    public DamageCause getCause() {
++        return cause;
++    }
++
++    @Override
++    public HandlerList getHandlers() {
++        return handlers;
++    }
++
++    public static HandlerList getHandlerList() {
++        return handlers;
++    }
++
++    /**
++     * An enum to specify the types of modifier
++     */
++    public enum DamageModifier {
++        /**
++         * This represents the amount of damage being done, also known as the
++         * raw {@link EntityDamageEvent#getDamage()}.
++         */
++        BASE,
++        /**
++         * This represents the damage reduced by a wearing a helmet when hit
++         * by a falling block.
++         */
++        HARD_HAT,
++        /**
++         * This represents  the damage reduction caused by blocking, only present for
++         * {@link Player Players}.
++         */
++        BLOCKING,
++        /**
++         * This represents the damage reduction caused by wearing armor.
++         */
++        ARMOR,
++        /**
++         * This represents the damage reduction caused by the Resistance potion effect.
++         */
++        RESISTANCE,
++        /**
++         * This represents the damage reduction caused by the combination of:
++         * <ul>
++         * <li>
++         *     Armor enchantments
++         * </li><li>
++         *     Witch's potion resistance
++         * </li>
++         * </ul>
++         */
++        MAGIC,
++        /**
++         * This represents the damage reduction caused by the absorption potion
++         * effect.
++         */
++        ABSORPTION,
++        ;
++    }
++
++    /**
++     * An enum to specify the cause of the damage
++     */
++    public enum DamageCause {
++
++        /**
++         * Damage caused when an entity contacts a block such as a Cactus.
++         * <p>
++         * Damage: 1 (Cactus)
++         */
++        CONTACT,
++        /**
++         * Damage caused when an entity attacks another entity.
++         * <p>
++         * Damage: variable
++         */
++        ENTITY_ATTACK,
++        /**
++         * Damage caused when attacked by a projectile.
++         * <p>
++         * Damage: variable
++         */
++        PROJECTILE,
++        /**
++         * Damage caused by being put in a block
++         * <p>
++         * Damage: 1
++         */
++        SUFFOCATION,
++        /**
++         * Damage caused when an entity falls a distance greater than 3 blocks
++         * <p>
++         * Damage: fall height - 3.0
++         */
++        FALL,
++        /**
++         * Damage caused by direct exposure to fire
++         * <p>
++         * Damage: 1
++         */
++        FIRE,
++        /**
++         * Damage caused due to burns caused by fire
++         * <p>
++         * Damage: 1
++         */
++        FIRE_TICK,
++        /**
++         * Damage caused due to a snowman melting
++         * <p>
++         * Damage: 1
++         */
++        MELTING,
++        /**
++         * Damage caused by direct exposure to lava
++         * <p>
++         * Damage: 4
++         */
++        LAVA,
++        /**
++         * Damage caused by running out of air while in water
++         * <p>
++         * Damage: 2
++         */
++        DROWNING,
++        /**
++         * Damage caused by being in the area when a block explodes.
++         * <p>
++         * Damage: variable
++         */
++        BLOCK_EXPLOSION,
++        /**
++         * Damage caused by being in the area when an entity, such as a
++         * Creeper, explodes.
++         * <p>
++         * Damage: variable
++         */
++        ENTITY_EXPLOSION,
++        /**
++         * Damage caused by falling into the void
++         * <p>
++         * Damage: 4 for players
++         */
++        VOID,
++        /**
++         * Damage caused by being struck by lightning
++         * <p>
++         * Damage: 5
++         */
++        LIGHTNING,
++        /**
++         * Damage caused by committing suicide using the command "/kill"
++         * <p>
++         * Damage: 1000
++         */
++        SUICIDE,
++        /**
++         * Damage caused by starving due to having an empty hunger bar
++         * <p>
++         * Damage: 1
++         */
++        STARVATION,
++        /**
++         * Damage caused due to an ongoing poison effect
++         * <p>
++         * Damage: 1
++         */
++        POISON,
++        /**
++         * Damage caused by being hit by a damage potion or spell
++         * <p>
++         * Damage: variable
++         */
++        MAGIC,
++        /**
++         * Damage caused by Wither potion effect
++         */
++        WITHER,
++        /**
++         * Damage caused by being hit by a falling block which deals damage
++         * <p>
++         * <b>Note:</b> Not every block deals damage
++         * <p>
++         * Damage: variable
++         */
++        FALLING_BLOCK,
++        /**
++         * Damage caused in retaliation to another attack by the Thorns
++         * enchantment.
++         * <p>
++         * Damage: 1-4 (Thorns)
++         */
++        THORNS,
++        /**
++         * Damage caused by a dragon breathing fire.
++         * <p>
++         * Damage: variable
++         */
++        DRAGON_BREATH,
++        /**
++         * Custom damage.
++         * <p>
++         * Damage: variable
++         */
++        CUSTOM,
++        /**
++         * Damage caused when an entity runs into a wall.
++         * <p>
++         * Damage: variable
++         */
++        FLY_INTO_WALL,
++        /**
++         * Damage caused when an entity steps on {@link Material#MAGMA}.
++         * <p>
++         * Damage: 1
++         */
++        HOT_FLOOR
++    }
++}
+diff --git a/src/main/java/org/bukkit/bukkit/inventory/ItemStack.java b/src/main/java/org/bukkit/bukkit/inventory/ItemStack.java
+new file mode 100644
+index 0000000..c412224
+--- /dev/null
++++ b/src/main/java/org/bukkit/bukkit/inventory/ItemStack.java
+@@ -0,0 +1,611 @@
++package org.bukkit.inventory;
++
++import com.google.common.collect.ImmutableMap;
++import java.util.LinkedHashMap;
++import java.util.Map;
++
++import org.apache.commons.lang.Validate;
++import org.bukkit.Bukkit;
++import org.bukkit.Material;
++import org.bukkit.Utility;
++import org.bukkit.configuration.serialization.ConfigurationSerializable;
++import org.bukkit.enchantments.Enchantment;
++import org.bukkit.inventory.meta.ItemMeta;
++import org.bukkit.material.MaterialData;
++
++/**
++ * Represents a stack of items
++ */
++public class ItemStack implements Cloneable, ConfigurationSerializable {
++    private int type = 0;
++    private int amount = 0;
++    private MaterialData data = null;
++    private short durability = 0;
++    private ItemMeta meta;
++
++    @Utility
++    protected ItemStack() {}
++
++    /**
++     * Defaults stack size to 1, with no extra data
++     *
++     * @param type item material id
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public ItemStack(final int type) {
++        this(type, 1);
++    }
++
++    /**
++     * Defaults stack size to 1, with no extra data
++     *
++     * @param type item material
++     */
++    public ItemStack(final Material type) {
++        this(type, 1);
++    }
++
++    /**
++     * An item stack with no extra data
++     *
++     * @param type item material id
++     * @param amount stack size
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public ItemStack(final int type, final int amount) {
++        this(type, amount, (short) 0);
++    }
++
++    /**
++     * An item stack with no extra data
++     *
++     * @param type item material
++     * @param amount stack size
++     */
++    public ItemStack(final Material type, final int amount) {
++        this(type.getId(), amount);
++    }
++
++    /**
++     * An item stack with the specified damage / durability
++     *
++     * @param type item material id
++     * @param amount stack size
++     * @param damage durability / damage
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public ItemStack(final int type, final int amount, final short damage) {
++        this.type = type;
++        this.amount = amount;
++        this.durability = damage;
++    }
++
++    /**
++     * An item stack with the specified damage / durabiltiy
++     *
++     * @param type item material
++     * @param amount stack size
++     * @param damage durability / damage
++     */
++    public ItemStack(final Material type, final int amount, final short damage) {
++        this(type.getId(), amount, damage);
++    }
++
++    /**
++     * @param type the raw type id
++     * @param amount the amount in the stack
++     * @param damage the damage value of the item
++     * @param data the data value or null
++     * @deprecated this method uses an ambiguous data byte object
++     */
++    @Deprecated
++    public ItemStack(final int type, final int amount, final short damage, final Byte data) {
++        this.type = type;
++        this.amount = amount;
++        this.durability = damage;
++        if (data != null) {
++            createData(data);
++            this.durability = data;
++        }
++    }
++
++    /**
++     * @param type the type
++     * @param amount the amount in the stack
++     * @param damage the damage value of the item
++     * @param data the data value or null
++     * @deprecated this method uses an ambiguous data byte object
++     */
++    @Deprecated
++    public ItemStack(final Material type, final int amount, final short damage, final Byte data) {
++        this(type.getId(), amount, damage, data);
++    }
++
++    /**
++     * Creates a new item stack derived from the specified stack
++     *
++     * @param stack the stack to copy
++     * @throws IllegalArgumentException if the specified stack is null or
++     *     returns an item meta not created by the item factory
++     */
++    public ItemStack(final ItemStack stack) throws IllegalArgumentException {
++        Validate.notNull(stack, "Cannot copy null stack");
++        this.type = stack.getTypeId();
++        this.amount = stack.getAmount();
++        this.durability = stack.getDurability();
++        this.data = stack.getData();
++        if (stack.hasItemMeta()) {
++            setItemMeta0(stack.getItemMeta(), getType0());
++        }
++    }
++
++    /**
++     * Gets the type of this item
++     *
++     * @return Type of the items in this stack
++     */
++    @Utility
++    public Material getType() {
++        return getType0(getTypeId());
++    }
++
++    private Material getType0() {
++        return getType0(this.type);
++    }
++
++    private static Material getType0(int id) {
++        Material material = Material.getMaterial(id);
++        return material == null ? Material.AIR : material;
++    }
++
++    /**
++     * Sets the type of this item
++     * <p>
++     * Note that in doing so you will reset the MaterialData for this stack
++     *
++     * @param type New type to set the items in this stack to
++     */
++    @Utility
++    public void setType(Material type) {
++        Validate.notNull(type, "Material cannot be null");
++        setTypeId(type.getId());
++    }
++
++    /**
++     * Gets the type id of this item
++     *
++     * @return Type Id of the items in this stack
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public int getTypeId() {
++        return type;
++    }
++
++    /**
++     * Sets the type id of this item
++     * <p>
++     * Note that in doing so you will reset the MaterialData for this stack
++     *
++     * @param type New type id to set the items in this stack to
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public void setTypeId(int type) {
++        this.type = type;
++        if (this.meta != null) {
++            this.meta = Bukkit.getItemFactory().asMetaFor(meta, getType0());
++        }
++        createData((byte) 0);
++    }
++
++    /**
++     * Gets the amount of items in this stack
++     *
++     * @return Amount of items in this stick
++     */
++    public int getAmount() {
++        return amount;
++    }
++
++    /**
++     * Sets the amount of items in this stack
++     *
++     * @param amount New amount of items in this stack
++     */
++    public void setAmount(int amount) {
++        this.amount = amount;
++    }
++
++    /**
++     * Gets the MaterialData for this stack of items
++     *
++     * @return MaterialData for this item
++     */
++    public MaterialData getData() {
++        Material mat = getType();
++        if (data == null && mat != null && mat.getData() != null) {
++            data = mat.getNewData((byte) this.getDurability());
++        }
++
++        return data;
++    }
++
++    /**
++     * Sets the MaterialData for this stack of items
++     *
++     * @param data New MaterialData for this item
++     */
++    public void setData(MaterialData data) {
++        Material mat = getType();
++
++        if (data == null || mat == null || mat.getData() == null) {
++            this.data = data;
++        } else {
++            if ((data.getClass() == mat.getData()) || (data.getClass() == MaterialData.class)) {
++                this.data = data;
++            } else {
++                throw new IllegalArgumentException("Provided data is not of type " + mat.getData().getName() + ", found " + data.getClass().getName());
++            }
++        }
++    }
++
++    /**
++     * Sets the durability of this item
++     *
++     * @param durability Durability of this item
++     */
++    public void setDurability(final short durability) {
++        this.durability = durability;
++    }
++
++    /**
++     * Gets the durability of this item
++     *
++     * @return Durability of this item
++     */
++    public short getDurability() {
++        return durability;
++    }
++
++    /**
++     * Get the maximum stacksize for the material hold in this ItemStack.
++     * (Returns -1 if it has no idea)
++     *
++     * @return The maximum you can stack this material to.
++     */
++    @Utility
++    public int getMaxStackSize() {
++        Material material = getType();
++        if (material != null) {
++            return material.getMaxStackSize();
++        }
++        return -1;
++    }
++
++    private void createData(final byte data) {
++        Material mat = Material.getMaterial(type);
++
++        if (mat == null) {
++            this.data = new MaterialData(type, data);
++        } else {
++            this.data = mat.getNewData(data);
++        }
++    }
++
++    @Override
++    @Utility
++    public String toString() {
++        StringBuilder toString = new StringBuilder("ItemStack{").append(getType().name()).append(" x ").append(getAmount());
++        if (hasItemMeta()) {
++            toString.append(", ").append(getItemMeta());
++        }
++        return toString.append('}').toString();
++    }
++
++    @Override
++    @Utility
++    public boolean equals(Object obj) {
++        if (this == obj) {
++            return true;
++        }
++        if (!(obj instanceof ItemStack)) {
++            return false;
++        }
++
++        ItemStack stack = (ItemStack) obj;
++        return getAmount() == stack.getAmount() && isSimilar(stack);
++    }
++
++    /**
++     * This method is the same as equals, but does not consider stack size
++     * (amount).
++     *
++     * @param stack the item stack to compare to
++     * @return true if the two stacks are equal, ignoring the amount
++     */
++    @Utility
++    public boolean isSimilar(ItemStack stack) {
++        if (stack == null) {
++            return false;
++        }
++        if (stack == this) {
++            return true;
++        }
++        return getTypeId() == stack.getTypeId() && getDurability() == stack.getDurability() && hasItemMeta() == stack.hasItemMeta() && (hasItemMeta() ? Bukkit.getItemFactory().equals(getItemMeta(), stack.getItemMeta()) : true);
++    }
++
++    @Override
++    public ItemStack clone() {
++        try {
++            ItemStack itemStack = (ItemStack) super.clone();
++
++            if (this.meta != null) {
++                itemStack.meta = this.meta.clone();
++            }
++
++            if (this.data != null) {
++                itemStack.data = this.data.clone();
++            }
++
++            return itemStack;
++        } catch (CloneNotSupportedException e) {
++            throw new Error(e);
++        }
++    }
++
++    @Override
++    @Utility
++    public int hashCode() { // Torch
++        int hash = 1;
++
++        hash = hash * 31 + getTypeId();
++        hash = hash * 31 + getAmount();
++        hash = hash * 31 + (getDurability() & 0xffff);
++        hash = hash * 31 + (hasItemMeta() ? (meta == null ? getItemMeta().hashCode() : meta.hashCode()) : 0);
++
++        return hash;
++    }
++
++    /**
++     * Checks if this ItemStack contains the given {@link Enchantment}
++     *
++     * @param ench Enchantment to test
++     * @return True if this has the given enchantment
++     */
++    public boolean containsEnchantment(Enchantment ench) {
++        return meta == null ? false : meta.hasEnchant(ench);
++    }
++
++    /**
++     * Gets the level of the specified enchantment on this item stack
++     *
++     * @param ench Enchantment to check
++     * @return Level of the enchantment, or 0
++     */
++    public int getEnchantmentLevel(Enchantment ench) {
++        return meta == null ? 0 : meta.getEnchantLevel(ench);
++    }
++
++    /**
++     * Gets a map containing all enchantments and their levels on this item.
++     *
++     * @return Map of enchantments.
++     */
++    public Map<Enchantment, Integer> getEnchantments() {
++        return meta == null ? ImmutableMap.<Enchantment, Integer>of() : meta.getEnchants();
++    }
++
++    /**
++     * Adds the specified enchantments to this item stack.
++     * <p>
++     * This method is the same as calling {@link
++     * #addEnchantment(org.bukkit.enchantments.Enchantment, int)} for each
++     * element of the map.
++     *
++     * @param enchantments Enchantments to add
++     * @throws IllegalArgumentException if the specified enchantments is null
++     * @throws IllegalArgumentException if any specific enchantment or level
++     *     is null. <b>Warning</b>: Some enchantments may be added before this
++     *     exception is thrown.
++     */
++    @Utility
++    public void addEnchantments(Map<Enchantment, Integer> enchantments) {
++        Validate.notNull(enchantments, "Enchantments cannot be null");
++        for (Map.Entry<Enchantment, Integer> entry : enchantments.entrySet()) {
++            addEnchantment(entry.getKey(), entry.getValue());
++        }
++    }
++
++    /**
++     * Adds the specified {@link Enchantment} to this item stack.
++     * <p>
++     * If this item stack already contained the given enchantment (at any
++     * level), it will be replaced.
++     *
++     * @param ench Enchantment to add
++     * @param level Level of the enchantment
++     * @throws IllegalArgumentException if enchantment null, or enchantment is
++     *     not applicable
++     */
++    @Utility
++    public void addEnchantment(Enchantment ench, int level) {
++        Validate.notNull(ench, "Enchantment cannot be null");
++        if ((level < ench.getStartLevel()) || (level > ench.getMaxLevel())) {
++            throw new IllegalArgumentException("Enchantment level is either too low or too high (given " + level + ", bounds are " + ench.getStartLevel() + " to " + ench.getMaxLevel() + ")");
++        } else if (!ench.canEnchantItem(this)) {
++            throw new IllegalArgumentException("Specified enchantment cannot be applied to this itemstack");
++        }
++
++        addUnsafeEnchantment(ench, level);
++    }
++
++    /**
++     * Adds the specified enchantments to this item stack in an unsafe manner.
++     * <p>
++     * This method is the same as calling {@link
++     * #addUnsafeEnchantment(org.bukkit.enchantments.Enchantment, int)} for
++     * each element of the map.
++     *
++     * @param enchantments Enchantments to add
++     */
++    @Utility
++    public void addUnsafeEnchantments(Map<Enchantment, Integer> enchantments) {
++        for (Map.Entry<Enchantment, Integer> entry : enchantments.entrySet()) {
++            addUnsafeEnchantment(entry.getKey(), entry.getValue());
++        }
++    }
++
++    /**
++     * Adds the specified {@link Enchantment} to this item stack.
++     * <p>
++     * If this item stack already contained the given enchantment (at any
++     * level), it will be replaced.
++     * <p>
++     * This method is unsafe and will ignore level restrictions or item type.
++     * Use at your own discretion.
++     *
++     * @param ench Enchantment to add
++     * @param level Level of the enchantment
++     */
++    public void addUnsafeEnchantment(Enchantment ench, int level) {
++        (meta == null ? meta = Bukkit.getItemFactory().getItemMeta(getType0()) : meta).addEnchant(ench, level, true);
++    }
++
++    /**
++     * Removes the specified {@link Enchantment} if it exists on this
++     * ItemStack
++     *
++     * @param ench Enchantment to remove
++     * @return Previous level, or 0
++     */
++    public int removeEnchantment(Enchantment ench) {
++        int level = getEnchantmentLevel(ench);
++        if (level == 0 || meta == null) {
++            return level;
++        }
++        meta.removeEnchant(ench);
++        return level;
++    }
++
++    @Utility
++    public Map<String, Object> serialize() {
++        Map<String, Object> result = new LinkedHashMap<String, Object>();
++
++        result.put("type", getType().name());
++
++        if (getDurability() != 0) {
++            result.put("damage", getDurability());
++        }
++
++        if (getAmount() != 1) {
++            result.put("amount", getAmount());
++        }
++
++        ItemMeta meta = getItemMeta();
++        if (!Bukkit.getItemFactory().equals(meta, null)) {
++            result.put("meta", meta);
++        }
++
++        return result;
++    }
++
++    /**
++     * Required method for configuration serialization
++     *
++     * @param args map to deserialize
++     * @return deserialized item stack
++     * @see ConfigurationSerializable
++     */
++    public static ItemStack deserialize(Map<String, Object> args) {
++        Material type = Material.getMaterial((String) args.get("type"));
++        short damage = 0;
++        int amount = 1;
++
++        if (args.containsKey("damage")) {
++            damage = ((Number) args.get("damage")).shortValue();
++        }
++
++        if (args.containsKey("amount")) {
++            amount = ((Number) args.get("amount")).intValue();
++        }
++
++        ItemStack result = new ItemStack(type, amount, damage);
++
++        if (args.containsKey("enchantments")) { // Backward compatiblity, @deprecated
++            Object raw = args.get("enchantments");
++
++            if (raw instanceof Map) {
++                Map<?, ?> map = (Map<?, ?>) raw;
++
++                for (Map.Entry<?, ?> entry : map.entrySet()) {
++                    Enchantment enchantment = Enchantment.getByName(entry.getKey().toString());
++
++                    if ((enchantment != null) && (entry.getValue() instanceof Integer)) {
++                        result.addUnsafeEnchantment(enchantment, (Integer) entry.getValue());
++                    }
++                }
++            }
++        } else if (args.containsKey("meta")) { // We cannot and will not have meta when enchantments (pre-ItemMeta) exist
++            Object raw = args.get("meta");
++            if (raw instanceof ItemMeta) {
++                result.setItemMeta((ItemMeta) raw);
++            }
++        }
++
++        return result;
++    }
++
++    /**
++     * Get a copy of this ItemStack's {@link ItemMeta}.
++     *
++     * @return a copy of the current ItemStack's ItemData
++     */
++    public ItemMeta getItemMeta() {
++        return this.meta == null ? Bukkit.getItemFactory().getItemMeta(getType0()) : this.meta.clone();
++    }
++
++    /**
++     * Checks to see if any meta data has been defined.
++     *
++     * @return Returns true if some meta data has been set for this item
++     */
++    public boolean hasItemMeta() {
++        return !Bukkit.getItemFactory().equals(meta, null);
++    }
++
++    /**
++     * Set the ItemMeta of this ItemStack.
++     *
++     * @param itemMeta new ItemMeta, or null to indicate meta data be cleared.
++     * @return True if successfully applied ItemMeta, see {@link
++     *     ItemFactory#isApplicable(ItemMeta, ItemStack)}
++     * @throws IllegalArgumentException if the item meta was not created by
++     *     the {@link ItemFactory}
++     */
++    public boolean setItemMeta(ItemMeta itemMeta) {
++        return setItemMeta0(itemMeta, getType0());
++    }
++
++    /*
++     * Cannot be overridden, so it's safe for constructor call
++     */
++    private boolean setItemMeta0(ItemMeta itemMeta, Material material) {
++        if (itemMeta == null) {
++            this.meta = null;
++            return true;
++        }
++        if (!Bukkit.getItemFactory().isApplicable(itemMeta, material)) {
++            return false;
++        }
++        this.meta = Bukkit.getItemFactory().asMetaFor(itemMeta, material);
++        if (this.meta == itemMeta) {
++            this.meta = itemMeta.clone();
++        }
++
++        return true;
++    }
++}
+diff --git a/src/main/java/org/bukkit/enchantments/EnchantmentTarget.java b/src/main/java/org/bukkit/enchantments/EnchantmentTarget.java
+deleted file mode 100644
+index dee2350..0000000
+--- a/src/main/java/org/bukkit/enchantments/EnchantmentTarget.java
++++ /dev/null
+@@ -1,182 +0,0 @@
+-package org.bukkit.enchantments;
+-
+-import org.bukkit.Material;
+-import org.bukkit.inventory.ItemStack;
+-
+-/**
+- * Represents the applicable target for a {@link Enchantment}
+- */
+-public enum EnchantmentTarget {
+-    /**
+-     * Allows the Enchantment to be placed on all items
+-     */
+-    ALL {
+-        @Override
+-        public boolean includes(Material item) {
+-            return true;
+-        }
+-    },
+-
+-    /**
+-     * Allows the Enchantment to be placed on armor
+-     */
+-    ARMOR {
+-        @Override
+-        public boolean includes(Material item) {
+-            return ARMOR_FEET.includes(item)
+-                || ARMOR_LEGS.includes(item)
+-                || ARMOR_HEAD.includes(item)
+-                || ARMOR_TORSO.includes(item);
+-        }
+-    },
+-
+-    /**
+-     * Allows the Enchantment to be placed on feet slot armor
+-     */
+-    ARMOR_FEET {
+-        @Override
+-        public boolean includes(Material item) {
+-            return item.equals(Material.LEATHER_BOOTS)
+-                || item.equals(Material.CHAINMAIL_BOOTS)
+-                || item.equals(Material.IRON_BOOTS)
+-                || item.equals(Material.DIAMOND_BOOTS)
+-                || item.equals(Material.GOLD_BOOTS);
+-        }
+-    },
+-
+-    /**
+-     * Allows the Enchantment to be placed on leg slot armor
+-     */
+-    ARMOR_LEGS {
+-        @Override
+-        public boolean includes(Material item) {
+-            return item.equals(Material.LEATHER_LEGGINGS)
+-                || item.equals(Material.CHAINMAIL_LEGGINGS)
+-                || item.equals(Material.IRON_LEGGINGS)
+-                || item.equals(Material.DIAMOND_LEGGINGS)
+-                || item.equals(Material.GOLD_LEGGINGS);
+-        }
+-    },
+-
+-    /**
+-     * Allows the Enchantment to be placed on torso slot armor
+-     */
+-    ARMOR_TORSO {
+-        @Override
+-        public boolean includes(Material item) {
+-            return item.equals(Material.LEATHER_CHESTPLATE)
+-                || item.equals(Material.CHAINMAIL_CHESTPLATE)
+-                || item.equals(Material.IRON_CHESTPLATE)
+-                || item.equals(Material.DIAMOND_CHESTPLATE)
+-                || item.equals(Material.GOLD_CHESTPLATE);
+-        }
+-    },
+-
+-    /**
+-     * Allows the Enchantment to be placed on head slot armor
+-     */
+-    ARMOR_HEAD {
+-        @Override
+-        public boolean includes(Material item) {
+-            return item.equals(Material.LEATHER_HELMET)
+-                || item.equals(Material.CHAINMAIL_HELMET)
+-                || item.equals(Material.DIAMOND_HELMET)
+-                || item.equals(Material.IRON_HELMET)
+-                || item.equals(Material.GOLD_HELMET);
+-        }
+-    },
+-
+-    /**
+-     * Allows the Enchantment to be placed on weapons (swords)
+-     */
+-    WEAPON {
+-        @Override
+-        public boolean includes(Material item) {
+-            return item.equals(Material.WOOD_SWORD)
+-                || item.equals(Material.STONE_SWORD)
+-                || item.equals(Material.IRON_SWORD)
+-                || item.equals(Material.DIAMOND_SWORD)
+-                || item.equals(Material.GOLD_SWORD);
+-        }
+-    },
+-
+-    /**
+-     * Allows the Enchantment to be placed on tools (spades, pickaxe, hoes,
+-     * axes)
+-     */
+-    TOOL {
+-        @Override
+-        public boolean includes(Material item) {
+-            return item.equals(Material.WOOD_SPADE)
+-                || item.equals(Material.STONE_SPADE)
+-                || item.equals(Material.IRON_SPADE)
+-                || item.equals(Material.DIAMOND_SPADE)
+-                || item.equals(Material.GOLD_SPADE)
+-                || item.equals(Material.WOOD_PICKAXE)
+-                || item.equals(Material.STONE_PICKAXE)
+-                || item.equals(Material.IRON_PICKAXE)
+-                || item.equals(Material.DIAMOND_PICKAXE)
+-                || item.equals(Material.GOLD_PICKAXE)
+-                || item.equals(Material.WOOD_HOE)         // NOTE: No vanilla enchantments for this
+-                || item.equals(Material.STONE_HOE)        // NOTE: No vanilla enchantments for this
+-                || item.equals(Material.IRON_HOE)         // NOTE: No vanilla enchantments for this
+-                || item.equals(Material.DIAMOND_HOE)      // NOTE: No vanilla enchantments for this
+-                || item.equals(Material.GOLD_HOE)         // NOTE: No vanilla enchantments for this
+-                || item.equals(Material.WOOD_AXE)
+-                || item.equals(Material.STONE_AXE)
+-                || item.equals(Material.IRON_AXE)
+-                || item.equals(Material.DIAMOND_AXE)
+-                || item.equals(Material.GOLD_AXE)
+-                || item.equals(Material.SHEARS)           // NOTE: No vanilla enchantments for this
+-                || item.equals(Material.FLINT_AND_STEEL); // NOTE: No vanilla enchantments for this
+-        }
+-    },
+-
+-    /**
+-     * Allows the Enchantment to be placed on bows.
+-     */
+-    BOW {
+-        @Override
+-        public boolean includes(Material item) {
+-            return item.equals(Material.BOW);
+-        }
+-    },
+-
+-    /**
+-     * Allows the Enchantment to be placed on fishing rods.
+-     */
+-    FISHING_ROD {
+-        @Override
+-        public boolean includes(Material item) {
+-            return item.equals(Material.FISHING_ROD);
+-        }
+-    },
+-
+-    /**
+-     * Allows the enchantment to be placed on items with durability.
+-     */
+-    BREAKABLE {
+-        @Override
+-        public boolean includes(Material item) {
+-            return item.getMaxDurability() > 0 && item.getMaxStackSize() == 1;
+-        }
+-    };
+-
+-    /**
+-     * Check whether this target includes the specified item.
+-     *
+-     * @param item The item to check
+-     * @return True if the target includes the item
+-     */
+-    public abstract boolean includes(Material item);
+-
+-    /**
+-     * Check whether this target includes the specified item.
+-     *
+-     * @param item The item to check
+-     * @return True if the target includes the item
+-     */
+-    public boolean includes(ItemStack item) {
+-        return includes(item.getType());
+-    }
+-}
+diff --git a/src/main/java/org/bukkit/inventory/ItemStack.java b/src/main/java/org/bukkit/inventory/ItemStack.java
+deleted file mode 100644
+index c412224..0000000
+--- a/src/main/java/org/bukkit/inventory/ItemStack.java
++++ /dev/null
+@@ -1,611 +0,0 @@
+-package org.bukkit.inventory;
+-
+-import com.google.common.collect.ImmutableMap;
+-import java.util.LinkedHashMap;
+-import java.util.Map;
+-
+-import org.apache.commons.lang.Validate;
+-import org.bukkit.Bukkit;
+-import org.bukkit.Material;
+-import org.bukkit.Utility;
+-import org.bukkit.configuration.serialization.ConfigurationSerializable;
+-import org.bukkit.enchantments.Enchantment;
+-import org.bukkit.inventory.meta.ItemMeta;
+-import org.bukkit.material.MaterialData;
+-
+-/**
+- * Represents a stack of items
+- */
+-public class ItemStack implements Cloneable, ConfigurationSerializable {
+-    private int type = 0;
+-    private int amount = 0;
+-    private MaterialData data = null;
+-    private short durability = 0;
+-    private ItemMeta meta;
+-
+-    @Utility
+-    protected ItemStack() {}
+-
+-    /**
+-     * Defaults stack size to 1, with no extra data
+-     *
+-     * @param type item material id
+-     * @deprecated Magic value
+-     */
+-    @Deprecated
+-    public ItemStack(final int type) {
+-        this(type, 1);
+-    }
+-
+-    /**
+-     * Defaults stack size to 1, with no extra data
+-     *
+-     * @param type item material
+-     */
+-    public ItemStack(final Material type) {
+-        this(type, 1);
+-    }
+-
+-    /**
+-     * An item stack with no extra data
+-     *
+-     * @param type item material id
+-     * @param amount stack size
+-     * @deprecated Magic value
+-     */
+-    @Deprecated
+-    public ItemStack(final int type, final int amount) {
+-        this(type, amount, (short) 0);
+-    }
+-
+-    /**
+-     * An item stack with no extra data
+-     *
+-     * @param type item material
+-     * @param amount stack size
+-     */
+-    public ItemStack(final Material type, final int amount) {
+-        this(type.getId(), amount);
+-    }
+-
+-    /**
+-     * An item stack with the specified damage / durability
+-     *
+-     * @param type item material id
+-     * @param amount stack size
+-     * @param damage durability / damage
+-     * @deprecated Magic value
+-     */
+-    @Deprecated
+-    public ItemStack(final int type, final int amount, final short damage) {
+-        this.type = type;
+-        this.amount = amount;
+-        this.durability = damage;
+-    }
+-
+-    /**
+-     * An item stack with the specified damage / durabiltiy
+-     *
+-     * @param type item material
+-     * @param amount stack size
+-     * @param damage durability / damage
+-     */
+-    public ItemStack(final Material type, final int amount, final short damage) {
+-        this(type.getId(), amount, damage);
+-    }
+-
+-    /**
+-     * @param type the raw type id
+-     * @param amount the amount in the stack
+-     * @param damage the damage value of the item
+-     * @param data the data value or null
+-     * @deprecated this method uses an ambiguous data byte object
+-     */
+-    @Deprecated
+-    public ItemStack(final int type, final int amount, final short damage, final Byte data) {
+-        this.type = type;
+-        this.amount = amount;
+-        this.durability = damage;
+-        if (data != null) {
+-            createData(data);
+-            this.durability = data;
+-        }
+-    }
+-
+-    /**
+-     * @param type the type
+-     * @param amount the amount in the stack
+-     * @param damage the damage value of the item
+-     * @param data the data value or null
+-     * @deprecated this method uses an ambiguous data byte object
+-     */
+-    @Deprecated
+-    public ItemStack(final Material type, final int amount, final short damage, final Byte data) {
+-        this(type.getId(), amount, damage, data);
+-    }
+-
+-    /**
+-     * Creates a new item stack derived from the specified stack
+-     *
+-     * @param stack the stack to copy
+-     * @throws IllegalArgumentException if the specified stack is null or
+-     *     returns an item meta not created by the item factory
+-     */
+-    public ItemStack(final ItemStack stack) throws IllegalArgumentException {
+-        Validate.notNull(stack, "Cannot copy null stack");
+-        this.type = stack.getTypeId();
+-        this.amount = stack.getAmount();
+-        this.durability = stack.getDurability();
+-        this.data = stack.getData();
+-        if (stack.hasItemMeta()) {
+-            setItemMeta0(stack.getItemMeta(), getType0());
+-        }
+-    }
+-
+-    /**
+-     * Gets the type of this item
+-     *
+-     * @return Type of the items in this stack
+-     */
+-    @Utility
+-    public Material getType() {
+-        return getType0(getTypeId());
+-    }
+-
+-    private Material getType0() {
+-        return getType0(this.type);
+-    }
+-
+-    private static Material getType0(int id) {
+-        Material material = Material.getMaterial(id);
+-        return material == null ? Material.AIR : material;
+-    }
+-
+-    /**
+-     * Sets the type of this item
+-     * <p>
+-     * Note that in doing so you will reset the MaterialData for this stack
+-     *
+-     * @param type New type to set the items in this stack to
+-     */
+-    @Utility
+-    public void setType(Material type) {
+-        Validate.notNull(type, "Material cannot be null");
+-        setTypeId(type.getId());
+-    }
+-
+-    /**
+-     * Gets the type id of this item
+-     *
+-     * @return Type Id of the items in this stack
+-     * @deprecated Magic value
+-     */
+-    @Deprecated
+-    public int getTypeId() {
+-        return type;
+-    }
+-
+-    /**
+-     * Sets the type id of this item
+-     * <p>
+-     * Note that in doing so you will reset the MaterialData for this stack
+-     *
+-     * @param type New type id to set the items in this stack to
+-     * @deprecated Magic value
+-     */
+-    @Deprecated
+-    public void setTypeId(int type) {
+-        this.type = type;
+-        if (this.meta != null) {
+-            this.meta = Bukkit.getItemFactory().asMetaFor(meta, getType0());
+-        }
+-        createData((byte) 0);
+-    }
+-
+-    /**
+-     * Gets the amount of items in this stack
+-     *
+-     * @return Amount of items in this stick
+-     */
+-    public int getAmount() {
+-        return amount;
+-    }
+-
+-    /**
+-     * Sets the amount of items in this stack
+-     *
+-     * @param amount New amount of items in this stack
+-     */
+-    public void setAmount(int amount) {
+-        this.amount = amount;
+-    }
+-
+-    /**
+-     * Gets the MaterialData for this stack of items
+-     *
+-     * @return MaterialData for this item
+-     */
+-    public MaterialData getData() {
+-        Material mat = getType();
+-        if (data == null && mat != null && mat.getData() != null) {
+-            data = mat.getNewData((byte) this.getDurability());
+-        }
+-
+-        return data;
+-    }
+-
+-    /**
+-     * Sets the MaterialData for this stack of items
+-     *
+-     * @param data New MaterialData for this item
+-     */
+-    public void setData(MaterialData data) {
+-        Material mat = getType();
+-
+-        if (data == null || mat == null || mat.getData() == null) {
+-            this.data = data;
+-        } else {
+-            if ((data.getClass() == mat.getData()) || (data.getClass() == MaterialData.class)) {
+-                this.data = data;
+-            } else {
+-                throw new IllegalArgumentException("Provided data is not of type " + mat.getData().getName() + ", found " + data.getClass().getName());
+-            }
+-        }
+-    }
+-
+-    /**
+-     * Sets the durability of this item
+-     *
+-     * @param durability Durability of this item
+-     */
+-    public void setDurability(final short durability) {
+-        this.durability = durability;
+-    }
+-
+-    /**
+-     * Gets the durability of this item
+-     *
+-     * @return Durability of this item
+-     */
+-    public short getDurability() {
+-        return durability;
+-    }
+-
+-    /**
+-     * Get the maximum stacksize for the material hold in this ItemStack.
+-     * (Returns -1 if it has no idea)
+-     *
+-     * @return The maximum you can stack this material to.
+-     */
+-    @Utility
+-    public int getMaxStackSize() {
+-        Material material = getType();
+-        if (material != null) {
+-            return material.getMaxStackSize();
+-        }
+-        return -1;
+-    }
+-
+-    private void createData(final byte data) {
+-        Material mat = Material.getMaterial(type);
+-
+-        if (mat == null) {
+-            this.data = new MaterialData(type, data);
+-        } else {
+-            this.data = mat.getNewData(data);
+-        }
+-    }
+-
+-    @Override
+-    @Utility
+-    public String toString() {
+-        StringBuilder toString = new StringBuilder("ItemStack{").append(getType().name()).append(" x ").append(getAmount());
+-        if (hasItemMeta()) {
+-            toString.append(", ").append(getItemMeta());
+-        }
+-        return toString.append('}').toString();
+-    }
+-
+-    @Override
+-    @Utility
+-    public boolean equals(Object obj) {
+-        if (this == obj) {
+-            return true;
+-        }
+-        if (!(obj instanceof ItemStack)) {
+-            return false;
+-        }
+-
+-        ItemStack stack = (ItemStack) obj;
+-        return getAmount() == stack.getAmount() && isSimilar(stack);
+-    }
+-
+-    /**
+-     * This method is the same as equals, but does not consider stack size
+-     * (amount).
+-     *
+-     * @param stack the item stack to compare to
+-     * @return true if the two stacks are equal, ignoring the amount
+-     */
+-    @Utility
+-    public boolean isSimilar(ItemStack stack) {
+-        if (stack == null) {
+-            return false;
+-        }
+-        if (stack == this) {
+-            return true;
+-        }
+-        return getTypeId() == stack.getTypeId() && getDurability() == stack.getDurability() && hasItemMeta() == stack.hasItemMeta() && (hasItemMeta() ? Bukkit.getItemFactory().equals(getItemMeta(), stack.getItemMeta()) : true);
+-    }
+-
+-    @Override
+-    public ItemStack clone() {
+-        try {
+-            ItemStack itemStack = (ItemStack) super.clone();
+-
+-            if (this.meta != null) {
+-                itemStack.meta = this.meta.clone();
+-            }
+-
+-            if (this.data != null) {
+-                itemStack.data = this.data.clone();
+-            }
+-
+-            return itemStack;
+-        } catch (CloneNotSupportedException e) {
+-            throw new Error(e);
+-        }
+-    }
+-
+-    @Override
+-    @Utility
+-    public int hashCode() { // Torch
+-        int hash = 1;
+-
+-        hash = hash * 31 + getTypeId();
+-        hash = hash * 31 + getAmount();
+-        hash = hash * 31 + (getDurability() & 0xffff);
+-        hash = hash * 31 + (hasItemMeta() ? (meta == null ? getItemMeta().hashCode() : meta.hashCode()) : 0);
+-
+-        return hash;
+-    }
+-
+-    /**
+-     * Checks if this ItemStack contains the given {@link Enchantment}
+-     *
+-     * @param ench Enchantment to test
+-     * @return True if this has the given enchantment
+-     */
+-    public boolean containsEnchantment(Enchantment ench) {
+-        return meta == null ? false : meta.hasEnchant(ench);
+-    }
+-
+-    /**
+-     * Gets the level of the specified enchantment on this item stack
+-     *
+-     * @param ench Enchantment to check
+-     * @return Level of the enchantment, or 0
+-     */
+-    public int getEnchantmentLevel(Enchantment ench) {
+-        return meta == null ? 0 : meta.getEnchantLevel(ench);
+-    }
+-
+-    /**
+-     * Gets a map containing all enchantments and their levels on this item.
+-     *
+-     * @return Map of enchantments.
+-     */
+-    public Map<Enchantment, Integer> getEnchantments() {
+-        return meta == null ? ImmutableMap.<Enchantment, Integer>of() : meta.getEnchants();
+-    }
+-
+-    /**
+-     * Adds the specified enchantments to this item stack.
+-     * <p>
+-     * This method is the same as calling {@link
+-     * #addEnchantment(org.bukkit.enchantments.Enchantment, int)} for each
+-     * element of the map.
+-     *
+-     * @param enchantments Enchantments to add
+-     * @throws IllegalArgumentException if the specified enchantments is null
+-     * @throws IllegalArgumentException if any specific enchantment or level
+-     *     is null. <b>Warning</b>: Some enchantments may be added before this
+-     *     exception is thrown.
+-     */
+-    @Utility
+-    public void addEnchantments(Map<Enchantment, Integer> enchantments) {
+-        Validate.notNull(enchantments, "Enchantments cannot be null");
+-        for (Map.Entry<Enchantment, Integer> entry : enchantments.entrySet()) {
+-            addEnchantment(entry.getKey(), entry.getValue());
+-        }
+-    }
+-
+-    /**
+-     * Adds the specified {@link Enchantment} to this item stack.
+-     * <p>
+-     * If this item stack already contained the given enchantment (at any
+-     * level), it will be replaced.
+-     *
+-     * @param ench Enchantment to add
+-     * @param level Level of the enchantment
+-     * @throws IllegalArgumentException if enchantment null, or enchantment is
+-     *     not applicable
+-     */
+-    @Utility
+-    public void addEnchantment(Enchantment ench, int level) {
+-        Validate.notNull(ench, "Enchantment cannot be null");
+-        if ((level < ench.getStartLevel()) || (level > ench.getMaxLevel())) {
+-            throw new IllegalArgumentException("Enchantment level is either too low or too high (given " + level + ", bounds are " + ench.getStartLevel() + " to " + ench.getMaxLevel() + ")");
+-        } else if (!ench.canEnchantItem(this)) {
+-            throw new IllegalArgumentException("Specified enchantment cannot be applied to this itemstack");
+-        }
+-
+-        addUnsafeEnchantment(ench, level);
+-    }
+-
+-    /**
+-     * Adds the specified enchantments to this item stack in an unsafe manner.
+-     * <p>
+-     * This method is the same as calling {@link
+-     * #addUnsafeEnchantment(org.bukkit.enchantments.Enchantment, int)} for
+-     * each element of the map.
+-     *
+-     * @param enchantments Enchantments to add
+-     */
+-    @Utility
+-    public void addUnsafeEnchantments(Map<Enchantment, Integer> enchantments) {
+-        for (Map.Entry<Enchantment, Integer> entry : enchantments.entrySet()) {
+-            addUnsafeEnchantment(entry.getKey(), entry.getValue());
+-        }
+-    }
+-
+-    /**
+-     * Adds the specified {@link Enchantment} to this item stack.
+-     * <p>
+-     * If this item stack already contained the given enchantment (at any
+-     * level), it will be replaced.
+-     * <p>
+-     * This method is unsafe and will ignore level restrictions or item type.
+-     * Use at your own discretion.
+-     *
+-     * @param ench Enchantment to add
+-     * @param level Level of the enchantment
+-     */
+-    public void addUnsafeEnchantment(Enchantment ench, int level) {
+-        (meta == null ? meta = Bukkit.getItemFactory().getItemMeta(getType0()) : meta).addEnchant(ench, level, true);
+-    }
+-
+-    /**
+-     * Removes the specified {@link Enchantment} if it exists on this
+-     * ItemStack
+-     *
+-     * @param ench Enchantment to remove
+-     * @return Previous level, or 0
+-     */
+-    public int removeEnchantment(Enchantment ench) {
+-        int level = getEnchantmentLevel(ench);
+-        if (level == 0 || meta == null) {
+-            return level;
+-        }
+-        meta.removeEnchant(ench);
+-        return level;
+-    }
+-
+-    @Utility
+-    public Map<String, Object> serialize() {
+-        Map<String, Object> result = new LinkedHashMap<String, Object>();
+-
+-        result.put("type", getType().name());
+-
+-        if (getDurability() != 0) {
+-            result.put("damage", getDurability());
+-        }
+-
+-        if (getAmount() != 1) {
+-            result.put("amount", getAmount());
+-        }
+-
+-        ItemMeta meta = getItemMeta();
+-        if (!Bukkit.getItemFactory().equals(meta, null)) {
+-            result.put("meta", meta);
+-        }
+-
+-        return result;
+-    }
+-
+-    /**
+-     * Required method for configuration serialization
+-     *
+-     * @param args map to deserialize
+-     * @return deserialized item stack
+-     * @see ConfigurationSerializable
+-     */
+-    public static ItemStack deserialize(Map<String, Object> args) {
+-        Material type = Material.getMaterial((String) args.get("type"));
+-        short damage = 0;
+-        int amount = 1;
+-
+-        if (args.containsKey("damage")) {
+-            damage = ((Number) args.get("damage")).shortValue();
+-        }
+-
+-        if (args.containsKey("amount")) {
+-            amount = ((Number) args.get("amount")).intValue();
+-        }
+-
+-        ItemStack result = new ItemStack(type, amount, damage);
+-
+-        if (args.containsKey("enchantments")) { // Backward compatiblity, @deprecated
+-            Object raw = args.get("enchantments");
+-
+-            if (raw instanceof Map) {
+-                Map<?, ?> map = (Map<?, ?>) raw;
+-
+-                for (Map.Entry<?, ?> entry : map.entrySet()) {
+-                    Enchantment enchantment = Enchantment.getByName(entry.getKey().toString());
+-
+-                    if ((enchantment != null) && (entry.getValue() instanceof Integer)) {
+-                        result.addUnsafeEnchantment(enchantment, (Integer) entry.getValue());
+-                    }
+-                }
+-            }
+-        } else if (args.containsKey("meta")) { // We cannot and will not have meta when enchantments (pre-ItemMeta) exist
+-            Object raw = args.get("meta");
+-            if (raw instanceof ItemMeta) {
+-                result.setItemMeta((ItemMeta) raw);
+-            }
+-        }
+-
+-        return result;
+-    }
+-
+-    /**
+-     * Get a copy of this ItemStack's {@link ItemMeta}.
+-     *
+-     * @return a copy of the current ItemStack's ItemData
+-     */
+-    public ItemMeta getItemMeta() {
+-        return this.meta == null ? Bukkit.getItemFactory().getItemMeta(getType0()) : this.meta.clone();
+-    }
+-
+-    /**
+-     * Checks to see if any meta data has been defined.
+-     *
+-     * @return Returns true if some meta data has been set for this item
+-     */
+-    public boolean hasItemMeta() {
+-        return !Bukkit.getItemFactory().equals(meta, null);
+-    }
+-
+-    /**
+-     * Set the ItemMeta of this ItemStack.
+-     *
+-     * @param itemMeta new ItemMeta, or null to indicate meta data be cleared.
+-     * @return True if successfully applied ItemMeta, see {@link
+-     *     ItemFactory#isApplicable(ItemMeta, ItemStack)}
+-     * @throws IllegalArgumentException if the item meta was not created by
+-     *     the {@link ItemFactory}
+-     */
+-    public boolean setItemMeta(ItemMeta itemMeta) {
+-        return setItemMeta0(itemMeta, getType0());
+-    }
+-
+-    /*
+-     * Cannot be overridden, so it's safe for constructor call
+-     */
+-    private boolean setItemMeta0(ItemMeta itemMeta, Material material) {
+-        if (itemMeta == null) {
+-            this.meta = null;
+-            return true;
+-        }
+-        if (!Bukkit.getItemFactory().isApplicable(itemMeta, material)) {
+-            return false;
+-        }
+-        this.meta = Bukkit.getItemFactory().asMetaFor(itemMeta, material);
+-        if (this.meta == itemMeta) {
+-            this.meta = itemMeta.clone();
+-        }
+-
+-        return true;
+-    }
+-}
+-- 
+2.8.2.windows.1
+

@@ -1,4 +1,4 @@
-From 77c38a5e401f0ab421ee8181f900c6133591ad18 Mon Sep 17 00:00:00 2001
+From b4d0a182879cefb7e91ce6ad5bfc09f1c917140f Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 13:58:51 +0800
 Subject: [PATCH] SPIGOT-1283: Copy data directory on world import in case its

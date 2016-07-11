@@ -1,0 +1,60 @@
+From 04f649da8aba18a9ed90cd68753f4307c4bd3a8c Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 11 Jul 2016 17:09:12 +0800
+Subject: [PATCH] Fix queue sort
+
+
+diff --git a/src/main/java/net/minecraft/server/PlayerChunkMap.java b/src/main/java/net/minecraft/server/PlayerChunkMap.java
+index 7daa680..c26cc1c 100644
+--- a/src/main/java/net/minecraft/server/PlayerChunkMap.java
++++ b/src/main/java/net/minecraft/server/PlayerChunkMap.java
+@@ -26,7 +26,6 @@ import org.spigotmc.AsyncCatcher;
+ import com.google.common.collect.Maps;
+ import com.google.common.collect.Queues;
+ import java.util.Map;
+-import java.util.concurrent.ConcurrentLinkedQueue;
+ import java.util.Queue;
+ 
+ public class PlayerChunkMap {
+@@ -49,6 +48,7 @@ public class PlayerChunkMap {
+             return this.a((EntityPlayer) object);
+         }
+     };
++	
+     private final WorldServer world;
+     // TacoSpigot start - catch async access
+     private final List<EntityPlayer> managedPlayers = AsyncCatcher.catchAsyncUsage(Lists.newArrayList(), "list access PlayerChunkMap.managedPlayers");
+@@ -158,6 +158,7 @@ public class PlayerChunkMap {
+         if (this.l && i % 4L == 0L) {
+             this.l = false;
+             try (Timing ignored = world.timings.doChunkMapSortMissing.startTiming()) { // Paper
++			/*
+             Collections.sort(this.h, new Comparator() {
+                 public int a(PlayerChunk playerchunk, PlayerChunk playerchunk1) {
+                     return ComparisonChain.start().compare(playerchunk.g(), playerchunk1.g()).result();
+@@ -167,12 +168,14 @@ public class PlayerChunkMap {
+                     return this.a((PlayerChunk) object, (PlayerChunk) object1);
+                 }
+             });
++			*/
+             } // Paper timing
+         }
+ 
+         if (this.m && i % 4L == 2L) {
+             this.m = false;
+             try (Timing ignored = world.timings.doChunkMapSortSendToPlayers.startTiming()) { // Paper
++			/*
+             Collections.sort(this.g, new Comparator() {
+                 public int a(PlayerChunk playerchunk, PlayerChunk playerchunk1) {
+                     return ComparisonChain.start().compare(playerchunk.g(), playerchunk1.g()).result();
+@@ -182,6 +185,7 @@ public class PlayerChunkMap {
+                     return this.a((PlayerChunk) object, (PlayerChunk) object1);
+                 }
+             });
++			*/
+             } // Paper timing
+         }
+ 
+-- 
+2.8.2.windows.1
+

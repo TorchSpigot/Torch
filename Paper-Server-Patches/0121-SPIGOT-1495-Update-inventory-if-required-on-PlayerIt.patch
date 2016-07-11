@@ -1,0 +1,24 @@
+From 26d8fe50133371c132cdd29a01b84c122ff0d3c9 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 11 Jul 2016 17:35:17 +0800
+Subject: [PATCH] SPIGOT-1495: Update inventory if required on
+ PlayerItemDamageEvent
+
+
+diff --git a/src/main/java/net/minecraft/server/ItemStack.java b/src/main/java/net/minecraft/server/ItemStack.java
+index 2ac3cef..ec49f27 100644
+--- a/src/main/java/net/minecraft/server/ItemStack.java
++++ b/src/main/java/net/minecraft/server/ItemStack.java
+@@ -381,6 +381,9 @@ public final class ItemStack {
+                     org.bukkit.craftbukkit.inventory.CraftItemStack item = org.bukkit.craftbukkit.inventory.CraftItemStack.asCraftMirror(this);
+                     org.bukkit.event.player.PlayerItemDamageEvent event = new org.bukkit.event.player.PlayerItemDamageEvent((org.bukkit.entity.Player) entityliving.getBukkitEntity(), item, i);
+                     org.bukkit.Bukkit.getServer().getPluginManager().callEvent(event);
++					if (i != event.getDamage() || event.isCancelled()) {
++                        event.getPlayer().updateInventory();
++                    }
+                     if (event.isCancelled()) return false;
+                     i = event.getDamage();
+                 }
+-- 
+2.8.2.windows.1
+

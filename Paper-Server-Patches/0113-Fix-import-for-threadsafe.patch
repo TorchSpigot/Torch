@@ -1,0 +1,21 @@
+From 99a7359795b01ba240e1cb4e439d912ff585e21a Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 11 Jul 2016 17:11:25 +0800
+Subject: [PATCH] Fix import for threadsafe
+
+
+diff --git a/src/main/java/net/minecraft/server/PlayerChunkMap.java b/src/main/java/net/minecraft/server/PlayerChunkMap.java
+index c26cc1c..d04c8bb 100644
+--- a/src/main/java/net/minecraft/server/PlayerChunkMap.java
++++ b/src/main/java/net/minecraft/server/PlayerChunkMap.java
+@@ -27,6 +27,7 @@ import com.google.common.collect.Maps;
+ import com.google.common.collect.Queues;
+ import java.util.Map;
+ import java.util.Queue;
++import java.util.concurrent.ConcurrentLinkedQueue;
+ 
+ public class PlayerChunkMap {
+ 
+-- 
+2.8.2.windows.1
+

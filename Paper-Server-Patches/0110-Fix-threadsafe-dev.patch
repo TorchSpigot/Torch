@@ -1,0 +1,22 @@
+From 9740e461fa5599e200f91e6a8fe11456a892d59a Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 11 Jul 2016 16:56:18 +0800
+Subject: [PATCH] Fix threadsafe dev
+
+
+diff --git a/src/main/java/net/minecraft/server/PlayerChunkMap.java b/src/main/java/net/minecraft/server/PlayerChunkMap.java
+index 9255b96..f2348aa 100644
+--- a/src/main/java/net/minecraft/server/PlayerChunkMap.java
++++ b/src/main/java/net/minecraft/server/PlayerChunkMap.java
+@@ -26,7 +26,7 @@ import org.spigotmc.AsyncCatcher;
+ import com.google.common.collect.Maps;
+ import com.google.common.collect.Queues;
+ import java.util.Map;
+-import java.util.concurrent.ConcurrentLinkedQeque;
++import java.util.concurrent.ConcurrentLinkedQueue;
+ import java.util.Queue;
+ 
+ public class PlayerChunkMap {
+-- 
+2.8.2.windows.1
+

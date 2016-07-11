@@ -1,0 +1,29 @@
+From 7e8865f840b8a267163e3f1b4bc27f170bf31769 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 11 Jul 2016 18:59:26 +0800
+Subject: [PATCH] Revert villager backport
+
+
+diff --git a/src/main/java/org/bukkit/entity/Villager.java b/src/main/java/org/bukkit/entity/Villager.java
+index 57e5272..65b7797 100644
+--- a/src/main/java/org/bukkit/entity/Villager.java
++++ b/src/main/java/org/bukkit/entity/Villager.java
+@@ -120,15 +120,6 @@ public interface Villager extends Ageable, NPC, InventoryHolder {
+         BUTCHER(4),
+ 		HUSK(5);
+ 
+-        /**
+-         * Returns if this profession can only be used by zombies.
+-         *
+-         * @return zombie profession status
+-         */
+-        public boolean isZombie() {
+-            return zombie;
+-        }
+-
+         private static final Profession[] professions = new Profession[Profession.values().length];
+         private final int id;
+ 
+-- 
+2.8.2.windows.1
+

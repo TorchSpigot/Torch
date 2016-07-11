@@ -1,0 +1,106 @@
+From 95dae09ac9335d665c285bf247125905b7a87c9e Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 22:11:54 +0800
+Subject: [PATCH] Fix implement a new and improved in-memory UUID cache
+
+
+diff --git a/src/main/java/com/destroystokyo/paper/profile/EventProfileLookup.java b/src/main/java/com/destroystokyo/paper/profile/EventProfileLookup.java
+index 4cb486d..d942511 100644
+--- a/src/main/java/com/destroystokyo/paper/profile/EventProfileLookup.java
++++ b/src/main/java/com/destroystokyo/paper/profile/EventProfileLookup.java
+@@ -28,12 +28,12 @@ package com.destroystokyo.paper.profile;
+          Bukkit.getPluginManager().callEvent(preResolveEvent);
+          AsyncProfileResolveEvent resolveEvent;
+          if (preResolveEvent.isResolved()) { // Plugin set result
+-             resolveEvent = new AsyncProfileResolveEvent(LookupCause.NAME_LOOKUP, preResolveEvent.getResult(), false);
++             resolveEvent = new AsyncProfileResolveEvent(LookupCause.NAME, preResolveEvent.getResult(), false);
+          } else {
+              // Lookup result from mojang
+              AccountProfile profile = delegate.lookup(name);
+              if (profile == null) return null; // Not found
+-             resolveEvent = new AsyncProfileResolveEvent(LookupCause.NAME_LOOKUP, profile, true);
++             resolveEvent = new AsyncProfileResolveEvent(LookupCause.NAME, profile, true);
+          }
+          Bukkit.getPluginManager().callEvent(resolveEvent);
+          return resolveEvent.getResult();
+@@ -46,12 +46,12 @@ package com.destroystokyo.paper.profile;
+          Bukkit.getPluginManager().callEvent(preResolveEvent);
+          AsyncProfileResolveEvent resolveEvent;
+          if (preResolveEvent.isResolved()) { // Plugin set result
+-             resolveEvent = new AsyncProfileResolveEvent(LookupCause.UUID_LOOKUP, preResolveEvent.getResult(), false);
++             resolveEvent = new AsyncProfileResolveEvent(LookupCause.UUID, preResolveEvent.getResult(), false);
+          } else {
+              // Lookup result from mojang
+              AccountProfile profile = delegate.lookup(id);
+              if (profile == null) return null; // Not found
+-             resolveEvent = new AsyncProfileResolveEvent(LookupCause.UUID_LOOKUP, profile, true);
++             resolveEvent = new AsyncProfileResolveEvent(LookupCause.UUID, profile, true);
+          }
+          Bukkit.getPluginManager().callEvent(resolveEvent);
+          return resolveEvent.getResult();
+@@ -65,7 +65,7 @@ package com.destroystokyo.paper.profile;
+              AsyncUUIDPreResolveEvent preResolveEvent = new AsyncUUIDPreResolveEvent(id);
+              Bukkit.getPluginManager().callEvent(preResolveEvent);
+              if (preResolveEvent.isResolved()) { // Plugin set result
+-                 AsyncProfileResolveEvent resolveEvent = new AsyncProfileResolveEvent(LookupCause.UUID_LOOKUP, preResolveEvent.getResult(), false);
++                 AsyncProfileResolveEvent resolveEvent = new AsyncProfileResolveEvent(LookupCause.UUID, preResolveEvent.getResult(), false);
+                  Bukkit.getPluginManager().callEvent(resolveEvent);
+                  callback.onLookup(resolveEvent.getResult(), id);
+              } else {
+@@ -76,7 +76,7 @@ package com.destroystokyo.paper.profile;
+              @Override
+              public void onLookup(AccountProfile profile, UUID original) {
+                  if (profile != null) {
+-                     AsyncProfileResolveEvent resolveEvent = new AsyncProfileResolveEvent(LookupCause.UUID_LOOKUP, profile, true);
++                     AsyncProfileResolveEvent resolveEvent = new AsyncProfileResolveEvent(LookupCause.UUID, profile, true);
+                      Bukkit.getPluginManager().callEvent(resolveEvent);
+                      profile = resolveEvent.getResult();
+                  }
+@@ -98,7 +98,7 @@ package com.destroystokyo.paper.profile;
+              AsyncNamePreResolveEvent preResolveEvent = new AsyncNamePreResolveEvent(name);
+              Bukkit.getPluginManager().callEvent(preResolveEvent);
+              if (preResolveEvent.isResolved()) { // Plugin set result
+-                 AsyncProfileResolveEvent resolveEvent = new AsyncProfileResolveEvent(LookupCause.NAME_LOOKUP, preResolveEvent.getResult(), false);
++                 AsyncProfileResolveEvent resolveEvent = new AsyncProfileResolveEvent(LookupCause.NAME, preResolveEvent.getResult(), false);
+                  Bukkit.getPluginManager().callEvent(resolveEvent);
+                  callback.onLookup(resolveEvent.getResult(), name);
+              } else {
+@@ -109,7 +109,7 @@ package com.destroystokyo.paper.profile;
+              @Override
+              public void onLookup(AccountProfile profile, String original) {
+                  if (profile != null) {
+-                     AsyncProfileResolveEvent resolveEvent = new AsyncProfileResolveEvent(LookupCause.NAME_LOOKUP, profile, true);
++                     AsyncProfileResolveEvent resolveEvent = new AsyncProfileResolveEvent(LookupCause.NAME, profile, true);
+                      Bukkit.getPluginManager().callEvent(resolveEvent);
+                      profile = resolveEvent.getResult();
+                  }
+@@ -129,11 +129,11 @@ package com.destroystokyo.paper.profile;
+          Bukkit.getPluginManager().callEvent(preResolveEvent);
+          AsyncProfileResolveEvent resolveEvent;
+          if (preResolveEvent.isResolved()) {
+-             resolveEvent = new AsyncProfileResolveEvent(LookupCause.PROPERTIES_LOOKUP, preResolveEvent.getResult(), false);
++             resolveEvent = new AsyncProfileResolveEvent(LookupCause.PROPERTIES, preResolveEvent.getResult(), false);
+          } else {
+              ProfileProperties properties = delegate.lookupProperties(profile);
+              if (properties == null) return null;
+-             resolveEvent = new AsyncProfileResolveEvent(LookupCause.PROPERTIES_LOOKUP, profile.withProperties(properties), true);
++             resolveEvent = new AsyncProfileResolveEvent(LookupCause.PROPERTIES, profile.withProperties(properties), true);
+          }
+          Bukkit.getPluginManager().callEvent(resolveEvent);
+          return resolveEvent.getResult().getProperties();
+diff --git a/src/main/java/com/destroystokyo/paper/profile/event/AsyncUUIDPreResolveEvent.java b/src/main/java/com/destroystokyo/paper/profile/event/AsyncUUIDPreResolveEvent.java
+index fd60b58..3dde2f4 100644
+--- a/src/main/java/com/destroystokyo/paper/profile/event/AsyncUUIDPreResolveEvent.java
++++ b/src/main/java/com/destroystokyo/paper/profile/event/AsyncUUIDPreResolveEvent.java
+@@ -18,7 +18,7 @@ package com.destroystokyo.paper.profile.event;
+      private final UUID id;
+  
+      public AsyncUUIDPreResolveEvent(UUID id) {
+-         super(LookupCause.UUID_LOOKUP);
++         super(LookupCause.LOOKUP);
+          this.id = Preconditions.checkNotNull(id, "Null id");;
+      }
+  
+-- 
+2.8.2.windows.1
+

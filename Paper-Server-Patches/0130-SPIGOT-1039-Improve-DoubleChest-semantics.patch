@@ -1,0 +1,65 @@
+From 71a6a0c7eb302497d696fe638f386b85a9de59a7 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 11 Jul 2016 17:58:00 +0800
+Subject: [PATCH] SPIGOT-1039: Improve DoubleChest semantics
+
+
+diff --git a/src/main/java/org/bukkit/bukkit/block/DoubleChest.java b/src/main/java/org/bukkit/bukkit/block/DoubleChest.java
+new file mode 100644
+index 0000000..663fcbb
+--- /dev/null
++++ b/src/main/java/org/bukkit/bukkit/block/DoubleChest.java
+@@ -0,0 +1,50 @@
++package org.bukkit.block;
++
++import org.bukkit.Location;
++import org.bukkit.World;
++import org.bukkit.inventory.DoubleChestInventory;
++import org.bukkit.inventory.Inventory;
++import org.bukkit.inventory.InventoryHolder;
++
++/**
++ * Represents a double chest.
++ */
++public class DoubleChest implements InventoryHolder {
++    private DoubleChestInventory inventory;
++
++    public DoubleChest(DoubleChestInventory chest) {
++        inventory = chest;
++    }
++
++    public Inventory getInventory() {
++        return inventory;
++    }
++
++    public InventoryHolder getLeftSide() {
++        return inventory.getLeftSide().getHolder();
++    }
++
++    public InventoryHolder getRightSide() {
++        return inventory.getRightSide().getHolder();
++    }
++
++    public Location getLocation() {
++        return getInventory().getLocation();
++    }
++
++    public World getWorld() {
++        return getLocation().getWorld();
++    }
++
++    public double getX() {
++        return getLocation().getX();
++    }
++
++    public double getY() {
++        return getLocation().getY();
++    }
++
++    public double getZ() {
++        return getLocation().getZ();
++    }
++}
+-- 
+2.8.2.windows.1
+
