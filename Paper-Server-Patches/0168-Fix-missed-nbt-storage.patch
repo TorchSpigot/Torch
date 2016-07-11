@@ -1,0 +1,40 @@
+From 0d82c604346a32c01bd92b59ed63ca50a0208f87 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Tue, 12 Jul 2016 03:48:28 +0800
+Subject: [PATCH] Fix missed nbt storage
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
+index 36ebcf1..7228c42 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
+@@ -1,15 +1,12 @@
+ package org.bukkit.craftbukkit;
+ 
+ import com.mojang.authlib.GameProfile;
+-import java.io.File;
+ import java.util.LinkedHashMap;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.UUID;
+ 
+-import net.minecraft.server.EntityPlayer;
+ import net.minecraft.server.NBTTagCompound;
+-import net.minecraft.server.WorldNBTStorage;
+ import com.destroystokyo.paper.profile.ProfileUtils;
+ import com.destroystokyo.paper.profile.AccountProfile;
+ 
+@@ -43,8 +40,8 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+     protected CraftOfflinePlayer(CraftServer server, AccountProfile profile) {
+         this.server = server;
+         this.profile = ProfileUtils.toMojang(profile);
+-        this.storage = (WorldNBTStorage) (server.console.worlds.get(0).getDataManager());
+-        this.paperProfile = profile;
++        this.storage = server.console.worlds.get(0).getDataManager().getPlayerFileData(); // Paper
++        this.paperProfile = ProfileUtils.toPaper(profile);
+     }
+ 
+     public AccountProfile getAccount() {
+-- 
+2.8.2.windows.1
+

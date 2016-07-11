@@ -1,4 +1,4 @@
-From e1eb3243abdb7336a7cf87a85610e7d787debf2b Mon Sep 17 00:00:00 2001
+From dccfc98fc3ff389568efe635c8b24802a0bf2e57 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 16:27:34 +0800
 Subject: [PATCH] Fix import for multi threaded

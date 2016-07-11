@@ -1,4 +1,4 @@
-From e2e8db61e0266eec288b536f98de2680778180df Mon Sep 17 00:00:00 2001
+From c5df3d661badbb3f573da3612d7f43efe0cf9beb Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 21:11:32 +0800
 Subject: [PATCH] multi threaded with location fix
