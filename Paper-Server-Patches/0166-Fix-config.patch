@@ -1,0 +1,21 @@
+From ddaef60df2905bd02cef2153c7f6532d5026d25a Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Tue, 12 Jul 2016 03:14:07 +0800
+Subject: [PATCH] Fix config
+
+
+diff --git a/src/main/java/co/aikar/timings/TimingsExport.java b/src/main/java/co/aikar/timings/TimingsExport.java
+index c7b140a..6eb5f96 100644
+--- a/src/main/java/co/aikar/timings/TimingsExport.java
++++ b/src/main/java/co/aikar/timings/TimingsExport.java
+@@ -203,7 +203,6 @@ class TimingsExport extends Thread {
+             pair("spigot", mapAsJSON(Bukkit.spigot().getSpigotConfig(), null)),
+             pair("bukkit", mapAsJSON(Bukkit.spigot().getBukkitConfig(), null)),
+             pair("paper", mapAsJSON(Bukkit.spigot().getPaperConfig(), null))
+-			pair("spigot", mapAsJSON(Bukkit.spigot().getConfig(), null))
+         ));
+ 
+         new TimingsExport(sender, parent, history).start();
+-- 
+2.8.2.windows.1
+

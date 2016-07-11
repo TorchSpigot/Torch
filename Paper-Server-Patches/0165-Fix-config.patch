@@ -1,0 +1,65 @@
+From 6edcf524744d214bc597d402702b3e372159c886 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Tue, 12 Jul 2016 03:11:24 +0800
+Subject: [PATCH] Fix config
+
+
+diff --git a/src/main/java/co/aikar/timings/TimingsExport.java b/src/main/java/co/aikar/timings/TimingsExport.java
+index 8c2a274..c7b140a 100644
+--- a/src/main/java/co/aikar/timings/TimingsExport.java
++++ b/src/main/java/co/aikar/timings/TimingsExport.java
+@@ -200,9 +200,9 @@ class TimingsExport extends Thread {
+         // Information on the users Config
+ 
+         parent.put("config", createObject(
+-            // pair("spigot", mapAsJSON(Bukkit.spigot().getSpigotConfig(), null)),
+-            // pair("bukkit", mapAsJSON(Bukkit.spigot().getBukkitConfig(), null)),
+-            // pair("paper", mapAsJSON(Bukkit.spigot().getPaperConfig(), null))
++            pair("spigot", mapAsJSON(Bukkit.spigot().getSpigotConfig(), null)),
++            pair("bukkit", mapAsJSON(Bukkit.spigot().getBukkitConfig(), null)),
++            pair("paper", mapAsJSON(Bukkit.spigot().getPaperConfig(), null))
+ 			pair("spigot", mapAsJSON(Bukkit.spigot().getConfig(), null))
+         ));
+ 
+diff --git a/src/main/java/com/destroystokyo/paper/PaperWorldConfig.java b/src/main/java/com/destroystokyo/paper/PaperWorldConfig.java
+index 255e994..9265148 100644
+--- a/src/main/java/com/destroystokyo/paper/PaperWorldConfig.java
++++ b/src/main/java/com/destroystokyo/paper/PaperWorldConfig.java
+@@ -204,7 +204,7 @@ public class PaperWorldConfig {
+ 
+     public boolean optimizeExplosions;
+     private void optimizeExplosions() {
+-        optimizeExplosions = getBoolean("optimize-explosions", false);
++        optimizeExplosions = getBoolean("optimize-explosions", true); // Torch
+         log("Optimize explosions: " + optimizeExplosions);
+     }
+ 
+diff --git a/src/main/java/org/bukkit/Server.java b/src/main/java/org/bukkit/Server.java
+index dd4f087..070bde6 100644
+--- a/src/main/java/org/bukkit/Server.java
++++ b/src/main/java/org/bukkit/Server.java
+@@ -983,6 +983,21 @@ public interface Server extends PluginMessageRecipient {
+         {
+             throw new UnsupportedOperationException( "Not supported yet." );
+         }
++		
++		public org.bukkit.configuration.file.YamlConfiguration getBukkitConfig()
++        {
++            throw new UnsupportedOperationException( "Not supported yet." );
++        }
++
++        public org.bukkit.configuration.file.YamlConfiguration getSpigotConfig()
++        {
++            throw new UnsupportedOperationException("Not supported yet.");
++        }
++
++        public org.bukkit.configuration.file.YamlConfiguration getPaperConfig()
++        {
++            throw new UnsupportedOperationException("Not supported yet.");
++        }
+ 
+         /**
+          * Sends the component to the player
+-- 
+2.8.2.windows.1
+

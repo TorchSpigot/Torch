@@ -1,0 +1,140 @@
+From d408915bba3bd18953140e5e563fff279bb281c5 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 11 Jul 2016 23:19:43 +0800
+Subject: [PATCH] Register-default-commands
+
+
+diff --git a/src/main/java/org/bukkit/command/SimpleCommandMap.java b/src/main/java/org/bukkit/command/SimpleCommandMap.java
+index 0af67d2..05a5675 100644
+--- a/src/main/java/org/bukkit/command/SimpleCommandMap.java
++++ b/src/main/java/org/bukkit/command/SimpleCommandMap.java
+@@ -2,15 +2,11 @@ package org.bukkit.command;
+ 
+ import static org.bukkit.util.Java15Compat.Arrays_copyOfRange;
+ 
+-import java.util.ArrayList;
+-import java.util.Collection;
+-import java.util.Collections;
+-import java.util.HashMap;
+-import java.util.Iterator;
+-import java.util.List;
+-import java.util.Map;
++import java.util.*;
+ import java.util.regex.Pattern;
+ 
++import static org.bukkit.util.Java15Compat.Arrays_copyOfRange;
++
+ import com.destroystokyo.paper.event.server.ServerExceptionEvent;
+ import com.destroystokyo.paper.exception.ServerCommandException;
+ import com.destroystokyo.paper.exception.ServerTabCompleteException;
+@@ -33,6 +29,10 @@ public class SimpleCommandMap implements CommandMap {
+     }
+ 
+     private void setDefaultCommands() {
++		register("bukkit", new SaveCommand());
++        register("bukkit", new SaveOnCommand());
++        register("bukkit", new SaveOffCommand());
++        register("bukkit", new StopCommand());
+         register("bukkit", new VersionCommand("version"));
+         register("bukkit", new ReloadCommand("reload"));
+         register("bukkit", new PluginsCommand("plugins"));
+@@ -40,7 +40,47 @@ public class SimpleCommandMap implements CommandMap {
+     }
+ 
+     public void setFallbackCommands() {
++        register("bukkit", new ListCommand());
++        register("bukkit", new OpCommand());
++        register("bukkit", new DeopCommand());
++        register("bukkit", new BanIpCommand());
++        register("bukkit", new PardonIpCommand());
++        register("bukkit", new BanCommand());
++        register("bukkit", new PardonCommand());
++        register("bukkit", new KickCommand());
++        register("bukkit", new TeleportCommand());
++        register("bukkit", new GiveCommand());
++        register("bukkit", new TimeCommand());
++        register("bukkit", new SayCommand());
++        register("bukkit", new WhitelistCommand());
++        register("bukkit", new TellCommand());
++        register("bukkit", new MeCommand());
++        register("bukkit", new KillCommand());
++        register("bukkit", new GameModeCommand());
+         register("bukkit", new HelpCommand());
++        register("bukkit", new ExpCommand());
++        register("bukkit", new ToggleDownfallCommand());
++        register("bukkit", new BanListCommand());
++        register("bukkit", new DefaultGameModeCommand());
++        register("bukkit", new SeedCommand());
++        register("bukkit", new DifficultyCommand());
++        register("bukkit", new WeatherCommand());
++        register("bukkit", new SpawnpointCommand());
++        register("bukkit", new ClearCommand());
++        register("bukkit", new GameRuleCommand());
++        register("bukkit", new EnchantCommand());
++        register("bukkit", new TestForCommand());
++        register("bukkit", new EffectCommand());
++        register("bukkit", new ScoreboardCommand());
++        register("bukkit", new PlaySoundCommand());
++        register("bukkit", new SpreadPlayersCommand());
++        register("bukkit", new SetWorldSpawnCommand());
++        register("bukkit", new SetIdleTimeoutCommand());
++        register("bukkit", new AchievementCommand());
++        // register("bukkit", new ParticleCommand());
++        // register("bukkit", new SetBlockCommand());
++        // register("bukkit", new TriggerCommand());
++		 register("bukkit", new GCCommand()); // Torch - gc
+     }
+ 
+     /**
+diff --git a/src/main/java/org/bukkit/command/defaults/GCCommand.java b/src/main/java/org/bukkit/command/defaults/GCCommand.java
+new file mode 100644
+index 0000000..83ccd46
+--- /dev/null
++++ b/src/main/java/org/bukkit/command/defaults/GCCommand.java
+@@ -0,0 +1,43 @@
++package org.bukkit.command.defaults;
++
++import com.google.common.collect.ImmutableList;
++import org.apache.commons.lang3.Validate;
++import org.bukkit.Bukkit;
++import org.bukkit.ChatColor;
++import org.bukkit.Material;
++import org.bukkit.command.Command;
++import org.bukkit.command.CommandSender;
++import org.bukkit.entity.Player;
++import org.bukkit.util.StringUtil;
++
++import java.util.ArrayList;
++import java.util.Collections;
++import java.util.List;
++
++@Deprecated
++public class GCCommand extends VanillaCommand {
++
++    public GCCommand() {
++        super("tgc");
++        this.description = "Clear server memory.";
++        this.usageMessage = "/tgc";
++        this.setPermission("bukkit.command.gc");
++    }
++
++    @Override
++    public boolean execute(CommandSender sender, String currentAlias, String[] args) {
++        if (!testPermission(sender)) return true;
++
++		long m1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
++        System.gc();
++        System.runFinalization();
++        long m2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
++        if (m2 < m1)
++			sender.sendMessage(
++			ChatColor.GREEN + "Cleaned " + ChatColor.GOLD + ((m1 - m2) / 1024L / 1024L) + ChatColor.GREEN + "MB memory");
++          else
++            sender.sendMessage(ChatColor.GREEN + "Memory not require clean now.");
++
++        return true;
++    }
++}
+-- 
+2.8.2.windows.1
+

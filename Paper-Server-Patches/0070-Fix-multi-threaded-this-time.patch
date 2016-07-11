@@ -1,4 +1,4 @@
-From 965b72d1be4bfc6fed68587d457e214d2f41a477 Mon Sep 17 00:00:00 2001
+From 2f7407b9ae4a7747a5ea37f84585f027e019ce50 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 12:55:19 +0800
 Subject: [PATCH] Fix multi threaded this time

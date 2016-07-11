@@ -1,11 +1,11 @@
-From df8e4064236930defbc68704c96e58e2bd374560 Mon Sep 17 00:00:00 2001
+From 0eb58fa98bb9dd8848f0a4334a8f390a6d11f799 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 08:40:36 +0800
 Subject: [PATCH] Fix Torch version
 
 
 diff --git a/pom.xml b/pom.xml
-index 4dccd64..d31cc43 100644
+index 4dccd64..f7fb199 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -11,7 +11,7 @@
@@ -13,10 +13,34 @@ index 4dccd64..d31cc43 100644
      <groupId>net.techcable.tacospigot</groupId>
      <artifactId>tacospigot-api</artifactId>
 -    <version>1.9.4-R0.1</version>
-+    <version>1.9.4-R1.0</version>
++    <version>1.9.4-R1.1</version>
      <packaging>jar</packaging>
  
      <name>TacoSpigot-API</name>
+diff --git a/src/main/java/org/bukkit/command/defaults/VersionCommand.java b/src/main/java/org/bukkit/command/defaults/VersionCommand.java
+index 32177d3..a0a9695 100644
+--- a/src/main/java/org/bukkit/command/defaults/VersionCommand.java
++++ b/src/main/java/org/bukkit/command/defaults/VersionCommand.java
+@@ -192,8 +192,8 @@ public class VersionCommand extends BukkitCommand {
+         String version = Bukkit.getVersion();
+         if (version == null) version = "Custom";
+         // TacoSpigot start
+-        if (version.startsWith("git-TacoSpigot-")) {
+-            String[] parts = version.substring("git-TacoSpigot-".length()).split("[-\\s]");
++        if (version.startsWith("git-TorchSpigot-")) {
++            String[] parts = version.substring("git-TorchSpigot-".length()).split("[-\\s]");
+             // TacoSpigot end
+             int distance = getDistance(null, parts[0]);
+             switch (distance) {
+@@ -253,7 +253,7 @@ public class VersionCommand extends BukkitCommand {
+         } catch (NumberFormatException ex) {
+             */
+             verInfo = verInfo.replace("\"", "");
+-            return getFromRepo("TacoSpigot/TacoSpigot", verInfo); // 'PaperMC/Paper' -> 'TacoSpigot/TacoSpigot'
++            return getFromRepo("TorchSpigot/Torch", verInfo); // 'PaperMC/Paper' -> 'TacoSpigot/TacoSpigot'
+         //}
+         // TacoSpigot end
+             /*
 -- 
 2.8.2.windows.1
 

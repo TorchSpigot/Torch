@@ -10,14 +10,12 @@ The main repository of TorchSpigot
 A powerful high performance Spigot server fork with backported and more, 
 that aims to fix gameplay and inconsistencies, optimizations and multi-threaded computing included, based on TacoSpigot basically.
 * Current developing version:  1.9.4
-* Recommanded(stable) version: R1.0-RELEASE
+* Recommanded(stable) version: R1.1-RELEASE
 
 (If you're running a previous 1.9.4 Beta, upgrading is highly recommended.)
 
 ####How To (Server Admins)
-* Get Jar file(download), *[Click Here](http://t.im/torch)*,
-
-and use *Torch-1.9.4-R0.x.jar*, to start server directly.
+* Get Jar file(download): *[Click Here](http://t.im/torch)*, and use *Torch-1.9.4-R0.x.jar*, to start server directly.
 * Just enjoy Torch! :)
 
 ####How To (Compiling From Source)
@@ -31,4 +29,4 @@ run `git clone https://github.com/TorchSpigot/Torch.git` and copy files to the m
 run `mvn clean install`, and get final jar in *./TacoSpigot-Server/target/*
 
 
-* Feel free to open a PR!
+Feel free to open a PR!

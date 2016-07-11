@@ -1,4 +1,4 @@
-From f37dde9f8428369c953cc2c4ed785a6f42c4bc5c Mon Sep 17 00:00:00 2001
+From f66b634efa5ae5eb04a049d1e67b6ab8e63fd59d Mon Sep 17 00:00:00 2001
 From: Techcable <Techcable@outlook.com>
 Date: Wed, 3 Feb 2016 11:27:34 -0700
 Subject: [PATCH] Add a flag to disable InventoryMoveItemEvent
@@ -127,5 +127,5 @@ index 4e2283c..3f18f79 100644
 +    }
  }
 -- 
-2.8.2.windows.1
+2.8.3
 

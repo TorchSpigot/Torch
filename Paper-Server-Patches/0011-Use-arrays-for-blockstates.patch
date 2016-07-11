@@ -1,4 +1,4 @@
-From ca3df39d1fc541e729fd39f6c4d9346eb6a0af3c Mon Sep 17 00:00:00 2001
+From a7c8348d0006fb1a5c501bf3d4f62d3ae6c8e591 Mon Sep 17 00:00:00 2001
 From: Techcable <Techcable@techcable.net>
 Date: Thu, 31 Mar 2016 14:13:07 -0700
 Subject: [PATCH] Use arrays for blockstates
@@ -824,5 +824,5 @@ index 0000000..b5adb4e
 +    public R apply(T t, int i);
 +}
 -- 
-2.8.2.windows.1
+2.8.2
 

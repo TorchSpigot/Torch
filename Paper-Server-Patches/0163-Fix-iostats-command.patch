@@ -1,0 +1,34 @@
+From 0b2bf4188ae1d0905af0a30eecabff0a028b5375 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 11 Jul 2016 23:46:57 +0800
+Subject: [PATCH] Fix iostats command
+
+
+diff --git a/src/main/java/org/bukkit/command/SimpleCommandMap.java b/src/main/java/org/bukkit/command/SimpleCommandMap.java
+index 05a5675..5e8d146 100644
+--- a/src/main/java/org/bukkit/command/SimpleCommandMap.java
++++ b/src/main/java/org/bukkit/command/SimpleCommandMap.java
+@@ -37,6 +37,7 @@ public class SimpleCommandMap implements CommandMap {
+         register("bukkit", new ReloadCommand("reload"));
+         register("bukkit", new PluginsCommand("plugins"));
+         register("bukkit", new co.aikar.timings.TimingsCommand("timings")); // Spigot
++		register("bukkit", new com.destroystokyo.paper.IOStatCommand("iostat")); // Torch - registry
+     }
+ 
+     public void setFallbackCommands() {
+diff --git a/src/main/java/org/bukkit/command/defaults/GCCommand.java b/src/main/java/org/bukkit/command/defaults/GCCommand.java
+index 83ccd46..a8f2f63 100644
+--- a/src/main/java/org/bukkit/command/defaults/GCCommand.java
++++ b/src/main/java/org/bukkit/command/defaults/GCCommand.java
+@@ -34,7 +34,7 @@ public class GCCommand extends VanillaCommand {
+         long m2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+         if (m2 < m1)
+ 			sender.sendMessage(
+-			ChatColor.GREEN + "Cleaned " + ChatColor.GOLD + ((m1 - m2) / 1024L / 1024L) + ChatColor.GREEN + "MB memory");
++			ChatColor.GOLD + "Cleaned " + ChatColor.GREEN + ((m1 - m2) / 1024L / 1024L) + "MB" + ChatColor.GREEN + " memory");
+           else
+             sender.sendMessage(ChatColor.GREEN + "Memory not require clean now.");
+ 
+-- 
+2.8.2.windows.1
+

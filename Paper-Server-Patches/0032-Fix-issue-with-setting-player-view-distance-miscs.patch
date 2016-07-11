@@ -1,4 +1,4 @@
-From 5eecb8c4944e6645e9313ff5941830211181b3ae Mon Sep 17 00:00:00 2001
+From 95c6431109872324cb006781cc8b76b4c83efc5e Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 15:01:51 +0800
 Subject: [PATCH] Fix issue with setting player view distance, miscs

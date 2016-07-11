@@ -1,4 +1,4 @@
-From a585b5fad0ecc188ae44141ecf63ce6308b28d86 Mon Sep 17 00:00:00 2001
+From 12368d52f4166781df4538c943ca2f9477e1712c Mon Sep 17 00:00:00 2001
 From: Techcable <Techcable@techcable.net>
 Date: Fri, 18 Mar 2016 13:56:01 -0700
 Subject: [PATCH] Better AsyncCatcher
@@ -107,5 +107,5 @@ index 429c258..86c8bf6 100644
          {
              if ( script.isFile() )
 -- 
-2.8.2.windows.1
+2.8.3
 
