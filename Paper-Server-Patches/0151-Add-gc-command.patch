@@ -1,4 +1,4 @@
-From 93808a4f3bca3447e653f345d293f34e53ad5653 Mon Sep 17 00:00:00 2001
+From 73d546d5394cc7035cd32022fe1cbd35660cac5d Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 21:54:27 +0800
 Subject: [PATCH] Add gc command

@@ -1,4 +1,4 @@
-From a108772b0b97131cac054f6aec1d5c38e00cf3c2 Mon Sep 17 00:00:00 2001
+From d6b242ce78b9707c69478eba1fcc94da2c5bc4a9 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 17:11:00 +0800
 Subject: [PATCH] multi threaded org.hose

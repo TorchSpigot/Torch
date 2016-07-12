@@ -1,8 +1,9 @@
-From 87f1d14e4939517d49086e86d0ce30898dd74809 Mon Sep 17 00:00:00 2001
+From 5b0038de475a008eedbeb9185ad7fa08e3898999 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 08:40:36 +0800
 Subject: [PATCH] Fix Torch version
 
+This patch just aim to resolve the compiling issue that related to version.
 
 diff --git a/pom.xml b/pom.xml
 index 4dccd64..f7fb199 100644

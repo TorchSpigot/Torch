@@ -1,0 +1,275 @@
+From b673390f64cb9d53ec8aa0114e86d9ecd5733cc7 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Tue, 12 Jul 2016 05:34:27 +0800
+Subject: [PATCH] Dont-Spam-Hopper-InventoryMoveItemEvents misc revert
+
+
+diff --git a/src/main/java/net/minecraft/server/Chunk.java b/src/main/java/net/minecraft/server/Chunk.java
+index ceaf88c..b5e2555 100644
+--- a/src/main/java/net/minecraft/server/Chunk.java
++++ b/src/main/java/net/minecraft/server/Chunk.java
+@@ -59,18 +59,6 @@ public class Chunk {
+     private ConcurrentLinkedQueue<BlockPosition> y;
+     public boolean d;public void setShouldUnload(boolean unload) { this.d = unload; } public boolean isUnloading() { return d; } // Paper // OBFHELPER
+     protected gnu.trove.map.hash.TObjectIntHashMap<Class> entityCount = new gnu.trove.map.hash.TObjectIntHashMap<Class>(); // Spigot
+-	
+-	// Migot start
+-    private boolean unloaded = false;
+-
+-    public boolean wasUnloaded() {
+-        return this.unloaded;
+-    }
+-
+-    public void markAsUnloaded() {
+-        this.unloaded = true;
+-    }
+-    // Migot end
+ 
+     // Paper start
+     // Track the number of minecarts and items
+diff --git a/src/main/java/net/minecraft/server/ChunkProviderServer.java b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+index fc124d6..24497d5 100644
+--- a/src/main/java/net/minecraft/server/ChunkProviderServer.java
++++ b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+@@ -358,7 +358,6 @@ public class ChunkProviderServer implements IChunkProvider {
+             }
+         }
+         // Moved from unloadChunks above
+-		if (chunk != null) { chunk.markAsUnloaded(); } // Migot
+         chunk.removeEntities();
+         if (save) {
+             this.saveChunk(chunk);
+diff --git a/src/main/java/net/minecraft/server/TileEntityHopper.java b/src/main/java/net/minecraft/server/TileEntityHopper.java
+index 45c134b..782a5c6 100644
+--- a/src/main/java/net/minecraft/server/TileEntityHopper.java
++++ b/src/main/java/net/minecraft/server/TileEntityHopper.java
+@@ -47,6 +47,41 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+         maxStack = size;
+     }
+     // CraftBukkit end
++	
++	// Migot start
++    private static int doesInventoryHaveEnoughSpaceForItem(IInventory iinventory, ItemStack itemstack, EnumDirection enumdirection) {
++        if (iinventory instanceof IWorldInventory && enumdirection != null) {
++            IWorldInventory iworldinventory = (IWorldInventory) iinventory;
++            int[] possibleSlots = iworldinventory.getSlotsForFace(enumdirection);
++            for(int i = 0; i < possibleSlots.length; i++) {
++                int slotId = possibleSlots[i];
++                if(a(iinventory, itemstack, slotId, enumdirection)) {
++                    ItemStack slot = iinventory.getItem(slotId);
++                    if(slot == null || a(slot, itemstack)) {
++                        return slotId;
++                    }
++                }
++            }
++        } else {
++            int size = iinventory.getSize();
++            for(int i = 0; i < size; i++) {
++                if(a(iinventory, itemstack, i, enumdirection)) {
++                    ItemStack slot = iinventory.getItem(i);
++                    if(slot == null || a(slot, itemstack)) {
++                        return i;
++                    }
++                }
++            }
++        }
++        return -1;
++    }
++
++    private static int checkForPossibleInventorySlot(IInventory iinventory, ItemStack itemstack, EnumDirection enumdirection) {
++        ItemStack copyOfItemBeingProcessed = itemstack.cloneItemStack();
++        copyOfItemBeingProcessed.count = 1;
++        return doesInventoryHaveEnoughSpaceForItem(iinventory, copyOfItemBeingProcessed, enumdirection);
++    }
++    // Migot end
+ 
+     public TileEntityHopper() {}
+ 
+@@ -259,6 +294,13 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+                     if (this.getItem(i) != null) {
+                         ItemStack itemstack = this.getItem(i).cloneItemStack();
+                         // ItemStack itemstack1 = addItem(iinventory, this.splitStack(i, 1), enumdirection);
++						
++						// Migot start
++                        int possibleInventorySlot = checkForPossibleInventorySlot(iinventory, itemstack, enumdirection);
++                        if(possibleInventorySlot < 0) {
++                            continue;
++                        }
++                        // Migot end
+ 
+                         // CraftBukkit start - Call event when pushing items into other inventories
+                         CraftItemStack oitemstack = CraftItemStack.asCraftMirror(this.splitStack(i, world.spigotConfig.hopperAmount)); // Spigot
+@@ -287,7 +329,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+                             stack = oitemstack;
+                         }
+                         int origCount = stack.getAmount(); // Spigot
+-                        ItemStack itemstack1 = addItem(iinventory, CraftItemStack.asNMSCopy(stack), enumdirection);
++                        ItemStack itemstack1 = addItem(iinventory, possibleInventorySlot, CraftItemStack.asNMSCopy(stack), enumdirection); // Migot
+                         // TacoSpigot end
+ 
+                         if (itemstack1 == null || itemstack1.count == 0) {
+@@ -416,6 +458,14 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+             ItemStack itemstack1 = itemstack.cloneItemStack();
+             // ItemStack itemstack2 = addItem(ihopper, iinventory.splitStack(i, 1), (EnumDirection) null);
+             // CraftBukkit start - Call event on collection of items from inventories into the hopper
++			
++			// Migot start
++            int possibleInventorySlot = checkForPossibleInventorySlot(ihopper, iinventory.getItem(i), null);
++            if(possibleInventorySlot < 0) {
++                return false;
++            }
++            // Migot end
++			
+             CraftItemStack oitemstack = CraftItemStack.asCraftMirror(iinventory.splitStack(i, ihopper.getWorld().spigotConfig.hopperAmount)); // Spigot
+             // TacoSpigot start - option to disable event
+             final org.bukkit.inventory.ItemStack stack;
+@@ -449,7 +499,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+                 stack = oitemstack;
+             }
+             int origCount = stack.getAmount(); // Spigot
+-            ItemStack itemstack2 = addItem(ihopper, CraftItemStack.asNMSCopy(stack), null);
++			ItemStack itemstack2 = addItem(ihopper, possibleInventorySlot, CraftItemStack.asNMSCopy(stack), null); // Migot
+             // TacoSpigot end
+ 
+             if (itemstack2 == null || itemstack2.count == 0) {
+@@ -475,6 +525,12 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+         if (entityitem == null) {
+             return false;
+         } else {
++			// Migot start
++            int possibleInventorySlot = checkForPossibleInventorySlot(iinventory, entityitem.getItemStack(), null);
++            if(possibleInventorySlot < 0) {
++                return false;
++            }
++            // Migot end
+             // CraftBukkit start
+             InventoryPickupItemEvent event = new InventoryPickupItemEvent(iinventory.getOwner().getInventory(), (org.bukkit.entity.Item) entityitem.getBukkitEntity());
+             entityitem.world.getServer().getPluginManager().callEvent(event);
+@@ -483,7 +539,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+             }
+             // CraftBukkit end
+             ItemStack itemstack = entityitem.getItemStack().cloneItemStack();
+-            ItemStack itemstack1 = addItem(iinventory, itemstack, (EnumDirection) null);
++            ItemStack itemstack1 = addItem(iinventory, possibleInventorySlot, itemstack, null); // Migot
+ 
+             if (itemstack1 != null && itemstack1.count != 0) {
+                 entityitem.setItemStack(itemstack1);
+@@ -497,9 +553,21 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+     }
+ 
+     public static ItemStack addItem(IInventory iinventory, ItemStack itemstack, @Nullable EnumDirection enumdirection) {
++		// Migot start
++        return addItem(iinventory, -1, itemstack, enumdirection);
++    }
++
++    public static ItemStack addItem(IInventory iinventory, int possibleInventorySlot, ItemStack itemstack, @Nullable EnumDirection enumdirection) {
++    // Migot end
+         if (iinventory instanceof IWorldInventory && enumdirection != null) {
+             IWorldInventory iworldinventory = (IWorldInventory) iinventory;
+             int[] aint = iworldinventory.getSlotsForFace(enumdirection);
++			
++			// Migot start
++            if(possibleInventorySlot >= 0 && possibleInventorySlot < aint.length) {
++                itemstack = c(iinventory, itemstack, possibleInventorySlot, enumdirection);
++            }
++            // Migot end
+ 
+             for (int i = 0; i < aint.length && itemstack != null && itemstack.count > 0; ++i) {
+                 itemstack = c(iinventory, itemstack, aint[i], enumdirection);
+@@ -507,7 +575,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+         } else {
+             int j = iinventory.getSize();
+ 
+-            for (int k = 0; k < j && itemstack != null && itemstack.count > 0; ++k) {
++			for (int k = Math.max(possibleInventorySlot, 0); k < j && itemstack != null && itemstack.count > 0; ++k) { // Migot - set start index
+                 itemstack = c(iinventory, itemstack, k, enumdirection);
+             }
+         }
+@@ -638,7 +706,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+     }
+ 
+     private static boolean a(ItemStack itemstack, ItemStack itemstack1) {
+-        return itemstack.getItem() != itemstack1.getItem() ? false : (itemstack.getData() != itemstack1.getData() ? false : (itemstack.count > itemstack.getMaxStackSize() ? false : ItemStack.equals(itemstack, itemstack1)));
++        return itemstack.getItem() != itemstack1.getItem() ? false : (itemstack.getData() != itemstack1.getData() ? false : (itemstack.count >= itemstack.getMaxStackSize() ? false : ItemStack.equals(itemstack, itemstack1))); // Migot - can not merge when the itemcount is already >= getMaxStackSize
+     }
+ 
+     public double E() {
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index fc5a1b4..482ae13 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -160,13 +160,6 @@ public abstract class World implements IBlockAccess {
+ 	// Paper - Start Peristence counters.
+     private long nextPersistenceCountersTick = System.nanoTime();
+     // Paper - End
+-	
+-	// Migot start
+-    private Chunk dummyChunk = new EmptyChunk(this, Integer.MIN_VALUE, Integer.MIN_VALUE);
+-    private Chunk lastChunkAccessed = dummyChunk;
+-    final Object chunkLock = new Object();
+-    public ChunkProviderServer chunkProviderServer; // moved here from WorldServer
+-    // Migot end
+ 
+     public CraftWorld getWorld() {
+         return this.world;
+@@ -373,31 +366,9 @@ public abstract class World implements IBlockAccess {
+     public Chunk getChunkAtWorldCoords(BlockPosition blockposition) {
+         return this.getChunkAt(blockposition.getX() >> 4, blockposition.getZ() >> 4);
+     }
+-	
+-	// Migot start
+-    private void cacheLastChunkAccess(Chunk foundChunk) {
+-        this.lastChunkAccessed = ((foundChunk == null || foundChunk.isEmpty() || foundChunk.wasUnloaded()) ? this.dummyChunk : foundChunk);
+-    }
+-    // Migot end
+ 
+     public Chunk getChunkAt(int i, int j) {
+-        // Migot start
+-        Chunk last = this.lastChunkAccessed;
+-        if(last.a(i,j) && !last.wasUnloaded()) {
+-            return last;
+-        } else {
+-            Chunk result = null;
+-            if(this.chunkProviderServer.isChunkLoaded(i, j)) {
+-                result = this.chunkProviderServer.getChunkAt(i, j);
+-            } else {
+-                synchronized (this.chunkLock) {
+-                    result = this.chunkProvider.getOrCreateChunk(i, j);
+-                }
+-            }
+-            this.cacheLastChunkAccess(result);
+-            return result;
+-        }
+-        // Migot end
++       return this.chunkProvider.getOrCreateChunk(i, j);
+     }
+ 
+     public boolean setTypeAndData(BlockPosition blockposition, IBlockData iblockdata, int i) {
+diff --git a/src/main/java/net/minecraft/server/WorldServer.java b/src/main/java/net/minecraft/server/WorldServer.java
+index c172590..298406e 100644
+--- a/src/main/java/net/minecraft/server/WorldServer.java
++++ b/src/main/java/net/minecraft/server/WorldServer.java
+@@ -1211,7 +1211,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
+     }
+ 
+     public ChunkProviderServer getChunkProviderServer() {
+-        return net.minecraft.server.World.chunkProviderServer;
++        return (ChunkProviderServer) super.getChunkProvider();
+     }
+ 
+     public Explosion createExplosion(@Nullable Entity entity, double d0, double d1, double d2, float f, boolean flag, boolean flag1) {
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+index 4b6c530..c329f2c 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+@@ -217,7 +217,6 @@ public class CraftWorld implements World {
+         if (chunk == null) {
+ 			return true;
+ 		}
+-		chunk.markAsUnloaded(); // Migot
+ 		// If chunk had previously been queued to save, must do save to avoid loss of that data
+         return world.getChunkProviderServer().unloadChunk(chunk, chunk.mustSave || save);
+     }
+-- 
+2.8.2.windows.1
+

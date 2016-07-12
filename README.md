@@ -9,10 +9,19 @@ The main repository of TorchSpigot
 
 A powerful high performance Spigot server fork with backported and more, 
 that aims to fix gameplay and inconsistencies, optimizations and multi-threaded computing included, based on TacoSpigot basically.
+
+Torch aims to be stable and fast.
 * Current developing version:  1.9.4
-* Recommanded(stable) version: R1.1-RELEASE
+* Recommanded(stable) version: R1.1.2-RELEASE
 
 (If you're running a previous 1.9.4 Beta, upgrading is highly recommended.)
+
+####Features
+* All features of Tacospigot/Paper/Spigot/CraftBukkit is included.
+* Backported latest changes from Bukkit/CB/Spigot/Paper/Tacospigot and more to Minecraft 1.9.4 server.
+* Implement ChunkIO2 for better performance and experience.
+* Multi-threaded computing, enjoy the server with multi-core CPU.
+* The enhanced API and more!
 
 ####How To (Server Admins)
 * Get Jar file(download): *[Click Here](http://t.im/torch)*, and use *Torch-1.9.4-R0.x.jar*, to start server directly.
@@ -29,4 +38,4 @@ run `git clone https://github.com/TorchSpigot/Torch.git` and copy files to the m
 run `mvn clean install`, and get final jar in *./TacoSpigot-Server/target/*
 
 
-Feel free to open a PR!
+Feel free to open a PR or issue.

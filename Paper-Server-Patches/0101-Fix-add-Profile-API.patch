@@ -1,4 +1,4 @@
-From 19c370abb5ad37804c721dcccbb5c1a84550c219 Mon Sep 17 00:00:00 2001
+From 7025a12af947f317f0440637471dacf3ee065dcd Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 21:47:24 +0800
 Subject: [PATCH] Fix add Profile API

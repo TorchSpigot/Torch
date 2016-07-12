@@ -1,0 +1,31 @@
+From 318e2b3f81dd4b26658412f7bcda6fa44739478e Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Tue, 12 Jul 2016 05:48:18 +0800
+Subject: [PATCH] Fix nbt storage issue
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
+index 5ecadc2..813ae95 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
+@@ -31,7 +31,7 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+     protected CraftOfflinePlayer(CraftServer server, GameProfile profile) {
+         this.server = server;
+         this.profile = profile;
+-        this.storage = server.console.worlds.get(0).getDataManager().getPlayerFileData(); // Paper
++        this.storage = (WorldNBTStorage) (server.console.worlds.get(0).getDataManager());
+ 		// Paper start - store our profile
+         this.paperProfile = ProfileUtils.toPaper(profile);
+     }
+@@ -40,7 +40,7 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+     protected CraftOfflinePlayer(CraftServer server, AccountProfile profile) {
+         this.server = server;
+         this.profile = ProfileUtils.toMojang(profile);
+-        this.storage = server.console.worlds.get(0).getDataManager().getPlayerFileData(); // Paper
++        this.storage = (WorldNBTStorage) (server.console.worlds.get(0).getDataManager());
+         this.paperProfile = profile;
+     }
+ 
+-- 
+2.8.2.windows.1
+

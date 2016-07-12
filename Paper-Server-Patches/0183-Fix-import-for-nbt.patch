@@ -1,0 +1,41 @@
+From bb9f08b67aa28ed81152015a9e6ee02d23bd974f Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Tue, 12 Jul 2016 05:48:18 +0800
+Subject: [PATCH] Fix import for nbt
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
+index 5ecadc2..2f0c87f 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
+@@ -15,6 +15,9 @@ import org.bukkit.Bukkit;
+ import org.bukkit.Location;
+ import org.bukkit.OfflinePlayer;
+ import org.bukkit.Server;
++import net.minecraft.server.WorldNBTStorage;
++import java.io.File;
++import net.minecraft.server.EntityPlayer;
+ import org.bukkit.configuration.serialization.ConfigurationSerializable;
+ import org.bukkit.configuration.serialization.SerializableAs;
+ import org.bukkit.entity.Player;
+@@ -31,7 +34,7 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+     protected CraftOfflinePlayer(CraftServer server, GameProfile profile) {
+         this.server = server;
+         this.profile = profile;
+-        this.storage = server.console.worlds.get(0).getDataManager().getPlayerFileData(); // Paper
++        this.storage = (WorldNBTStorage) (server.console.worlds.get(0).getDataManager());
+ 		// Paper start - store our profile
+         this.paperProfile = ProfileUtils.toPaper(profile);
+     }
+@@ -40,7 +43,7 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+     protected CraftOfflinePlayer(CraftServer server, AccountProfile profile) {
+         this.server = server;
+         this.profile = ProfileUtils.toMojang(profile);
+-        this.storage = server.console.worlds.get(0).getDataManager().getPlayerFileData(); // Paper
++        this.storage = (WorldNBTStorage) (server.console.worlds.get(0).getDataManager());
+         this.paperProfile = profile;
+     }
+ 
+-- 
+2.8.2.windows.1
+

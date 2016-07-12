@@ -1,0 +1,389 @@
+From d949a36599b1bc5243fd7f2e8105a41337d75082 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Tue, 12 Jul 2016 15:00:22 +0800
+Subject: [PATCH] Revert mbt storage
+
+
+diff --git a/src/main/java/net/minecraft/server/IPlayerFileData.java b/src/main/java/net/minecraft/server/IPlayerFileData.java
+index 62c1062..80ed342 100644
+--- a/src/main/java/net/minecraft/server/IPlayerFileData.java
++++ b/src/main/java/net/minecraft/server/IPlayerFileData.java
+@@ -1,7 +1,5 @@
+ package net.minecraft.server;
+ 
+-import java.util.List; // Paper
+-import java.util.UUID; // Paper
+ 
+ public interface IPlayerFileData {
+ 
+@@ -10,10 +8,4 @@ public interface IPlayerFileData {
+     NBTTagCompound load(EntityHuman entityhuman);
+ 
+     String[] getSeenPlayers();
+-	
+-	List<UUID> getSeenPlayerUUIDs(); // Paper
+-
+-    NBTTagCompound getPlayerData(UUID id); // Paper
+-
+-    long getLastModified(UUID id); // Paper
+ }
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index bd89917..a34c290 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -63,7 +63,6 @@ import org.bukkit.Bukkit;
+ import org.bukkit.craftbukkit.CraftServer;
+ // CraftBukkit end
+ import co.aikar.timings.MinecraftTimings; // Paper
+-import org.bukkit.craftbukkit.chunkio2.impl.CraftNBTStorage; // Paper
+ 
+ public abstract class MinecraftServer implements Runnable, ICommandListener, IAsyncTaskHandler, IMojangStatistics {
+ 
+@@ -274,11 +273,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+             worldsettings.setGeneratorSettings(s2);
+ 
+             if (j == 0) {
+-				// Paper - Start
+-                IDataManager idatamanager = persistence == null ? 
+-                        new ServerNBTManager(server.getWorldContainer(), s1, true, this.dataConverterManager) :
+-                        new CraftNBTStorage(true, this.dataConverterManager, persistence);
+-                // Paper - End
++				IDataManager idatamanager = new ServerNBTManager(server.getWorldContainer(), s1, true, this.dataConverterManager);
+                 WorldData worlddata = idatamanager.getWorldData();
+                 if (worlddata == null) {
+                     worlddata = new WorldData(worldsettings, s1);
+@@ -328,11 +323,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+                     }
+                 }
+ 
+-                // Paper - Start
+-                IDataManager idatamanager = persistence == null ? 
+-                        new ServerNBTManager(server.getWorldContainer(), name, true, this.dataConverterManager) :
+-                        new CraftNBTStorage(true, this.dataConverterManager, persistence);
+-                // Paper - End
++                IDataManager idatamanager = new ServerNBTManager(server.getWorldContainer(), name, true, this.dataConverterManager);
+                 // world =, b0 to dimension, s1 to name, added Environment and gen
+                 WorldData worlddata = idatamanager.getWorldData();
+                 if (worlddata == null) {
+diff --git a/src/main/java/net/minecraft/server/WorldNBTStorage.java b/src/main/java/net/minecraft/server/WorldNBTStorage.java
+index cebe38d..6bb3d3f 100644
+--- a/src/main/java/net/minecraft/server/WorldNBTStorage.java
++++ b/src/main/java/net/minecraft/server/WorldNBTStorage.java
+@@ -214,7 +214,7 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
+     }
+ 
+     // CraftBukkit start
+-    public NBTTagCompound getPlayerData(UUID s) { // Paper - String -> UUID.
++    public NBTTagCompound getPlayerData(String s) {
+         try {
+             File file1 = new File(this.playerDir, s + ".dat");
+ 
+@@ -306,7 +306,6 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
+     // CraftBukkit end
+ 	
+ 	// Paper start
+-    @Override
+     public List<UUID> getSeenPlayerUUIDs() {
+         return Arrays.asList(playerDir.list((dir, s) -> s.endsWith(".dat")))
+                 .stream()
+@@ -321,7 +320,6 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
+                 .collect(Collectors.toList());
+     }
+ 
+-    @Override
+     public long getLastModified(UUID id) {
+         File file = new File(playerDir, id + ".dat");
+         if (file.exists()) {
+diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
+index f4090cb..d4418d3 100644
+--- a/src/main/java/org/bukkit/OfflinePlayer.java
++++ b/src/main/java/org/bukkit/OfflinePlayer.java
+@@ -8,8 +8,6 @@ import org.bukkit.entity.AnimalTamer;
+ import org.bukkit.entity.Player;
+ import org.bukkit.permissions.ServerOperator;
+ 
+-import com.destroystokyo.paper.profile.AccountProfile; // Paper
+-
+ public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable {
+ 
+     /**
+@@ -156,14 +154,5 @@ public interface OfflinePlayer extends ServerOperator, AnimalTamer, Configuratio
+     @Override
+     int hashCode();
+     // Paper end
+-	
+-	// Paper start
+-    /**
+-     * Return this player's profile
+-     *
+-     * @return this player's profile
+-     */
+-    public AccountProfile getAccount();
+-    // Paper end
+ 
+ }
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
+index 538a370..40697e9 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
+@@ -16,10 +16,8 @@ import org.bukkit.Location;
+ import org.bukkit.OfflinePlayer;
+ import org.bukkit.Server;
+ import net.minecraft.server.WorldNBTStorage;
+-import net.minecraft.server.IPlayerFileData;
+ import java.io.File;
+ import net.minecraft.server.EntityPlayer;
+-import net.minecraft.server.IDataManager;
+ import org.bukkit.configuration.serialization.ConfigurationSerializable;
+ import org.bukkit.configuration.serialization.SerializableAs;
+ import org.bukkit.entity.Player;
+@@ -30,27 +28,14 @@ import org.bukkit.plugin.Plugin;
+ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializable {
+     private final GameProfile profile;
+     private final CraftServer server;
+-    private final IDataManager storage; // Paper
++    private final WorldNBTStorage storage;
+ 
+     protected CraftOfflinePlayer(CraftServer server, GameProfile profile) {
+         this.server = server;
+         this.profile = profile;
+-        this.storage = server.console.worlds.get(0).getDataManager();
++        this.storage = (WorldNBTStorage) (server.console.worlds.get(0).getDataManager());
+ 		// Paper start - store our profile
+-        this.paperProfile = ProfileUtils.toPaper(profile);
+     }
+-    private final AccountProfile paperProfile;
+-
+-    protected CraftOfflinePlayer(CraftServer server, AccountProfile profile) {
+-        this.server = server;
+-        this.profile = ProfileUtils.toMojang(profile);
+-        this.storage = server.console.worlds.get(0).getDataManager();
+-        this.paperProfile = profile;
+-    }
+-
+-    public AccountProfile getAccount() {
+-        return paperProfile;
+-     }
+ 
+     public GameProfile getProfile() {
+         return profile;
+@@ -184,9 +169,13 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+         hash = 97 * hash + (this.getUniqueId() != null ? this.getUniqueId().hashCode() : 0);
+         return hash;
+     }
++	
++	private File getDataFile() {
++        return new File(storage.getPlayerDir(), getUniqueId() + ".dat");
++    }
+ 
+     private NBTTagCompound getData() {
+-        return storage.getPlayerData(getUniqueId());
++        return storage.getPlayerData(getUniqueId().toString());
+     }
+ 
+     private NBTTagCompound getBukkitData() {
+@@ -212,7 +201,8 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+             if (data.hasKey("firstPlayed")) {
+                 return data.getLong("firstPlayed");
+             } else {
+-                return storage.getLastModified(getUniqueId()); // Paper
++                File file = getDataFile();
++                return file.lastModified();
+             }
+         } else {
+             return 0;
+@@ -229,7 +219,8 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+             if (data.hasKey("lastPlayed")) {
+                 return data.getLong("lastPlayed");
+             } else {
+-                return storage.getLastModified(getUniqueId()); // Paper
++                File file = getDataFile();
++                return file.lastModified();
+             }
+         } else {
+             return 0;
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index 263f4c0..17076ca 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -24,7 +24,6 @@ import com.destroystokyo.paper.PaperConfig;
+ import java.util.stream.Collectors; // Paper
+ import org.bukkit.craftbukkit.chunkio2.WorldPersistence;
+ import org.bukkit.craftbukkit.chunkio2.anvil.AnvilWorldPersistenceFactory;
+-import org.bukkit.craftbukkit.chunkio2.impl.CraftNBTStorage;
+ 
+ import javax.imageio.ImageIO;
+ import com.destroystokyo.paper.profile.EventProfileLookup;
+@@ -922,13 +921,7 @@ public final class CraftServer implements Server {
+         } while(used);
+         boolean hardcore = false;
+ 
+-        // Paper Start
+-        org.bukkit.craftbukkit.chunkio2.WorldPersistence persistence = getPersistence(name, creator.environment(), false);
+-
+-        IDataManager sdm = persistence == null ? 
+-                new ServerNBTManager(getWorldContainer(), name, true, getHandle().getServer().getDataConverterManager()) :
+-                new CraftNBTStorage(false, getHandle().getServer().getDataConverterManager(), persistence);
+-        // Paper Endver().getDataConverterManager());
++        IDataManager sdm = new ServerNBTManager(getWorldContainer(), name, true, getHandle().getServer().getDataConverterManager());
+         WorldData worlddata = sdm.getWorldData();
+         WorldSettings worldSettings = null;
+         if (worlddata == null) {
+@@ -1383,11 +1376,11 @@ public final class CraftServer implements Server {
+         OfflinePlayer result = getPlayerExact(name);
+         if (result == null) {
+             // Spigot Start
+-            AccountProfile profile = null;
++            GameProfile profile = null;
+             // Only fetch an online UUID in online mode
+             if ( MinecraftServer.getServer().getOnlineMode() || org.spigotmc.SpigotConfig.bungee )
+             {
+-                profile = getProfileLookup().lookup(name);
++                profile = console.getUserCache().getProfile( name );
+             }
+             // Spigot end
+             if (profile == null) {
+@@ -1395,8 +1388,7 @@ public final class CraftServer implements Server {
+                 result = getOfflinePlayer(new GameProfile(UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes(Charsets.UTF_8)), name));
+             } else {
+                 // Use the GameProfile even when we get a UUID so we ensure we still have a name
+-                result = new CraftOfflinePlayer(this, profile);
+-                offlinePlayers.put(result.getUniqueId(), result);
++                result = getOfflinePlayer(profile);
+             }
+         } else {
+             offlinePlayers.remove(result.getUniqueId());
+@@ -1413,7 +1405,7 @@ public final class CraftServer implements Server {
+         if (result == null) {
+             result = offlinePlayers.get(id);
+             if (result == null) {
+-                result = new CraftOfflinePlayer(this, getProfileLookup().lookup(id)); // Paper - do lookup
++                result = new CraftOfflinePlayer(this, new GameProfile(id, null));
+                 offlinePlayers.put(id, result);
+             }
+         } else {
+@@ -1552,13 +1544,21 @@ public final class CraftServer implements Server {
+ 
+     @Override
+     public OfflinePlayer[] getOfflinePlayers() {
+-        // Paper Start
+-        Set<OfflinePlayer> result = 
+-                console.worlds.get(0).getDataManager().getPlayerFileData().getSeenPlayerUUIDs().stream()
+-                .map((id) -> getOfflinePlayer(id))
+-                .collect(Collectors.toSet());
+-        return result.toArray(new OfflinePlayer[result.size()]);
+-        // Paper End
++        WorldNBTStorage storage = (WorldNBTStorage) console.worlds.get(0).getDataManager();
++        String[] files = storage.getPlayerDir().list(new DatFileFilter());
++        Set<OfflinePlayer> players = new HashSet<OfflinePlayer>();
++
++        for (String file : files) {
++            try {
++                players.add(getOfflinePlayer(UUID.fromString(file.substring(0, file.length() - 4))));
++            } catch (IllegalArgumentException ex) {
++                // Who knows what is in this directory, just ignore invalid files
++            }
++        }
++
++        players.addAll(getOnlinePlayers());
++
++        return players.toArray(new OfflinePlayer[players.size()]);
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+index c329f2c..d65ddab 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+@@ -1233,7 +1233,7 @@ public class CraftWorld implements World {
+     }
+ 
+     public File getWorldFolder() {
+-        return world.getDataManager().getDirectory(); // Paper
++        return ((WorldNBTStorage) world.getDataManager()).getDirectory();
+     }
+ 
+     public void sendPluginMessage(Plugin source, String channel, byte[] message) {
+diff --git a/src/main/java/org/bukkit/craftbukkit/chunkio2/impl/CraftNBTStorage.java b/src/main/java/org/bukkit/craftbukkit/chunkio2/impl/CraftNBTStorage.java
+index 9b4572c..4cf7fa8 100644
+--- a/src/main/java/org/bukkit/craftbukkit/chunkio2/impl/CraftNBTStorage.java
++++ b/src/main/java/org/bukkit/craftbukkit/chunkio2/impl/CraftNBTStorage.java
+@@ -145,7 +145,6 @@ public class CraftNBTStorage implements IDataManager, IPlayerFileData {
+         return nbttagcompound;
+     }
+ 
+-    @Override
+     public NBTTagCompound getPlayerData(UUID s) {
+         NBTDataInputConsumer result = new NBTDataInputConsumer();
+         persistence.getPlayerPersistence().loadPlayer(null, s, result);
+@@ -186,12 +185,10 @@ public class CraftNBTStorage implements IDataManager, IPlayerFileData {
+         return persistence.getUUID();
+     }
+ 
+-    @Override
+     public List<UUID> getSeenPlayerUUIDs() {
+         return persistence.getPlayerPersistence().getPlayerUUIDs();
+     }
+ 
+-    @Override
+     public long getLastModified(UUID id) {
+         return persistence.getPlayerPersistence().getLastModified(id);
+     }
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+index 90adf99..59e77a1 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+@@ -22,8 +22,6 @@ import java.util.logging.Level;
+ import java.util.logging.Logger;
+ import net.md_5.bungee.api.chat.BaseComponent;
+ 
+-import com.destroystokyo.paper.profile.AccountProfile; // Paper
+-
+ import net.minecraft.server.*;
+ import net.minecraft.server.PacketPlayOutTitle.EnumTitleAction;
+ 
+@@ -84,13 +82,6 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+ 
+         firstPlayed = System.currentTimeMillis();
+     }
+-	
+-	// Paper start
+-    @Override
+-    public AccountProfile getAccount() {
+-        return getHandle().getBukkitProfile();
+-    }
+-    // Paper end
+ 
+     public GameProfile getProfile() {
+         return getHandle().getProfile();
+diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
+index 76392a0..0ead18d 100644
+--- a/src/main/java/org/bukkit/entity/Player.java
++++ b/src/main/java/org/bukkit/entity/Player.java
+@@ -22,8 +22,6 @@ import org.bukkit.map.MapView;
+ import org.bukkit.plugin.messaging.PluginMessageRecipient;
+ import org.bukkit.scoreboard.Scoreboard;
+ 
+-import com.destroystokyo.paper.profile.AccountProfile; // Paper
+-
+ /**
+  * Represents a player, connected or not
+  */
+@@ -1658,14 +1656,4 @@ public interface Player extends HumanEntity, Conversable, CommandSender, Offline
+ 
+     Spigot spigot();
+     // Spigot end
+-	
+-	// Paper start
+-    /**
+-     * Return this player's profile
+-     *
+-     * @return this player's profile
+-     */
+-    @Override
+-    public AccountProfile getAccount();
+-    // Paper end
+ }
+-- 
+2.8.2.windows.1
+

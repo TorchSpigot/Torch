@@ -1,0 +1,22 @@
+From 92dd1082da734bb6f37b3bb545810fd0992064f4 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Tue, 12 Jul 2016 05:48:18 +0800
+Subject: [PATCH] Fix chunk get
+
+
+diff --git a/src/main/java/net/minecraft/server/TileEntityFurnace.java b/src/main/java/net/minecraft/server/TileEntityFurnace.java
+index 8dbfcc0..e12a8ed 100644
+--- a/src/main/java/net/minecraft/server/TileEntityFurnace.java
++++ b/src/main/java/net/minecraft/server/TileEntityFurnace.java
+@@ -252,7 +252,7 @@ public class TileEntityFurnace extends TileEntityContainer implements ITickable,
+             return false;
+         } else {
+             ItemStack itemstack = RecipesFurnace.getInstance().getResult(this.items[0]);
+-			if(!this.world.isLoaded(this.position) || ((WorldServer) this.world).chunkProviderServer.unloadQueue.contains(this.position.getX() >> 4, this.position.getZ() >> 4)) { return false; } // Migot
++			if(!this.world.isLoaded(this.position)) { return false; } // Migot
+ 
+             // CraftBukkit - consider resultant count instead of current count
+             return itemstack == null ? false : (this.items[2] == null ? true : (!this.items[2].doMaterialsMatch(itemstack) ? false : (this.items[2].count + itemstack.count <= this.getMaxStackSize() && this.items[2].count < this.items[2].getMaxStackSize() ? true : this.items[2].count + itemstack.count <= itemstack.getMaxStackSize())));
+-- 
+2.8.2.windows.1
+
