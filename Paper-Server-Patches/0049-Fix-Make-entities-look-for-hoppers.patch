@@ -1,4 +1,4 @@
-From e952e5eaad7bc0ded25422cbdf84c83853a572dd Mon Sep 17 00:00:00 2001
+From 518c17fe019c40222e225871a270c3b760e771ab Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 18:06:09 +0800
 Subject: [PATCH] Fix Make entities look for hoppers
