@@ -1,4 +1,4 @@
-From d037f381ea1df55c7b4b4197600f30132b352a85 Mon Sep 17 00:00:00 2001
+From f90f7f075b5e042c6b06687ce32f4fa254860145 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 14:00:06 +0800
 Subject: [PATCH] Fix missed SPIGOT-1284

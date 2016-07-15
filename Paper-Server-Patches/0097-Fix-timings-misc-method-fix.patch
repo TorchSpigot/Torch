@@ -1,4 +1,4 @@
-From b5da52f36eb7b0f9056a4997341ca41e2e2984bb Mon Sep 17 00:00:00 2001
+From de4eb02c362106788c21859dc840ffa69b8422d6 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 19:53:16 +0800
 Subject: [PATCH] Fix timings, misc method fix
