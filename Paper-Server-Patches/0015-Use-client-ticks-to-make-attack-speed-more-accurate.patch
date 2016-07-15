@@ -1,4 +1,4 @@
-From 3001bb5e0cd72dcef44df5b7ec7e4b78c0d6847c Mon Sep 17 00:00:00 2001
+From ad4466f54dc5e03805d834296501047edf02612d Mon Sep 17 00:00:00 2001
 From: Jedediah Smith <jedediah@silencegreys.com>
 Date: Tue, 19 Apr 2016 20:30:55 -0400
 Subject: [PATCH] Use client ticks to make attack speed more accurate

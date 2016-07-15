@@ -1,4 +1,4 @@
-From d987471fe8318fc6467c1330abcef85028056add Mon Sep 17 00:00:00 2001
+From 240e2140ced065316949ef0f2a7b9bc93ff5e968 Mon Sep 17 00:00:00 2001
 From: Techcable <Techcable@outlook.com>
 Date: Fri, 24 Jul 2015 16:20:18 -0700
 Subject: [PATCH] Fix hopper lag by making entities look for hoppers.

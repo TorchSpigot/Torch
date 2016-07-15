@@ -1,4 +1,4 @@
-From 93a7769ae0e650efb2acba47f053f4fb90e7e2bd Mon Sep 17 00:00:00 2001
+From afe1e61828310d0adb8722750d70d8d438085af9 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 12:51:43 +0800
 Subject: [PATCH] Fix threaded actually

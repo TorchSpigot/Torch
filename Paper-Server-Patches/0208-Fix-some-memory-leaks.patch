@@ -1,4 +1,4 @@
-From d15e864536812754243c9c9b2b0d6acd67f27e0e Mon Sep 17 00:00:00 2001
+From e5f2a53739994ecbaa41ca0a6b0253dd024c1bbd Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 01:43:54 +0800
 Subject: [PATCH] Fix some memory leaks
@@ -559,6 +559,33 @@ index 2f16136..8e7e556 100644
              int i = this.nextTickList.size();
  
              if (false) { // CraftBukkit
+diff --git a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java
+index 085cabd..0d05c3e 100644
+--- a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java
++++ b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java
+@@ -15,22 +15,16 @@ public class ChunkIOExecutor {
+     private static final AsynchronousExecutor<QueuedChunk, Chunk, Runnable, RuntimeException> instance = new AsynchronousExecutor<QueuedChunk, Chunk, Runnable, RuntimeException>(new ChunkIOProvider(), BASE_THREADS);
+ 
+     public static Chunk syncChunkLoad(World world, IChunkLoader loader, ChunkProviderServer provider, int x, int z) {
+-        synchronized(instance) { // Migot
+             return instance.getSkipQueue(new QueuedChunk(x, z, loader, world, provider));
+-        }
+     }
+ 
+     public static void queueChunkLoad(World world, IChunkLoader loader, ChunkProviderServer provider, int x, int z, Runnable runnable) {
+-        synchronized(instance) { // Migot
+             instance.add(new QueuedChunk(x, z, loader, world, provider), runnable);
+-        }
+     }
+ 
+     // Abuses the fact that hashCode and equals for QueuedChunk only use world and coords
+     public static void dropQueuedChunkLoad(World world, int x, int z, Runnable runnable) {
+-        synchronized(instance) { // Migot
+             instance.drop(new QueuedChunk(x, z, null, world, null), runnable);
+-        }
+     }
+ 
+ 	/*
 -- 
 2.8.2.windows.1
 
