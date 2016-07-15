@@ -1,4 +1,4 @@
-From 602ab6207f53782e1db832504221de58abb9fcc8 Mon Sep 17 00:00:00 2001
+From 766934939f607d2a24457912bbbde2dc0c686787 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 08:07:24 +0800
 Subject: [PATCH] SPIGOT-1364: sendMap should update entire map, miscs

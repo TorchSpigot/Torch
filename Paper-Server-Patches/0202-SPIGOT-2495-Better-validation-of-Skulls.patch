@@ -1,0 +1,93 @@
+From 2b9ecc82cbdad289fdcfa82a3295d094ec94f48e Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Fri, 15 Jul 2016 20:08:18 +0800
+Subject: [PATCH] SPIGOT-2495: Better validation of Skulls.
+
+
+diff --git a/src/main/java/net/minecraft/server/BlockOre.java b/src/main/java/net/minecraft/server/BlockOre.java
+index ceec8c8..58b5d36 100644
+--- a/src/main/java/net/minecraft/server/BlockOre.java
++++ b/src/main/java/net/minecraft/server/BlockOre.java
+@@ -89,10 +89,6 @@ public class BlockOre extends Block {
+         return new ItemStack(this);
+     }
+ 
+-    public int getDropData(World world, BlockPosition blockposition) {
+-        return 0;
+-    }
+-
+     public int getDropData(IBlockData iblockdata) {
+         return this == Blocks.LAPIS_ORE ? EnumColor.BLUE.getInvColorIndex() : 0;
+     }
+diff --git a/src/main/java/net/minecraft/server/ItemSkull.java b/src/main/java/net/minecraft/server/ItemSkull.java
+index 75cd3f1..72c902a 100644
+--- a/src/main/java/net/minecraft/server/ItemSkull.java
++++ b/src/main/java/net/minecraft/server/ItemSkull.java
+@@ -131,6 +131,20 @@ public class ItemSkull extends Item {
+             // Spigot end
+             return true;
+         } else {
++			// CraftBukkit start
++            boolean valid = true;
++
++            NBTTagList textures = nbttagcompound.getCompound("SkullOwner").getCompound("Properties").getList("textures", 10); // Safe due to method contracts
++            for (int i = 0; i < textures.size(); i++) {
++                if (textures.get(i) instanceof NBTTagCompound && !((NBTTagCompound) textures.get(i)).hasKeyOfType("Signature", 8)) {
++                    valid = false;
++                }
++            }
++
++            if (!valid) {
++                nbttagcompound.remove("SkullOwner");
++            }
++            // CraftBukkit end
+             return false;
+         }
+     }
+diff --git a/src/main/java/org/bukkit/inventory/InventoryView.java b/src/main/java/org/bukkit/inventory/InventoryView.java
+index 8fae28b..e37cb9b 100644
+--- a/src/main/java/org/bukkit/inventory/InventoryView.java
++++ b/src/main/java/org/bukkit/inventory/InventoryView.java
+@@ -48,6 +48,27 @@ public abstract class InventoryView {
+          * value.
+          */
+         ENCHANT_BUTTON2(1, InventoryType.ENCHANTING),
++		ENCHANT_ID1(4, InventoryType.ENCHANTING),
++        /**
++         * In an enchanting inventory, the middle button's enchantment's id
++         */
++        ENCHANT_ID2(5, InventoryType.ENCHANTING),
++        /**
++         * In an enchanting inventory, the bottom button's enchantment's id
++         */
++        ENCHANT_ID3(6, InventoryType.ENCHANTING),
++        /**
++         * In an enchanting inventory, the top button's level value.
++         */
++        ENCHANT_LEVEL1(7, InventoryType.ENCHANTING),
++        /**
++         * In an enchanting inventory, the middle button's level value.
++         */
++        ENCHANT_LEVEL2(8, InventoryType.ENCHANTING),
++        /**
++         * In an enchanting inventory, the bottom button's level value.
++         */
++        ENCHANT_LEVEL3(9, InventoryType.ENCHANTING),
+         /**
+          * In an enchanting inventory, the bottom button's experience level
+          * value.
+@@ -77,8 +98,11 @@ public abstract class InventoryView {
+          */
+         ENCHANT_ID_AND_LEVEL3(6, InventoryType.ENCHANTING),
+         POWER_LEVEL(0, InventoryType.BEACON),
++		LEVELS(0, InventoryType.BEACON),
+         POTION_EFFECT1(1, InventoryType.BEACON),
+         POTION_EFFECT2(2, InventoryType.BEACON),
++		SECONDARY_EFFECT(2, InventoryType.BEACON),
++		PRIMARY_EFFECT(1, InventoryType.BEACON),
+         /**
+          * The repair's cost in xp levels
+          */
+-- 
+2.8.2.windows.1
+

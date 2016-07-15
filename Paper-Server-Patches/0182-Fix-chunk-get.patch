@@ -1,4 +1,4 @@
-From 92dd1082da734bb6f37b3bb545810fd0992064f4 Mon Sep 17 00:00:00 2001
+From c76b80d202cc6fc3e359aeeb70dd4fee8db55584 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 12 Jul 2016 05:48:18 +0800
 Subject: [PATCH] Fix chunk get

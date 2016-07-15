@@ -1,0 +1,254 @@
+From 35ce885f376059a9ca9761db81bf5fc7fee9d3ef Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Tue, 12 Jul 2016 18:36:37 +0800
+Subject: [PATCH] Prevent-a-CME-in-EntityTracker
+
+
+diff --git a/src/main/java/net/minecraft/server/BiomeDecorator.java b/src/main/java/net/minecraft/server/BiomeDecorator.java
+index ba304bf..e58815b 100644
+--- a/src/main/java/net/minecraft/server/BiomeDecorator.java
++++ b/src/main/java/net/minecraft/server/BiomeDecorator.java
+@@ -88,7 +88,6 @@ public class BiomeDecorator {
+         if (this.a) {
+             // Migot start
+             BiomeDecorator decorator = this.createShallowCopy();
+-            decorator.a = world;
+             String s = world.getWorldData().getGeneratorOptions();
+             if (s != null) {
+                 decorator.c = CustomWorldSettingsFinal.CustomWorldSettings.a(s).b();
+diff --git a/src/main/java/net/minecraft/server/EntityTracker.java b/src/main/java/net/minecraft/server/EntityTracker.java
+index 95a57c0..becf468 100644
+--- a/src/main/java/net/minecraft/server/EntityTracker.java
++++ b/src/main/java/net/minecraft/server/EntityTracker.java
+@@ -29,15 +29,17 @@ public class EntityTracker {
+         if (entity instanceof EntityPlayer) {
+             this.addEntity(entity, 512, 2);
+             EntityPlayer entityplayer = (EntityPlayer) entity;
+-            Iterator iterator = this.c.iterator();
++            synchronized(this.c) { // Migot
++                Iterator iterator = this.c.iterator();
+ 
+-            while (iterator.hasNext()) {
+-                EntityTrackerEntry entitytrackerentry = (EntityTrackerEntry) iterator.next();
++				while (iterator.hasNext()) {
++					EntityTrackerEntry entitytrackerentry = (EntityTrackerEntry) iterator.next();
+ 
+-                if (entitytrackerentry.b() != entityplayer) {
+-                    entitytrackerentry.updatePlayer(entityplayer);
+-                }
+-            }
++					if (entitytrackerentry.b() != entityplayer) {
++						entitytrackerentry.updatePlayer(entityplayer);
++					}
++				}
++			}
+         } else if (entity instanceof EntityFishingHook) {
+             this.addEntity(entity, 64, 5, true);
+         } else if (entity instanceof EntityArrow) {
+@@ -110,7 +112,9 @@ public class EntityTracker {
+ 
+             EntityTrackerEntry entitytrackerentry = new EntityTrackerEntry(entity, i, this.e, j, flag);
+ 
+-            this.c.add(entitytrackerentry);
++            synchronized(this.c) { // Migot
++                this.c.add(entitytrackerentry);
++            }
+             this.trackedEntities.a(entity.getId(), entitytrackerentry);
+             entitytrackerentry.scanPlayers(this.world.players);
+         } catch (Throwable throwable) {
+@@ -152,19 +156,23 @@ public class EntityTracker {
+         // org.spigotmc.AsyncCatcher.catchOp( "entity untrack"); // Spigot
+         if (entity instanceof EntityPlayer) {
+             EntityPlayer entityplayer = (EntityPlayer) entity;
+-            Iterator iterator = this.c.iterator();
++            synchronized(this.c) { // Migot
++                Iterator iterator = this.c.iterator();
+ 
+-            while (iterator.hasNext()) {
+-                EntityTrackerEntry entitytrackerentry = (EntityTrackerEntry) iterator.next();
++				while (iterator.hasNext()) {
++					EntityTrackerEntry entitytrackerentry = (EntityTrackerEntry) iterator.next();
+ 
+-                entitytrackerentry.a(entityplayer);
+-            }
++					entitytrackerentry.a(entityplayer);
++				}
++			}
+         }
+ 
+         EntityTrackerEntry entitytrackerentry1 = (EntityTrackerEntry) this.trackedEntities.d(entity.getId());
+ 
+         if (entitytrackerentry1 != null) {
+-            this.c.remove(entitytrackerentry1);
++            synchronized(this.c) { // Migot
++                this.c.remove(entitytrackerentry1);
++            }
+             entitytrackerentry1.a();
+         }
+ 
+@@ -172,50 +180,56 @@ public class EntityTracker {
+ 
+     public void updatePlayers() {
+         ArrayList arraylist = Lists.newArrayList();
+-        Iterator iterator = this.c.iterator();
+-        world.timings.tracker1.startTiming(); // Spigot
+-        while (iterator.hasNext()) {
+-            EntityTrackerEntry entitytrackerentry = (EntityTrackerEntry) iterator.next();
+-
+-            entitytrackerentry.track(this.world.players);
+-            if (entitytrackerentry.b) {
+-                Entity entity = entitytrackerentry.b();
+-
+-                if (entity instanceof EntityPlayer) {
+-                    arraylist.add((EntityPlayer) entity);
+-                }
+-            }
++		world.timings.tracker1.startTiming(); // Spigot
++        synchronized(this.c) { // Migot
++            Iterator iterator = this.c.iterator();
++			while (iterator.hasNext()) {
++				EntityTrackerEntry entitytrackerentry = (EntityTrackerEntry) iterator.next();
++
++				entitytrackerentry.track(this.world.players);
++				if (entitytrackerentry.b) {
++					Entity entity = entitytrackerentry.b();
++
++					if (entity instanceof EntityPlayer) {
++						arraylist.add((EntityPlayer) entity);
++					}
++				}
++			}
+         }
+         world.timings.tracker1.stopTiming(); // Spigot
+ 
+         world.timings.tracker2.startTiming(); // Spigot
+         for (int i = 0; i < arraylist.size(); ++i) {
+             EntityPlayer entityplayer = (EntityPlayer) arraylist.get(i);
+-            Iterator iterator1 = this.c.iterator();
++            synchronized(this.c) { // Migot
++                Iterator iterator1 = this.c.iterator();
+ 
+-            while (iterator1.hasNext()) {
+-                EntityTrackerEntry entitytrackerentry1 = (EntityTrackerEntry) iterator1.next();
++				while (iterator1.hasNext()) {
++					EntityTrackerEntry entitytrackerentry1 = (EntityTrackerEntry) iterator1.next();
+ 
+-                if (entitytrackerentry1.b() != entityplayer) {
+-                    entitytrackerentry1.updatePlayer(entityplayer);
+-                }
+-            }
++					if (entitytrackerentry1.b() != entityplayer) {
++						entitytrackerentry1.updatePlayer(entityplayer);
++					}
++				}
++			}
+         }
+         world.timings.tracker2.stopTiming(); // Spigot
+ 
+     }
+ 
+     public void a(EntityPlayer entityplayer) {
+-        Iterator iterator = this.c.iterator();
++        synchronized(this.c) { // Migot
++            Iterator iterator = this.c.iterator();
+ 
+-        while (iterator.hasNext()) {
+-            EntityTrackerEntry entitytrackerentry = (EntityTrackerEntry) iterator.next();
++			while (iterator.hasNext()) {
++				EntityTrackerEntry entitytrackerentry = (EntityTrackerEntry) iterator.next();
+ 
+-            if (entitytrackerentry.b() == entityplayer) {
+-                entitytrackerentry.scanPlayers(this.world.players);
+-            } else {
+-                entitytrackerentry.updatePlayer(entityplayer);
+-            }
++				if (entitytrackerentry.b() == entityplayer) {
++					entitytrackerentry.scanPlayers(this.world.players);
++				} else {
++					entitytrackerentry.updatePlayer(entityplayer);
++				}
++			}
+         }
+ 
+     }
+@@ -239,35 +253,38 @@ public class EntityTracker {
+     }
+ 
+     public void untrackPlayer(EntityPlayer entityplayer) {
+-        Iterator iterator = this.c.iterator();
++        synchronized(this.c) { // Migot
++            Iterator iterator = this.c.iterator();
+ 
+-        while (iterator.hasNext()) {
+-            EntityTrackerEntry entitytrackerentry = (EntityTrackerEntry) iterator.next();
++			while (iterator.hasNext()) {
++				EntityTrackerEntry entitytrackerentry = (EntityTrackerEntry) iterator.next();
+ 
+-            entitytrackerentry.clear(entityplayer);
+-        }
++				entitytrackerentry.clear(entityplayer);
++			}
++		}
+ 
+     }
+ 
+     public void a(EntityPlayer entityplayer, Chunk chunk) {
+         ArrayList arraylist = Lists.newArrayList();
+         ArrayList arraylist1 = Lists.newArrayList();
+-        Iterator iterator = this.c.iterator();
+-
+-        while (iterator.hasNext()) {
+-            EntityTrackerEntry entitytrackerentry = (EntityTrackerEntry) iterator.next();
+-            Entity entity = entitytrackerentry.b();
+-
+-            if (entity != entityplayer && entity.ab == chunk.locX && entity.ad == chunk.locZ) {
+-                entitytrackerentry.updatePlayer(entityplayer);
+-                if (entity instanceof EntityInsentient && ((EntityInsentient) entity).getLeashHolder() != null) {
+-                    arraylist.add(entity);
+-                }
+-
+-                if (!entity.bv().isEmpty()) {
+-                    arraylist1.add(entity);
+-                }
+-            }
++		Iterator iterator = this.c.iterator();
++        synchronized(this.c) { // Migot
++			while (iterator.hasNext()) {
++				EntityTrackerEntry entitytrackerentry = (EntityTrackerEntry) iterator.next();
++				Entity entity = entitytrackerentry.b();
++
++				if (entity != entityplayer && entity.ab == chunk.locX && entity.ad == chunk.locZ) {
++					entitytrackerentry.updatePlayer(entityplayer);
++					if (entity instanceof EntityInsentient && ((EntityInsentient) entity).getLeashHolder() != null) {
++						arraylist.add(entity);
++					}
++
++					if (!entity.bv().isEmpty()) {
++						arraylist1.add(entity);
++					}
++				}
++			}
+         }
+ 
+         Entity entity1;
+diff --git a/src/main/java/net/minecraft/server/StructureGenerator.java b/src/main/java/net/minecraft/server/StructureGenerator.java
+index aa4bea4..bc5b5d1 100644
+--- a/src/main/java/net/minecraft/server/StructureGenerator.java
++++ b/src/main/java/net/minecraft/server/StructureGenerator.java
+@@ -258,4 +258,13 @@ public abstract class StructureGenerator extends WorldGenBase {
+                  
+     }
+ 	
++	private void a(int i, int j, StructureStart structurestart) {
++        this.a.a(structurestart.a(i, j), i, j);
++        this.a.c();
++    }
++
++    protected abstract boolean a(int i, int j);
++
++    protected abstract StructureStart b(int i, int j);
++	
+ }
+-- 
+2.8.2.windows.1
+

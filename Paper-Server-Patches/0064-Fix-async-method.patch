@@ -1,4 +1,4 @@
-From ab966bab5e0f3a9440a4ebfc16cc9233e1c32df3 Mon Sep 17 00:00:00 2001
+From 79e7d96b36ceed889b1067d176c19127c276a044 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 09:27:47 +0800
 Subject: [PATCH] Fix async method

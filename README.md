@@ -12,19 +12,22 @@ that aims to fix gameplay and inconsistencies, optimizations and multi-threaded 
 
 Torch aims to be stable and fast.
 * Current developing version:  1.9.4
-* Recommanded(stable) version: R1.1.2-RELEASE
+* Recommanded(stable) version: R1.2-RELEASE
 
-(If you're running a previous 1.9.4 Beta, upgrading is highly recommended.)
+(If you're running a previous Beta, upgrading is highly recommended.)
 
 ####Features
-* All features of Tacospigot/Paper/Spigot/CraftBukkit is included.
+* All features of Tacospigot/Paper/Spigot/CraftBukkit are included.
 * Backported latest changes from Bukkit/CB/Spigot/Paper/Tacospigot and more to Minecraft 1.9.4 server.
 * Implement ChunkIO2 for better performance and experience.
-* Multi-threaded computing, enjoy the server with multi-core CPU.
+* The Anti-Xray is inbult.
+* Multithreading computing, enjoy the server with multi-core CPU.
 * The enhanced API and more!
 
 ####How To (Server Admins)
-* Get Jar file(download): *[Click Here](http://t.im/torch)*, and use *Torch-1.9.4-R0.x.jar*, to start server directly.
+To use Torch, you need JRE8(or above).
+
+* Get Jar file(download): *[Click Here](http://t.im/torch)*, and use *Torch-1.9.4-R1.x.jar*, to start server directly.
 * Just enjoy Torch! :)
 
 ####How To (Compiling From Source)
@@ -33,9 +36,9 @@ To compile Torch, you need JDK8(or above), git, bash, maven, and an internet con
 * First clone and build *[TacoSpigot](https://github.com/TacoSpigot/TacoSpigot/)*,
 run `git clone --branch version/1.9.4 https://github.com/TacoSpigot/TacoSpigot.git`
 * then clone this repo,
-run `git clone https://github.com/TorchSpigot/Torch.git` and copy files to the main folder
+run `git clone https://github.com/TorchSpigot/Torch.git` and copy files to the main repo folder
 * last, run `./applypatches.sh`,
-run `mvn clean install`, and get final jar in *./TacoSpigot-Server/target/*
+and `mvn clean install`, you can get the final jar in *./TacoSpigot-Server/target/*
 
 
 Feel free to open a PR or issue.

@@ -1,4 +1,4 @@
-From 5e15700ab0b3a520c86f00808158f1834ba1e5b3 Mon Sep 17 00:00:00 2001
+From f71ee27ccc5812dc97f99b8fe67fa42bcf2da120 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 14:15:46 +0800
 Subject: [PATCH] Fix timings issues
@@ -49,7 +49,7 @@ index f743681..bb505fa 100644
          // return chunk; // CraftBukkit
      }
 diff --git a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOProvider.java b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOProvider.java
-index e5c6a1e..e53d88b 100644
+index e5c6a1e..e53d88b92 100644
 --- a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOProvider.java
 +++ b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOProvider.java
 @@ -44,9 +44,9 @@ class ChunkIOProvider implements AsynchronousExecutor.CallBackProvider<QueuedChu

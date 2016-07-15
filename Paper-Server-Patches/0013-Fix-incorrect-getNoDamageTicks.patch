@@ -1,4 +1,4 @@
-From 95211c52aef8e7a0be40a3560e25334a2315fa03 Mon Sep 17 00:00:00 2001
+From 7e5245bd5426d8c05afd50063961c15c6983f064 Mon Sep 17 00:00:00 2001
 From: Jedediah Smith <jedediah@silencegreys.com>
 Date: Wed, 16 Mar 2016 22:03:58 -0400
 Subject: [PATCH] Fix incorrect getNoDamageTicks
@@ -26,5 +26,5 @@ index d23cade..a9654be 100644
  
      @Override
 -- 
-2.8.2
+2.8.2.windows.1
 

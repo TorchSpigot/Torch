@@ -1,4 +1,4 @@
-From 15cfc9083171a088fcd068dae136157599fa204c Mon Sep 17 00:00:00 2001
+From d39bf479c56a010d5fd69fd3a088abbcbad9b48b Mon Sep 17 00:00:00 2001
 From: Techcable <Techcable@outlook.com>
 Date: Thu, 19 Mar 2015 19:41:15 -0500
 Subject: [PATCH] POM Changes
@@ -79,5 +79,5 @@ index 674096c..4135e72 100644
  
          if (stream != null) {
 -- 
-2.8.3
+2.8.2.windows.1
 

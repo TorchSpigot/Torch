@@ -1,4 +1,4 @@
-From 7924439f54fd2a1c99e5338cf923aaf7e9804928 Mon Sep 17 00:00:00 2001
+From f19ff89eb9d4519f3ba4955d5c51e1549944c5e8 Mon Sep 17 00:00:00 2001
 From: Techcable <Techcable@outlook.com>
 Date: Fri, 24 Jul 2015 16:20:18 -0700
 Subject: [PATCH] Fix hopper lag by making entities look for hoppers.
@@ -50,7 +50,7 @@ index 0b11fd7..26f7f6c 100644
          int elapsedTicks = MinecraftServer.currentTick - this.lastTick;
          if (this.pickupDelay != 32767) this.pickupDelay -= elapsedTicks;
 diff --git a/src/main/java/net/minecraft/server/EntityMinecartContainer.java b/src/main/java/net/minecraft/server/EntityMinecartContainer.java
-index 7216fa5..717cf21 100644
+index 9162348..c5bac00 100644
 --- a/src/main/java/net/minecraft/server/EntityMinecartContainer.java
 +++ b/src/main/java/net/minecraft/server/EntityMinecartContainer.java
 @@ -13,8 +13,27 @@ import org.bukkit.craftbukkit.entity.CraftHumanEntity;
@@ -318,5 +318,5 @@ index 2bc5877..d431d3b 100644
 +    }
  }
 -- 
-2.8.3
+2.8.2.windows.1
 

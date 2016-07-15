@@ -1,4 +1,4 @@
-From 41511514e2937782432e56c900f36831b4c1dc64 Mon Sep 17 00:00:00 2001
+From 41740ede509b6095f63395d6ceeeba87b1438a86 Mon Sep 17 00:00:00 2001
 From: Techcable <Techcable@techcable.net>
 Date: Sun, 3 Apr 2016 14:05:27 -0700
 Subject: [PATCH] MC-Dev Fixes
@@ -75,5 +75,5 @@ index a79fa01..a21743d 100644
 +    // TacoSpigot end
  }
 -- 
-2.8.3
+2.8.2.windows.1
 

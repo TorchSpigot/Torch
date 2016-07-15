@@ -1,4 +1,4 @@
-From 16ee3607e5c6bf0cad35280aaf8cf4e9b0a6e2ca Mon Sep 17 00:00:00 2001
+From d905a202dfdff4a1d8f4db0cb5251c04e915cec8 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 22:42:24 +0800
 Subject: [PATCH] Add alternative implementation for Mojangs File IO.
@@ -769,7 +769,7 @@ index 4e458bc..2dc688c 100644
      }
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOProvider.java b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOProvider.java
-index e53d88b..ffbc4de 100644
+index e53d88b92..ffbc4de 100644
 --- a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOProvider.java
 +++ b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOProvider.java
 @@ -8,6 +8,7 @@ import net.minecraft.server.NBTTagCompound;

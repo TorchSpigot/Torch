@@ -1,4 +1,4 @@
-From 030d067256e8231ac91c82b6db7968e3fbf7a964 Mon Sep 17 00:00:00 2001
+From d870d26e97584bddcf3e9e1ec763615b796e12b4 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:35:17 +0800
 Subject: [PATCH] SPIGOT-1495: Update inventory if required on

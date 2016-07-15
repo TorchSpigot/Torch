@@ -1,11 +1,11 @@
-From 2bcbb978dc9809ad48f881e7c8bcbb62cf52c675 Mon Sep 17 00:00:00 2001
+From 1c47450694dd26ae4b68d8773e96149585e98cb0 Mon Sep 17 00:00:00 2001
 From: Jedediah Smith <jedediah@silencegreys.com>
 Date: Mon, 4 Apr 2016 01:45:23 -0400
 Subject: [PATCH] Fix armor toughness being ignored
 
 
 diff --git a/src/main/java/net/minecraft/server/EntityLiving.java b/src/main/java/net/minecraft/server/EntityLiving.java
-index 129bca8..2848def 100644
+index c4c0308..c1b98cf 100644
 --- a/src/main/java/net/minecraft/server/EntityLiving.java
 +++ b/src/main/java/net/minecraft/server/EntityLiving.java
 @@ -1131,7 +1131,7 @@ public abstract class EntityLiving extends Entity {
@@ -18,5 +18,5 @@ index 129bca8..2848def 100644
  
          return f;
 -- 
-2.8.2
+2.8.2.windows.1
 
