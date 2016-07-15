@@ -1,4 +1,4 @@
-From 38b1eecb5fc1c25ee0787b9696b478198c46f2f5 Mon Sep 17 00:00:00 2001
+From 57f9350509619a2851a92099aa8d5048a204fb50 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 18:38:25 +0800
 Subject: [PATCH] Fix missed method for bukkit command
