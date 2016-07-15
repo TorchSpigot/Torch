@@ -1,4 +1,4 @@
-From d0cafeafaff9f58007800a35ad8ee8dce2e84645 Mon Sep 17 00:00:00 2001
+From 17fc7729879ee7f584bc8f2ead2609baff624659 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:31:39 +0800
 Subject: [PATCH] SPIGOT-2481: Implement EnchantmentTarget.BREAKABLE
