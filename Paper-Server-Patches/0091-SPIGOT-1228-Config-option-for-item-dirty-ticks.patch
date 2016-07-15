@@ -1,4 +1,4 @@
-From 0c6fa02c98629da55d0b4445ec74921b2cf1e5f7 Mon Sep 17 00:00:00 2001
+From 48b47a23b4f9b6d2c4514646db9133e8cf416d1b Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 18:10:53 +0800
 Subject: [PATCH] SPIGOT-1228: Config option for item dirty ticks
