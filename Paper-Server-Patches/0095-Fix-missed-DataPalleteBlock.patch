@@ -1,4 +1,4 @@
-From 4b83e05365b409931ceba8970ef08641d615a767 Mon Sep 17 00:00:00 2001
+From 8c1275c4dcae0cac343de4c3ab4045c854c0ebc0 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 19:45:30 +0800
 Subject: [PATCH] Fix missed DataPalleteBlock

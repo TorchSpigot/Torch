@@ -1,4 +1,4 @@
-From b5cbf199ae165d6b5b1a521488a472100f8a1509 Mon Sep 17 00:00:00 2001
+From a07208aefd3ad2a946c7d3c4c1d600cbc58908fe Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 16:59:11 +0800
 Subject: [PATCH] Fix threadsafe dev issue

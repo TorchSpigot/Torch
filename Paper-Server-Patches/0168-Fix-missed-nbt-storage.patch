@@ -1,4 +1,4 @@
-From 392d3e1fdd7c61f5db133e953a05f0f3b77d1b24 Mon Sep 17 00:00:00 2001
+From 58c71e7fc508ec1bfec0d11c5409e45fc3ca0022 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 12 Jul 2016 03:48:28 +0800
 Subject: [PATCH] Fix missed nbt storage
