@@ -12,15 +12,15 @@ that aims to fix gameplay and inconsistencies, optimizations and multi-threaded 
 
 Torch aims to be stable and fast.
 * Current developing version:  1.9.4
-* Recommanded(stable) version: R1.2-RELEASE
+* Recommanded(stable) version: R1.3-RELEASE
 
 (If you're running a previous Beta, upgrading is highly recommended.)
 
 ####Features
-* All features of Tacospigot/Paper/Spigot/CraftBukkit are included.
+* All features of Tacospigot/Paper/Spigot/CB are included.
 * Backported latest changes from Bukkit/CB/Spigot/Paper/Tacospigot and more to Minecraft 1.9.4 server.
 * Implement ChunkIO2 for better performance and experience.
-* The Anti-Xray is inbult.
+* The asynchronous Anti-Xray inbult.
 * Multithreading computing, enjoy the server with multi-core CPU.
 * The enhanced API and more!
 

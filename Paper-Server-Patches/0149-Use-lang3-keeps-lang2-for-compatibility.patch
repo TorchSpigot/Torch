@@ -1,11 +1,11 @@
-From dc3d2c638cbb9e62bf55538df64e09a026f61f48 Mon Sep 17 00:00:00 2001
+From c33f039581b3d5ecb7750d791f4bc41d9b34a3c3 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 20:04:20 +0800
 Subject: [PATCH] Use-lang3-keeps-lang2-for-compatibility
 
 
 diff --git a/pom.xml b/pom.xml
-index ef8f607..b06cb46 100644
+index 88217c1..dd8de36 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -35,6 +35,11 @@

@@ -1,0 +1,4337 @@
+From e8c422f5442d7f27550f202563074363cb892a64 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 16 Jul 2016 04:17:07 +0800
+Subject: [PATCH] Physical interface
+
+
+diff --git a/src/main/java/net/minecraft/server/Chunk.java b/src/main/java/net/minecraft/server/Chunk.java
+index c6bb08a..6416609 100644
+--- a/src/main/java/net/minecraft/server/Chunk.java
++++ b/src/main/java/net/minecraft/server/Chunk.java
+@@ -54,6 +54,8 @@ public class Chunk {
+     private boolean t;
+     private long lastSaved;
+     private int v;
++	public org.bukkit.Chunk bukkitChunk;
++    public boolean mustSave;
+     private long w;
+     private int x;
+     private ConcurrentLinkedQueue<BlockPosition> y;
+@@ -121,9 +123,6 @@ public class Chunk {
+         this.bukkitChunk = new org.bukkit.craftbukkit.CraftChunk(this);
+ 		this.chunkKey = ChunkCoordIntPair.a(this.locX, this.locZ);
+     }
+-
+-    public org.bukkit.Chunk bukkitChunk;
+-    public boolean mustSave;
+     // CraftBukkit end
+ 
+     public Chunk(World world, ChunkSnapshot chunksnapshot, int i, int j) {
+diff --git a/src/main/java/net/minecraft/server/EntityTNTPrimed.java b/src/main/java/net/minecraft/server/EntityTNTPrimed.java
+index 51fe30b..028d68d 100644
+--- a/src/main/java/net/minecraft/server/EntityTNTPrimed.java
++++ b/src/main/java/net/minecraft/server/EntityTNTPrimed.java
+@@ -131,7 +131,7 @@ public class EntityTNTPrimed extends Entity {
+         server.getPluginManager().callEvent(event);
+ 
+         if (!event.isCancelled()) {
+-            this.world.createExplosion(this, this.locX, this.locY + (double) (this.length / 16.0F), this.locZ, explosive.getYield(), explosive.isIncendiary(), true);
++            this.world.createExplosion(this, this.locX, this.locY + (double) (this.length / 16.0F), this.locZ, event.getRadius(), event.getFire(), true);
+         }
+         // CraftBukkit end
+     }
+diff --git a/src/main/java/org/bukkit/Chunk.java b/src/main/java/org/bukkit/Chunk.java
+new file mode 100644
+index 0000000..fa98cf7
+--- /dev/null
++++ b/src/main/java/org/bukkit/Chunk.java
+@@ -0,0 +1,126 @@
++package org.bukkit;
++
++import org.bukkit.block.Block;
++import org.bukkit.block.BlockState;
++import org.bukkit.entity.Entity;
++
++/**
++ * Represents a chunk of blocks
++ */
++public interface Chunk extends Physical {
++
++    /**
++     * Gets the X-coordinate of this chunk
++     *
++     * @return X-coordinate
++     */
++    int getX();
++
++    /**
++     * Gets the Z-coordinate of this chunk
++     *
++     * @return Z-coordinate
++     */
++    int getZ();
++
++    /**
++     * Gets the world containing this chunk
++     *
++     * @return Parent World
++     */
++    World getWorld();
++
++    /**
++     * Gets a block from this chunk
++     *
++     * @param x 0-15
++     * @param y 0-127
++     * @param z 0-15
++     * @return the Block
++     */
++    Block getBlock(int x, int y, int z);
++
++    /**
++     * Capture thread-safe read-only snapshot of chunk data
++     *
++     * @return ChunkSnapshot
++     */
++    ChunkSnapshot getChunkSnapshot();
++
++    /**
++     * Capture thread-safe read-only snapshot of chunk data
++     *
++     * @param includeMaxblocky - if true, snapshot includes per-coordinate
++     *     maximum Y values
++     * @param includeBiome - if true, snapshot includes per-coordinate biome
++     *     type
++     * @param includeBiomeTempRain - if true, snapshot includes per-coordinate
++     *     raw biome temperature and rainfall
++     * @return ChunkSnapshot
++     */
++    ChunkSnapshot getChunkSnapshot(boolean includeMaxblocky, boolean includeBiome, boolean includeBiomeTempRain);
++
++    /**
++     * Get a list of all entities in the chunk.
++     *
++     * @return The entities.
++     */
++    Entity[] getEntities();
++
++    /**
++     * Get a list of all tile entities in the chunk.
++     *
++     * @return The tile entities.
++     */
++    BlockState[] getTileEntities();
++
++    /**
++     * Checks if the chunk is loaded.
++     *
++     * @return True if it is loaded.
++     */
++    boolean isLoaded();
++
++    /**
++     * Loads the chunk.
++     *
++     * @param generate Whether or not to generate a chunk if it doesn't
++     *     already exist
++     * @return true if the chunk has loaded successfully, otherwise false
++     */
++    boolean load(boolean generate);
++
++    /**
++     * Loads the chunk.
++     *
++     * @return true if the chunk has loaded successfully, otherwise false
++     */
++    boolean load();
++
++    /**
++     * Unloads and optionally saves the Chunk
++     *
++     * @param save Controls whether the chunk is saved
++     * @param safe Controls whether to unload the chunk when players are
++     *     nearby
++     * @return true if the chunk has unloaded successfully, otherwise false
++     * @deprecated it is never safe to remove a chunk in use
++     */
++    @Deprecated
++    boolean unload(boolean save, boolean safe);
++
++    /**
++     * Unloads and optionally saves the Chunk
++     *
++     * @param save Controls whether the chunk is saved
++     * @return true if the chunk has unloaded successfully, otherwise false
++     */
++    boolean unload(boolean save);
++
++    /**
++     * Unloads and optionally saves the Chunk
++     *
++     * @return true if the chunk has unloaded successfully, otherwise false
++     */
++    boolean unload();
++}
+diff --git a/src/main/java/org/bukkit/Location.java b/src/main/java/org/bukkit/Location.java
+new file mode 100644
+index 0000000..cd7ac2f
+--- /dev/null
++++ b/src/main/java/org/bukkit/Location.java
+@@ -0,0 +1,600 @@
++package org.bukkit;
++
++import java.util.HashMap;
++import java.util.Map;
++
++import org.bukkit.block.Block;
++import org.bukkit.configuration.serialization.ConfigurationSerializable;
++import org.bukkit.util.NumberConversions;
++import static org.bukkit.util.NumberConversions.checkFinite;
++import org.bukkit.util.Vector;
++
++/**
++ * Represents a 3-dimensional position in a world
++ */
++public class Location implements Cloneable, ConfigurationSerializable, Physical {
++    private World world;
++    private double x;
++    private double y;
++    private double z;
++    private float pitch;
++    private float yaw;
++
++    /**
++     * Constructs a new Location with the given coordinates
++     *
++     * @param world The world in which this location resides
++     * @param x The x-coordinate of this new location
++     * @param y The y-coordinate of this new location
++     * @param z The z-coordinate of this new location
++     */
++    public Location(final World world, final double x, final double y, final double z) {
++        this(world, x, y, z, 0, 0);
++    }
++
++    /**
++     * Constructs a new Location with the given coordinates and direction
++     *
++     * @param world The world in which this location resides
++     * @param x The x-coordinate of this new location
++     * @param y The y-coordinate of this new location
++     * @param z The z-coordinate of this new location
++     * @param yaw The absolute rotation on the x-plane, in degrees
++     * @param pitch The absolute rotation on the y-plane, in degrees
++     */
++    public Location(final World world, final double x, final double y, final double z, final float yaw, final float pitch) {
++        this.world = world;
++        this.x = x;
++        this.y = y;
++        this.z = z;
++        this.pitch = pitch;
++        this.yaw = yaw;
++    }
++
++    /**
++     * Sets the world that this location resides in
++     *
++     * @param world New world that this location resides in
++     */
++    public void setWorld(World world) {
++        this.world = world;
++    }
++
++    /**
++     * Gets the world that this location resides in
++     *
++     * @return World that contains this location
++     */
++    public World getWorld() {
++        return world;
++    }
++
++    /**
++     * Gets the chunk at the represented location
++     *
++     * @return Chunk at the represented location
++     */
++    public Chunk getChunk() {
++        return world.getChunkAt(this);
++    }
++
++    /**
++     * Gets the block at the represented location
++     *
++     * @return Block at the represented location
++     */
++    public Block getBlock() {
++        return world.getBlockAt(this);
++    }
++
++    /**
++     * Sets the x-coordinate of this location
++     *
++     * @param x X-coordinate
++     */
++    public void setX(double x) {
++        this.x = x;
++    }
++
++    /**
++     * Gets the x-coordinate of this location
++     *
++     * @return x-coordinate
++     */
++    public double getX() {
++        return x;
++    }
++
++    /**
++     * Gets the floored value of the X component, indicating the block that
++     * this location is contained with.
++     *
++     * @return block X
++     */
++    public int getBlockX() {
++        return locToBlock(x);
++    }
++
++    /**
++     * Sets the y-coordinate of this location
++     *
++     * @param y y-coordinate
++     */
++    public void setY(double y) {
++        this.y = y;
++    }
++
++    /**
++     * Gets the y-coordinate of this location
++     *
++     * @return y-coordinate
++     */
++    public double getY() {
++        return y;
++    }
++
++    /**
++     * Gets the floored value of the Y component, indicating the block that
++     * this location is contained with.
++     *
++     * @return block y
++     */
++    public int getBlockY() {
++        return locToBlock(y);
++    }
++
++    /**
++     * Sets the z-coordinate of this location
++     *
++     * @param z z-coordinate
++     */
++    public void setZ(double z) {
++        this.z = z;
++    }
++
++    /**
++     * Gets the z-coordinate of this location
++     *
++     * @return z-coordinate
++     */
++    public double getZ() {
++        return z;
++    }
++
++    /**
++     * Gets the floored value of the Z component, indicating the block that
++     * this location is contained with.
++     *
++     * @return block z
++     */
++    public int getBlockZ() {
++        return locToBlock(z);
++    }
++
++    /**
++     * Sets the yaw of this location, measured in degrees.
++     * <ul>
++     * <li>A yaw of 0 or 360 represents the positive z direction.
++     * <li>A yaw of 180 represents the negative z direction.
++     * <li>A yaw of 90 represents the negative x direction.
++     * <li>A yaw of 270 represents the positive x direction.
++     * </ul>
++     * Increasing yaw values are the equivalent of turning to your
++     * right-facing, increasing the scale of the next respective axis, and
++     * decreasing the scale of the previous axis.
++     *
++     * @param yaw new rotation's yaw
++     */
++    public void setYaw(float yaw) {
++        this.yaw = yaw;
++    }
++
++    /**
++     * Gets the yaw of this location, measured in degrees.
++     * <ul>
++     * <li>A yaw of 0 or 360 represents the positive z direction.
++     * <li>A yaw of 180 represents the negative z direction.
++     * <li>A yaw of 90 represents the negative x direction.
++     * <li>A yaw of 270 represents the positive x direction.
++     * </ul>
++     * Increasing yaw values are the equivalent of turning to your
++     * right-facing, increasing the scale of the next respective axis, and
++     * decreasing the scale of the previous axis.
++     *
++     * @return the rotation's yaw
++     */
++    public float getYaw() {
++        return yaw;
++    }
++
++    /**
++     * Sets the pitch of this location, measured in degrees.
++     * <ul>
++     * <li>A pitch of 0 represents level forward facing.
++     * <li>A pitch of 90 represents downward facing, or negative y
++     *     direction.
++     * <li>A pitch of -90 represents upward facing, or positive y direction.
++     * </ul>
++     * Increasing pitch values the equivalent of looking down.
++     *
++     * @param pitch new incline's pitch
++     */
++    public void setPitch(float pitch) {
++        this.pitch = pitch;
++    }
++
++    /**
++     * Gets the pitch of this location, measured in degrees.
++     * <ul>
++     * <li>A pitch of 0 represents level forward facing.
++     * <li>A pitch of 90 represents downward facing, or negative y
++     *     direction.
++     * <li>A pitch of -90 represents upward facing, or positive y direction.
++     * </ul>
++     * Increasing pitch values the equivalent of looking down.
++     *
++     * @return the incline's pitch
++     */
++    public float getPitch() {
++        return pitch;
++    }
++
++    /**
++     * Gets a unit-vector pointing in the direction that this Location is
++     * facing.
++     *
++     * @return a vector pointing the direction of this location's {@link
++     *     #getPitch() pitch} and {@link #getYaw() yaw}
++     */
++    public Vector getDirection() {
++        Vector vector = new Vector();
++
++        double rotX = this.getYaw();
++        double rotY = this.getPitch();
++
++        vector.setY(-Math.sin(Math.toRadians(rotY)));
++
++        double xz = Math.cos(Math.toRadians(rotY));
++
++        vector.setX(-xz * Math.sin(Math.toRadians(rotX)));
++        vector.setZ(xz * Math.cos(Math.toRadians(rotX)));
++
++        return vector;
++    }
++
++    /**
++     * Sets the {@link #getYaw() yaw} and {@link #getPitch() pitch} to point
++     * in the direction of the vector.
++     * 
++     * @param vector the direction vector
++     * @return the same location
++     */
++    public Location setDirection(Vector vector) {
++        /*
++         * Sin = Opp / Hyp
++         * Cos = Adj / Hyp
++         * Tan = Opp / Adj
++         *
++         * x = -Opp
++         * z = Adj
++         */
++        final double _2PI = 2 * Math.PI;
++        final double x = vector.getX();
++        final double z = vector.getZ();
++
++        if (x == 0 && z == 0) {
++            pitch = vector.getY() > 0 ? -90 : 90;
++            return this;
++        }
++
++        double theta = Math.atan2(-x, z);
++        yaw = (float) Math.toDegrees((theta + _2PI) % _2PI);
++
++        double x2 = NumberConversions.square(x);
++        double z2 = NumberConversions.square(z);
++        double xz = Math.sqrt(x2 + z2);
++        pitch = (float) Math.toDegrees(Math.atan(-vector.getY() / xz));
++
++        return this;
++    }
++
++    /**
++     * Adds the location by another.
++     *
++     * @see Vector
++     * @param vec The other location
++     * @return the same location
++     * @throws IllegalArgumentException for differing worlds
++     */
++    public Location add(Location vec) {
++        if (vec == null || vec.getWorld() != getWorld()) {
++            throw new IllegalArgumentException("Cannot add Locations of differing worlds");
++        }
++
++        x += vec.x;
++        y += vec.y;
++        z += vec.z;
++        return this;
++    }
++
++    /**
++     * Adds the location by a vector.
++     *
++     * @see Vector
++     * @param vec Vector to use
++     * @return the same location
++     */
++    public Location add(Vector vec) {
++        this.x += vec.getX();
++        this.y += vec.getY();
++        this.z += vec.getZ();
++        return this;
++    }
++
++    /**
++     * Adds the location by another. Not world-aware.
++     *
++     * @see Vector
++     * @param x X coordinate
++     * @param y Y coordinate
++     * @param z Z coordinate
++     * @return the same location
++     */
++    public Location add(double x, double y, double z) {
++        this.x += x;
++        this.y += y;
++        this.z += z;
++        return this;
++    }
++
++    /**
++     * Subtracts the location by another.
++     *
++     * @see Vector
++     * @param vec The other location
++     * @return the same location
++     * @throws IllegalArgumentException for differing worlds
++     */
++    public Location subtract(Location vec) {
++        if (vec == null || vec.getWorld() != getWorld()) {
++            throw new IllegalArgumentException("Cannot add Locations of differing worlds");
++        }
++
++        x -= vec.x;
++        y -= vec.y;
++        z -= vec.z;
++        return this;
++    }
++
++    /**
++     * Subtracts the location by a vector.
++     *
++     * @see Vector
++     * @param vec The vector to use
++     * @return the same location
++     */
++    public Location subtract(Vector vec) {
++        this.x -= vec.getX();
++        this.y -= vec.getY();
++        this.z -= vec.getZ();
++        return this;
++    }
++
++    /**
++     * Subtracts the location by another. Not world-aware and
++     * orientation independent.
++     *
++     * @see Vector
++     * @param x X coordinate
++     * @param y Y coordinate
++     * @param z Z coordinate
++     * @return the same location
++     */
++    public Location subtract(double x, double y, double z) {
++        this.x -= x;
++        this.y -= y;
++        this.z -= z;
++        return this;
++    }
++
++    /**
++     * Gets the magnitude of the location, defined as sqrt(x^2+y^2+z^2). The
++     * value of this method is not cached and uses a costly square-root
++     * function, so do not repeatedly call this method to get the location's
++     * magnitude. NaN will be returned if the inner result of the sqrt()
++     * function overflows, which will be caused if the length is too long. Not
++     * world-aware and orientation independent.
++     *
++     * @see Vector
++     * @return the magnitude
++     */
++    public double length() {
++        return Math.sqrt(NumberConversions.square(x) + NumberConversions.square(y) + NumberConversions.square(z));
++    }
++
++    /**
++     * Gets the magnitude of the location squared. Not world-aware and
++     * orientation independent.
++     *
++     * @see Vector
++     * @return the magnitude
++     */
++    public double lengthSquared() {
++        return NumberConversions.square(x) + NumberConversions.square(y) + NumberConversions.square(z);
++    }
++
++    /**
++     * Get the distance between this location and another. The value of this
++     * method is not cached and uses a costly square-root function, so do not
++     * repeatedly call this method to get the location's magnitude. NaN will
++     * be returned if the inner result of the sqrt() function overflows, which
++     * will be caused if the distance is too long.
++     *
++     * @see Vector
++     * @param o The other location
++     * @return the distance
++     * @throws IllegalArgumentException for differing worlds
++     */
++    public double distance(Location o) {
++        return Math.sqrt(distanceSquared(o));
++    }
++
++    /**
++     * Get the squared distance between this location and another.
++     *
++     * @see Vector
++     * @param o The other location
++     * @return the distance
++     * @throws IllegalArgumentException for differing worlds
++     */
++    public double distanceSquared(Location o) {
++        if (o == null) {
++            throw new IllegalArgumentException("Cannot measure distance to a null location");
++        } else if (o.getWorld() == null || getWorld() == null) {
++            throw new IllegalArgumentException("Cannot measure distance to a null world");
++        } else if (o.getWorld() != getWorld()) {
++            throw new IllegalArgumentException("Cannot measure distance between " + getWorld().getName() + " and " + o.getWorld().getName());
++        }
++
++        return NumberConversions.square(x - o.x) + NumberConversions.square(y - o.y) + NumberConversions.square(z - o.z);
++    }
++
++    /**
++     * Performs scalar multiplication, multiplying all components with a
++     * scalar. Not world-aware.
++     *
++     * @param m The factor
++     * @see Vector
++     * @return the same location
++     */
++    public Location multiply(double m) {
++        x *= m;
++        y *= m;
++        z *= m;
++        return this;
++    }
++
++    /**
++     * Zero this location's components. Not world-aware.
++     *
++     * @see Vector
++     * @return the same location
++     */
++    public Location zero() {
++        x = 0;
++        y = 0;
++        z = 0;
++        return this;
++    }
++
++    @Override
++    public boolean equals(Object obj) {
++        if (obj == null) {
++            return false;
++        }
++        if (getClass() != obj.getClass()) {
++            return false;
++        }
++        final Location other = (Location) obj;
++
++        if (this.world != other.world && (this.world == null || !this.world.equals(other.world))) {
++            return false;
++        }
++        if (Double.doubleToLongBits(this.x) != Double.doubleToLongBits(other.x)) {
++            return false;
++        }
++        if (Double.doubleToLongBits(this.y) != Double.doubleToLongBits(other.y)) {
++            return false;
++        }
++        if (Double.doubleToLongBits(this.z) != Double.doubleToLongBits(other.z)) {
++            return false;
++        }
++        if (Float.floatToIntBits(this.pitch) != Float.floatToIntBits(other.pitch)) {
++            return false;
++        }
++        if (Float.floatToIntBits(this.yaw) != Float.floatToIntBits(other.yaw)) {
++            return false;
++        }
++        return true;
++    }
++
++    @Override
++    public int hashCode() {
++        int hash = 3;
++
++        hash = 19 * hash + (this.world != null ? this.world.hashCode() : 0);
++        hash = 19 * hash + (int) (Double.doubleToLongBits(this.x) ^ (Double.doubleToLongBits(this.x) >>> 32));
++        hash = 19 * hash + (int) (Double.doubleToLongBits(this.y) ^ (Double.doubleToLongBits(this.y) >>> 32));
++        hash = 19 * hash + (int) (Double.doubleToLongBits(this.z) ^ (Double.doubleToLongBits(this.z) >>> 32));
++        hash = 19 * hash + Float.floatToIntBits(this.pitch);
++        hash = 19 * hash + Float.floatToIntBits(this.yaw);
++        return hash;
++    }
++
++    @Override
++    public String toString() {
++        return "Location{" + "world=" + world + ",x=" + x + ",y=" + y + ",z=" + z + ",pitch=" + pitch + ",yaw=" + yaw + '}';
++    }
++
++    /**
++     * Constructs a new {@link Vector} based on this Location
++     *
++     * @return New Vector containing the coordinates represented by this
++     *     Location
++     */
++    public Vector toVector() {
++        return new Vector(x, y, z);
++    }
++
++    @Override
++    public Location clone() {
++        try {
++            return (Location) super.clone();
++        } catch (CloneNotSupportedException e) {
++            throw new Error(e);
++        }
++    }
++
++    /**
++     * Safely converts a double (location coordinate) to an int (block
++     * coordinate)
++     *
++     * @param loc Precise coordinate
++     * @return Block coordinate
++     */
++    public static int locToBlock(double loc) {
++        return NumberConversions.floor(loc);
++    }
++
++	@Utility
++	public Map<String, Object> serialize() {
++		Map<String, Object> data = new HashMap<String, Object>();
++		data.put("world", this.world.getName());
++
++		data.put("x", this.x);
++		data.put("y", this.y);
++		data.put("z", this.z);
++
++		data.put("yaw", this.yaw);
++		data.put("pitch", this.pitch);
++
++		return data;
++	}
++	
++	 /**
++     * Required method for deserialization
++     *
++     * @param args map to deserialize
++     * @return deserialized location
++     * @throws IllegalArgumentException if the world don't exists
++     * @see ConfigurationSerializable
++     */
++	public static Location deserialize(Map<String, Object> args) {
++		World world = Bukkit.getWorld((String) args.get("world"));
++		if (world == null) {
++			throw new IllegalArgumentException("unknown world");
++		}
++
++		return new Location(world, NumberConversions.toDouble(args.get("x")), NumberConversions.toDouble(args.get("y")), NumberConversions.toDouble(args.get("z")), NumberConversions.toFloat(args.get("yaw")), NumberConversions.toFloat(args.get("pitch")));
++	}
++}
+diff --git a/src/main/java/org/bukkit/Physical.java b/src/main/java/org/bukkit/Physical.java
+new file mode 100644
+index 0000000..16f06d1
+--- /dev/null
++++ b/src/main/java/org/bukkit/Physical.java
+@@ -0,0 +1,14 @@
++package org.bukkit;
++
++/**
++ * Common interface for any type of object that can be associated with a specific world.
++ * This interface makes no guarantees about the mutability or nullability of the world.
++ */
++public interface Physical {
++
++    /**
++     * Return the world this object is associated with. May return null if the world
++     * is not available (i.e. not loaded), or this object does not have a world.
++     */
++    World getWorld();
++}
+\ No newline at end of file
+diff --git a/src/main/java/org/bukkit/World.java b/src/main/java/org/bukkit/World.java
+new file mode 100644
+index 0000000..e1d1fcd
+--- /dev/null
++++ b/src/main/java/org/bukkit/World.java
+@@ -0,0 +1,1593 @@
++package org.bukkit;
++
++import java.io.File;
++import org.bukkit.generator.ChunkGenerator;
++import java.util.Collection;
++import java.util.HashMap;
++import java.util.List;
++import java.util.Map;
++import java.util.UUID;
++
++import org.bukkit.block.Biome;
++import org.bukkit.block.Block;
++import org.bukkit.entity.*;
++import org.bukkit.generator.BlockPopulator;
++import org.bukkit.inventory.ItemStack;
++import org.bukkit.metadata.Metadatable;
++import org.bukkit.plugin.messaging.PluginMessageRecipient;
++import org.bukkit.util.Vector;
++
++/**
++ * Represents a world, which may contain entities, chunks and blocks
++ */
++public interface World extends PluginMessageRecipient, Metadatable, Physical {
++
++    /**
++     * Gets the {@link Block} at the given coordinates
++     *
++     * @param x X-coordinate of the block
++     * @param y Y-coordinate of the block
++     * @param z Z-coordinate of the block
++     * @return Block at the given coordinates
++     * @see #getBlockTypeIdAt(int, int, int) Returns the current type ID of
++     *     the block
++     */
++    public Block getBlockAt(int x, int y, int z);
++
++    /**
++     * Gets the {@link Block} at the given {@link Location}
++     *
++     * @param location Location of the block
++     * @return Block at the given location
++     * @see #getBlockTypeIdAt(org.bukkit.Location) Returns the current type ID
++     *     of the block
++     */
++    public Block getBlockAt(Location location);
++
++    /**
++     * Gets the block type ID at the given coordinates
++     *
++     * @param x X-coordinate of the block
++     * @param y Y-coordinate of the block
++     * @param z Z-coordinate of the block
++     * @return Type ID of the block at the given coordinates
++     * @see #getBlockAt(int, int, int) Returns a live Block object at the
++     *     given location
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public int getBlockTypeIdAt(int x, int y, int z);
++
++    /**
++     * Gets the block type ID at the given {@link Location}
++     *
++     * @param location Location of the block
++     * @return Type ID of the block at the given location
++     * @see #getBlockAt(org.bukkit.Location) Returns a live Block object at
++     *     the given location
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public int getBlockTypeIdAt(Location location);
++
++    /**
++     * Gets the highest non-air coordinate at the given coordinates
++     *
++     * @param x X-coordinate of the blocks
++     * @param z Z-coordinate of the blocks
++     * @return Y-coordinate of the highest non-air block
++     */
++    public int getHighestBlockYAt(int x, int z);
++
++    /**
++     * Gets the highest non-air coordinate at the given {@link Location}
++     *
++     * @param location Location of the blocks
++     * @return Y-coordinate of the highest non-air block
++     */
++    public int getHighestBlockYAt(Location location);
++
++    /**
++     * Gets the highest non-empty block at the given coordinates
++     *
++     * @param x X-coordinate of the block
++     * @param z Z-coordinate of the block
++     * @return Highest non-empty block
++     */
++    public Block getHighestBlockAt(int x, int z);
++
++    /**
++     * Gets the highest non-empty block at the given coordinates
++     *
++     * @param location Coordinates to get the highest block
++     * @return Highest non-empty block
++     */
++    public Block getHighestBlockAt(Location location);
++
++    /**
++     * Gets the {@link Chunk} at the given coordinates
++     *
++     * @param x X-coordinate of the chunk
++     * @param z Z-coordinate of the chunk
++     * @return Chunk at the given coordinates
++     */
++    public Chunk getChunkAt(int x, int z);
++
++    /**
++     * Gets the {@link Chunk} at the given {@link Location}
++     *
++     * @param location Location of the chunk
++     * @return Chunk at the given location
++     */
++    public Chunk getChunkAt(Location location);
++
++    /**
++     * Gets the {@link Chunk} that contains the given {@link Block}
++     *
++     * @param block Block to get the containing chunk from
++     * @return The chunk that contains the given block
++     */
++    public Chunk getChunkAt(Block block);
++
++    /**
++     * Used by {@link World#getChunkAtAsync(Location,ChunkLoadCallback)} methods
++     * to request a {@link Chunk} to be loaded, with this callback receiving
++     * the chunk when it is finished.
++     *
++     * This callback will be executed on synchronously on the main thread.
++     *
++     * Timing and order this callback is fired is intentionally not defined and
++     * and subject to change.
++     */
++    public static interface ChunkLoadCallback {
++        public void onLoad(Chunk chunk);
++    }
++
++    /**
++     * Requests a {@link Chunk} to be loaded at the given coordinates
++     *
++     * This method makes no guarantee on how fast the chunk will load,
++     * and will return the chunk to the callback at a later time.
++     *
++     * You should use this method if you need a chunk but do not need it
++     * immediately, and you wish to let the server control the speed
++     * of chunk loads, keeping performance in mind.
++     *
++     * The {@link ChunkLoadCallback} will always be executed synchronously
++     * on the main Server Thread.
++     *
++     * @param x Chunk X-coordinate of the chunk - (world coordinate / 16)
++     * @param z Chunk Z-coordinate of the chunk - (world coordinate / 16)
++     * @param cb Callback to receive the chunk when it is loaded.
++     *           will be executed synchronously
++     */
++    public void getChunkAtAsync(int x, int z, ChunkLoadCallback cb);
++
++    /**
++     * Requests a {@link Chunk} to be loaded at the given {@link Location}
++     *
++     * This method makes no guarantee on how fast the chunk will load,
++     * and will return the chunk to the callback at a later time.
++     *
++     * You should use this method if you need a chunk but do not need it
++     * immediately, and you wish to let the server control the speed
++     * of chunk loads, keeping performance in mind.
++     *
++     * The {@link ChunkLoadCallback} will always be executed synchronously
++     * on the main Server Thread.
++     *
++     * @param location Location of the chunk
++     * @param cb Callback to receive the chunk when it is loaded.
++     *           will be executed synchronously
++     */
++    public void getChunkAtAsync(Location location, ChunkLoadCallback cb);
++
++    /**
++     * Requests {@link Chunk} to be loaded that contains the given {@link Block}
++     *
++     * This method makes no guarantee on how fast the chunk will load,
++     * and will return the chunk to the callback at a later time.
++     *
++     * You should use this method if you need a chunk but do not need it
++     * immediately, and you wish to let the server control the speed
++     * of chunk loads, keeping performance in mind.
++     *
++     * The {@link ChunkLoadCallback} will always be executed synchronously
++     * on the main Server Thread.
++     *
++     * @param block Block to get the containing chunk from
++     * @param cb Callback to receive the chunk when it is loaded.
++     *           will be executed synchronously
++     */
++    public void getChunkAtAsync(Block block, ChunkLoadCallback cb);
++
++    /**
++     * Checks if the specified {@link Chunk} is loaded
++     *
++     * @param chunk The chunk to check
++     * @return true if the chunk is loaded, otherwise false
++     */
++    public boolean isChunkLoaded(Chunk chunk);
++
++    /**
++     * Gets an array of all loaded {@link Chunk}s
++     *
++     * @return Chunk[] containing all loaded chunks
++     */
++    public Chunk[] getLoadedChunks();
++
++    /**
++     * Loads the specified {@link Chunk}
++     *
++     * @param chunk The chunk to load
++     */
++    public void loadChunk(Chunk chunk);
++
++    /**
++     * Checks if the {@link Chunk} at the specified coordinates is loaded
++     *
++     * @param x X-coordinate of the chunk
++     * @param z Z-coordinate of the chunk
++     * @return true if the chunk is loaded, otherwise false
++     */
++    public boolean isChunkLoaded(int x, int z);
++
++    /**
++     * Checks if the {@link Chunk} at the specified coordinates is loaded and
++     * in use by one or more players
++     *
++     * @param x X-coordinate of the chunk
++     * @param z Z-coordinate of the chunk
++     * @return true if the chunk is loaded and in use by one or more players,
++     *     otherwise false
++     */
++    public boolean isChunkInUse(int x, int z);
++
++    /**
++     * Loads the {@link Chunk} at the specified coordinates
++     * <p>
++     * If the chunk does not exist, it will be generated.
++     * <p>
++     * This method is analogous to {@link #loadChunk(int, int, boolean)} where
++     * generate is true.
++     *
++     * @param x X-coordinate of the chunk
++     * @param z Z-coordinate of the chunk
++     */
++    public void loadChunk(int x, int z);
++
++    /**
++     * Loads the {@link Chunk} at the specified coordinates
++     *
++     * @param x X-coordinate of the chunk
++     * @param z Z-coordinate of the chunk
++     * @param generate Whether or not to generate a chunk if it doesn't
++     *     already exist
++     * @return true if the chunk has loaded successfully, otherwise false
++     */
++    public boolean loadChunk(int x, int z, boolean generate);
++
++    /**
++     * Safely unloads and saves the {@link Chunk} at the specified coordinates
++     * <p>
++     * This method is analogous to {@link #unloadChunk(int, int, boolean,
++     * boolean)} where safe and saveis true
++     *
++     * @param chunk the chunk to unload
++     * @return true if the chunk has unloaded successfully, otherwise false
++     */
++    public boolean unloadChunk(Chunk chunk);
++
++    /**
++     * Safely unloads and saves the {@link Chunk} at the specified coordinates
++     * <p>
++     * This method is analogous to {@link #unloadChunk(int, int, boolean,
++     * boolean)} where safe and saveis true
++     *
++     * @param x X-coordinate of the chunk
++     * @param z Z-coordinate of the chunk
++     * @return true if the chunk has unloaded successfully, otherwise false
++     */
++    public boolean unloadChunk(int x, int z);
++
++    /**
++     * Safely unloads and optionally saves the {@link Chunk} at the specified
++     * coordinates
++     * <p>
++     * This method is analogous to {@link #unloadChunk(int, int, boolean,
++     * boolean)} where save is true
++     *
++     * @param x X-coordinate of the chunk
++     * @param z Z-coordinate of the chunk
++     * @param save Whether or not to save the chunk
++     * @return true if the chunk has unloaded successfully, otherwise false
++     */
++    public boolean unloadChunk(int x, int z, boolean save);
++
++    /**
++     * Unloads and optionally saves the {@link Chunk} at the specified
++     * coordinates
++     *
++     * @param x X-coordinate of the chunk
++     * @param z Z-coordinate of the chunk
++     * @param save Controls whether the chunk is saved
++     * @param safe Controls whether to unload the chunk when players are
++     *     nearby
++     * @return true if the chunk has unloaded successfully, otherwise false
++     * @deprecated it is never safe to remove a chunk in use
++     */
++    @Deprecated
++    public boolean unloadChunk(int x, int z, boolean save, boolean safe);
++
++    /**
++     * Safely queues the {@link Chunk} at the specified coordinates for
++     * unloading
++     * <p>
++     * This method is analogous to {@link #unloadChunkRequest(int, int,
++     * boolean)} where safe is true
++     *
++     * @param x X-coordinate of the chunk
++     * @param z Z-coordinate of the chunk
++     * @return true is the queue attempt was successful, otherwise false
++     */
++    public boolean unloadChunkRequest(int x, int z);
++
++    /**
++     * Queues the {@link Chunk} at the specified coordinates for unloading
++     *
++     * @param x X-coordinate of the chunk
++     * @param z Z-coordinate of the chunk
++     * @param safe Controls whether to queue the chunk when players are nearby
++     * @return Whether the chunk was actually queued
++     */
++    public boolean unloadChunkRequest(int x, int z, boolean safe);
++
++    /**
++     * Regenerates the {@link Chunk} at the specified coordinates
++     *
++     * @param x X-coordinate of the chunk
++     * @param z Z-coordinate of the chunk
++     * @return Whether the chunk was actually regenerated
++     */
++    public boolean regenerateChunk(int x, int z);
++
++    /**
++     * Resends the {@link Chunk} to all clients
++     *
++     * @param x X-coordinate of the chunk
++     * @param z Z-coordinate of the chunk
++     * @return Whether the chunk was actually refreshed
++     * 
++     * @deprecated This method is not guaranteed to work suitably across all client implementations.
++     */
++    @Deprecated
++    public boolean refreshChunk(int x, int z);
++
++    /**
++     * Drops an item at the specified {@link Location}
++     *
++     * @param location Location to drop the item
++     * @param item ItemStack to drop
++     * @return ItemDrop entity created as a result of this method
++     */
++    public Item dropItem(Location location, ItemStack item);
++
++    /**
++     * Drops an item at the specified {@link Location} with a random offset
++     *
++     * @param location Location to drop the item
++     * @param item ItemStack to drop
++     * @return ItemDrop entity created as a result of this method
++     */
++    public Item dropItemNaturally(Location location, ItemStack item);
++
++    /**
++     * Creates an {@link Arrow} entity at the given {@link Location}
++     *
++     * @param location Location to spawn the arrow
++     * @param direction Direction to shoot the arrow in
++     * @param speed Speed of the arrow. A recommend speed is 0.6
++     * @param spread Spread of the arrow. A recommend spread is 12
++     * @return Arrow entity spawned as a result of this method
++     */
++    public Arrow spawnArrow(Location location, Vector direction, float speed, float spread);
++
++    /**
++     * Creates an arrow entity of the given class at the given {@link Location}
++     *
++     * @param <T> type of arrow to spawn
++     * @param location Location to spawn the arrow
++     * @param direction Direction to shoot the arrow in
++     * @param speed Speed of the arrow. A recommend speed is 0.6
++     * @param spread Spread of the arrow. A recommend spread is 12
++     * @param clazz the Entity class for the arrow
++     * {@link org.bukkit.entity.SpectralArrow},{@link org.bukkit.entity.Arrow},{@link org.bukkit.entity.TippedArrow}
++     * @return Arrow entity spawned as a result of this method
++     */
++    public <T extends Arrow> T spawnArrow(Location location, Vector direction, float speed, float spread, Class<T> clazz);
++
++    /**
++     * Creates a tree at the given {@link Location}
++     *
++     * @param location Location to spawn the tree
++     * @param type Type of the tree to create
++     * @return true if the tree was created successfully, otherwise false
++     */
++    public boolean generateTree(Location location, TreeType type);
++
++    /**
++     * Creates a tree at the given {@link Location}
++     *
++     * @param loc Location to spawn the tree
++     * @param type Type of the tree to create
++     * @param delegate A class to call for each block changed as a result of
++     *     this method
++     * @return true if the tree was created successfully, otherwise false
++     */
++    public boolean generateTree(Location loc, TreeType type, BlockChangeDelegate delegate);
++
++    /**
++     * Creates a entity at the given {@link Location}
++     *
++     * @param loc The location to spawn the entity
++     * @param type The entity to spawn
++     * @return Resulting Entity of this method, or null if it was unsuccessful
++     */
++    public Entity spawnEntity(Location loc, EntityType type);
++
++    /**
++     * Strikes lightning at the given {@link Location}
++     *
++     * @param loc The location to strike lightning
++     * @return The lightning entity.
++     */
++    public LightningStrike strikeLightning(Location loc);
++
++    /**
++     * Strikes lightning at the given {@link Location} without doing damage
++     *
++     * @param loc The location to strike lightning
++     * @return The lightning entity.
++     */
++    public LightningStrike strikeLightningEffect(Location loc);
++
++    /**
++     * Get a list of all entities in this World
++     *
++     * @return A List of all Entities currently residing in this world
++     */
++    public List<Entity> getEntities();
++
++    /**
++     * Get a list of all living entities in this World
++     *
++     * @return A List of all LivingEntities currently residing in this world
++     */
++    public List<LivingEntity> getLivingEntities();
++
++    /**
++     * Get a collection of all entities in this World matching the given
++     * class/interface
++     *
++     * @param <T> an entity subclass
++     * @param classes The classes representing the types of entity to match
++     * @return A List of all Entities currently residing in this world that
++     *     match the given class/interface
++     */
++    @Deprecated
++    public <T extends Entity> Collection<T> getEntitiesByClass(Class<T>... classes);
++
++    /**
++     * Get a collection of all entities in this World matching the given
++     * class/interface
++     * 
++     * @param <T> an entity subclass
++     * @param cls The class representing the type of entity to match
++     * @return A List of all Entities currently residing in this world that
++     *     match the given class/interface
++     */
++    public <T extends Entity> Collection<T> getEntitiesByClass(Class<T> cls);
++
++    /**
++     * Get a collection of all entities in this World matching any of the
++     * given classes/interfaces
++     *
++     * @param classes The classes representing the types of entity to match
++     * @return A List of all Entities currently residing in this world that
++     *     match one or more of the given classes/interfaces
++     */
++    public Collection<Entity> getEntitiesByClasses(Class<?>... classes);
++
++    /**
++     * Get a list of all players in this World
++     *
++     * @return A list of all Players currently residing in this world
++     */
++    public List<Player> getPlayers();
++
++    /**
++     * Returns a list of entities within a bounding box centered around a Location.
++     *
++     * Some implementations may impose artificial restrictions on the size of the search bounding box.
++     *
++     * @param location The center of the bounding box
++     * @param x 1/2 the size of the box along x axis
++     * @param y 1/2 the size of the box along y axis
++     * @param z 1/2 the size of the box along z axis
++     * @return the collection of entities near location. This will always be a non-null collection.
++     */
++    public Collection<Entity> getNearbyEntities(Location location, double x, double y, double z);
++
++    /**
++     * Gets the unique name of this world
++     *
++     * @return Name of this world
++     */
++    public String getName();
++
++    /**
++     * Gets the Unique ID of this world
++     *
++     * @return Unique ID of this world.
++     */
++    public UUID getUID();
++
++    /**
++     * Gets the default spawn {@link Location} of this world
++     *
++     * @return The spawn location of this world
++     */
++    public Location getSpawnLocation();
++
++    /**
++     * Sets the spawn location of the world
++     *
++     * @param x X coordinate
++     * @param y Y coordinate
++     * @param z Z coordinate
++     * @return True if it was successfully set.
++     */
++    public boolean setSpawnLocation(int x, int y, int z);
++
++    /**
++     * Gets the relative in-game time of this world.
++     * <p>
++     * The relative time is analogous to hours * 1000
++     *
++     * @return The current relative time
++     * @see #getFullTime() Returns an absolute time of this world
++     */
++    public long getTime();
++
++    /**
++     * Sets the relative in-game time on the server.
++     * <p>
++     * The relative time is analogous to hours * 1000
++     * <p>
++     * Note that setting the relative time below the current relative time
++     * will actually move the clock forward a day. If you require to rewind
++     * time, please see {@link #setFullTime(long)}
++     *
++     * @param time The new relative time to set the in-game time to (in
++     *     hours*1000)
++     * @see #setFullTime(long) Sets the absolute time of this world
++     */
++    public void setTime(long time);
++
++    /**
++     * Gets the full in-game time on this world
++     *
++     * @return The current absolute time
++     * @see #getTime() Returns a relative time of this world
++     */
++    public long getFullTime();
++
++    /**
++     * Sets the in-game time on the server
++     * <p>
++     * Note that this sets the full time of the world, which may cause adverse
++     * effects such as breaking redstone clocks and any scheduled events
++     *
++     * @param time The new absolute time to set this world to
++     * @see #setTime(long) Sets the relative time of this world
++     */
++    public void setFullTime(long time);
++
++    /**
++     * Returns whether the world has an ongoing storm.
++     *
++     * @return Whether there is an ongoing storm
++     */
++    public boolean hasStorm();
++
++    /**
++     * Set whether there is a storm. A duration will be set for the new
++     * current conditions.
++     *
++     * @param hasStorm Whether there is rain and snow
++     */
++    public void setStorm(boolean hasStorm);
++
++    /**
++     * Get the remaining time in ticks of the current conditions.
++     *
++     * @return Time in ticks
++     */
++    public int getWeatherDuration();
++
++    /**
++     * Set the remaining time in ticks of the current conditions.
++     *
++     * @param duration Time in ticks
++     */
++    public void setWeatherDuration(int duration);
++
++    /**
++     * Returns whether there is thunder.
++     *
++     * @return Whether there is thunder
++     */
++    public boolean isThundering();
++
++    /**
++     * Set whether it is thundering.
++     *
++     * @param thundering Whether it is thundering
++     */
++    public void setThundering(boolean thundering);
++
++    /**
++     * Get the thundering duration.
++     *
++     * @return Duration in ticks
++     */
++    public int getThunderDuration();
++
++    /**
++     * Set the thundering duration.
++     *
++     * @param duration Duration in ticks
++     */
++    public void setThunderDuration(int duration);
++
++    /**
++     * Creates explosion at given coordinates with given power
++     *
++     * @param x X coordinate
++     * @param y Y coordinate
++     * @param z Z coordinate
++     * @param power The power of explosion, where 4F is TNT
++     * @return false if explosion was canceled, otherwise true
++     */
++    public boolean createExplosion(double x, double y, double z, float power);
++
++    /**
++     * Creates explosion at given coordinates with given power and optionally
++     * setting blocks on fire.
++     *
++     * @param x X coordinate
++     * @param y Y coordinate
++     * @param z Z coordinate
++     * @param power The power of explosion, where 4F is TNT
++     * @param setFire Whether or not to set blocks on fire
++     * @return false if explosion was canceled, otherwise true
++     */
++    public boolean createExplosion(double x, double y, double z, float power, boolean setFire);
++
++    /**
++     * Creates explosion at given coordinates with given power and optionally
++     * setting blocks on fire or breaking blocks.
++     *
++     * @param x X coordinate
++     * @param y Y coordinate
++     * @param z Z coordinate
++     * @param power The power of explosion, where 4F is TNT
++     * @param setFire Whether or not to set blocks on fire
++     * @param breakBlocks Whether or not to have blocks be destroyed
++     * @return false if explosion was canceled, otherwise true
++     */
++    public boolean createExplosion(double x, double y, double z, float power, boolean setFire, boolean breakBlocks);
++
++    /**
++     * Creates explosion at given coordinates with given power
++     *
++     * @param loc Location to blow up
++     * @param power The power of explosion, where 4F is TNT
++     * @return false if explosion was canceled, otherwise true
++     */
++    public boolean createExplosion(Location loc, float power);
++
++    /**
++     * Creates explosion at given coordinates with given power and optionally
++     * setting blocks on fire.
++     *
++     * @param loc Location to blow up
++     * @param power The power of explosion, where 4F is TNT
++     * @param setFire Whether or not to set blocks on fire
++     * @return false if explosion was canceled, otherwise true
++     */
++    public boolean createExplosion(Location loc, float power, boolean setFire);
++
++    /**
++     * Gets the {@link Environment} type of this world
++     *
++     * @return This worlds Environment type
++     */
++    public Environment getEnvironment();
++
++    /**
++     * Gets the Seed for this world.
++     *
++     * @return This worlds Seed
++     */
++    public long getSeed();
++
++    /**
++     * Gets the current PVP setting for this world.
++     *
++     * @return True if PVP is enabled
++     */
++    public boolean getPVP();
++
++    /**
++     * Sets the PVP setting for this world.
++     *
++     * @param pvp True/False whether PVP should be Enabled.
++     */
++    public void setPVP(boolean pvp);
++
++    /**
++     * Gets the chunk generator for this world
++     *
++     * @return ChunkGenerator associated with this world
++     */
++    public ChunkGenerator getGenerator();
++
++    /**
++     * Saves world to disk
++     */
++    public void save();
++
++    /**
++     * Gets a list of all applied {@link BlockPopulator}s for this World
++     *
++     * @return List containing any or none BlockPopulators
++     */
++    public List<BlockPopulator> getPopulators();
++
++    /**
++     * Spawn an entity of a specific class at the given {@link Location}
++     *
++     * @param location the {@link Location} to spawn the entity at
++     * @param clazz the class of the {@link Entity} to spawn
++     * @param <T> the class of the {@link Entity} to spawn
++     * @return an instance of the spawned {@link Entity}
++     * @throws IllegalArgumentException if either parameter is null or the
++     *     {@link Entity} requested cannot be spawned
++     */
++    public <T extends Entity> T spawn(Location location, Class<T> clazz) throws IllegalArgumentException;
++
++    /**
++     * Spawn a {@link FallingBlock} entity at the given {@link Location} of
++     * the specified {@link Material}. The material dictates what is falling.
++     * When the FallingBlock hits the ground, it will place that block.
++     * <p>
++     * The Material must be a block type, check with {@link Material#isBlock()
++     * material.isBlock()}. The Material may not be air.
++     *
++     * @param location The {@link Location} to spawn the FallingBlock
++     * @param material The block {@link Material} type
++     * @param data The block data
++     * @return The spawned {@link FallingBlock} instance
++     * @throws IllegalArgumentException if {@link Location} or {@link
++     *     Material} are null or {@link Material} is not a block
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public FallingBlock spawnFallingBlock(Location location, Material material, byte data) throws IllegalArgumentException;
++
++    /**
++     * Spawn a {@link FallingBlock} entity at the given {@link Location} of
++     * the specified blockId (converted to {@link Material})
++     *
++     * @param location The {@link Location} to spawn the FallingBlock
++     * @param blockId The id of the intended material
++     * @param blockData The block data
++     * @return The spawned FallingBlock instance
++     * @throws IllegalArgumentException if location is null, or blockId is
++     *     invalid
++     * @see #spawnFallingBlock(org.bukkit.Location, org.bukkit.Material, byte)
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public FallingBlock spawnFallingBlock(Location location, int blockId, byte blockData) throws IllegalArgumentException;
++
++    /**
++     * Plays an effect to all players within a default radius around a given
++     * location.
++     *
++     * @param location the {@link Location} around which players must be to
++     *     hear the sound
++     * @param effect the {@link Effect}
++     * @param data a data bit needed for some effects
++     */
++    public void playEffect(Location location, Effect effect, int data);
++
++    /**
++     * Plays an effect to all players within a given radius around a location.
++     *
++     * @param location the {@link Location} around which players must be to
++     *     hear the effect
++     * @param effect the {@link Effect}
++     * @param data a data bit needed for some effects
++     * @param radius the radius around the location
++     */
++    public void playEffect(Location location, Effect effect, int data, int radius);
++
++    /**
++     * Plays an effect to all players within a default radius around a given
++     * location.
++     *
++     * @param <T> data dependant on the type of effect
++     * @param location the {@link Location} around which players must be to
++     *     hear the sound
++     * @param effect the {@link Effect}
++     * @param data a data bit needed for some effects
++     */
++    public <T> void playEffect(Location location, Effect effect, T data);
++
++    /**
++     * Plays an effect to all players within a given radius around a location.
++     *
++     * @param <T> data dependant on the type of effect
++     * @param location the {@link Location} around which players must be to
++     *     hear the effect
++     * @param effect the {@link Effect}
++     * @param data a data bit needed for some effects
++     * @param radius the radius around the location
++     */
++    public <T> void playEffect(Location location, Effect effect, T data, int radius);
++
++    /**
++     * Get empty chunk snapshot (equivalent to all air blocks), optionally
++     * including valid biome data. Used for representing an ungenerated chunk,
++     * or for fetching only biome data without loading a chunk.
++     *
++     * @param x - chunk x coordinate
++     * @param z - chunk z coordinate
++     * @param includeBiome - if true, snapshot includes per-coordinate biome
++     *     type
++     * @param includeBiomeTempRain - if true, snapshot includes per-coordinate
++     *     raw biome temperature and rainfall
++     * @return The empty snapshot.
++     */
++    public ChunkSnapshot getEmptyChunkSnapshot(int x, int z, boolean includeBiome, boolean includeBiomeTempRain);
++
++    /**
++     * Sets the spawn flags for this.
++     *
++     * @param allowMonsters - if true, monsters are allowed to spawn in this
++     *     world.
++     * @param allowAnimals - if true, animals are allowed to spawn in this
++     *     world.
++     */
++    public void setSpawnFlags(boolean allowMonsters, boolean allowAnimals);
++
++    /**
++     * Gets whether animals can spawn in this world.
++     *
++     * @return whether animals can spawn in this world.
++     */
++    public boolean getAllowAnimals();
++
++    /**
++     * Gets whether monsters can spawn in this world.
++     *
++     * @return whether monsters can spawn in this world.
++     */
++    public boolean getAllowMonsters();
++
++    /**
++     * Gets the biome for the given block coordinates.
++     *
++     * @param x X coordinate of the block
++     * @param z Z coordinate of the block
++     * @return Biome of the requested block
++     */
++    Biome getBiome(int x, int z);
++
++    /**
++     * Sets the biome for the given block coordinates
++     *
++     * @param x X coordinate of the block
++     * @param z Z coordinate of the block
++     * @param bio new Biome type for this block
++     */
++    void setBiome(int x, int z, Biome bio);
++
++    /**
++     * Gets the temperature for the given block coordinates.
++     * <p>
++     * It is safe to run this method when the block does not exist, it will
++     * not create the block.
++     *
++     * @param x X coordinate of the block
++     * @param z Z coordinate of the block
++     * @return Temperature of the requested block
++     */
++    public double getTemperature(int x, int z);
++
++    /**
++     * Gets the humidity for the given block coordinates.
++     * <p>
++     * It is safe to run this method when the block does not exist, it will
++     * not create the block.
++     *
++     * @param x X coordinate of the block
++     * @param z Z coordinate of the block
++     * @return Humidity of the requested block
++     */
++    public double getHumidity(int x, int z);
++
++    /**
++     * Gets the maximum height of this world.
++     * <p>
++     * If the max height is 100, there are only blocks from y=0 to y=99.
++     *
++     * @return Maximum height of the world
++     */
++    public int getMaxHeight();
++
++    /**
++     * Gets the sea level for this world.
++     * <p>
++     * This is often half of {@link #getMaxHeight()}
++     *
++     * @return Sea level
++     */
++    public int getSeaLevel();
++
++    /**
++     * Gets whether the world's spawn area should be kept loaded into memory
++     * or not.
++     *
++     * @return true if the world's spawn area will be kept loaded into memory.
++     */
++    public boolean getKeepSpawnInMemory();
++
++    /**
++     * Sets whether the world's spawn area should be kept loaded into memory
++     * or not.
++     *
++     * @param keepLoaded if true then the world's spawn area will be kept
++     *     loaded into memory.
++     */
++    public void setKeepSpawnInMemory(boolean keepLoaded);
++
++    /**
++     * Gets whether or not the world will automatically save
++     *
++     * @return true if the world will automatically save, otherwise false
++     */
++    public boolean isAutoSave();
++
++    /**
++     * Sets whether or not the world will automatically save
++     *
++     * @param value true if the world should automatically save, otherwise
++     *     false
++     */
++    public void setAutoSave(boolean value);
++
++    /**
++     * Sets the Difficulty of the world.
++     *
++     * @param difficulty the new difficulty you want to set the world to
++     */
++    public void setDifficulty(Difficulty difficulty);
++
++    /**
++     * Gets the Difficulty of the world.
++     *
++     * @return The difficulty of the world.
++     */
++    public Difficulty getDifficulty();
++
++    /**
++     * Gets the folder of this world on disk.
++     *
++     * @return The folder of this world.
++     */
++    public File getWorldFolder();
++
++    /**
++     * Gets the type of this world.
++     *
++     * @return Type of this world.
++     */
++    public WorldType getWorldType();
++
++    /**
++     * Gets whether or not structures are being generated.
++     *
++     * @return True if structures are being generated.
++     */
++    public boolean canGenerateStructures();
++
++    /**
++     * Gets the world's ticks per animal spawns value
++     * <p>
++     * This value determines how many ticks there are between attempts to
++     * spawn animals.
++     * <p>
++     * <b>Example Usage:</b>
++     * <ul>
++     * <li>A value of 1 will mean the server will attempt to spawn animals in
++     *     this world every tick.
++     * <li>A value of 400 will mean the server will attempt to spawn animals
++     *     in this world every 400th tick.
++     * <li>A value below 0 will be reset back to Minecraft's default.
++     * </ul>
++     * <p>
++     * <b>Note:</b>
++     * If set to 0, animal spawning will be disabled for this world. We
++     * recommend using {@link #setSpawnFlags(boolean, boolean)} to control
++     * this instead.
++     * <p>
++     * Minecraft default: 400.
++     *
++     * @return The world's ticks per animal spawns value
++     */
++    public long getTicksPerAnimalSpawns();
++
++    /**
++     * Sets the world's ticks per animal spawns value
++     * <p>
++     * This value determines how many ticks there are between attempts to
++     * spawn animals.
++     * <p>
++     * <b>Example Usage:</b>
++     * <ul>
++     * <li>A value of 1 will mean the server will attempt to spawn animals in
++     *     this world every tick.
++     * <li>A value of 400 will mean the server will attempt to spawn animals
++     *     in this world every 400th tick.
++     * <li>A value below 0 will be reset back to Minecraft's default.
++     * </ul>
++     * <p>
++     * <b>Note:</b>
++     * If set to 0, animal spawning will be disabled for this world. We
++     * recommend using {@link #setSpawnFlags(boolean, boolean)} to control
++     * this instead.
++     * <p>
++     * Minecraft default: 400.
++     *
++     * @param ticksPerAnimalSpawns the ticks per animal spawns value you want
++     *     to set the world to
++     */
++    public void setTicksPerAnimalSpawns(int ticksPerAnimalSpawns);
++
++    /**
++     * Gets the world's ticks per monster spawns value
++     * <p>
++     * This value determines how many ticks there are between attempts to
++     * spawn monsters.
++     * <p>
++     * <b>Example Usage:</b>
++     * <ul>
++     * <li>A value of 1 will mean the server will attempt to spawn monsters in
++     *     this world every tick.
++     * <li>A value of 400 will mean the server will attempt to spawn monsters
++     *     in this world every 400th tick.
++     * <li>A value below 0 will be reset back to Minecraft's default.
++     * </ul>
++     * <p>
++     * <b>Note:</b>
++     * If set to 0, monsters spawning will be disabled for this world. We
++     * recommend using {@link #setSpawnFlags(boolean, boolean)} to control
++     * this instead.
++     * <p>
++     * Minecraft default: 1.
++     *
++     * @return The world's ticks per monster spawns value
++     */
++    public long getTicksPerMonsterSpawns();
++
++    /**
++     * Sets the world's ticks per monster spawns value
++     * <p>
++     * This value determines how many ticks there are between attempts to
++     * spawn monsters.
++     * <p>
++     * <b>Example Usage:</b>
++     * <ul>
++     * <li>A value of 1 will mean the server will attempt to spawn monsters in
++     *     this world on every tick.
++     * <li>A value of 400 will mean the server will attempt to spawn monsters
++     *     in this world every 400th tick.
++     * <li>A value below 0 will be reset back to Minecraft's default.
++     * </ul>
++     * <p>
++     * <b>Note:</b>
++     * If set to 0, monsters spawning will be disabled for this world. We
++     * recommend using {@link #setSpawnFlags(boolean, boolean)} to control
++     * this instead.
++     * <p>
++     * Minecraft default: 1.
++     *
++     * @param ticksPerMonsterSpawns the ticks per monster spawns value you
++     *     want to set the world to
++     */
++    public void setTicksPerMonsterSpawns(int ticksPerMonsterSpawns);
++
++    /**
++     * Gets limit for number of monsters that can spawn in a chunk in this
++     * world
++     *
++     * @return The monster spawn limit
++     */
++    int getMonsterSpawnLimit();
++
++    /**
++     * Sets the limit for number of monsters that can spawn in a chunk in this
++     * world
++     * <p>
++     * <b>Note:</b> If set to a negative number the world will use the
++     * server-wide spawn limit instead.
++     * 
++     * @param limit the new mob limit
++     */
++    void setMonsterSpawnLimit(int limit);
++
++    /**
++     * Gets the limit for number of animals that can spawn in a chunk in this
++     * world
++     *
++     * @return The animal spawn limit
++     */
++    int getAnimalSpawnLimit();
++
++    /**
++     * Sets the limit for number of animals that can spawn in a chunk in this
++     * world
++     * <p>
++     * <b>Note:</b> If set to a negative number the world will use the
++     * server-wide spawn limit instead.
++     * 
++     * @param limit the new mob limit
++     */
++    void setAnimalSpawnLimit(int limit);
++
++    /**
++     * Gets the limit for number of water animals that can spawn in a chunk in
++     * this world
++     *
++     * @return The water animal spawn limit
++     */
++    int getWaterAnimalSpawnLimit();
++
++    /**
++     * Sets the limit for number of water animals that can spawn in a chunk in
++     * this world
++     * <p>
++     * <b>Note:</b> If set to a negative number the world will use the
++     * server-wide spawn limit instead.
++     * 
++     * @param limit the new mob limit
++     */
++    void setWaterAnimalSpawnLimit(int limit);
++
++    /**
++     * Gets the limit for number of ambient mobs that can spawn in a chunk in
++     * this world
++     *
++     * @return The ambient spawn limit
++     */
++    int getAmbientSpawnLimit();
++
++    /**
++     * Sets the limit for number of ambient mobs that can spawn in a chunk in
++     * this world
++     * <p>
++     * <b>Note:</b> If set to a negative number the world will use the
++     * server-wide spawn limit instead.
++     * 
++     * @param limit the new mob limit
++     */
++    void setAmbientSpawnLimit(int limit);
++
++    /**
++     * Play a Sound at the provided Location in the World
++     * <p>
++     * This function will fail silently if Location or Sound are null.
++     *
++     * @param location The location to play the sound
++     * @param sound The sound to play
++     * @param volume The volume of the sound
++     * @param pitch The pitch of the sound
++     */
++    void playSound(Location location, Sound sound, float volume, float pitch);
++
++    /**
++     * Play a Sound at the provided Location in the World.
++     * <p>
++     * This function will fail silently if Location or Sound are null. No
++     * sound will be heard by the players if their clients do not have the
++     * respective sound for the value passed.
++     *
++     * @param location the location to play the sound
++     * @param sound the internal sound name to play
++     * @param volume the volume of the sound
++     * @param pitch the pitch of the sound
++     */
++    void playSound(Location location, String sound, float volume, float pitch);
++
++    /**
++     * Get existing rules
++     *
++     * @return An array of rules
++     */
++    public String[] getGameRules();
++
++    /**
++     * Gets the current state of the specified rule
++     * <p>
++     * Will return null if rule passed is null
++     *
++     * @param rule Rule to look up value of
++     * @return String value of rule
++     */
++    public String getGameRuleValue(String rule);
++
++    /**
++     * Set the specified gamerule to specified value.
++     * <p>
++     * The rule may attempt to validate the value passed, will return true if
++     * value was set.
++     * <p>
++     * If rule is null, the function will return false.
++     *
++     * @param rule Rule to set
++     * @param value Value to set rule to
++     * @return True if rule was set
++     */
++    public boolean setGameRuleValue(String rule, String value);
++
++    /**
++     * Checks if string is a valid game rule
++     *
++     * @param rule Rule to check
++     * @return True if rule exists
++     */
++    public boolean isGameRule(String rule);
++
++    // Spigot start
++    public class Spigot
++    {
++
++        /**
++         * Plays an effect to all players within a default radius around a given
++         * location.
++         *
++         * @param location the {@link Location} around which players must be to
++         * see the effect
++         * @param effect the {@link Effect}
++         * @throws IllegalArgumentException if the location or effect is null.
++         * It also throws when the effect requires a material or a material data
++         */
++        public void playEffect(Location location, Effect effect)
++        {
++            throw new UnsupportedOperationException( "Not supported yet." );
++        }
++
++        /**
++         * Plays an effect to all players within a default radius around a given
++         * location. The effect will use the provided material (and material
++         * data if required). The particle's position on the client will be the
++         * given location, adjusted on each axis by a normal distribution with
++         * mean 0 and standard deviation given in the offset parameters, each
++         * particle has independently calculated offsets. The effect will have
++         * the given speed and particle count if the effect is a particle. Some
++         * effect will create multiple particles.
++         *
++         * @param location the {@link Location} around which players must be to
++         * see the effect
++         * @param effect effect the {@link Effect}
++         * @param id the item/block/data id for the effect
++         * @param data the data value of the block/item for the effect
++         * @param offsetX the amount to be randomly offset by in the X axis
++         * @param offsetY the amount to be randomly offset by in the Y axis
++         * @param offsetZ the amount to be randomly offset by in the Z axis
++         * @param speed the speed of the particles
++         * @param particleCount the number of particles
++         * @param radius the radius around the location
++         */
++        public void playEffect(Location location, Effect effect, int id, int data, float offsetX, float offsetY, float offsetZ, float speed, int particleCount, int radius)
++        {
++            throw new UnsupportedOperationException( "Not supported yet." );
++        }
++        
++        /**
++         * Strikes lightning at the given {@link Location} and possibly without sound
++         *
++         * @param loc The location to strike lightning
++         * @param isSilent Whether this strike makes no sound
++         * @return The lightning entity.
++         */        
++        public LightningStrike strikeLightning(Location loc, boolean isSilent)
++        {
++            throw new UnsupportedOperationException( "Not supported yet." );
++        }
++        
++        /**
++         * Strikes lightning at the given {@link Location} without doing damage and possibly without sound
++         *
++         * @param loc The location to strike lightning
++         * @param isSilent Whether this strike makes no sound
++         * @return The lightning entity.
++         */
++        public LightningStrike strikeLightningEffect(Location loc, boolean isSilent)
++        {
++            throw new UnsupportedOperationException( "Not supported yet." );
++        }
++    }
++
++    Spigot spigot();
++    // Spigot end
++
++    /**
++     * Gets the world border for this world.
++     *
++     * @return The world border for this world.
++     */
++    public WorldBorder getWorldBorder();
++
++    /**
++     * Spawns the particle (the number of times specified by count)
++     * at the target location.
++     *
++     * @param particle the particle to spawn
++     * @param location the location to spawn at
++     * @param count the number of particles
++     */
++    public void spawnParticle(Particle particle, Location location, int count);
++
++    /**
++     * Spawns the particle (the number of times specified by count)
++     * at the target location.
++     *
++     * @param particle the particle to spawn
++     * @param x the position on the x axis to spawn at
++     * @param y the position on the y axis to spawn at
++     * @param z the position on the z axis to spawn at
++     * @param count the number of particles
++     */
++    public void spawnParticle(Particle particle, double x, double y, double z, int count);
++
++    /**
++     * Spawns the particle (the number of times specified by count)
++     * at the target location.
++     *
++     * @param particle the particle to spawn
++     * @param location the location to spawn at
++     * @param count the number of particles
++     * @param data the data to use for the particle or null,
++     *             the type of this depends on {@link Particle#getDataType()}
++     */
++    public <T> void spawnParticle(Particle particle, Location location, int count, T data);
++
++
++    /**
++     * Spawns the particle (the number of times specified by count)
++     * at the target location.
++     *
++     * @param particle the particle to spawn
++     * @param x the position on the x axis to spawn at
++     * @param y the position on the y axis to spawn at
++     * @param z the position on the z axis to spawn at
++     * @param count the number of particles
++     * @param data the data to use for the particle or null,
++     *             the type of this depends on {@link Particle#getDataType()}
++     */
++    public <T> void spawnParticle(Particle particle, double x, double y, double z, int count, T data);
++
++    /**
++     * Spawns the particle (the number of times specified by count)
++     * at the target location. The position of each particle will be
++     * randomized positively and negatively by the offset parameters
++     * on each axis.
++     *
++     * @param particle the particle to spawn
++     * @param location the location to spawn at
++     * @param count the number of particles
++     * @param offsetX the maximum random offset on the X axis
++     * @param offsetY the maximum random offset on the Y axis
++     * @param offsetZ the maximum random offset on the Z axis
++     */
++    public void spawnParticle(Particle particle, Location location, int count, double offsetX, double offsetY, double offsetZ);
++
++    /**
++     * Spawns the particle (the number of times specified by count)
++     * at the target location. The position of each particle will be
++     * randomized positively and negatively by the offset parameters
++     * on each axis.
++     *
++     * @param particle the particle to spawn
++     * @param x the position on the x axis to spawn at
++     * @param y the position on the y axis to spawn at
++     * @param z the position on the z axis to spawn at
++     * @param count the number of particles
++     * @param offsetX the maximum random offset on the X axis
++     * @param offsetY the maximum random offset on the Y axis
++     * @param offsetZ the maximum random offset on the Z axis
++     */
++    public void spawnParticle(Particle particle, double x, double y, double z, int count, double offsetX, double offsetY, double offsetZ);
++
++    /**
++     * Spawns the particle (the number of times specified by count)
++     * at the target location. The position of each particle will be
++     * randomized positively and negatively by the offset parameters
++     * on each axis.
++     *
++     * @param particle the particle to spawn
++     * @param location the location to spawn at
++     * @param count the number of particles
++     * @param offsetX the maximum random offset on the X axis
++     * @param offsetY the maximum random offset on the Y axis
++     * @param offsetZ the maximum random offset on the Z axis
++     * @param data the data to use for the particle or null,
++     *             the type of this depends on {@link Particle#getDataType()}
++     */
++    public <T> void spawnParticle(Particle particle, Location location, int count, double offsetX, double offsetY, double offsetZ, T data);
++
++    /**
++     * Spawns the particle (the number of times specified by count)
++     * at the target location. The position of each particle will be
++     * randomized positively and negatively by the offset parameters
++     * on each axis.
++     *
++     * @param particle the particle to spawn
++     * @param x the position on the x axis to spawn at
++     * @param y the position on the y axis to spawn at
++     * @param z the position on the z axis to spawn at
++     * @param count the number of particles
++     * @param offsetX the maximum random offset on the X axis
++     * @param offsetY the maximum random offset on the Y axis
++     * @param offsetZ the maximum random offset on the Z axis
++     * @param data the data to use for the particle or null,
++     *             the type of this depends on {@link Particle#getDataType()}
++     */
++    public <T> void spawnParticle(Particle particle, double x, double y, double z, int count, double offsetX, double offsetY, double offsetZ, T data);
++
++    /**
++     * Spawns the particle (the number of times specified by count)
++     * at the target location. The position of each particle will be
++     * randomized positively and negatively by the offset parameters
++     * on each axis.
++     *
++     * @param particle the particle to spawn
++     * @param location the location to spawn at
++     * @param count the number of particles
++     * @param offsetX the maximum random offset on the X axis
++     * @param offsetY the maximum random offset on the Y axis
++     * @param offsetZ the maximum random offset on the Z axis
++     * @param extra the extra data for this particle, depends on the
++     *              particle used (normally speed)
++     */
++    public void spawnParticle(Particle particle, Location location, int count, double offsetX, double offsetY, double offsetZ, double extra);
++
++    /**
++     * Spawns the particle (the number of times specified by count)
++     * at the target location. The position of each particle will be
++     * randomized positively and negatively by the offset parameters
++     * on each axis.
++     *
++     * @param particle the particle to spawn
++     * @param x the position on the x axis to spawn at
++     * @param y the position on the y axis to spawn at
++     * @param z the position on the z axis to spawn at
++     * @param count the number of particles
++     * @param offsetX the maximum random offset on the X axis
++     * @param offsetY the maximum random offset on the Y axis
++     * @param offsetZ the maximum random offset on the Z axis
++     * @param extra the extra data for this particle, depends on the
++     *              particle used (normally speed)
++     */
++    public void spawnParticle(Particle particle, double x, double y, double z, int count, double offsetX, double offsetY, double offsetZ, double extra);
++
++    /**
++     * Spawns the particle (the number of times specified by count)
++     * at the target location. The position of each particle will be
++     * randomized positively and negatively by the offset parameters
++     * on each axis.
++     *
++     * @param particle the particle to spawn
++     * @param location the location to spawn at
++     * @param count the number of particles
++     * @param offsetX the maximum random offset on the X axis
++     * @param offsetY the maximum random offset on the Y axis
++     * @param offsetZ the maximum random offset on the Z axis
++     * @param extra the extra data for this particle, depends on the
++     *              particle used (normally speed)
++     * @param data the data to use for the particle or null,
++     *             the type of this depends on {@link Particle#getDataType()}
++     */
++    public <T> void spawnParticle(Particle particle, Location location, int count, double offsetX, double offsetY, double offsetZ, double extra, T data);
++
++    /**
++     * Spawns the particle (the number of times specified by count)
++     * at the target location. The position of each particle will be
++     * randomized positively and negatively by the offset parameters
++     * on each axis.
++     *
++     * @param particle the particle to spawn
++     * @param x the position on the x axis to spawn at
++     * @param y the position on the y axis to spawn at
++     * @param z the position on the z axis to spawn at
++     * @param count the number of particles
++     * @param offsetX the maximum random offset on the X axis
++     * @param offsetY the maximum random offset on the Y axis
++     * @param offsetZ the maximum random offset on the Z axis
++     * @param extra the extra data for this particle, depends on the
++     *              particle used (normally speed)
++     * @param data the data to use for the particle or null,
++     *             the type of this depends on {@link Particle#getDataType()}
++     */
++    public <T> void spawnParticle(Particle particle, double x, double y, double z, int count, double offsetX, double offsetY, double offsetZ, double extra, T data);
++
++
++    /**
++     * Represents various map environment types that a world may be
++     */
++    public enum Environment {
++
++        /**
++         * Represents the "normal"/"surface world" map
++         */
++        NORMAL(0),
++        /**
++         * Represents a nether based map ("hell")
++         */
++        NETHER(-1),
++        /**
++         * Represents the "end" map
++         */
++        THE_END(1);
++
++        private final int id;
++        private static final Map<Integer, Environment> lookup = new HashMap<Integer, Environment>();
++
++        private Environment(int id) {
++            this.id = id;
++        }
++
++        /**
++         * Gets the dimension ID of this environment
++         *
++         * @return dimension ID
++         * @deprecated Magic value
++         */
++        @Deprecated
++        public int getId() {
++            return id;
++        }
++
++        /**
++         * Get an environment by ID
++         *
++         * @param id The ID of the environment
++         * @return The environment
++         * @deprecated Magic value
++         */
++        @Deprecated
++        public static Environment getEnvironment(int id) {
++            return lookup.get(id);
++        }
++
++        static {
++            for (Environment env : values()) {
++                lookup.put(env.getId(), env);
++            }
++        }
++    }
++}
+diff --git a/src/main/java/org/bukkit/block/Block.java b/src/main/java/org/bukkit/block/Block.java
+new file mode 100644
+index 0000000..640eb8f
+--- /dev/null
++++ b/src/main/java/org/bukkit/block/Block.java
+@@ -0,0 +1,394 @@
++package org.bukkit.block;
++
++import java.util.Collection;
++
++import org.bukkit.Chunk;
++import org.bukkit.Material;
++import org.bukkit.World;
++import org.bukkit.Location;
++import org.bukkit.inventory.ItemStack;
++import org.bukkit.metadata.Metadatable;
++import org.bukkit.Physical;
++
++/**
++ * Represents a block. This is a live object, and only one Block may exist for
++ * any given location in a world. The state of the block may change
++ * concurrently to your own handling of it; use block.getState() to get a
++ * snapshot state of a block which will not be modified.
++ */
++public interface Block extends Metadatable, Physical {
++
++    /**
++     * Gets the metadata for this block
++     *
++     * @return block specific metadata
++     * @deprecated Magic value
++     */
++    @Deprecated
++    byte getData();
++
++    /**
++     * Gets the block at the given offsets
++     *
++     * @param modX X-coordinate offset
++     * @param modY Y-coordinate offset
++     * @param modZ Z-coordinate offset
++     * @return Block at the given offsets
++     */
++    Block getRelative(int modX, int modY, int modZ);
++
++    /**
++     * Gets the block at the given face
++     * <p>
++     * This method is equal to getRelative(face, 1)
++     *
++     * @param face Face of this block to return
++     * @return Block at the given face
++     * @see #getRelative(BlockFace, int)
++     */
++    Block getRelative(BlockFace face);
++
++    /**
++     * Gets the block at the given distance of the given face
++     * <p>
++     * For example, the following method places water at 100,102,100; two
++     * blocks above 100,100,100.
++     *
++     * <pre>
++     * Block block = world.getBlockAt(100, 100, 100);
++     * Block shower = block.getRelative(BlockFace.UP, 2);
++     * shower.setType(Material.WATER);
++     * </pre>
++     *
++     * @param face Face of this block to return
++     * @param distance Distance to get the block at
++     * @return Block at the given face
++     */
++    Block getRelative(BlockFace face, int distance);
++
++    /**
++     * Gets the type of this block
++     *
++     * @return block type
++     */
++    Material getType();
++
++    /**
++     * Gets the type-id of this block
++     *
++     * @return block type-id
++     * @deprecated Magic value
++     */
++    @Deprecated
++    int getTypeId();
++
++    /**
++     * Gets the light level between 0-15
++     *
++     * @return light level
++     */
++    byte getLightLevel();
++
++    /**
++     * Get the amount of light at this block from the sky.
++     * <p>
++     * Any light given from other sources (such as blocks like torches) will
++     * be ignored.
++     *
++     * @return Sky light level
++     */
++    byte getLightFromSky();
++
++    /**
++     * Get the amount of light at this block from nearby blocks.
++     * <p>
++     * Any light given from other sources (such as the sun) will be ignored.
++     *
++     * @return Block light level
++     */
++    byte getLightFromBlocks();
++
++    /**
++     * Gets the world which contains this Block
++     *
++     * @return World containing this block
++     */
++    World getWorld();
++
++    /**
++     * Gets the x-coordinate of this block
++     *
++     * @return x-coordinate
++     */
++    int getX();
++
++    /**
++     * Gets the y-coordinate of this block
++     *
++     * @return y-coordinate
++     */
++    int getY();
++
++    /**
++     * Gets the z-coordinate of this block
++     *
++     * @return z-coordinate
++     */
++    int getZ();
++
++    /**
++     * Gets the Location of the block
++     *
++     * @return Location of block
++     */
++    Location getLocation();
++
++    /**
++     * Stores the location of the block in the provided Location object.
++     * <p>
++     * If the provided Location is null this method does nothing and returns
++     * null.
++     *
++     * @param loc the location to copy into
++     * @return The Location object provided or null
++     */
++    Location getLocation(Location loc);
++
++    /**
++     * Gets the chunk which contains this block
++     *
++     * @return Containing Chunk
++     */
++    Chunk getChunk();
++
++    /**
++     * Sets the metadata for this block
++     *
++     * @param data New block specific metadata
++     * @deprecated Magic value
++     */
++    @Deprecated
++    void setData(byte data);
++
++    /**
++     * Sets the metadata for this block
++     *
++     * @param data New block specific metadata
++     * @param applyPhysics False to cancel physics from the changed block.
++     * @deprecated Magic value
++     */
++    @Deprecated
++    void setData(byte data, boolean applyPhysics);
++
++    /**
++     * Sets the type of this block
++     *
++     * @param type Material to change this block to
++     */
++    void setType(Material type);
++
++    /**
++     * Sets the type of this block
++     *
++     * @param type Material to change this block to
++     * @param applyPhysics False to cancel physics on the changed block.
++     */
++    void setType(Material type, boolean applyPhysics);
++
++    /**
++     * Sets the type-id of this block
++     *
++     * @param type Type-Id to change this block to
++     * @return whether the block was changed
++     * @deprecated Magic value
++     */
++    @Deprecated
++    boolean setTypeId(int type);
++
++    /**
++     * Sets the type-id of this block
++     *
++     * @param type Type-Id to change this block to
++     * @param applyPhysics False to cancel physics on the changed block.
++     * @return whether the block was changed
++     * @deprecated Magic value
++     */
++    @Deprecated
++    boolean setTypeId(int type, boolean applyPhysics);
++
++    /**
++     * Sets the type-id of this block
++     *
++     * @param type Type-Id to change this block to
++     * @param data The data value to change this block to
++     * @param applyPhysics False to cancel physics on the changed block
++     * @return whether the block was changed
++     * @deprecated Magic value
++     */
++    @Deprecated
++    boolean setTypeIdAndData(int type, byte data, boolean applyPhysics);
++
++    /**
++     * Gets the face relation of this block compared to the given block.
++     * <p>
++     * For example: 
++     * <pre>{@code
++     * Block current = world.getBlockAt(100, 100, 100);
++     * Block target = world.getBlockAt(100, 101, 100);
++     *
++     * current.getFace(target) == BlockFace.Up;
++     * }</pre>
++     * <br>
++     * If the given block is not connected to this block, null may be returned
++     *
++     * @param block Block to compare against this block
++     * @return BlockFace of this block which has the requested block, or null
++     */
++    BlockFace getFace(Block block);
++
++    /**
++     * Captures the current state of this block. You may then cast that state
++     * into any accepted type, such as Furnace or Sign.
++     * <p>
++     * The returned object will never be updated, and you are not guaranteed
++     * that (for example) a sign is still a sign after you capture its state.
++     *
++     * @return BlockState with the current state of this block.
++     */
++    BlockState getState();
++
++    /**
++     * Returns the biome that this block resides in
++     *
++     * @return Biome type containing this block
++     */
++    Biome getBiome();
++
++    /**
++     * Sets the biome that this block resides in
++     *
++     * @param bio new Biome type for this block
++     */
++    void setBiome(Biome bio);
++
++    /**
++     * Returns true if the block is being powered by Redstone.
++     *
++     * @return True if the block is powered.
++     */
++    boolean isBlockPowered();
++
++    /**
++     * Returns true if the block is being indirectly powered by Redstone.
++     *
++     * @return True if the block is indirectly powered.
++     */
++    boolean isBlockIndirectlyPowered();
++
++    /**
++     * Returns true if the block face is being powered by Redstone.
++     *
++     * @param face The block face
++     * @return True if the block face is powered.
++     */
++    boolean isBlockFacePowered(BlockFace face);
++
++    /**
++     * Returns true if the block face is being indirectly powered by Redstone.
++     *
++     * @param face The block face
++     * @return True if the block face is indirectly powered.
++     */
++    boolean isBlockFaceIndirectlyPowered(BlockFace face);
++
++    /**
++     * Returns the redstone power being provided to this block face
++     *
++     * @param face the face of the block to query or BlockFace.SELF for the
++     *     block itself
++     * @return The power level.
++     */
++    int getBlockPower(BlockFace face);
++
++    /**
++     * Returns the redstone power being provided to this block
++     *
++     * @return The power level.
++     */
++    int getBlockPower();
++
++    /**
++     * Checks if this block is empty.
++     * <p>
++     * A block is considered empty when {@link #getType()} returns {@link
++     * Material#AIR}.
++     *
++     * @return true if this block is empty
++     */
++    boolean isEmpty();
++
++    /**
++     * Checks if this block is liquid.
++     * <p>
++     * A block is considered liquid when {@link #getType()} returns {@link
++     * Material#WATER}, {@link Material#STATIONARY_WATER}, {@link
++     * Material#LAVA} or {@link Material#STATIONARY_LAVA}.
++     *
++     * @return true if this block is liquid
++     */
++    boolean isLiquid();
++
++    /**
++     * Gets the temperature of the biome of this block
++     *
++     * @return Temperature of this block
++     */
++    double getTemperature();
++
++    /**
++     * Gets the humidity of the biome of this block
++     *
++     * @return Humidity of this block
++     */
++    double getHumidity();
++
++    /**
++     * Returns the reaction of the block when moved by a piston
++     *
++     * @return reaction
++     */
++    PistonMoveReaction getPistonMoveReaction();
++
++    /**
++     * Breaks the block and spawns items as if a player had digged it
++     *
++     * @return true if the block was destroyed
++     */
++    boolean breakNaturally();
++
++    /**
++     * Breaks the block and spawns items as if a player had digged it with a
++     * specific tool
++     *
++     * @param tool The tool or item in hand used for digging
++     * @return true if the block was destroyed
++     */
++    boolean breakNaturally(ItemStack tool);
++
++    /**
++     * Returns a list of items which would drop by destroying this block
++     *
++     * @return a list of dropped items for this type of block
++     */
++    Collection<ItemStack> getDrops();
++
++    /**
++     * Returns a list of items which would drop by destroying this block with
++     * a specific tool
++     *
++     * @param tool The tool or item in hand used for digging
++     * @return a list of dropped items for this type of block
++     */
++    Collection<ItemStack> getDrops(ItemStack tool);
++
++}
+diff --git a/src/main/java/org/bukkit/block/BlockState.java b/src/main/java/org/bukkit/block/BlockState.java
+new file mode 100644
+index 0000000..6a00e02
+--- /dev/null
++++ b/src/main/java/org/bukkit/block/BlockState.java
+@@ -0,0 +1,207 @@
++package org.bukkit.block;
++
++import org.bukkit.Chunk;
++import org.bukkit.Location;
++import org.bukkit.Material;
++import org.bukkit.World;
++import org.bukkit.material.MaterialData;
++import org.bukkit.metadata.Metadatable;
++import org.bukkit.Physical;
++
++/**
++ * Represents a captured state of a block, which will not change
++ * automatically.
++ * <p>
++ * Unlike Block, which only one object can exist per coordinate, BlockState
++ * can exist multiple times for any given Block. Note that another plugin may
++ * change the state of the block and you will not know, or they may change the
++ * block to another type entirely, causing your BlockState to become invalid.
++ */
++public interface BlockState extends Metadatable, Physical {
++
++    /**
++     * Gets the block represented by this BlockState
++     *
++     * @return Block that this BlockState represents
++     */
++    Block getBlock();
++
++    /**
++     * Gets the metadata for this block
++     *
++     * @return block specific metadata
++     */
++    MaterialData getData();
++
++    /**
++     * Gets the type of this block
++     *
++     * @return block type
++     */
++    Material getType();
++
++    /**
++     * Gets the type-id of this block
++     *
++     * @return block type-id
++     * @deprecated Magic value
++     */
++    @Deprecated
++    int getTypeId();
++
++    /**
++     * Gets the light level between 0-15
++     *
++     * @return light level
++     */
++    byte getLightLevel();
++
++    /**
++     * Gets the world which contains this Block
++     *
++     * @return World containing this block
++     */
++    World getWorld();
++
++    /**
++     * Gets the x-coordinate of this block
++     *
++     * @return x-coordinate
++     */
++    int getX();
++
++    /**
++     * Gets the y-coordinate of this block
++     *
++     * @return y-coordinate
++     */
++    int getY();
++
++    /**
++     * Gets the z-coordinate of this block
++     *
++     * @return z-coordinate
++     */
++    int getZ();
++
++    /**
++     * Gets the location of this block
++     *
++     * @return location
++     */
++    Location getLocation();
++
++    /**
++     * Stores the location of this block in the provided Location object.
++     * <p>
++     * If the provided Location is null this method does nothing and returns
++     * null.
++     *
++     * @param loc the location to copy into
++     * @return The Location object provided or null
++     */
++    Location getLocation(Location loc);
++
++    /**
++     * Gets the chunk which contains this block
++     *
++     * @return Containing Chunk
++     */
++    Chunk getChunk();
++
++    /**
++     * Sets the metadata for this block
++     *
++     * @param data New block specific metadata
++     */
++    void setData(MaterialData data);
++
++    /**
++     * Sets the type of this block
++     *
++     * @param type Material to change this block to
++     */
++    void setType(Material type);
++
++    /**
++     * Sets the type-id of this block
++     *
++     * @param type Type-Id to change this block to
++     * @return Whether it worked?
++     * @deprecated Magic value
++     */
++    @Deprecated
++    boolean setTypeId(int type);
++
++    /**
++     * Attempts to update the block represented by this state, setting it to
++     * the new values as defined by this state.
++     * <p>
++     * This has the same effect as calling update(false). That is to say,
++     * this will not modify the state of a block if it is no longer the same
++     * type as it was when this state was taken. It will return false in this
++     * eventuality.
++     *
++     * @return true if the update was successful, otherwise false
++     * @see #update(boolean)
++     */
++    boolean update();
++
++    /**
++     * Attempts to update the block represented by this state, setting it to
++     * the new values as defined by this state.
++     * <p>
++     * This has the same effect as calling update(force, true). That is to
++     * say, this will trigger a physics update to surrounding blocks.
++     *
++     * @param force true to forcefully set the state
++     * @return true if the update was successful, otherwise false
++     */
++    boolean update(boolean force);
++
++    /**
++     * Attempts to update the block represented by this state, setting it to
++     * the new values as defined by this state.
++     * <p>
++     * Unless force is true, this will not modify the state of a block if it
++     * is no longer the same type as it was when this state was taken. It will
++     * return false in this eventuality.
++     * <p>
++     * If force is true, it will set the type of the block to match the new
++     * state, set the state data and then return true.
++     * <p>
++     * If applyPhysics is true, it will trigger a physics update on
++     * surrounding blocks which could cause them to update or disappear.
++     *
++     * @param force true to forcefully set the state
++     * @param applyPhysics false to cancel updating physics on surrounding
++     *     blocks
++     * @return true if the update was successful, otherwise false
++     */
++    boolean update(boolean force, boolean applyPhysics);
++
++    /**
++     * @return The data as a raw byte.
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public byte getRawData();
++
++    /**
++     * @param data The new data value for the block.
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public void setRawData(byte data);
++
++    /**
++     * Returns whether this state is placed in the world.
++     *
++     * Some methods will not work if the blockState isn't
++     * placed in the world.
++     *
++     * @return whether the state is placed in the world
++     *         or 'virtual' (e.g. on an itemstack)
++     */
++    boolean isPlaced();
++}
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+index c329f2c..284ff3f 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+@@ -88,6 +88,11 @@ public class CraftWorld implements World {
+             chunkGCTickCount = rand.nextInt(server.chunkGCPeriod);
+         }
+     }
++	
++	@Override
++    public World getWorld() {
++        return this;
++    }
+ 
+     public Block getBlockAt(int x, int y, int z) {
+         return getChunkAt(x >> 4, z >> 4).getBlock(x & 0xF, y, z & 0xF);
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventory.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventory.java
+index 3297216..428de7b 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventory.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventory.java
+@@ -3,6 +3,7 @@ package org.bukkit.craftbukkit.inventory;
+ import java.util.HashMap;
+ import java.util.List;
+ import java.util.ListIterator;
++import org.bukkit.World;
+ 
+ import net.minecraft.server.IHopper;
+ import net.minecraft.server.IInventory;
+@@ -470,6 +471,11 @@ public class CraftInventory implements Inventory {
+     public InventoryHolder getHolder() {
+         return inventory.getOwner();
+     }
++	
++	@Override
++    public World getWorld() {
++        return getLocation().getWorld();
++    }
+ 
+     public int getMaxStackSize() {
+         return inventory.getMaxStackSize();
+diff --git a/src/main/java/org/bukkit/craftbukkit/projectiles/CraftBlockProjectileSource.java b/src/main/java/org/bukkit/craftbukkit/projectiles/CraftBlockProjectileSource.java
+index 057ae24..fa00d2b 100644
+--- a/src/main/java/org/bukkit/craftbukkit/projectiles/CraftBlockProjectileSource.java
++++ b/src/main/java/org/bukkit/craftbukkit/projectiles/CraftBlockProjectileSource.java
+@@ -13,6 +13,7 @@ import org.bukkit.entity.EnderPearl;
+ import org.bukkit.entity.Fireball;
+ import org.bukkit.entity.LingeringPotion;
+ import org.bukkit.entity.Projectile;
++import org.bukkit.World;
+ import org.bukkit.entity.SmallFireball;
+ import org.bukkit.entity.Snowball;
+ import org.bukkit.entity.SpectralArrow;
+@@ -58,6 +59,11 @@ public class CraftBlockProjectileSource implements BlockProjectileSource {
+     public Block getBlock() {
+         return dispenserBlock.getWorld().getWorld().getBlockAt(dispenserBlock.getPosition().getX(), dispenserBlock.getPosition().getY(), dispenserBlock.getPosition().getZ());
+     }
++	
++	@Override
++    public World getWorld() {
++        return getBlock().getWorld();
++    }
+ 
+     @Override
+     public <T extends Projectile> T launchProjectile(Class<? extends T> projectile) {
+diff --git a/src/main/java/org/bukkit/entity/Entity.java b/src/main/java/org/bukkit/entity/Entity.java
+index 7331e36..59bcfbd 100644
+--- a/src/main/java/org/bukkit/entity/Entity.java
++++ b/src/main/java/org/bukkit/entity/Entity.java
+@@ -8,6 +8,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
+ import org.bukkit.metadata.Metadatable;
+ import org.bukkit.util.Vector;
+ 
++import org.bukkit.Physical;
+ import java.util.List;
+ import java.util.UUID;
+ import org.bukkit.command.CommandSender;
+@@ -16,7 +17,7 @@ import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+ /**
+  * Represents a base entity in the world
+  */
+-public interface Entity extends Metadatable, CommandSender {
++public interface Entity extends Metadatable, CommandSender, Physical {
+ 
+     /**
+      * Gets the entity's current position
+diff --git a/src/main/java/org/bukkit/event/Cancellable.java b/src/main/java/org/bukkit/event/Cancellable.java
+new file mode 100644
+index 0000000..a1bc6db
+--- /dev/null
++++ b/src/main/java/org/bukkit/event/Cancellable.java
+@@ -0,0 +1,23 @@
++package org.bukkit.event;
++
++import org.bukkit.World;
++
++public interface Cancellable {
++
++    /**
++     * Gets the cancellation state of this event. A cancelled event will not
++     * be executed in the server, but will still pass to other plugins
++     *
++     * @return true if this event is cancelled
++     */
++    public boolean isCancelled();
++
++    /**
++     * Sets the cancellation state of this event. A cancelled event will not
++     * be executed in the server, but will still pass to other plugins.
++     *
++     * @param cancel true if you wish to cancel this event
++     */
++    public void setCancelled(boolean cancel);
++	
++}
+diff --git a/src/main/java/org/bukkit/event/block/BlockEvent.java b/src/main/java/org/bukkit/event/block/BlockEvent.java
+new file mode 100644
+index 0000000..bc3c55e
+--- /dev/null
++++ b/src/main/java/org/bukkit/event/block/BlockEvent.java
+@@ -0,0 +1,31 @@
++package org.bukkit.event.block;
++
++import org.bukkit.block.Block;
++import org.bukkit.event.Event;
++import org.bukkit.World;
++import org.bukkit.Physical;
++
++/**
++ * Represents a block related event.
++ */
++public abstract class BlockEvent extends Event implements Physical {
++    protected Block block;
++
++    public BlockEvent(final Block theBlock) {
++        block = theBlock;
++    }
++
++    /**
++     * Gets the block involved in this event.
++     *
++     * @return The Block which block is involved in this event
++     */
++    public final Block getBlock() {
++        return block;
++    }
++	
++	@Override
++    public World getWorld() {
++        return getBlock().getWorld();
++    }
++}
+diff --git a/src/main/java/org/bukkit/event/entity/EntityEvent.java b/src/main/java/org/bukkit/event/entity/EntityEvent.java
+new file mode 100644
+index 0000000..789bb3d
+--- /dev/null
++++ b/src/main/java/org/bukkit/event/entity/EntityEvent.java
+@@ -0,0 +1,41 @@
++package org.bukkit.event.entity;
++
++import org.bukkit.entity.Entity;
++import org.bukkit.entity.EntityType;
++import org.bukkit.event.Event;
++import org.bukkit.World;
++import org.bukkit.Physical;
++
++/**
++ * Represents an Entity-related event
++ */
++public abstract class EntityEvent extends Event implements Physical {
++    protected Entity entity;
++
++    public EntityEvent(final Entity what) {
++        entity = what;
++    }
++
++    /**
++     * Returns the Entity involved in this event
++     *
++     * @return Entity who is involved in this event
++     */
++    public Entity getEntity() {
++        return entity;
++    }
++
++    /**
++     * Gets the EntityType of the Entity involved in this event.
++     *
++     * @return EntityType of the Entity involved in this event
++     */
++    public EntityType getEntityType() {
++        return entity.getType();
++    }
++	
++	@Override
++    public World getWorld() {
++        return getEntity().getWorld();
++    }
++}
+diff --git a/src/main/java/org/bukkit/event/entity/PlayerLeashEntityEvent.java b/src/main/java/org/bukkit/event/entity/PlayerLeashEntityEvent.java
+new file mode 100644
+index 0000000..4b9cce9
+--- /dev/null
++++ b/src/main/java/org/bukkit/event/entity/PlayerLeashEntityEvent.java
+@@ -0,0 +1,75 @@
++package org.bukkit.event.entity;
++
++import org.bukkit.entity.Entity;
++import org.bukkit.entity.Player;
++import org.bukkit.event.Cancellable;
++import org.bukkit.event.Event;
++import org.bukkit.event.HandlerList;
++import org.bukkit.World;
++import org.bukkit.Physical;
++
++/**
++ * Called immediately prior to a creature being leashed by a player.
++ */
++public class PlayerLeashEntityEvent extends Event implements Cancellable, Physical {
++    private static final HandlerList handlers = new HandlerList();
++    private final Entity leashHolder;
++    private final Entity entity;
++    private boolean cancelled = false;
++    private final Player player;
++
++    public PlayerLeashEntityEvent(Entity what, Entity leashHolder, Player leasher) {
++        this.leashHolder = leashHolder;
++        this.entity = what;
++        this.player = leasher;
++    }
++
++    /**
++     * Returns the entity that is holding the leash.
++     *
++     * @return The leash holder
++     */
++    public Entity getLeashHolder() {
++        return leashHolder;
++    }
++
++    /**
++     * Returns the entity being leashed.
++     *
++     * @return The entity
++     */
++    public Entity getEntity() {
++        return entity;
++    }
++
++    /**
++     * Returns the player involved in this event
++     *
++     * @return Player who is involved in this event
++     */
++    public final Player getPlayer() {
++        return player;
++    }
++	
++	@Override
++    public World getWorld() {
++        return getEntity().getWorld();
++    }
++
++    @Override
++    public HandlerList getHandlers() {
++        return handlers;
++    }
++
++    public static HandlerList getHandlerList() {
++        return handlers;
++    }
++
++    public boolean isCancelled() {
++        return this.cancelled;
++    }
++
++    public void setCancelled(boolean cancel) {
++        this.cancelled  = cancel;
++    }
++}
+diff --git a/src/main/java/org/bukkit/event/hanging/HangingEvent.java b/src/main/java/org/bukkit/event/hanging/HangingEvent.java
+new file mode 100644
+index 0000000..74186a8
+--- /dev/null
++++ b/src/main/java/org/bukkit/event/hanging/HangingEvent.java
+@@ -0,0 +1,25 @@
++package org.bukkit.event.hanging;
++
++import org.bukkit.entity.Hanging;
++import org.bukkit.event.entity.EntityEvent;
++
++/**
++ * Represents a hanging entity-related event.
++ */
++public abstract class HangingEvent extends EntityEvent {
++    protected Hanging hanging;
++
++    protected HangingEvent(final Hanging painting) {
++		super(painting);
++        this.hanging = painting;
++    }
++
++    /**
++     * Gets the hanging entity involved in this event.
++     *
++     * @return the hanging entity
++     */
++    public Hanging getEntity() {
++        return hanging;
++    }
++}
+diff --git a/src/main/java/org/bukkit/event/inventory/InventoryEvent.java b/src/main/java/org/bukkit/event/inventory/InventoryEvent.java
+new file mode 100644
+index 0000000..9ce3b76
+--- /dev/null
++++ b/src/main/java/org/bukkit/event/inventory/InventoryEvent.java
+@@ -0,0 +1,64 @@
++package org.bukkit.event.inventory;
++
++import java.util.List;
++import org.bukkit.event.HandlerList;
++import org.bukkit.entity.HumanEntity;
++import org.bukkit.event.Event;
++import org.bukkit.inventory.Inventory;
++import org.bukkit.inventory.InventoryView;
++import org.bukkit.World;
++import org.bukkit.Physical;
++
++/**
++ * Represents a player related inventory event
++ */
++public class InventoryEvent extends Event implements Physical {
++    private static final HandlerList handlers = new HandlerList();
++    protected InventoryView transaction;
++
++    public InventoryEvent(InventoryView transaction) {
++        this.transaction = transaction;
++    }
++
++    /**
++     * Gets the primary Inventory involved in this transaction
++     *
++     * @return The upper inventory.
++     */
++    public Inventory getInventory() {
++        return transaction.getTopInventory();
++    }
++	
++	@Override
++    public World getWorld() {
++        return getInventory().getWorld();
++    }
++
++    /**
++     * Gets the list of players viewing the primary (upper) inventory involved
++     * in this event
++     *
++     * @return A list of people viewing.
++     */
++    public List<HumanEntity> getViewers() {
++        return transaction.getTopInventory().getViewers();
++    }
++
++    /**
++     * Gets the view object itself
++     *
++     * @return InventoryView
++     */
++    public InventoryView getView() {
++        return transaction;
++    }
++
++    @Override
++    public HandlerList getHandlers() {
++        return handlers;
++    }
++
++    public static HandlerList getHandlerList() {
++        return handlers;
++    }
++}
+diff --git a/src/main/java/org/bukkit/event/inventory/InventoryMoveItemEvent.java b/src/main/java/org/bukkit/event/inventory/InventoryMoveItemEvent.java
+index 8afd028..ee2f8f2 100644
+--- a/src/main/java/org/bukkit/event/inventory/InventoryMoveItemEvent.java
++++ b/src/main/java/org/bukkit/event/inventory/InventoryMoveItemEvent.java
+@@ -6,6 +6,8 @@ import org.bukkit.event.Event;
+ import org.bukkit.event.HandlerList;
+ import org.bukkit.inventory.Inventory;
+ import org.bukkit.inventory.ItemStack;
++import org.bukkit.World;
++import org.bukkit.Physical;
+ 
+ /**
+  * Called when some entity or block (e.g. hopper) tries to move items directly
+@@ -23,7 +25,7 @@ import org.bukkit.inventory.ItemStack;
+  * has not been modified, the source inventory slot will be restored to its
+  * former state. Otherwise any additional items will be discarded.
+  */
+-public class InventoryMoveItemEvent extends Event implements Cancellable {
++public class InventoryMoveItemEvent extends Event implements Cancellable, Physical {
+     private static final HandlerList handlers = new HandlerList();
+     private boolean cancelled;
+     private final Inventory sourceInventory;
+@@ -69,6 +71,11 @@ public class InventoryMoveItemEvent extends Event implements Cancellable {
+         Validate.notNull(itemStack, "ItemStack cannot be null.  Cancel the event if you want nothing to be transferred.");
+         this.itemStack = itemStack.clone();
+     }
++	
++	@Override
++    public World getWorld() {
++        return getInitiator().getWorld();
++    }
+ 
+     /**
+      * Gets the Inventory that the ItemStack is being put into
+diff --git a/src/main/java/org/bukkit/event/inventory/InventoryPickupItemEvent.java b/src/main/java/org/bukkit/event/inventory/InventoryPickupItemEvent.java
+new file mode 100644
+index 0000000..4fa7c39
+--- /dev/null
++++ b/src/main/java/org/bukkit/event/inventory/InventoryPickupItemEvent.java
+@@ -0,0 +1,65 @@
++package org.bukkit.event.inventory;
++
++import org.bukkit.entity.Item;
++import org.bukkit.event.Cancellable;
++import org.bukkit.event.Event;
++import org.bukkit.event.HandlerList;
++import org.bukkit.inventory.Inventory;
++import org.bukkit.World;
++import org.bukkit.Physical;
++
++/**
++ * Called when a hopper or hopper minecart picks up a dropped item.
++ */
++public class InventoryPickupItemEvent extends Event implements Cancellable, Physical {
++    private static final HandlerList handlers = new HandlerList();
++    private boolean cancelled;
++    private final Inventory inventory;
++    private final Item item;
++
++    public InventoryPickupItemEvent(final Inventory inventory, final Item item) {
++        super();
++        this.inventory = inventory;
++        this.item = item;
++    }
++
++    /**
++     * Gets the Inventory that picked up the item
++     *
++     * @return Inventory
++     */
++    public Inventory getInventory() {
++        return inventory;
++    }
++
++    /**
++     * Gets the Item entity that was picked up
++     *
++     * @return Item
++     */
++    public Item getItem() {
++        return item;
++    }
++	
++	@Override
++    public World getWorld() {
++        return getInventory().getHolder().getWorld();
++    }
++
++    public boolean isCancelled() {
++        return cancelled;
++    }
++
++    public void setCancelled(boolean cancel) {
++        this.cancelled = cancel;
++    }
++
++    @Override
++    public HandlerList getHandlers() {
++        return handlers;
++    }
++
++    public static HandlerList getHandlerList() {
++        return handlers;
++    }
++}
+diff --git a/src/main/java/org/bukkit/event/player/PlayerEvent.java b/src/main/java/org/bukkit/event/player/PlayerEvent.java
+new file mode 100644
+index 0000000..00de0d5
+--- /dev/null
++++ b/src/main/java/org/bukkit/event/player/PlayerEvent.java
+@@ -0,0 +1,37 @@
++package org.bukkit.event.player;
++
++import org.bukkit.entity.Player;
++import org.bukkit.event.Event;
++import org.bukkit.World;
++import org.bukkit.Physical;
++
++/**
++ * Represents a player related event
++ */
++public abstract class PlayerEvent extends Event implements Physical {
++    protected Player player;
++
++    public PlayerEvent(final Player who) {
++        player = who;
++    }
++
++    PlayerEvent(final Player who, boolean async) {
++        super(async);
++        player = who;
++
++    }
++
++    /**
++     * Returns the player involved in this event
++     *
++     * @return Player who is involved in this event
++     */
++    public final Player getPlayer() {
++        return player;
++    }
++	
++	@Override
++    public World getWorld() {
++        return getPlayer().getWorld();
++    }
++}
+diff --git a/src/main/java/org/bukkit/event/server/MapInitializeEvent.java b/src/main/java/org/bukkit/event/server/MapInitializeEvent.java
+new file mode 100644
+index 0000000..f0ea229
+--- /dev/null
++++ b/src/main/java/org/bukkit/event/server/MapInitializeEvent.java
+@@ -0,0 +1,41 @@
++package org.bukkit.event.server;
++
++import org.bukkit.event.HandlerList;
++import org.bukkit.map.MapView;
++import org.bukkit.World;
++import org.bukkit.Physical;
++
++/**
++ * Called when a map is initialized.
++ */
++public class MapInitializeEvent extends ServerEvent implements Physical {
++    private static final HandlerList handlers = new HandlerList();
++    private final MapView mapView;
++
++    public MapInitializeEvent(final MapView mapView) {
++        this.mapView = mapView;
++    }
++
++    /**
++     * Gets the map initialized in this event.
++     *
++     * @return Map for this event
++     */
++    public MapView getMap() {
++        return mapView;
++    }
++	
++	@Override
++    public World getWorld() {
++        return getMap().getWorld();
++    }
++
++    @Override
++    public HandlerList getHandlers() {
++        return handlers;
++    }
++
++    public static HandlerList getHandlerList() {
++        return handlers;
++    }
++}
+diff --git a/src/main/java/org/bukkit/event/vehicle/VehicleEvent.java b/src/main/java/org/bukkit/event/vehicle/VehicleEvent.java
+new file mode 100644
+index 0000000..f6ee27c
+--- /dev/null
++++ b/src/main/java/org/bukkit/event/vehicle/VehicleEvent.java
+@@ -0,0 +1,31 @@
++package org.bukkit.event.vehicle;
++
++import org.bukkit.entity.Vehicle;
++import org.bukkit.event.Event;
++import org.bukkit.World;
++import org.bukkit.Physical;
++
++/**
++ * Represents a vehicle-related event.
++ */
++public abstract class VehicleEvent extends Event implements Physical {
++    protected Vehicle vehicle;
++
++    public VehicleEvent(final Vehicle vehicle) {
++        this.vehicle = vehicle;
++    }
++
++    /**
++     * Get the vehicle.
++     *
++     * @return the vehicle
++     */
++    public final Vehicle getVehicle() {
++        return vehicle;
++    }
++	
++	@Override
++    public World getWorld() {
++        return getVehicle().getWorld();
++    }
++}
+diff --git a/src/main/java/org/bukkit/event/weather/WeatherEvent.java b/src/main/java/org/bukkit/event/weather/WeatherEvent.java
+new file mode 100644
+index 0000000..3e90359
+--- /dev/null
++++ b/src/main/java/org/bukkit/event/weather/WeatherEvent.java
+@@ -0,0 +1,25 @@
++package org.bukkit.event.weather;
++
++import org.bukkit.World;
++import org.bukkit.event.Event;
++import org.bukkit.Physical;
++
++/**
++ * Represents a Weather-related event
++ */
++public abstract class WeatherEvent extends Event implements Physical {
++    protected World world;
++
++    public WeatherEvent(final World where) {
++        world = where;
++    }
++
++    /**
++     * Returns the World where this event is occurring
++     *
++     * @return World this event is occurring in
++     */
++    public final World getWorld() {
++        return world;
++    }
++}
+diff --git a/src/main/java/org/bukkit/event/world/WorldEvent.java b/src/main/java/org/bukkit/event/world/WorldEvent.java
+new file mode 100644
+index 0000000..04e766e
+--- /dev/null
++++ b/src/main/java/org/bukkit/event/world/WorldEvent.java
+@@ -0,0 +1,25 @@
++package org.bukkit.event.world;
++
++import org.bukkit.World;
++import org.bukkit.event.Event;
++import org.bukkit.Physical;
++
++/**
++ * Represents events within a world
++ */
++public abstract class WorldEvent extends Event implements Physical {
++    private final World world;
++
++    public WorldEvent(final World world) {
++        this.world = world;
++    }
++
++    /**
++     * Gets the world primarily involved with this event
++     *
++     * @return World which caused this event
++     */
++    public World getWorld() {
++        return world;
++    }
++}
+diff --git a/src/main/java/org/bukkit/inventory/Inventory.java b/src/main/java/org/bukkit/inventory/Inventory.java
+new file mode 100644
+index 0000000..f29f0a3
+--- /dev/null
++++ b/src/main/java/org/bukkit/inventory/Inventory.java
+@@ -0,0 +1,421 @@
++package org.bukkit.inventory;
++
++import java.util.HashMap;
++import java.util.List;
++import java.util.ListIterator;
++import org.bukkit.Physical;
++
++import org.bukkit.Location;
++import org.bukkit.Material;
++import org.bukkit.entity.HumanEntity;
++import org.bukkit.event.inventory.InventoryType;
++
++/**
++ * Interface to the various inventories. Behavior relating to {@link
++ * Material#AIR} is unspecified.
++ */
++public interface Inventory extends Iterable<ItemStack>, Physical {
++
++    /**
++     * Returns the size of the inventory
++     *
++     * @return The size of the inventory
++     */
++    public int getSize();
++
++    /**
++     * Returns the maximum stack size for an ItemStack in this inventory.
++     *
++     * @return The maximum size for an ItemStack in this inventory.
++     */
++    public int getMaxStackSize();
++
++    /**
++     * This method allows you to change the maximum stack size for an
++     * inventory.
++     * <p>
++     * <b>Caveats:</b>
++     * <ul>
++     * <li>Not all inventories respect this value.
++     * <li>Stacks larger than 127 may be clipped when the world is saved.
++     * <li>This value is not guaranteed to be preserved; be sure to set it
++     *     before every time you want to set a slot over the max stack size.
++     * <li>Stacks larger than the default max size for this type of inventory
++     *     may not display correctly in the client.
++     * </ul>
++     *
++     * @param size The new maximum stack size for items in this inventory.
++     */
++    public void setMaxStackSize(int size);
++
++    /**
++     * Returns the name of the inventory
++     *
++     * @return The String with the name of the inventory
++     */
++    public String getName();
++
++    /**
++     * Returns the ItemStack found in the slot at the given index
++     *
++     * @param index The index of the Slot's ItemStack to return
++     * @return The ItemStack in the slot
++     */
++    public ItemStack getItem(int index);
++
++    /**
++     * Stores the ItemStack at the given index of the inventory.
++     *
++     * @param index The index where to put the ItemStack
++     * @param item The ItemStack to set
++     */
++    public void setItem(int index, ItemStack item);
++
++    /**
++     * Stores the given ItemStacks in the inventory. This will try to fill
++     * existing stacks and empty slots as well as it can.
++     * <p>
++     * The returned HashMap contains what it couldn't store, where the key is
++     * the index of the parameter, and the value is the ItemStack at that
++     * index of the varargs parameter. If all items are stored, it will return
++     * an empty HashMap.
++     * <p>
++     * If you pass in ItemStacks which exceed the maximum stack size for the
++     * Material, first they will be added to partial stacks where
++     * Material.getMaxStackSize() is not exceeded, up to
++     * Material.getMaxStackSize(). When there are no partial stacks left
++     * stacks will be split on Inventory.getMaxStackSize() allowing you to
++     * exceed the maximum stack size for that material.
++     * <p>
++     * It is known that in some implementations this method will also set
++     * the inputted argument amount to the number of that item not placed in
++     * slots.
++     *
++     * @param items The ItemStacks to add
++     * @return A HashMap containing items that didn't fit.
++     * @throws IllegalArgumentException if items or any element in it is null
++     */
++    public HashMap<Integer, ItemStack> addItem(ItemStack... items) throws IllegalArgumentException;
++
++    /**
++     * Removes the given ItemStacks from the inventory.
++     * <p>
++     * It will try to remove 'as much as possible' from the types and amounts
++     * you give as arguments.
++     * <p>
++     * The returned HashMap contains what it couldn't remove, where the key is
++     * the index of the parameter, and the value is the ItemStack at that
++     * index of the varargs parameter. If all the given ItemStacks are
++     * removed, it will return an empty HashMap.
++     * <p>
++     * It is known that in some implementations this method will also set the
++     * inputted argument amount to the number of that item not removed from
++     * slots.
++     *
++     * @param items The ItemStacks to remove
++     * @return A HashMap containing items that couldn't be removed.
++     * @throws IllegalArgumentException if items is null
++     */
++    public HashMap<Integer, ItemStack> removeItem(ItemStack... items) throws IllegalArgumentException;
++
++    /**
++     * Returns all ItemStacks from the inventory
++     *
++     * @return An array of ItemStacks from the inventory.
++     */
++    public ItemStack[] getContents();
++
++    /**
++     * Completely replaces the inventory's contents. Removes all existing
++     * contents and replaces it with the ItemStacks given in the array.
++     *
++     * @param items A complete replacement for the contents; the length must
++     *     be less than or equal to {@link #getSize()}.
++     * @throws IllegalArgumentException If the array has more items than the
++     *     inventory.
++     */
++    public void setContents(ItemStack[] items) throws IllegalArgumentException;
++
++    /**
++     * Return the contents from the section of the inventory where items can
++     * reasonably be expected to be stored. In most cases this will represent
++     * the entire inventory, but in some cases it may exclude armor or result
++     * slots.
++     * <br>
++     * It is these contents which will be used for add / contains / remove
++     * methods which look for a specific stack.
++     *
++     * @return inventory storage contents
++     */
++    public ItemStack[] getStorageContents();
++
++    /**
++     * Put the given ItemStacks into the storage slots
++     *
++     * @param items The ItemStacks to use as storage contents
++     * @throws IllegalArgumentException If the array has more items than the
++     * inventory.
++     */
++    public void setStorageContents(ItemStack[] items) throws IllegalArgumentException;
++
++    /**
++     * Checks if the inventory contains any ItemStacks with the given
++     * materialId
++     *
++     * @param materialId The materialId to check for
++     * @return true if an ItemStack in this inventory contains the materialId
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public boolean contains(int materialId);
++
++    /**
++     * Checks if the inventory contains any ItemStacks with the given
++     * material.
++     *
++     * @param material The material to check for
++     * @return true if an ItemStack is found with the given Material
++     * @throws IllegalArgumentException if material is null
++     */
++    public boolean contains(Material material) throws IllegalArgumentException;
++
++    /**
++     * Checks if the inventory contains any ItemStacks matching the given
++     * ItemStack.
++     * <p>
++     * This will only return true if both the type and the amount of the stack
++     * match.
++     *
++     * @param item The ItemStack to match against
++     * @return false if item is null, true if any exactly matching ItemStacks
++     *     were found
++     */
++    public boolean contains(ItemStack item);
++
++    /**
++     * Checks if the inventory contains any ItemStacks with the given
++     * materialId, adding to at least the minimum amount specified.
++     *
++     * @param materialId The materialId to check for
++     * @param amount The minimum amount to look for
++     * @return true if this contains any matching ItemStack with the given
++     *     materialId and amount
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public boolean contains(int materialId, int amount);
++
++    /**
++     * Checks if the inventory contains any ItemStacks with the given
++     * material, adding to at least the minimum amount specified.
++     *
++     * @param material The material to check for
++     * @param amount The minimum amount
++     * @return true if amount is less than 1, true if enough ItemStacks were
++     *     found to add to the given amount
++     * @throws IllegalArgumentException if material is null
++     */
++    public boolean contains(Material material, int amount) throws IllegalArgumentException;
++
++    /**
++     * Checks if the inventory contains at least the minimum amount specified
++     * of exactly matching ItemStacks.
++     * <p>
++     * An ItemStack only counts if both the type and the amount of the stack
++     * match.
++     *
++     * @param item the ItemStack to match against
++     * @param amount how many identical stacks to check for
++     * @return false if item is null, true if amount less than 1, true if
++     *     amount of exactly matching ItemStacks were found
++     * @see #containsAtLeast(ItemStack, int)
++     */
++    public boolean contains(ItemStack item, int amount);
++
++    /**
++     * Checks if the inventory contains ItemStacks matching the given
++     * ItemStack whose amounts sum to at least the minimum amount specified.
++     *
++     * @param item the ItemStack to match against
++     * @param amount the minimum amount
++     * @return false if item is null, true if amount less than 1, true if
++     *     enough ItemStacks were found to add to the given amount
++     */
++    public boolean containsAtLeast(ItemStack item, int amount);
++
++    /**
++     * Returns a HashMap with all slots and ItemStacks in the inventory with
++     * given materialId.
++     * <p>
++     * The HashMap contains entries where, the key is the slot index, and the
++     * value is the ItemStack in that slot. If no matching ItemStack with the
++     * given materialId is found, an empty map is returned.
++     *
++     * @param materialId The materialId to look for
++     * @return A HashMap containing the slot index, ItemStack pairs
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public HashMap<Integer, ? extends ItemStack> all(int materialId);
++
++    /**
++     * Returns a HashMap with all slots and ItemStacks in the inventory with
++     * the given Material.
++     * <p>
++     * The HashMap contains entries where, the key is the slot index, and the
++     * value is the ItemStack in that slot. If no matching ItemStack with the
++     * given Material is found, an empty map is returned.
++     *
++     * @param material The material to look for
++     * @return A HashMap containing the slot index, ItemStack pairs
++     * @throws IllegalArgumentException if material is null
++     */
++    public HashMap<Integer, ? extends ItemStack> all(Material material) throws IllegalArgumentException;
++
++    /**
++     * Finds all slots in the inventory containing any ItemStacks with the
++     * given ItemStack. This will only match slots if both the type and the
++     * amount of the stack match
++     * <p>
++     * The HashMap contains entries where, the key is the slot index, and the
++     * value is the ItemStack in that slot. If no matching ItemStack with the
++     * given Material is found, an empty map is returned.
++     *
++     * @param item The ItemStack to match against
++     * @return A map from slot indexes to item at index
++     */
++    public HashMap<Integer, ? extends ItemStack> all(ItemStack item);
++
++    /**
++     * Finds the first slot in the inventory containing an ItemStack with the
++     * given materialId.
++     *
++     * @param materialId The materialId to look for
++     * @return The slot index of the given materialId or -1 if not found
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public int first(int materialId);
++
++    /**
++     * Finds the first slot in the inventory containing an ItemStack with the
++     * given material
++     *
++     * @param material The material to look for
++     * @return The slot index of the given Material or -1 if not found
++     * @throws IllegalArgumentException if material is null
++     */
++    public int first(Material material) throws IllegalArgumentException;
++
++    /**
++     * Returns the first slot in the inventory containing an ItemStack with
++     * the given stack. This will only match a slot if both the type and the
++     * amount of the stack match
++     *
++     * @param item The ItemStack to match against
++     * @return The slot index of the given ItemStack or -1 if not found
++     */
++    public int first(ItemStack item);
++
++    /**
++     * Returns the first empty Slot.
++     *
++     * @return The first empty Slot found, or -1 if no empty slots.
++     */
++    public int firstEmpty();
++
++    /**
++     * Removes all stacks in the inventory matching the given materialId.
++     *
++     * @param materialId The material to remove
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public void remove(int materialId);
++
++    /**
++     * Removes all stacks in the inventory matching the given material.
++     *
++     * @param material The material to remove
++     * @throws IllegalArgumentException if material is null
++     */
++    public void remove(Material material) throws IllegalArgumentException;
++
++    /**
++     * Removes all stacks in the inventory matching the given stack.
++     * <p>
++     * This will only match a slot if both the type and the amount of the
++     * stack match
++     *
++     * @param item The ItemStack to match against
++     */
++    public void remove(ItemStack item);
++
++    /**
++     * Clears out a particular slot in the index.
++     *
++     * @param index The index to empty.
++     */
++    public void clear(int index);
++
++    /**
++     * Clears out the whole Inventory.
++     */
++    public void clear();
++
++    /**
++     * Gets a list of players viewing the inventory. Note that a player is
++     * considered to be viewing their own inventory and internal crafting
++     * screen even when said inventory is not open. They will normally be
++     * considered to be viewing their inventory even when they have a
++     * different inventory screen open, but it's possible for customized
++     * inventory screens to exclude the viewer's inventory, so this should
++     * never be assumed to be non-empty.
++     *
++     * @return A list of HumanEntities who are viewing this Inventory.
++     */
++    public List<HumanEntity> getViewers();
++
++    /**
++     * Returns the title of this inventory.
++     *
++     * @return A String with the title.
++     */
++    public String getTitle();
++
++    /**
++     * Returns what type of inventory this is.
++     *
++     * @return The InventoryType representing the type of inventory.
++     */
++    public InventoryType getType();
++
++    /**
++     * Gets the block or entity belonging to the open inventory
++     *
++     * @return The holder of the inventory; null if it has no holder.
++     */
++    public InventoryHolder getHolder();
++
++    @Override
++    public ListIterator<ItemStack> iterator();
++
++    /**
++     * Returns an iterator starting at the given index. If the index is
++     * positive, then the first call to next() will return the item at that
++     * index; if it is negative, the first call to previous will return the
++     * item at index (getSize() + index).
++     *
++     * @param index The index.
++     * @return An iterator.
++     */
++    public ListIterator<ItemStack> iterator(int index);
++
++    /**
++     * Get the location of the block or entity which corresponds to this inventory. May return null if this container
++     * was custom created or is a virtual / subcontainer.
++     *
++     * @return location or null if not applicable.
++     */
++    public Location getLocation();
++}
+diff --git a/src/main/java/org/bukkit/inventory/InventoryHolder.java b/src/main/java/org/bukkit/inventory/InventoryHolder.java
+new file mode 100644
+index 0000000..6e128ba
+--- /dev/null
++++ b/src/main/java/org/bukkit/inventory/InventoryHolder.java
+@@ -0,0 +1,13 @@
++package org.bukkit.inventory;
++
++import org.bukkit.Physical;
++
++public interface InventoryHolder extends Physical {
++
++    /**
++     * Get the object's inventory.
++     *
++     * @return The inventory.
++     */
++    public Inventory getInventory();
++}
+diff --git a/src/main/java/org/bukkit/map/MapView.java b/src/main/java/org/bukkit/map/MapView.java
+new file mode 100644
+index 0000000..e0bb2a6
+--- /dev/null
++++ b/src/main/java/org/bukkit/map/MapView.java
+@@ -0,0 +1,158 @@
++package org.bukkit.map;
++
++import java.util.List;
++import org.bukkit.World;
++import org.bukkit.Physical;
++
++/**
++ * Represents a map item.
++ */
++public interface MapView extends Physical {
++
++    /**
++     * An enum representing all possible scales a map can be set to.
++     */
++    public static enum Scale {
++        CLOSEST(0),
++        CLOSE(1),
++        NORMAL(2),
++        FAR(3),
++        FARTHEST(4);
++
++        private byte value;
++
++        private Scale(int value) {
++            this.value = (byte) value;
++        }
++
++        /**
++         * Get the scale given the raw value.
++         *
++         * @param value The raw scale
++         * @return The enum scale, or null for an invalid input
++         * @deprecated Magic value
++         */
++        @Deprecated
++        public static Scale valueOf(byte value) {
++            switch (value) {
++            case 0: return CLOSEST;
++            case 1: return CLOSE;
++            case 2: return NORMAL;
++            case 3: return FAR;
++            case 4: return FARTHEST;
++            default: return null;
++            }
++        }
++
++        /**
++         * Get the raw value of this scale level.
++         *
++         * @return The scale value
++         * @deprecated Magic value
++         */
++        @Deprecated
++        public byte getValue() {
++            return value;
++        }
++    }
++
++    /**
++     * Get the ID of this map item. Corresponds to the damage value of a map
++     * in an inventory.
++     *
++     * @return The ID of the map.
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public short getId();
++
++    /**
++     * Check whether this map is virtual. A map is virtual if its lowermost
++     * MapRenderer is plugin-provided.
++     *
++     * @return Whether the map is virtual.
++     */
++    public boolean isVirtual();
++
++    /**
++     * Get the scale of this map.
++     *
++     * @return The scale of the map.
++     */
++    public Scale getScale();
++
++    /**
++     * Set the scale of this map.
++     *
++     * @param scale The scale to set.
++     */
++    public void setScale(Scale scale);
++
++    /**
++     * Get the center X position of this map.
++     *
++     * @return The center X position.
++     */
++    public int getCenterX();
++
++    /**
++     * Get the center Z position of this map.
++     *
++     * @return The center Z position.
++     */
++    public int getCenterZ();
++
++    /**
++     * Set the center X position of this map.
++     *
++     * @param x The center X position.
++     */
++    public void setCenterX(int x);
++
++    /**
++     * Set the center Z position of this map.
++     *
++     * @param z The center Z position.
++     */
++    public void setCenterZ(int z);
++
++    /**
++     * Get the world that this map is associated with. Primarily used by the
++     * internal renderer, but may be used by external renderers. May return
++     * null if the world the map is associated with is not loaded.
++     *
++     * @return The World this map is associated with.
++     */
++    public World getWorld();
++
++    /**
++     * Set the world that this map is associated with. The world is used by
++     * the internal renderer, and may also be used by external renderers.
++     *
++     * @param world The World to associate this map with.
++     */
++    public void setWorld(World world);
++
++    /**
++     * Get a list of MapRenderers currently in effect.
++     *
++     * @return A {@code List<MapRenderer>} containing each map renderer.
++     */
++    public List<MapRenderer> getRenderers();
++
++    /**
++     * Add a renderer to this map.
++     *
++     * @param renderer The MapRenderer to add.
++     */
++    public void addRenderer(MapRenderer renderer);
++
++    /**
++     * Remove a renderer from this map.
++     *
++     * @param renderer The MapRenderer to remove.
++     * @return True if the renderer was successfully removed.
++     */
++    public boolean removeRenderer(MapRenderer renderer);
++
++}
+diff --git a/src/main/java/org/bukkit/projectiles/ProjectileSource.java b/src/main/java/org/bukkit/projectiles/ProjectileSource.java
+new file mode 100644
+index 0000000..600374a
+--- /dev/null
++++ b/src/main/java/org/bukkit/projectiles/ProjectileSource.java
+@@ -0,0 +1,31 @@
++package org.bukkit.projectiles;
++
++import org.bukkit.entity.Projectile;
++import org.bukkit.util.Vector;
++import org.bukkit.Physical;
++
++/**
++ * Represents a valid source of a projectile.
++ */
++public interface ProjectileSource extends Physical {
++
++    /**
++     * Launches a {@link Projectile} from the ProjectileSource.
++     *
++     * @param <T> a projectile subclass
++     * @param projectile class of the projectile to launch
++     * @return the launched projectile
++     */
++    public <T extends Projectile> T launchProjectile(Class<? extends T> projectile);
++
++    /**
++     * Launches a {@link Projectile} from the ProjectileSource with an
++     * initial velocity.
++     *
++     * @param <T> a projectile subclass
++     * @param projectile class of the projectile to launch
++     * @param velocity the velocity with which to launch
++     * @return the launched projectile
++     */
++    public <T extends Projectile> T launchProjectile(Class<? extends T> projectile, Vector velocity);
++}
+-- 
+2.8.2.windows.1
+

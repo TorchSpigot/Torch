@@ -1,0 +1,445 @@
+From 4623e12a2fe10bd8d8ab6078aeccc301e2e032b5 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 16 Jul 2016 05:41:07 +0800
+Subject: [PATCH] BungeeChat API
+
+
+diff --git a/src/main/java/net/minecraft/server/ChatModifier.java b/src/main/java/net/minecraft/server/ChatModifier.java
+index 8cf8313..b6cd0f5 100644
+--- a/src/main/java/net/minecraft/server/ChatModifier.java
++++ b/src/main/java/net/minecraft/server/ChatModifier.java
+@@ -114,6 +114,18 @@ public class ChatModifier {
+     };
+ 
+     public ChatModifier() {}
++	
++	// SportBukkit start - add raw getters (make sure the fields in these methods match the ones below)
++    public EnumChatFormat getColorRaw() { return this.b; }
++    public Boolean isBoldRaw() { return this.c; }
++    public Boolean isItalicRaw() { return this.d; }
++    public Boolean isStrikethroughRaw() { return this.f; }
++    public Boolean isUnderlinedRaw() { return this.e; }
++    public Boolean isRandomRaw() { return this.g; }
++    public ChatClickable getClickableRaw() { return this.h; }
++    public ChatHoverable getHoverableRaw() { return this.i; }
++    public String getInsertionRaw() { return this.j; }
++    // SportBukkit end
+ 
+     @Nullable
+     public EnumChatFormat getColor() {
+diff --git a/src/main/java/net/minecraft/server/ItemStack.java b/src/main/java/net/minecraft/server/ItemStack.java
+index 2f68e74..d7ed23b 100644
+--- a/src/main/java/net/minecraft/server/ItemStack.java
++++ b/src/main/java/net/minecraft/server/ItemStack.java
+@@ -7,7 +7,6 @@ import java.util.Random;
+ import javax.annotation.Nullable;
+ import org.bukkit.potion.Potion;
+ import org.bukkit.potion.PotionType;
+-import org.bukkit.registry.Key;
+ 
+ // CraftBukkit start
+ import java.util.List;
+@@ -294,34 +293,6 @@ public final class ItemStack {
+                 this.item.a(this.tag);
+             }
+         }
+-		
+-		// SportBukkit start - convert legacy potions
+-        if(this.item == Items.POTION && this.damage != 0 && (tag == null || !tag.hasKey("Potion"))) {
+-            // Calculate a Potion from the damage value, and then set it to 0
+-            final Potion potion = Potion.fromDamage(this.damage);
+-            final PotionType type = potion.getType();
+-            this.damage = 0;
+-            if(potion.isSplash()) this.item = Items.SPLASH_POTION;
+-            if(tag == null) {
+-                this.tag = new NBTTagCompound();
+-            }
+-            // Custom effects used to replace the defaults, so recreate that behavior
+-            // by only setting a potion type if there are no custom effects.
+-            final List<MobEffect> customEffects = new java.util.ArrayList<MobEffect>();
+-            PotionUtil.a(this.tag, customEffects);
+-            if(customEffects.isEmpty()) {
+-                final Key key;
+-                if(potion.hasExtendedDuration()) {
+-                    key = type.longKey();
+-                } else if(potion.getLevel() > 1) {
+-                    key = type.strongKey();
+-                } else {
+-                    key = type.baseKey();
+-                }
+-                tag.setString("Potion", key.toString());
+-            }
+-        }
+-        // SportBukkit end
+ 
+     }
+ 
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index a75f9ec..64e20fc 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -18,7 +18,6 @@ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ import net.md_5.bungee.api.chat.BaseComponent;
+ import net.md_5.bungee.api.chat.TextComponent;
+-import org.bukkit.craftbukkit.util.BungeeChatUtils;
+ import io.netty.util.AttributeKey; // Torch
+ 
+ // CraftBukkit start
+@@ -2184,19 +2183,16 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+             int x = packetplayinupdatesign.a().getX();
+             int y = packetplayinupdatesign.a().getY();
+             int z = packetplayinupdatesign.a().getZ();
+-            BaseComponent[] lines = new BaseComponent[4];
++            String[] lines = new String[4];
+ 
+             for (int i = 0; i < astring.length; ++i) {
+-                lines[i] = new TextComponent(EnumChatFormat.a(astring[i]));
++                lines[i] = EnumChatFormat.a(new ChatComponentText(EnumChatFormat.a(astring[i])).toPlainText());
+             }
+             SignChangeEvent event = new SignChangeEvent((org.bukkit.craftbukkit.block.CraftBlock) player.getWorld().getBlockAt(x, y, z), this.server.getPlayer(this.player), lines);
+             this.server.getPluginManager().callEvent(event);
+ 
+             if (!event.isCancelled()) {
+-                for(int i = 0; i < tileentitysign.lines.length; i++) {
+-                    tileentitysign.lines[i] = BungeeChatUtils.toNms(event.line(i));
+-                }
+-                tileentitysign.isEditable = false;
++                System.arraycopy(org.bukkit.craftbukkit.block.CraftSign.sanitizeLines(event.getLines()), 0, tileentitysign.lines, 0, 4);
+              }
+             // CraftBukkit end
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index d7a52c2..630f3c2 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -21,6 +21,7 @@ import java.util.UUID;
+ import java.util.logging.Level;
+ import java.util.logging.Logger;
+ import java.util.regex.Pattern;
++import net.md_5.bungee.api.chat.BaseComponent;
+ import com.destroystokyo.paper.PaperConfig;
+ import java.util.stream.Collectors; // Paper
+ import org.bukkit.craftbukkit.chunkio2.WorldPersistence;
+@@ -1942,7 +1943,6 @@ public final class CraftServer implements Server {
+     }
+     // Paper end
+ 	
+-	@Override
+     public Set<Integer> getProtocolVersions() {
+         return ImmutableSet.of(107, 108, 109, 110);
+     }
+diff --git a/src/main/java/org/bukkit/craftbukkit/block/CraftSign.java b/src/main/java/org/bukkit/craftbukkit/block/CraftSign.java
+index 84ea4f5..23582c1 100644
+--- a/src/main/java/org/bukkit/craftbukkit/block/CraftSign.java
++++ b/src/main/java/org/bukkit/craftbukkit/block/CraftSign.java
+@@ -1,17 +1,17 @@
+ package org.bukkit.craftbukkit.block;
+ 
+-import net.md_5.bungee.api.chat.BaseComponent;
+-import net.md_5.bungee.api.chat.TextComponent;
++import net.minecraft.server.ChatComponentText;
++import net.minecraft.server.IChatBaseComponent;
+ import net.minecraft.server.TileEntitySign;
+ import org.bukkit.Material;
+ import org.bukkit.block.Block;
+ import org.bukkit.block.Sign;
+ import org.bukkit.craftbukkit.CraftWorld;
+-import org.bukkit.craftbukkit.util.BungeeChatUtils;
++import org.bukkit.craftbukkit.util.CraftChatMessage;
+ 
+ public class CraftSign extends CraftBlockState implements Sign {
+     private final TileEntitySign sign;
+-    private final BaseComponent[] lines = new BaseComponent[4];
++    private final String[] lines;
+ 
+     public CraftSign(final Block block) {
+         super(block);
+@@ -24,57 +24,36 @@ public class CraftSign extends CraftBlockState implements Sign {
+             return;
+         }
+         // Spigot end
+-        importFromNms();
++        lines = new String[sign.lines.length];
++       System.arraycopy(revertComponents(sign.lines), 0, lines, 0, lines.length);
+     }
+ 
+     public CraftSign(final Material material, final TileEntitySign te) {
+         super(material);
+         sign = te;
+-        importFromNms();
++        lines = new String[sign.lines.length];
++        System.arraycopy(revertComponents(sign.lines), 0, lines, 0, lines.length);
+     }
+ 
+-    private void importFromNms() {
+-        for(int i = 0; i < lines.length; i++) {
+-            lines[i] = sign.lines.length > i ? BungeeChatUtils.toBungee(sign.lines[i])
+-                                             : new TextComponent();
+-        }
+-    }
+-
+-	@Override
+-    public BaseComponent[] lines() {
++    public String[] getLines() {
+         return lines;
+     }
+ 
+-    @Override
+-    public BaseComponent line(int index) {
++    public String getLine(int index) throws IndexOutOfBoundsException {
+         return lines[index];
+     }
+ 
+-    @Override
+-    public void setLine(int index, BaseComponent line) {
++   public void setLine(int index, String line) throws IndexOutOfBoundsException {
+         lines[index] = line;
+     }
+ 	
+-	public String[] getLines() {
+-        return BaseComponent.toLegacyArray(lines);
+-    }
+-
+-    public String getLine(int index) throws IndexOutOfBoundsException {
+-        return lines[index].toLegacyText();
+-    }
+-
+-    public void setLine(int index, String line) throws IndexOutOfBoundsException {
+-        lines[index] = TextComponent.fromLegacyToComponent(line, false);
+-    }
+-
+     @Override
+     public boolean update(boolean force, boolean applyPhysics) {
+         boolean result = super.update(force, applyPhysics);
+ 
+         if (result) {
+-            for(int i = 0; i < sign.lines.length; i++) {
+-                sign.lines[i] = BungeeChatUtils.toNms(lines[i]);
+-            }
++            IChatBaseComponent[] newLines = sanitizeLines(lines);
++            System.arraycopy(newLines, 0, sign.lines, 0, 4);
+             sign.update();
+         }
+ 
+@@ -85,4 +64,30 @@ public class CraftSign extends CraftBlockState implements Sign {
+     public TileEntitySign getTileEntity() {
+         return sign;
+     }
++	
++	public static IChatBaseComponent[] sanitizeLines(String[] lines) {
++        IChatBaseComponent[] components = new IChatBaseComponent[4];
++
++        for (int i = 0; i < 4; i++) {
++            if (i < lines.length && lines[i] != null) {
++                components[i] = CraftChatMessage.fromString(lines[i])[0];
++            } else {
++                components[i] = new ChatComponentText("");
++            }
++        }
++
++        return components;
++    }
++
++    public static String[] revertComponents(IChatBaseComponent[] components) {
++        String[] lines = new String[components.length];
++        for (int i = 0; i < lines.length; i++) {
++            lines[i] = revertComponent(components[i]);
++        }
++        return lines;
++    }
++
++    private static String revertComponent(IChatBaseComponent component) {
++        return CraftChatMessage.fromComponent(component);
++    }
+ }
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+index 1667c01..4865b4b 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+@@ -3,7 +3,6 @@ package org.bukkit.craftbukkit.entity;
+ import com.destroystokyo.paper.Title;
+ import com.google.common.base.Preconditions;
+ import com.google.common.collect.ImmutableSet;
+-import org.bukkit.craftbukkit.util.BungeeChatUtils;
+ import com.mojang.authlib.GameProfile;
+ import io.netty.buffer.Unpooled;
+ 
+@@ -120,28 +119,9 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+             return null;
+         }
+     }
+-	
+-	@Override
+-    public java.util.Locale getCurrentLocale() {
+-        try {
+-            return org.apache.commons.lang.LocaleUtils.toLocale(getLocale());
+-        } catch(IllegalArgumentException e) {
+-            return java.util.Locale.US;
+-        }
+-    }
+-
+-    @Override
+-    public void sendMessage(net.md_5.bungee.api.ChatMessageType position, BaseComponent... message) {
+-        if ( getHandle().playerConnection == null ) return;
+ 
+-        PacketPlayOutChat packet = new PacketPlayOutChat(null, (byte) position.ordinal());
+-        packet.components = message;
+-        getHandle().playerConnection.sendPacket(packet);
+-    }
+-
+-    @Override
+-    public void sendMessage(net.md_5.bungee.api.ChatMessageType position, BaseComponent message) {
+-        sendMessage(position, new BaseComponent[] {message});
++    public java.util.Locale getCurrentLocale() {
++        return java.util.Locale.US; // Torch - fix locale
+     }
+ 
+     @Override
+@@ -478,41 +458,24 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+ 
+     @Override
+     public void sendSignChange(Location loc, String[] lines) {
+-
++		if (getHandle().playerConnection == null) {
++            return;
++        }
++	
+         if (lines == null) {
+             lines = new String[4];
+         }
+-		final IChatBaseComponent[] nms = new IChatBaseComponent[4];
+-        for(int i = 0; i < 4; i++) {
+-            nms[i] = lines != null && lines[i] == null ? new ChatComponentText("")
+-                                                       : CraftChatMessage.fromString(lines[i])[0];
+-        }
+-        sendSignChange(loc, nms);
+-    }
+- 
+-    @Override
+-    public void sendSignChange(Location loc, BaseComponent[] lines) {
+-        final IChatBaseComponent[] nms = new IChatBaseComponent[4];
+-        for(int i = 0; i < 4; i++) {
+-            nms[i] = lines != null && lines[i] == null ? new ChatComponentText("")
+-                                                       : BungeeChatUtils.toNms(lines[i]);
+-        }
+-        sendSignChange(loc, nms);
+-    }
+-
+-    private void sendSignChange(Location loc, IChatBaseComponent[] lines) {
++		
+         Validate.notNull(loc, "Location can not be null");
+         if (lines.length < 4) {
+             throw new IllegalArgumentException("Must have at least 4 lines");
+         }
+ 
+-        if (getHandle().playerConnection == null) {
+-            return;
+-        }
++        IChatBaseComponent[] components = CraftSign.sanitizeLines(lines);
+ 		
+         TileEntitySign sign = new TileEntitySign();
+         sign.a(new BlockPosition(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ())); // PAIL: rename
+-        System.arraycopy(lines, 0, sign.lines, 0, sign.lines.length);
++        System.arraycopy(components, 0, sign.lines, 0, sign.lines.length);
+ 
+         getHandle().playerConnection.sendPacket(sign.getUpdatePacket());
+     }
+@@ -1782,7 +1745,6 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+     }
+     // Spigot end
+ 	
+-	@Override
+     public int getProtocolVersion() {
+         return getHandle().protocolVersion;
+     }
+diff --git a/src/main/java/org/bukkit/potion/Potion.java b/src/main/java/org/bukkit/potion/Potion.java
+index ffcccd0..2bfb61a 100644
+--- a/src/main/java/org/bukkit/potion/Potion.java
++++ b/src/main/java/org/bukkit/potion/Potion.java
+@@ -19,7 +19,6 @@ public class Potion {
+     private boolean splash = false;
+     private int level = 1;
+     private PotionType type;
+-	private static final int NAME_MASK = 0x10;
+ 
+     /**
+      * Construct a new potion of the given type. Unless the type is {@link
+@@ -323,7 +322,7 @@ public class Potion {
+         }
+         ItemStack itemStack = new ItemStack(material, amount);
+         PotionMeta meta = (PotionMeta) itemStack.getItemMeta();
+-        meta.setBasePotionData(new PotionData(type, extended, level == 2));
++        meta.setBasePotionData(new PotionData(type, level == 2, extended));
+         itemStack.setItemMeta(meta);
+         return itemStack;
+     }
+@@ -366,22 +365,11 @@ public class Potion {
+      * @return the produced potion
+      */
+     public static Potion fromDamage(int damage) {
+-		final int level = ((damage & TIER_BIT) >> TIER_SHIFT) + 1;
+ 		
+         PotionType type;
+         switch (damage & POTION_BIT) {
+             case 0:
+-                switch(damage & NAME_MASK) {
+-                    default:
+-                        type = damage == 0 ? PotionType.WATER : PotionType.MUNDANE;
+-                        break;
+-                    case 16:
+-                        type = PotionType.AWKWARD;
+-                        break;
+-                    case 32:
+-                        type = PotionType.THICK;
+-                        break;
+-                }
++                type = PotionType.WATER;
+                 break;
+             case 1:
+                 type = PotionType.REGEN;
+@@ -425,29 +413,29 @@ public class Potion {
+             default:
+                 type = PotionType.WATER;
+         }
+-		
+-		Potion potion = new Potion(type, type.isUpgradeable() ? level : 1);
++		Potion potion;
++        if (type == null || type == PotionType.WATER) {
++            potion = new Potion(PotionType.WATER);
++        } else {
++            int level = (damage & TIER_BIT) >> TIER_SHIFT;
++            level++;
++            potion = new Potion(type, level);
++        }
+ 
+         if ((damage & SPLASH_BIT) > 0) {
+             potion = potion.splash();
+         }
+-        if ((damage & EXTENDED_BIT) > 0 && type.isExtendable()) {
++        if ((damage & EXTENDED_BIT) > 0) {
+             potion = potion.extend();
+         }
+         return potion;
+     }
+ 
+-	@Deprecated
+     public static Potion fromItemStack(ItemStack item) {
+         Validate.notNull(item, "item cannot be null");
+-        if(item.getType() != Material.POTION && item.getType() != Material.SPLASH_POTION) {
+-            throw new IllegalArgumentException("item cannot be converted to a legacy potion");
+-        }
+-
+-        final PotionData potionData = ((PotionMeta) item.getItemMeta()).getBasePotionData();
+-        final Potion potion = new Potion(potionData.getType(), potionData.isUpgraded() ? 2 : 1, potionData.isExtended());
+-        if(item.getType() == Material.SPLASH_POTION) potion.splash();
+-        return potion;
++        if (item.getType() != Material.POTION)
++            throw new IllegalArgumentException("item is not a potion");
++        return fromDamage(item.getDurability());
+     }
+ 
+     /**
+-- 
+2.8.2.windows.1
+

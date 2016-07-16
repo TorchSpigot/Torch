@@ -1,4 +1,4 @@
-From 79b4633dea07e0598fb94197abc05e10d3c7deb6 Mon Sep 17 00:00:00 2001
+From c0f2429e4e32ae7ccd18d2474d31fcc2bded98fc Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:56:25 +0800
 Subject: [PATCH] SPIGOT-1319: Add EntityBreedEvent for Bukkit

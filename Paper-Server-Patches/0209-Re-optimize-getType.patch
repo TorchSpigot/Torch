@@ -1,0 +1,175 @@
+From 3a881ea093ae5d5dfa76f404dd10f581e27f444d Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 16 Jul 2016 03:18:21 +0800
+Subject: [PATCH] Re-optimize getType
+
+
+diff --git a/src/main/java/net/minecraft/server/DataPaletteBlock.java b/src/main/java/net/minecraft/server/DataPaletteBlock.java
+index 5fb7ba0..b6b7a1d 100644
+--- a/src/main/java/net/minecraft/server/DataPaletteBlock.java
++++ b/src/main/java/net/minecraft/server/DataPaletteBlock.java
+@@ -6,7 +6,7 @@ public class DataPaletteBlock implements DataPaletteExpandable {
+ 
+     private static final DataPalette d = new DataPaletteGlobal();
+     protected static final IBlockData a = Blocks.AIR.getBlockData();
+-    protected DataBits b;
++    protected DataBits b; // Paper - nope
+     protected DataPalette c;
+     private int e = 0;
+ 	private final IBlockData[] predefinedBlockData; // Paper - Anti-Xray - Blocks used for obfuscation (since 1.9 MC uses DataPalettes which have to be changed if more different blocks are used in a ChunkSection -> to avoid that while setting the fake-blocks we add them from the beginning)
+@@ -182,7 +182,7 @@ public class DataPaletteBlock implements DataPaletteExpandable {
+     }
+ 
+     public int a() {
+-        return 1 + this.c.a() + PacketDataSerializer.a(this.b.b()) + this.b.a().length * 8;
++		return 1 + this.c.a() + PacketDataSerializer.a(this.b.b()) + this.b.a().length * 8;
+         // Paper end
+     }
+ }
+diff --git a/src/main/java/net/minecraft/server/EntityTNTPrimed.java b/src/main/java/net/minecraft/server/EntityTNTPrimed.java
+index 436bbb8..51fe30b 100644
+--- a/src/main/java/net/minecraft/server/EntityTNTPrimed.java
++++ b/src/main/java/net/minecraft/server/EntityTNTPrimed.java
+@@ -83,6 +83,43 @@ public class EntityTNTPrimed extends Entity {
+         }
+ 
+     }
++	
++	// SportBukkit start - Prevent TNT from being pushed in water by overriding the method that applies the motion
++    @Override
++    public boolean aj() {
++        if(this.world.getServer().getWaterPushesTNT()) return super.aj();
++
++        // Preserve velocity while calling the super method
++        double oldMotX = this.motX;
++        double oldMotY = this.motY;
++        double oldMotZ = this.motZ;
++
++        super.aj();
++
++        this.motX = oldMotX;
++        this.motY = oldMotY;
++        this.motZ = oldMotZ;
++
++        if(this.inWater) {
++            // Send position and velocity updates to nearby players on every tick while the TNT is in water.
++            // This does pretty well at keeping their clients in sync with the server.
++            EntityTrackerEntry ete = ((WorldServer) this.getWorld()).getTracker().trackedEntities.get(this.getId());
++            if(ete != null) {
++                PacketPlayOutEntityVelocity velocityPacket = new PacketPlayOutEntityVelocity(this);
++                PacketPlayOutEntityTeleport positionPacket = new PacketPlayOutEntityTeleport(this);
++
++                for(EntityPlayer viewer : ete.trackedPlayers) {
++                    if((viewer.locX - this.locX) * (viewer.locY - this.locY) * (viewer.locZ - this.locZ) < 16 * 16) {
++                        viewer.playerConnection.sendPacket(velocityPacket);
++                        viewer.playerConnection.sendPacket(positionPacket);
++                    }
++                }
++            }
++        }
++
++        return this.inWater;
++    }
++    // SportBukkit end
+ 
+     private void explode() {
+         // CraftBukkit start
+@@ -94,7 +131,7 @@ public class EntityTNTPrimed extends Entity {
+         server.getPluginManager().callEvent(event);
+ 
+         if (!event.isCancelled()) {
+-            this.world.createExplosion(this, this.locX, this.locY + (double) (this.length / 2.0F), this.locZ, event.getRadius(), event.getFire(), true);
++            this.world.createExplosion(this, this.locX, this.locY + (double) (this.length / 16.0F), this.locZ, explosive.getYield(), explosive.isIncendiary(), true);
+         }
+         // CraftBukkit end
+     }
+@@ -120,7 +157,7 @@ public class EntityTNTPrimed extends Entity {
+     }
+ 
+     public float getHeadHeight() {
+-        return world.paperConfig.oldCannonBehaviors ? this.length / 2 : 0.0F; // Paper - Old TNT cannon behaviors
++        return world.paperConfig.oldCannonBehaviors ? this.length / 2 : this.length / 16f; // Paper - Old TNT cannon behaviors
+     }
+ 
+     public void setFuseTicks(int i) {
+diff --git a/src/main/java/net/minecraft/server/PlayerList.java b/src/main/java/net/minecraft/server/PlayerList.java
+index 6cc5630..17c6391 100644
+--- a/src/main/java/net/minecraft/server/PlayerList.java
++++ b/src/main/java/net/minecraft/server/PlayerList.java
+@@ -622,6 +622,7 @@ public abstract class PlayerList {
+         BlockPosition blockposition1;
+ 
+         // CraftBukkit start - fire PlayerRespawnEvent
++		this.players.add(entityplayer1); // Add player back to this list earlier than vanilla does
+         if (location == null) {
+             boolean isBedSpawn = false;
+             CraftWorld cworld = (CraftWorld) this.server.server.getWorld(entityplayer.spawnWorld);
+@@ -682,10 +683,13 @@ public abstract class PlayerList {
+         entityplayer1.playerConnection.sendPacket(new PacketPlayOutExperience(entityplayer1.exp, entityplayer1.expTotal, entityplayer1.expLevel));
+         this.b(entityplayer1, worldserver);
+         this.f(entityplayer1);
+-        if (!entityplayer.playerConnection.isDisconnected()) {
++        // Don't re-add player to player list if disconnected
++        if (entityplayer.playerConnection.isDisconnected()) {
++            this.players.remove(entityplayer1);
++        } else {
+             worldserver.getPlayerChunkMap().addPlayer(entityplayer1);
+             worldserver.addEntity(entityplayer1);
+-            this.players.add(entityplayer1);
++            // this.players.add(entityplayer1);
+             this.playersByName.put(entityplayer1.getName(), entityplayer1); // Spigot
+             this.j.put(entityplayer1.getUniqueID(), entityplayer1);
+         }
+diff --git a/src/main/java/org/bukkit/Bukkit.java b/src/main/java/org/bukkit/Bukkit.java
+index 15539da..c568af1 100644
+--- a/src/main/java/org/bukkit/Bukkit.java
++++ b/src/main/java/org/bukkit/Bukkit.java
+@@ -370,6 +370,13 @@ public final class Bukkit {
+     public static long getConnectionThrottle() {
+         return server.getConnectionThrottle();
+     }
++	
++	/**
++     * @see Server#getWaterPushesTNT()
++     */
++    public static boolean getWaterPushesTNT() {
++        return server.getWaterPushesTNT();
++    }
+ 
+     /**
+      * Gets default ticks per animal spawns value.
+diff --git a/src/main/java/org/bukkit/Server.java b/src/main/java/org/bukkit/Server.java
+index 1537bc7..dd1a694 100644
+--- a/src/main/java/org/bukkit/Server.java
++++ b/src/main/java/org/bukkit/Server.java
+@@ -845,6 +845,11 @@ public interface Server extends PluginMessageRecipient {
+      * @return the ambient spawn limit
+      */
+     int getAmbientSpawnLimit();
++	
++	/**
++     * Should flowing water move primed TNT entities?
++     */
++    public boolean getWaterPushesTNT();
+ 
+     /**
+      * Checks the current thread against the expected primary thread for the
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index d89f84c..daac03a 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -603,6 +603,11 @@ public final class CraftServer implements Server {
+     }
+ 
+     @Override
++	public boolean getWaterPushesTNT() {
++        return this.configuration.getBoolean("settings.water-pushes-tnt", true);
++    }
++
++    @Override
+     public int getTicksPerAnimalSpawns() {
+         return this.configuration.getInt("ticks-per.animal-spawns");
+     }
+-- 
+2.8.2.windows.1
+

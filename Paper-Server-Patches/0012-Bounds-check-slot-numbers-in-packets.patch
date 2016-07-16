@@ -1,4 +1,4 @@
-From 336b7b83d992fd8b48b65024047a3efbf01e9cde Mon Sep 17 00:00:00 2001
+From ffa3ffdcb08db3a169c7aa980cb3a49b165318c0 Mon Sep 17 00:00:00 2001
 From: Jedediah Smith <jedediah@silencegreys.com>
 Date: Tue, 23 Jun 2015 17:18:20 -0400
 Subject: [PATCH] Bounds check slot numbers in packets

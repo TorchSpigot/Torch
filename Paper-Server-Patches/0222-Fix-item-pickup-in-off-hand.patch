@@ -1,0 +1,63 @@
+From 30a79ad412f6276abe5e74633d6a6348496d37cf Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 16 Jul 2016 06:20:15 +0800
+Subject: [PATCH] Fix item pickup in off-hand
+
+
+diff --git a/src/main/java/net/minecraft/server/PlayerInventory.java b/src/main/java/net/minecraft/server/PlayerInventory.java
+index e7da4a2..9c024e7 100644
+--- a/src/main/java/net/minecraft/server/PlayerInventory.java
++++ b/src/main/java/net/minecraft/server/PlayerInventory.java
+@@ -98,7 +98,15 @@ public class PlayerInventory implements IInventory {
+             }
+             if (remains <= 0) return itemstack.count;
+         }
+-        return itemstack.count - remains;
++        // Stack in off-hand, but only if it's already holding the right item
++        if(remains > 0) {
++            final ItemStack offHand = this.getItem(40);
++            if(this.a(offHand, itemstack)) {
++                remains -= Math.min(offHand.getMaxStackSize(), this.getMaxStackSize()) - offHand.count;
++            }
++        }
++
++        return itemstack.count - Math.max(0, remains);
+     }
+     // CraftBukkit end
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventory.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventory.java
+index 428de7b..ecb87e7 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventory.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventory.java
+@@ -256,7 +256,7 @@ public class CraftInventory implements Inventory {
+         return firstPartial(material.getId());
+     }
+ 
+-    private int firstPartial(ItemStack item) {
++    protected int firstPartial(ItemStack item) {
+         ItemStack[] inventory = getStorageContents();
+         ItemStack filteredItem = CraftItemStack.asCraftCopy(item);
+         if (item == null) {
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryPlayer.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryPlayer.java
+index 47654a0..e2aa794 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryPlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryPlayer.java
+@@ -204,6 +204,15 @@ public class CraftInventoryPlayer extends CraftInventory implements org.bukkit.i
+ 
+         return count;
+     }
++	
++	@Override
++    protected int firstPartial(ItemStack item) {
++        final ItemStack heldItem = getItemInOffHand();
++        if(heldItem != null && heldItem.getAmount() < heldItem.getMaxStackSize() && heldItem.isSimilar(CraftItemStack.asCraftCopy(item))) {
++            return getInventory().items.length + getInventory().armor.length;
++        }
++        return super.firstPartial(item);
++    }
+ 
+     @Override
+     public HumanEntity getHolder() {
+-- 
+2.8.2.windows.1
+
