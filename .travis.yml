@@ -1,16 +1,24 @@
 language: java
-
-sudo: true
-
 jdk:
-  - openjdk8
+  - oraclejdk8
+sudo: false
+before_install:
+  - git config --global user.email "travis-ci@travis-ci.org"
+  - git config --global user.name "Travis CI"
+  - ./prepare-build.sh
+after_success:
+  - ./package.sh
+cache:
+  directories:
+    - '$HOME/.m2/repository'
+    - 'work'
 
-os:
-  - linux
+# Install bsdiff
+addons:
+  apt:
+    packages:
+      - bsdiff
 
-env:
-  global:
-    - JAVA_OPTS="-XX:+TieredCompilation"
-
-script:
-  - jdk_switcher use oraclejdk8
+# Clear build results from the cache
+before_cache:
+  - 'rm -rf $HOME/.m2/repository/net/techcable/tacospigot'
