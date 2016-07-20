@@ -19,7 +19,7 @@ Torch aims to be stable and fast.
 ####Features
 * All features of Tacospigot/Paper/Spigot/CB are included.
 * Backported latest changes from Bukkit/CB/Spigot/Paper/Tacospigot and more to Minecraft 1.9.4 server.
-* Implement ChunkIO2 for better performance and experience.
+* Implement new chunk system for better performance and experience.
 * The asynchronous Anti-Xray inbult.
 * Multithreading computing, enjoy the server with multi-core CPU.
 * The enhanced API and more!
@@ -33,12 +33,9 @@ To use Torch, you need JRE8(or above), also recommand 4+ CPU cores.
 ####How To (Compiling From Source)
 To compile Torch, you need JDK8(or above), git, bash, maven, and an internet connection.
 
-* First clone and build *[TacoSpigot](https://github.com/TacoSpigot/TacoSpigot/)*,
-run `git clone --branch version/1.9.4 https://github.com/TacoSpigot/TacoSpigot.git`
-* then clone this repo,
-run `git clone https://github.com/TorchSpigot/Torch.git` and copy files to the main repo folder
-* last, run `./applypatches.sh`,
-and `mvn clean install`, you can get the final jar in *./TacoSpigot-Server/target/*
+* Clone the repo.
+* Run `./build.sh`, and wait.
+* Get the final jar in *./TacoSpigot-Server/target/*
 
 
 Feel free to open a PR or issue.
