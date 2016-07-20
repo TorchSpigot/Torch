@@ -34,11 +34,6 @@ VANILLA_JAR=$2
 VANILLA_URL=$3
 NAME=$4
 
-which bsdiff 2>&1 >/dev/null
-if [ $? != 0 ]; then
-    echo "Bsdiff not found"
-fi;
-
 OUTPUT_JAR=$NAME.jar
 PATCH_FILE=$NAME.patch
 
@@ -47,8 +42,6 @@ hash() {
 }
 
 echo "Computing Patch"
-
-
 
 genJson() {
     PATCH=$1

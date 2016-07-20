@@ -13,12 +13,6 @@ cache:
     - '$HOME/.m2/repository'
     - 'work'
 
-# Install bsdiff
-addons:
-  apt:
-    packages:
-      - bsdiff
-
 # Clear build results from the cache
 before_cache:
   - 'rm -rf $HOME/.m2/repository/net/techcable/tacospigot'

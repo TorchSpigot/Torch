@@ -1,3 +1,50 @@
-/bin/
-/.classpath
-/.project
+# Eclipse stuff
+.classpath
+.project
+.settings/
+
+# netbeans
+nbproject/
+nbactions.xml
+
+# we use maven!
+build.xml
+
+# maven
+target/
+dependency-reduced-pom.xml
+
+# vim
+.*.sw[a-p]
+
+# various other potential build files
+build/
+bin/
+dist/
+manifest.mf
+
+# Mac filesystem dust
+.DS_Store/
+
+# intellij
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Linux temp files
+*~
+
+# other stuff
+TacoSpigot-API
+TacoSpigot-Server
+Spigot-API
+Spigot-Server
+Paper-Server
+Paper-API
+PaperSpigot-Server
+PaperSpigot-API
+CraftBukkit
+
+#Build System
+build
