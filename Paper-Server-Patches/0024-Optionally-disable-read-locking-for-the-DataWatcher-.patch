@@ -1,4 +1,4 @@
-From 8ad203f75897aaf80ae8981a01130d9236e08311 Mon Sep 17 00:00:00 2001
+From 7040c3b9eb0107c7bd931e691793791e18d45cb9 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 14:29:50 +0800
 Subject: [PATCH] Optionally disable read locking for the DataWatcher when

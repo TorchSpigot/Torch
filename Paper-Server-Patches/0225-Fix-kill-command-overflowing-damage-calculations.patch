@@ -1,4 +1,4 @@
-From 91d71a3aa8afccd5130b648694a0191248f22a76 Mon Sep 17 00:00:00 2001
+From ecdcae2384e85f8c2335be0b47a7f0080260feb9 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 06:22:36 +0800
 Subject: [PATCH] Fix kill command overflowing damage calculations

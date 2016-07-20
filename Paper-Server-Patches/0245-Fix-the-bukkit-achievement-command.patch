@@ -1,0 +1,37 @@
+From 9296df75b45aabe0515562d5ed0d4137207184ac Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Wed, 20 Jul 2016 22:21:40 +0800
+Subject: [PATCH] Fix the bukkit achievement command
+
+
+diff --git a/src/main/java/org/bukkit/command/defaults/AchievementCommand.java b/src/main/java/org/bukkit/command/defaults/AchievementCommand.java
+index e090053..5b8d4cf 100644
+--- a/src/main/java/org/bukkit/command/defaults/AchievementCommand.java
++++ b/src/main/java/org/bukkit/command/defaults/AchievementCommand.java
+@@ -118,7 +118,7 @@ public class AchievementCommand extends VanillaCommand {
+                 return true;
+             }
+ 
+-            PlayerStatisticIncrementEvent event = new PlayerStatisticIncrementEvent(player, statistic, player.getStatistic(statistic), player.getStatistic(statistic) + 1, entityType);
++            PlayerStatisticIncrementEvent event = new PlayerStatisticIncrementEvent(player, statistic, player.getStatistic(statistic, entityType), player.getStatistic(statistic, entityType) + 1, entityType); // Torch
+             Bukkit.getServer().getPluginManager().callEvent(event);
+             if (event.isCancelled()) {
+                 sender.sendMessage(String.format("Unable to increment %s for %s", statisticString, player.getName()));
+@@ -142,12 +142,12 @@ public class AchievementCommand extends VanillaCommand {
+ 
+             Material material = Material.getMaterial(id);
+ 
+-            if (material == null) {
++            if (material == null || org.bukkit.craftbukkit.CraftStatistic.getMaterialStatistic(statistic, material) == null) { // Torch
+                 sender.sendMessage(String.format("Unknown achievement or statistic '%s'", statisticString));
+                 return true;
+             }
+ 
+-            PlayerStatisticIncrementEvent event = new PlayerStatisticIncrementEvent(player, statistic, player.getStatistic(statistic), player.getStatistic(statistic) + 1, material);
++            PlayerStatisticIncrementEvent event = new PlayerStatisticIncrementEvent(player, statistic, player.getStatistic(statistic, material), player.getStatistic(statistic, material) + 1, material); // Torch
+             Bukkit.getServer().getPluginManager().callEvent(event);
+             if (event.isCancelled()) {
+                 sender.sendMessage(String.format("Unable to increment %s for %s", statisticString, player.getName()));
+-- 
+2.8.2.windows.1
+

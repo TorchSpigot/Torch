@@ -1,4 +1,4 @@
-From 446885bff91ce2b7ef4d8258d660775a24f66534 Mon Sep 17 00:00:00 2001
+From 6343a99bde699011d77871f0102b5a89aea2fd9e Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 14:30:35 +0800
 Subject: [PATCH] Void default move checking
