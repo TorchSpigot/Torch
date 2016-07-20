@@ -1,4 +1,4 @@
-From cdc552834a7c27bf963ce8dad002d684a76e2ab1 Mon Sep 17 00:00:00 2001
+From 88ae0ef6b3be74a3478a635f74a4c36732c90c10 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 14:35:36 +0800
 Subject: [PATCH] Fix DataWatcher for ArrayMap
