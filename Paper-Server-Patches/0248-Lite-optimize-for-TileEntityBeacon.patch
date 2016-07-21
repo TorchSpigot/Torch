@@ -1,4 +1,4 @@
-From 60a102b6b170cbc66a96a8b73c4ae49a02aad7db Mon Sep 17 00:00:00 2001
+From 147feb299dae4432679386ea039be28569f64c61 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Thu, 21 Jul 2016 00:44:39 +0800
 Subject: [PATCH] Lite optimize for TileEntityBeacon

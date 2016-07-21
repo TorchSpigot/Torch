@@ -12,7 +12,7 @@ that aims to fix gameplay and inconsistencies, optimizations and multi-threaded 
 
 Torch aims to be stable and fast.
 * Current developing version:  1.9.4
-* Recommanded(stable) version: R1.3.1-RELEASE
+* Recommanded(stable) version: R1.3.2-RELEASE
 
 (If you're running a previous Beta, upgrading is highly recommended.)
 
@@ -37,6 +37,11 @@ To compile Torch, you need JDK8(or above), git, bash, maven, and an internet con
 * Clone the repo
 * Run `./build.sh`, and wait
 * Get the final jar in *./TacoSpigot-Server/target/*
+
+or
+
+* First build a `TacoSpigot` (1.9.4 branch), and replace the patches manually.
+* run `./applypatches.sh`
 
 
 Feel free to open a PR or issue.
