@@ -1,4 +1,4 @@
-From 95aa0d0c204476acc3df8a91c81d080eb2eb7f78 Mon Sep 17 00:00:00 2001
+From 4942e40a462ecbd1c5492f88ee7501b1282e82be Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 12 Jul 2016 03:35:32 +0800
 Subject: [PATCH] Fix chunkio2 timings issue
