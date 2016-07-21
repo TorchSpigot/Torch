@@ -26,7 +26,7 @@ Torch aims to be stable and fast.
 * The enhanced API and more!
 
 ####How To (Server Admins)
-To use Torch, you need JRE8(or above).
+To use Torch, you need **Java 8**(or above).
 
 * Get Jar file(download): *[Click Here](http://t.im/torch)*, and use *Torch-1.9.4-R1.x.jar*, to start server directly.
 * Just enjoy Torch! :)
@@ -40,7 +40,7 @@ To compile Torch, you need JDK8(or above), git, bash, maven, and an internet con
 
 or
 
-* First build a `TacoSpigot` (1.9.4 branch), and replace the patches manually.
+* First build `TacoSpigot [(1.9.4 branch)](https://github.com/TacoSpigot/TacoSpigot/tree/version/1.9.4)', and replace the patches manually.
 * run `./applypatches.sh`
 
 
