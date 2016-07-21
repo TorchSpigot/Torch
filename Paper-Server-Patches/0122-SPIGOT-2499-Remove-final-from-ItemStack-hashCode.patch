@@ -1,4 +1,4 @@
-From da50d0d99b128f4264b9e3147dde7bfb6972145a Mon Sep 17 00:00:00 2001
+From 1a85b40e1e61c60c8c4a1ac9b63c75395cc4c153 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:37:40 +0800
 Subject: [PATCH] SPIGOT-2499: Remove final from ItemStack hashCode

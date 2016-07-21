@@ -1,4 +1,4 @@
-From eae520d933a8d1e07b6985be9475b632b2f40107 Mon Sep 17 00:00:00 2001
+From a58219038f8b401c633c56fcd493e75356fdd184 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 12 Jul 2016 18:28:41 +0800
 Subject: [PATCH] Check-for-lava-only-once-per-tick

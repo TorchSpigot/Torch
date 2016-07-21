@@ -1,4 +1,4 @@
-From 21debf398024a0dd3c26d47e652c40f054e4f21f Mon Sep 17 00:00:00 2001
+From 2cf8e42f170c2cc4a7962e89906af615ebc5fc91 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Wed, 20 Jul 2016 18:40:46 +0800
 Subject: [PATCH] Fix UUID duplicate
