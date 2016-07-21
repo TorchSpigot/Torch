@@ -1,4 +1,4 @@
-From be7a61545e66f41c0726e577bb5547410b121784 Mon Sep 17 00:00:00 2001
+From c6a14528ca766084b0b753c0c2b08e84a6826bbc Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 13:50:36 +0800
 Subject: [PATCH] SPIGOT-1515: Use CUSTOM reason for GENERIC damage

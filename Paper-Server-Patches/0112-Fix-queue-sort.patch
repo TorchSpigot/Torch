@@ -1,4 +1,4 @@
-From 632afe855649f95f2647cdc5577b28579dca9b5f Mon Sep 17 00:00:00 2001
+From ea24cfb15ce163cf008fd43d83981eb552720752 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:09:12 +0800
 Subject: [PATCH] Fix queue sort

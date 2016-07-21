@@ -1,4 +1,4 @@
-From 47ed49995bd5d842d369c875c723503e30eb3307 Mon Sep 17 00:00:00 2001
+From 6f6afb322d9441ca0d8a88b3397e34ec22ed9ac7 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 23:46:57 +0800
 Subject: [PATCH] Fix iostats command
