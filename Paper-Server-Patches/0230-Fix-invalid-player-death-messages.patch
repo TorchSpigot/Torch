@@ -1,4 +1,4 @@
-From 93f4a96b163390fd218967595b7cafa379fc10eb Mon Sep 17 00:00:00 2001
+From 611192d0cee524760f179faad117693f02d49f7a Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 06:41:14 +0800
 Subject: [PATCH] Fix invalid player death messages

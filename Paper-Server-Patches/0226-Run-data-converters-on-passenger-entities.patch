@@ -1,4 +1,4 @@
-From bc39ff9d349cca380674e2fbb53eea9ef72fe70c Mon Sep 17 00:00:00 2001
+From 646ef41782beb59532ab6f787ec0ef1d601d658b Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 06:24:47 +0800
 Subject: [PATCH] Run data converters on passenger entities

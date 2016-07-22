@@ -1,4 +1,4 @@
-From d43e8bc4de35000441e756521c5d1b7b7b882056 Mon Sep 17 00:00:00 2001
+From a592117e7422efc4c2ace78c5dfe2ce83369bf70 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 13:46:50 +0800
 Subject: [PATCH] Speedup BlockPos by fixing inlining

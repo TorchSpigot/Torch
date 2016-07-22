@@ -1,4 +1,4 @@
-From 02f9cc1790f4b446dccec16fb7898da2eda6d22d Mon Sep 17 00:00:00 2001
+From a588aedee9d4fba1abb3ce692993c75299569fd3 Mon Sep 17 00:00:00 2001
 From: Techcable <Techcable@techcable.net>
 Date: Thu, 31 Mar 2016 14:13:07 -0700
 Subject: [PATCH] Use arrays for blockstates
