@@ -1,4 +1,4 @@
-From f97521bf37e27293df4d81bd21584c5d6ea7eba2 Mon Sep 17 00:00:00 2001
+From 17627c0920da9b121e6621f9fe85b5692a3a51ff Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Wed, 20 Jul 2016 18:19:49 +0800
 Subject: [PATCH] Less strict skull validation, also fix TNTPrimed head hight

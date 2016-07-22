@@ -1,4 +1,4 @@
-From 2d10ec899527600b72da4191b401effcd335979e Mon Sep 17 00:00:00 2001
+From ffe7a87ce465f5e1ceca12d7fdeff135caa858d3 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 16:32:45 +0800
 Subject: [PATCH] Fix Old Sign Conversion

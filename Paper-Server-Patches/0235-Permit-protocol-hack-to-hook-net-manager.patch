@@ -1,4 +1,4 @@
-From 62925a7df5d91eff9a8ebf4be1a6b089e10138e2 Mon Sep 17 00:00:00 2001
+From 231763b8a66b34d0e60db5239415c5fbf33a92a7 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 08:53:34 +0800
 Subject: [PATCH] Permit protocol hack to hook net manager

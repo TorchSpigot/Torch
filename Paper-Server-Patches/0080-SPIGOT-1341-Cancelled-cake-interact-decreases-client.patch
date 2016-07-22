@@ -1,4 +1,4 @@
-From 429eb24e4a8d93932db2dc236a4118b69e2bc870 Mon Sep 17 00:00:00 2001
+From c5bdf420771a73c7d75e20e3271593d87f1eb45c Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 14:04:48 +0800
 Subject: [PATCH] SPIGOT-1341: Cancelled cake interact decreases client hunger
