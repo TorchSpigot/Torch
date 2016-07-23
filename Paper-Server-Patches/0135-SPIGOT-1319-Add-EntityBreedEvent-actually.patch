@@ -1,4 +1,4 @@
-From 5491a1c6286de44555d668c6e626919bf0858323 Mon Sep 17 00:00:00 2001
+From a3c342c05c68b58a0d9a6bbaeb8929c7a4163932 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 18:06:45 +0800
 Subject: [PATCH] SPIGOT-1319: Add EntityBreedEvent actually

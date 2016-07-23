@@ -1,4 +1,4 @@
-From 81c06f573205995d462f3b9f3203b0e2e4c79f7a Mon Sep 17 00:00:00 2001
+From d45e437852cc3376de61b48e5fa3c72003cec326 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 07:26:48 +0800
 Subject: [PATCH] Add Player.stopSound, miscs

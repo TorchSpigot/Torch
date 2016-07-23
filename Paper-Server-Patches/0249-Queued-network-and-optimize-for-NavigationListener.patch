@@ -1,4 +1,4 @@
-From 003b0ac8bd6f804232370dcd46fb00dc290a40bd Mon Sep 17 00:00:00 2001
+From 9e524f6d813a48eb3dcc34348663a657c34a2f29 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Thu, 21 Jul 2016 01:34:27 +0800
 Subject: [PATCH] Queued network and optimize for NavigationListener
