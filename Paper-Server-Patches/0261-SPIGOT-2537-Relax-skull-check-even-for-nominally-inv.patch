@@ -1,4 +1,4 @@
-From 4a160dd72d00b37f4f64e77e7e92cef3fed65598 Mon Sep 17 00:00:00 2001
+From ea898fb8c1f017008bee4ac826190379a67c6eed Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 23 Jul 2016 00:41:27 +0800
 Subject: [PATCH] SPIGOT-2537: Relax skull check even for nominally invalid

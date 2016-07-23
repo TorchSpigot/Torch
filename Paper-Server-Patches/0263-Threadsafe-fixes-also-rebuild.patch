@@ -1,7 +1,7 @@
-From f11d57fd43fe639a29217b5bdad5c5381ab433dc Mon Sep 17 00:00:00 2001
+From 3621f89ce993d330f792797f3ececadc73adb382 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 23 Jul 2016 16:14:58 +0800
-Subject: [PATCH] Threadsafe fix
+Subject: [PATCH] Threadsafe fixes, also rebuild
 
 
 diff --git a/src/main/java/net/minecraft/server/BiomeBase.java b/src/main/java/net/minecraft/server/BiomeBase.java
@@ -269,7 +269,7 @@ index e97070b..b913de3 100644
          hashset1.removeAll(hashset);
          Iterator iterator1 = hashset1.iterator();
 diff --git a/src/main/java/net/minecraft/server/Entity.java b/src/main/java/net/minecraft/server/Entity.java
-index 8da127f..858ae8d 100644
+index 8da127f..71e4154 100644
 --- a/src/main/java/net/minecraft/server/Entity.java
 +++ b/src/main/java/net/minecraft/server/Entity.java
 @@ -5,7 +5,6 @@ import com.google.common.collect.Lists;
@@ -298,7 +298,74 @@ index 8da127f..858ae8d 100644
          this.world = world;
          this.setPosition(0.0D, 0.0D, 0.0D);
          if (world != null) {
-@@ -2980,14 +2979,14 @@ public abstract class Entity implements ICommandListener, org.spigotmc.Optimized
+@@ -406,7 +405,7 @@ public abstract class Entity implements ICommandListener, org.spigotmc.Optimized
+             this.world.methodProfiler.b();
+         }
+ 
+-		// us_task = new U_sub(); // Torch - removed to the head
++		U_sub us_task = new U_sub(); // Torch - removed to the head
+         us_task.fork();
+ 		// Hose start
+ 		/*
+@@ -455,9 +454,8 @@ public abstract class Entity implements ICommandListener, org.spigotmc.Optimized
+     }
+ 	
+ 	// Hose start
+-	U_sub us_task = new U_sub(); // Hose - fork // Torch - fix leak
+-	U u_task = new U(); // Hose - fork // Torch - fix leak
+ 	public void U() {
++		U u_task = new U();
+         u_task.fork();
+     }
+ 	// Hose end
+@@ -878,14 +876,7 @@ public abstract class Entity implements ICommandListener, org.spigotmc.Optimized
+         // org.bukkit.craftbukkit.SpigotTimings.entityMoveTimer.stopTiming(); // Spigot
+     }
+     
+-    TE_Pool te_task;
+     public void move(double d0, double d1, double d2) {
+-        /*double[] pos = {d0, d1, d2};
+-        SpigotWorldConfig.entity_move.put(this, pos);*/
+-        /*
+-        m_task = new move(d0, d1, d2);
+-        SpigotWorldConfig.move_forks.add(m_task);*/
+-        //m_task.fork();
+ 
+         // org.bukkit.craftbukkit.SpigotTimings.entityMoveTimer.startTiming(); // Spigot
+         if (this.noclip) {
+@@ -973,9 +964,6 @@ public abstract class Entity implements ICommandListener, org.spigotmc.Optimized
+             }
+ 
+             List list = this.world.getCubes(this, this.getBoundingBox().a(d0, d1, d2));
+-            /*te_task = new TE_Pool(this, d0, d1, d2);
+-            te_task.fork();
+-            List list = te_task.join(); */
+             
+             AxisAlignedBB axisalignedbb = this.getBoundingBox();
+             int i = 0;
+@@ -1016,9 +1004,7 @@ public abstract class Entity implements ICommandListener, org.spigotmc.Optimized
+                 this.a(axisalignedbb);
+                 d1 = (double) this.P;
+                 List list1 = this.world.getCubes(this, this.getBoundingBox().a(d6, d1, d8));
+-                /*te_task = new TE_Pool(this, d6, d1, d8);
+-                te_task.fork();
+-                List list1 = te_task.join();*/ 
++
+                 AxisAlignedBB axisalignedbb2 = this.getBoundingBox();
+                 AxisAlignedBB axisalignedbb3 = axisalignedbb2.a(d6, 0.0D, d8);
+ 
+@@ -1646,9 +1632,8 @@ public abstract class Entity implements ICommandListener, org.spigotmc.Optimized
+         }
+     }
+ 	
+-    collide c_task;
+     public void collide(Entity entity) { // Hose - fork it
+-        c_task = new collide(entity);
++		collide c_task = new collide(entity);
+         c_task.fork();
+     }
+ 
+@@ -2980,14 +2965,14 @@ public abstract class Entity implements ICommandListener, org.spigotmc.Optimized
      }
  
      public Collection<Entity> bw() {
@@ -568,7 +635,7 @@ index 5adffb9..fea9ea7 100644
      public NavigationListener() {}
  	
 diff --git a/src/main/java/net/minecraft/server/Pathfinder.java b/src/main/java/net/minecraft/server/Pathfinder.java
-index 25de357..446dd6b 100644
+index 25de357..4be7b6a 100644
 --- a/src/main/java/net/minecraft/server/Pathfinder.java
 +++ b/src/main/java/net/minecraft/server/Pathfinder.java
 @@ -1,13 +1,13 @@
@@ -587,6 +654,25 @@ index 25de357..446dd6b 100644
      private final PathPoint[] c = new PathPoint[32];
      private final PathfinderAbstract d;
  
+@@ -36,18 +36,6 @@ public class Pathfinder {
+         this.d.a();
+         return pathentity;
+     }
+-	
+-	@Nullable
+-    private PathEntity a(IBlockAccess iblockaccess, Entity entity, double d0, double d1, double d2, float f) {
+-        this.a.a();
+-        this.d.a(iblockaccess, entity);
+-        PathPoint pathpoint = this.d.b();
+-        PathPoint pathpoint1 = this.d.a(d0, d1, d2);
+-        PathEntity pathentity = this.a(pathpoint, pathpoint1, f);
+-
+-        this.d.a();
+-        return pathentity;
+-    }
+ 
+     @Nullable
+     private PathEntity a(PathPoint pathpoint, PathPoint pathpoint1, float f) {
 diff --git a/src/main/java/net/minecraft/server/PathfinderNormal.java b/src/main/java/net/minecraft/server/PathfinderNormal.java
 index fa7f8a4..e38b236 100644
 --- a/src/main/java/net/minecraft/server/PathfinderNormal.java
@@ -866,7 +952,7 @@ index a6b252b..6a4fd0d 100644
          this.a = world;
      }
 diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
-index 85a7962..4edda24 100644
+index 85a7962..643540b 100644
 --- a/src/main/java/net/minecraft/server/World.java
 +++ b/src/main/java/net/minecraft/server/World.java
 @@ -16,6 +16,8 @@ import java.util.Random;
@@ -914,7 +1000,19 @@ index 85a7962..4edda24 100644
  	
  	// Paper - Start Peristence counters.
      private long nextPersistenceCountersTick = System.nanoTime();
-@@ -2181,9 +2185,16 @@ public abstract class World implements IBlockAccess {
+@@ -1059,10 +1063,9 @@ public abstract class World implements IBlockAccess {
+ 
+     }
+ 
+-	addparticle ap_task; // Hose
+     public void addParticle(EnumParticle enumparticle, double d0, double d1, double d2, double d3, double d4, double d5, int... aint) {
+         // this.a(enumparticle.c(), enumparticle.e(), d0, d1, d2, d3, d4, d5, aint);
+-		ap_task = new addparticle(enumparticle, d0, d1, d2, d3, d4, d5, aint);
++		addparticle ap_task = new addparticle(enumparticle, d0, d1, d2, d3, d4, d5, aint);
+         ap_task.fork();
+     }
+ 
+@@ -2181,9 +2184,16 @@ public abstract class World implements IBlockAccess {
  
          // explosion.a();
          // explosion.a(true);
@@ -934,7 +1032,7 @@ index 85a7962..4edda24 100644
      }
  	
  	class ExplosionTask extends RecursiveAction {
-@@ -2199,6 +2210,19 @@ public abstract class World implements IBlockAccess {
+@@ -2199,6 +2209,19 @@ public abstract class World implements IBlockAccess {
              explosion.a(true);
          }
      }

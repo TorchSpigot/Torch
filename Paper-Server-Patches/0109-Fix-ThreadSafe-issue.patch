@@ -1,4 +1,4 @@
-From 8b2f61c42f0f4a7fd42e9bd50bda279f022c325f Mon Sep 17 00:00:00 2001
+From 503f9887318ac19519cc902edb4dc5735ff2e85f Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 16:53:27 +0800
 Subject: [PATCH] Fix ThreadSafe issue

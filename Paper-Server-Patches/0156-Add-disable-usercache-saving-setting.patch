@@ -1,4 +1,4 @@
-From aad4727ceff2e9b40d9c098f82ab3a93e3a0a3d5 Mon Sep 17 00:00:00 2001
+From c3bc3c07089a2c377e17c2924596a2d807fa65b1 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 23:04:33 +0800
 Subject: [PATCH] Add disable-usercache-saving setting

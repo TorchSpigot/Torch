@@ -1,4 +1,4 @@
-From b312d9cedea6fda3e6b7c011135ae320785d202f Mon Sep 17 00:00:00 2001
+From d4307d1fc22e546b69cc90a86f88b843b32ab7a4 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Wed, 20 Jul 2016 22:21:40 +0800
 Subject: [PATCH] Lite optimize foreach for ticking, also add option to

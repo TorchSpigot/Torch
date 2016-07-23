@@ -1,4 +1,4 @@
-From 2c242525f6424b04196bf8263a7839e0e5b9fc10 Mon Sep 17 00:00:00 2001
+From 28be44d4e7c7621eb5285fbb35c8954b75505e46 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 12 Jul 2016 15:00:22 +0800
 Subject: [PATCH] Revert mbt storage

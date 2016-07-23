@@ -1,4 +1,4 @@
-From 777605721efd6cc8dbb4a2c4f52204df50e477da Mon Sep 17 00:00:00 2001
+From 821a4c02653b02f79abb8a50e7320845d4206100 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 16:30:30 +0800
 Subject: [PATCH] Fix var for entity
