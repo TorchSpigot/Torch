@@ -1,4 +1,4 @@
-From eed78ac1348493368dfe5c278ee98e7a01618515 Mon Sep 17 00:00:00 2001
+From 1dd510f0ace036e71287ce71b14693cffcff1b86 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 19:11:22 +0800
 Subject: [PATCH] Fix test for bukkit
