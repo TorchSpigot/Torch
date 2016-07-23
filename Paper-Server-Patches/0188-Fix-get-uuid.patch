@@ -1,4 +1,4 @@
-From b47fa12b4b13ecd0671ee59a146ec1d459607f7f Mon Sep 17 00:00:00 2001
+From 7b63c93d9035fbb82e26507db77ea496b3610eab Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 12 Jul 2016 14:08:04 +0800
 Subject: [PATCH] Fix get uuid

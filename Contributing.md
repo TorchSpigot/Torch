@@ -2,6 +2,9 @@ Contributing to Torch
 ==========================
 Torch has a very lenient policy towards PRs, but would prefer that you try and adhere to the following guidelines.
 
+## Issues
+If there is any performance-issue/question, bug or crash(stacktrace). Just open a new issue.
+
 ## Understanding Patches
 Patches to Torch are very simple, but centes around the directories 'TacoSpigot-API' and 'TacoSpigot-Server' (we based on TacoSpigot)
 

@@ -1,4 +1,4 @@
-From 4cb1f500b62670efc648597ff7367229007a2562 Mon Sep 17 00:00:00 2001
+From a92c76a8a6f32b2181a54068a24df6618e8f3a68 Mon Sep 17 00:00:00 2001
 From: Jedediah Smith <jedediah@silencegreys.com>
 Date: Mon, 4 Apr 2016 01:45:23 -0400
 Subject: [PATCH] Fix armor toughness being ignored

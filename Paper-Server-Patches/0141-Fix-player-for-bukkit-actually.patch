@@ -1,4 +1,4 @@
-From be0bbd6cae087f63bddb7fc4027989e348ea2ef8 Mon Sep 17 00:00:00 2001
+From 6d3c8d33c7586281b219e452d80d73f6ec323275 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 18:32:24 +0800
 Subject: [PATCH] Fix player for bukkit actually
