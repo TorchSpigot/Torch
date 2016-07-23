@@ -1,4 +1,4 @@
-From 2cfb10115083fe135ca375ff18c31813f3ae6c1a Mon Sep 17 00:00:00 2001
+From fefcc16adaf4d40e59537e192a3a00dc4a0b2686 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 20:04:20 +0800
 Subject: [PATCH] Use-lang3-keeps-lang2-for-compatibility

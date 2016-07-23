@@ -1,4 +1,4 @@
-From 9c7c3c7e1e35a0fb29bc71f8e8b601c66ce3c980 Mon Sep 17 00:00:00 2001
+From 49308bf7dd9037a5c6bb67eeff9ccee17a19d08f Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 17:21:43 +0800
 Subject: [PATCH] multi threaded EntityLiving

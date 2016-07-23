@@ -1,7 +1,7 @@
-From 73a80c4749c153e58f0c51cbc7df3d410044a0d1 Mon Sep 17 00:00:00 2001
+From d8fa45d31c9e8ad4f45005118d6906402a6ff8ad Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 24 Jul 2016 00:15:49 +0800
-Subject: [PATCH] Fix sync chunk bug
+Subject: [PATCH] Fix chunk sync issues, Rebuild.
 
 
 diff --git a/src/main/java/com/destroystokyo/paper/PaperConfig.java b/src/main/java/com/destroystokyo/paper/PaperConfig.java
@@ -21,6 +21,19 @@ index 705c937..5807996 100644
  
      public static boolean enableFileIOThreadSleep;
      private static void enableFileIOThreadSleep() {
+diff --git a/src/main/java/net/minecraft/server/Village.java b/src/main/java/net/minecraft/server/Village.java
+index 6a4fd0d..a20a462 100644
+--- a/src/main/java/net/minecraft/server/Village.java
++++ b/src/main/java/net/minecraft/server/Village.java
+@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
+ public class Village {
+ 
+     private World a;
+-    private final List<VillageDoor> b = new java.util.concurrent.CopyOnWriteArrayList<VillageDoor>();
++    private final List<VillageDoor> b = Lists.newArrayList();
+     private BlockPosition c;
+     private BlockPosition d;
+     private int e;
 diff --git a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java
 index 67c13fc..80eb01f 100644
 --- a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java

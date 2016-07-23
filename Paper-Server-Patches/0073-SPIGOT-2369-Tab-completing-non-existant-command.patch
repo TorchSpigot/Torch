@@ -1,4 +1,4 @@
-From 3b9ba286e3961d6a68c60f8a6e8ff1a58f5e5251 Mon Sep 17 00:00:00 2001
+From 6b480220e0c9216bc54595a8e5a5aba9d186b83c Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 13:52:13 +0800
 Subject: [PATCH] SPIGOT-2369: Tab completing non existant command
