@@ -1,4 +1,4 @@
-From bfff962723b74fcbe4e9b60c13a0a3ea254146db Mon Sep 17 00:00:00 2001
+From 3b7f46779275a476178504af17804a027d54902d Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Thu, 21 Jul 2016 16:04:52 +0800
 Subject: [PATCH] SPIGOT-2414: Dontt disconnect if progressing also fix sync
