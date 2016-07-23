@@ -1,4 +1,4 @@
-From 0af5bc87c0d32f65c873c1716d73bfeaec5ad5b1 Mon Sep 17 00:00:00 2001
+From 30f0c5ad6d27576111a7b44d7d7d2556372d4527 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:48:17 +0800
 Subject: [PATCH] Add DamageCause.HOT_FLOOR for Bukkit

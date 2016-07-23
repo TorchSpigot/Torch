@@ -1,4 +1,4 @@
-From 44fc9afa6ba35b857b8c438ca3741400a0446082 Mon Sep 17 00:00:00 2001
+From 97aca1404ea6c18592ebcd024f1d24708aae9b5e Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 22 Jul 2016 03:49:54 +0800
 Subject: [PATCH] Dont use hopper push-based by default.

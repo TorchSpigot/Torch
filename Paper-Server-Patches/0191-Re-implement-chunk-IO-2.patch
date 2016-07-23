@@ -1,4 +1,4 @@
-From e0353842fa163514b1ede3e938b7ac3460690fc3 Mon Sep 17 00:00:00 2001
+From 67cd98e0274182aaa80f51f5ec8f43f558a8b034 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 12 Jul 2016 16:57:09 +0800
 Subject: [PATCH] Re-implement chunk IO 2

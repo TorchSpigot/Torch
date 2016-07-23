@@ -1,4 +1,4 @@
-From 167c48e9334e919232ec13221d3e7c3868dc6379 Mon Sep 17 00:00:00 2001
+From 2fa07a6ca6f7136e6f2d49d6e099c09fd0e7c7da Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 03:58:37 +0800
 Subject: [PATCH] Stop server on failed port binding
