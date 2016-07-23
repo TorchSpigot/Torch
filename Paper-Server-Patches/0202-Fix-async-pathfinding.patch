@@ -1,4 +1,4 @@
-From fd673d738062b3f8d06f652777d26f8e0372fc5d Mon Sep 17 00:00:00 2001
+From 6fe350b2ebad0a22e8c4f4800d5bc1fbc6461c72 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 15 Jul 2016 20:08:18 +0800
 Subject: [PATCH] Fix async pathfinding

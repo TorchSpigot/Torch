@@ -1,4 +1,4 @@
-From 6c95f5d95bc67a4e58a563999e7336358091d50d Mon Sep 17 00:00:00 2001
+From 394d9fe9bcb0319f51b3798efcc7db9db1e0876f Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 12 Jul 2016 05:48:18 +0800
 Subject: [PATCH] Fix import for nbt

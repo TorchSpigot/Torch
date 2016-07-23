@@ -1,7 +1,7 @@
-From d8fa45d31c9e8ad4f45005118d6906402a6ff8ad Mon Sep 17 00:00:00 2001
+From ca783f7631f66038fddbdd3f2fc5cedf7b38ed3d Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 24 Jul 2016 00:15:49 +0800
-Subject: [PATCH] Fix chunk sync issues, Rebuild.
+Subject: [PATCH] Fix ticking list bug
 
 
 diff --git a/src/main/java/com/destroystokyo/paper/PaperConfig.java b/src/main/java/com/destroystokyo/paper/PaperConfig.java
@@ -21,8 +21,21 @@ index 705c937..5807996 100644
  
      public static boolean enableFileIOThreadSleep;
      private static void enableFileIOThreadSleep() {
+diff --git a/src/main/java/net/minecraft/server/PersistentVillage.java b/src/main/java/net/minecraft/server/PersistentVillage.java
+index 96f82de..05309b5 100644
+--- a/src/main/java/net/minecraft/server/PersistentVillage.java
++++ b/src/main/java/net/minecraft/server/PersistentVillage.java
+@@ -10,7 +10,7 @@ public class PersistentVillage extends PersistentBase {
+     private World world;
+     private final List<BlockPosition> c = new CopyOnWriteArrayList<BlockPosition>();
+     private final List<VillageDoor> d = new CopyOnWriteArrayList<VillageDoor>();
+-    private final List<Village> villages = new CopyOnWriteArrayList<Village>();
++    private final List<Village> villages = Lists.newArrayList(); // COWIterator
+     private int time;
+ 
+     public PersistentVillage(String s) {
 diff --git a/src/main/java/net/minecraft/server/Village.java b/src/main/java/net/minecraft/server/Village.java
-index 6a4fd0d..a20a462 100644
+index 6a4fd0d..bc3d8d0 100644
 --- a/src/main/java/net/minecraft/server/Village.java
 +++ b/src/main/java/net/minecraft/server/Village.java
 @@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
@@ -30,10 +43,22 @@ index 6a4fd0d..a20a462 100644
  
      private World a;
 -    private final List<VillageDoor> b = new java.util.concurrent.CopyOnWriteArrayList<VillageDoor>();
-+    private final List<VillageDoor> b = Lists.newArrayList();
++    private final List<VillageDoor> b = Lists.newArrayList(); // COWIterator
      private BlockPosition c;
      private BlockPosition d;
      private int e;
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index 643540b..bb35e90 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -21,6 +21,7 @@ import com.google.common.collect.Sets;
+ 
+ import com.destroystokyo.paper.IOStatCommand;
+ import com.destroystokyo.paper.PaperConfig;
++import java.util.concurrent.CopyOnWriteArrayList;
+ 
+ // CraftBukkit start
+ import com.google.common.collect.Maps;
 diff --git a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java
 index 67c13fc..80eb01f 100644
 --- a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java
