@@ -1,4 +1,4 @@
-From c0b168c1e37ffefd005f6253866180044acc1596 Mon Sep 17 00:00:00 2001
+From 6c1bd2558491ccefb626e0bf769f4ab65d150a3a Mon Sep 17 00:00:00 2001
 From: Techcable <Techcable@outlook.com>
 Date: Sat, 7 Mar 2015 22:55:25 -0600
 Subject: [PATCH] Show 'TacoSpigot' in client crashes, server lists, and Mojang

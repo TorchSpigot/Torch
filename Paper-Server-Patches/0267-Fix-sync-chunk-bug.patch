@@ -1,0 +1,65 @@
+From 73a80c4749c153e58f0c51cbc7df3d410044a0d1 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 24 Jul 2016 00:15:49 +0800
+Subject: [PATCH] Fix sync chunk bug
+
+
+diff --git a/src/main/java/com/destroystokyo/paper/PaperConfig.java b/src/main/java/com/destroystokyo/paper/PaperConfig.java
+index 705c937..5807996 100644
+--- a/src/main/java/com/destroystokyo/paper/PaperConfig.java
++++ b/src/main/java/com/destroystokyo/paper/PaperConfig.java
+@@ -194,12 +194,10 @@ public class PaperConfig {
+         }
+     }
+ 
+-	/*
+     public static int minChunkLoadThreads = 2;
+     private static void chunkLoadThreads() {
+         minChunkLoadThreads = Math.min(6, getInt("settings.min-chunk-load-threads", 2)); // Keep people from doing stupid things with max of 6
+     }
+-	*/
+ 
+     public static boolean enableFileIOThreadSleep;
+     private static void enableFileIOThreadSleep() {
+diff --git a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java
+index 67c13fc..80eb01f 100644
+--- a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java
++++ b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java
+@@ -6,16 +6,18 @@ import net.minecraft.server.IChunkLoader;
+ import net.minecraft.server.MCUtil; // Paper
+ import net.minecraft.server.World;
+ import org.bukkit.craftbukkit.util.AsynchronousExecutor;
++import com.destroystokyo.paper.PaperConfig;
+ 
+ public class ChunkIOExecutor {
+-    // static final int BASE_THREADS = PaperConfig.minChunkLoadThreads; // Paper
+-    // static final int PLAYERS_PER_THREAD = 50;
+-	static final int BASE_THREADS =  Runtime.getRuntime().availableProcessors(); // Paper // Hose - threaded
++    static final int BASE_THREADS = PaperConfig.minChunkLoadThreads; // Paper
++    static final int PLAYERS_PER_THREAD = 50;
+ 
+     private static final AsynchronousExecutor<QueuedChunk, Chunk, Runnable, RuntimeException> instance = new AsynchronousExecutor<QueuedChunk, Chunk, Runnable, RuntimeException>(new ChunkIOProvider(), BASE_THREADS);
+ 
+     public static Chunk syncChunkLoad(World world, IChunkLoader loader, ChunkProviderServer provider, int x, int z) {
++		synchronized(instance) {
+ 			return instance.getSkipQueue(new QueuedChunk(x, z, loader, world, provider));
++		}
+     }
+ 
+     public static void queueChunkLoad(World world, IChunkLoader loader, ChunkProviderServer provider, int x, int z, Runnable runnable) {
+@@ -27,12 +29,10 @@ public class ChunkIOExecutor {
+             instance.drop(new QueuedChunk(x, z, null, world, null), runnable);
+     }
+ 
+-	/*
+     public static void adjustPoolSize(int players) {
+         int size = Math.max(BASE_THREADS, (int) Math.ceil(players / PLAYERS_PER_THREAD));
+         instance.setActiveThreads(size);
+     }
+-	*/
+ 
+     public static void tick() {
+         instance.finishActive();
+-- 
+2.8.2.windows.1
+

@@ -1,4 +1,4 @@
-From 2db921ee337534f1b49eea8adf97546e06269dee Mon Sep 17 00:00:00 2001
+From e317b0fe8afdd280f63e947a95459f8000f8c0f2 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 13:45:47 +0800
 Subject: [PATCH] Fix missed multi threaded

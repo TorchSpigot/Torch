@@ -1,4 +1,4 @@
-From 623f2279d92c0ae015698ddb2ae3a35626c5d85c Mon Sep 17 00:00:00 2001
+From 5e80f1025245099ce97b7ef37c93b73a5f27cfd4 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 22:13:43 +0800
 Subject: [PATCH] Fix implement a new and improved in-memory UUID cache

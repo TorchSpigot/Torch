@@ -1,4 +1,4 @@
-From fba89d692bfb64351b0c11c571569b53ad6def7e Mon Sep 17 00:00:00 2001
+From 79f534a21edcf712ad901b7be1b6b6aec0bc394c Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 18:57:03 +0800
 Subject: [PATCH] Fix entity villager for bukkit

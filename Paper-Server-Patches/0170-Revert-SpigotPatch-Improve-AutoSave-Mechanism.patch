@@ -1,4 +1,4 @@
-From 14bf580ad6537739b6e937b229a960b3df5cc05c Mon Sep 17 00:00:00 2001
+From 50447aaa74900fafc292fd5ccf2e906f72131b93 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 12 Jul 2016 04:07:34 +0800
 Subject: [PATCH] Revert-SpigotPatch-Improve-AutoSave-Mechanism
