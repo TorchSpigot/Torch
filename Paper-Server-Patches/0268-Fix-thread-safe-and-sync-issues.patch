@@ -1,4 +1,4 @@
-From c05dfd6e79fa7c1b6f0e94cfdc7fe47196a58a98 Mon Sep 17 00:00:00 2001
+From 01b8fbdb39accb9e9814f490b586d955292e8ba0 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 24 Jul 2016 13:56:37 +0800
 Subject: [PATCH] Fix thread safe and sync issues

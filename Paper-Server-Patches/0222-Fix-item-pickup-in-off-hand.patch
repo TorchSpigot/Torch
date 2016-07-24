@@ -1,4 +1,4 @@
-From 661179e4a4fedc1bafcb19f7f97432194bc7827d Mon Sep 17 00:00:00 2001
+From 93c3e850919055615fefea0506ce7f9d2e1f66ea Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 06:20:15 +0800
 Subject: [PATCH] Fix item pickup in off-hand

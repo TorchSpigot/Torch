@@ -1,4 +1,4 @@
-From a39c79c8aee714476df4bf39284fea104e9acad0 Mon Sep 17 00:00:00 2001
+From be90952488098de7af3a968c05e0e13055cbb37e Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 24 Jul 2016 00:15:49 +0800
 Subject: [PATCH] Fix ticking list bug
