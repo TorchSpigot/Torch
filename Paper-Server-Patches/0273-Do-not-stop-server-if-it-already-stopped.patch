@@ -1,0 +1,26 @@
+From 30f473eecebfd361f5b3dc01043621796073c201 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 25 Jul 2016 02:59:27 +0800
+Subject: [PATCH] Do not stop server if it already stopped
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/util/ServerShutdownThread.java b/src/main/java/org/bukkit/craftbukkit/util/ServerShutdownThread.java
+index ae3481b..0a65e95 100644
+--- a/src/main/java/org/bukkit/craftbukkit/util/ServerShutdownThread.java
++++ b/src/main/java/org/bukkit/craftbukkit/util/ServerShutdownThread.java
+@@ -13,7 +13,11 @@ public class ServerShutdownThread extends Thread {
+     @Override
+     public void run() {
+         try {
+-            server.stop();
++			// Torch start
++            if(!server.isStopped()) {
++                server.stop();
++            }
++			// Torch end
+         } catch (ExceptionWorldConflict ex) {
+             ex.printStackTrace();
+         } finally {
+-- 
+2.8.2.windows.1
+
