@@ -1,4 +1,4 @@
-From 5af52fcd0326b63ca274aac58ecd07c8ccd7a0ce Mon Sep 17 00:00:00 2001
+From 6804751260f83355b2fc25fd58980bc386f85039 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 12 Jul 2016 18:14:26 +0800
 Subject: [PATCH] Enable-Concurrent-Chunk-Decoration

@@ -1,4 +1,4 @@
-From 576a76af7ea384a4319222be2547d69b674dce28 Mon Sep 17 00:00:00 2001
+From 713a09170758e507ada3c06e43f68142ec2d93eb Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 22 Jul 2016 12:51:07 +0800
 Subject: [PATCH] timings fix also fix async

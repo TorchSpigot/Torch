@@ -1,7 +1,8 @@
-From f4b097b0ab38d7b564a37c16b6ea1799eb98696b Mon Sep 17 00:00:00 2001
+From 62e7f8f08645a86f2669a907ed7846d1b72ebbe1 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 24 Jul 2016 19:01:11 +0800
-Subject: [PATCH] Use fastutil for array i/o, miscs
+Subject: [PATCH] Fix chunk ticking issues, also use fastutil to progress the
+ region file.
 
 
 diff --git a/pom.xml b/pom.xml
@@ -150,41 +151,6 @@ index 85424e3..4ded721 100644
          //if (this.c.contains(chunkcoordintpair)) { // Paper - Chunk queue improvements
              if (this.b.containsKey(chunkcoordintpair)) {
                  return true;
-diff --git a/src/main/java/net/minecraft/server/NBTCompressedStreamTools.java b/src/main/java/net/minecraft/server/NBTCompressedStreamTools.java
-index b2d5254..0fccfe5 100644
---- a/src/main/java/net/minecraft/server/NBTCompressedStreamTools.java
-+++ b/src/main/java/net/minecraft/server/NBTCompressedStreamTools.java
-@@ -1,7 +1,12 @@
- package net.minecraft.server;
- 
-+/* // Torch start
- import java.io.BufferedInputStream;
- import java.io.BufferedOutputStream;
-+*/
-+import org.torch.util.io.FastBufferedInputStream;
-+import org.torch.util.io.FastBufferedOutputStream;
-+// Torch end
- import java.io.DataInput;
- import java.io.DataInputStream;
- import java.io.DataOutput;
-@@ -15,7 +20,7 @@ import java.util.zip.GZIPOutputStream;
- public class NBTCompressedStreamTools {
- 
-     public static NBTTagCompound a(InputStream inputstream) throws IOException {
--        DataInputStream datainputstream = new DataInputStream(new BufferedInputStream(new GZIPInputStream(inputstream)));
-+        DataInputStream datainputstream = new DataInputStream(new FastBufferedInputStream(new GZIPInputStream(inputstream)));
- 
-         NBTTagCompound nbttagcompound;
- 
-@@ -29,7 +34,7 @@ public class NBTCompressedStreamTools {
-     }
- 
-     public static void a(NBTTagCompound nbttagcompound, OutputStream outputstream) throws IOException {
--        DataOutputStream dataoutputstream = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(outputstream)));
-+        DataOutputStream dataoutputstream = new DataOutputStream(new FastBufferedOutputStream(new GZIPOutputStream(outputstream)));
- 
-         try {
-             a(nbttagcompound, (DataOutput) dataoutputstream);
 diff --git a/src/main/java/net/minecraft/server/RegionFile.java b/src/main/java/net/minecraft/server/RegionFile.java
 index 25c4611..a6e6e26 100644
 --- a/src/main/java/net/minecraft/server/RegionFile.java

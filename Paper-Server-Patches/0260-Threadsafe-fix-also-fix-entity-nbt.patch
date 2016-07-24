@@ -1,4 +1,4 @@
-From c91d99b742f1ea7c21e9a45e278e60f01aacd49c Mon Sep 17 00:00:00 2001
+From e074f761b40426af85bfb809bc824d2e71660bdb Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 22 Jul 2016 21:11:51 +0800
 Subject: [PATCH] Threadsafe fix also fix entity nbt
