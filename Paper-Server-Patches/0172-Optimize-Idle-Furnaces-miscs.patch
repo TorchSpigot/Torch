@@ -1,4 +1,4 @@
-From 7c96c99ea61fe75036a350165c039514213f018a Mon Sep 17 00:00:00 2001
+From 5d694f0314809a3e86aaf225ba8714421a8145e0 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 12 Jul 2016 04:14:07 +0800
 Subject: [PATCH] Optimize-Idle-Furnaces miscs

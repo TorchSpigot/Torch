@@ -1,4 +1,4 @@
-From 524edc51922f6ffae3f499b76e66f8519e04b06b Mon Sep 17 00:00:00 2001
+From 7ef79f6a42f0efbf705c58df5354a348ceb60c92 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 01:43:54 +0800
 Subject: [PATCH] Fix some memory leaks
