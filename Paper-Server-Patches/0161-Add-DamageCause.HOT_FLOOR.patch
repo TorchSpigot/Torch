@@ -1,4 +1,4 @@
-From d3611bd1d2168b5d23decef6e92435858b7f2be1 Mon Sep 17 00:00:00 2001
+From 4e2876b4a87ea291da7bac40fc2b2f12ecb57fa4 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 23:32:01 +0800
 Subject: [PATCH] Add DamageCause.HOT_FLOOR

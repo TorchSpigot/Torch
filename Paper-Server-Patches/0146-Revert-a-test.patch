@@ -1,4 +1,4 @@
-From b54dc2531508d88fcf34bd0fee61c38e2457255a Mon Sep 17 00:00:00 2001
+From faaf2e368eec7c60dca0b7cd08d074d9467c9a84 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 19:05:58 +0800
 Subject: [PATCH] Revert a test

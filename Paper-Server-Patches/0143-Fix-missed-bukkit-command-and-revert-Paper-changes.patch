@@ -1,4 +1,4 @@
-From 6687473a4bc1853a3a36702ce6b11c9393050f62 Mon Sep 17 00:00:00 2001
+From 670a132e5507465e107ad0b5565f659df93e4fc5 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 18:54:12 +0800
 Subject: [PATCH] Fix missed bukkit command and revert Paper changes
