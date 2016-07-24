@@ -1,0 +1,39 @@
+From 6cbe07003ef0f8d116dba2afdb7db36f093ffc15 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 25 Jul 2016 02:59:27 +0800
+Subject: [PATCH] Do not stop server if it already stopped, miscs
+
+
+diff --git a/src/main/java/net/minecraft/server/BlockCactus.java b/src/main/java/net/minecraft/server/BlockCactus.java
+index cdd5ec6..fec2f0a 100644
+--- a/src/main/java/net/minecraft/server/BlockCactus.java
++++ b/src/main/java/net/minecraft/server/BlockCactus.java
+@@ -89,7 +89,7 @@ public class BlockCactus extends Block {
+         return false;
+     }
+ 
+-    public synchronized void a(World world, BlockPosition blockposition, IBlockData iblockdata, Entity entity) {
++    public void a(World world, BlockPosition blockposition, IBlockData iblockdata, Entity entity) {
+         CraftEventFactory.blockDamage = world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ()); // CraftBukkit
+         entity.damageEntity(DamageSource.CACTUS, 1.0F);
+         CraftEventFactory.blockDamage = null; // CraftBukkit
+diff --git a/src/main/java/org/bukkit/craftbukkit/util/ServerShutdownThread.java b/src/main/java/org/bukkit/craftbukkit/util/ServerShutdownThread.java
+index ae3481b..0a65e95 100644
+--- a/src/main/java/org/bukkit/craftbukkit/util/ServerShutdownThread.java
++++ b/src/main/java/org/bukkit/craftbukkit/util/ServerShutdownThread.java
+@@ -13,7 +13,11 @@ public class ServerShutdownThread extends Thread {
+     @Override
+     public void run() {
+         try {
+-            server.stop();
++			// Torch start
++            if(!server.isStopped()) {
++                server.stop();
++            }
++			// Torch end
+         } catch (ExceptionWorldConflict ex) {
+             ex.printStackTrace();
+         } finally {
+-- 
+2.8.2.windows.1
+

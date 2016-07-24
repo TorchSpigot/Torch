@@ -1,4 +1,4 @@
-From 9e3f5f5d3f24304795e2ab86626a8457ff46d67d Mon Sep 17 00:00:00 2001
+From 565af6b08dc59083dcce3101c6cf18eb5c136a5a Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 14:51:52 +0800
 Subject: [PATCH] MC-80966 - Always send chunk sections

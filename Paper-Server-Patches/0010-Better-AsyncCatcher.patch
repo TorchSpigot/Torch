@@ -1,4 +1,4 @@
-From edf47a3184f0baff76346fa287eb9faf60ff484e Mon Sep 17 00:00:00 2001
+From 70e0828be95b571598275bb8d7dbd477011da1ed Mon Sep 17 00:00:00 2001
 From: Techcable <Techcable@techcable.net>
 Date: Fri, 18 Mar 2016 13:56:01 -0700
 Subject: [PATCH] Better AsyncCatcher

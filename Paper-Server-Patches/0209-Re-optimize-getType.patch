@@ -1,4 +1,4 @@
-From 39275e545d361d9b2d327e544b627539b8697713 Mon Sep 17 00:00:00 2001
+From 84f808c407c38dc12cb557ba672a23b414510622 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 03:18:21 +0800
 Subject: [PATCH] Re-optimize getType

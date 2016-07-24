@@ -1,4 +1,4 @@
-From 14c0ef249b182cdb47baffa7b658c0e5dd1a6bfc Mon Sep 17 00:00:00 2001
+From 7f9b4ff6f1b745054936e10aeeb97f1a827b027d Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 23 Jul 2016 23:10:34 +0800
 Subject: [PATCH] SPIGOT-2548: Do not special case spawn locations of falling

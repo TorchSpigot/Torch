@@ -1,4 +1,4 @@
-From f5d31109794fd63a81d4094338b8539ceec0303a Mon Sep 17 00:00:00 2001
+From 2987cf4b28be063f3976c2f68c73b8347b0c0609 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 03:48:08 +0800
 Subject: [PATCH] Fix TNT damage being cancelled by friendly-fire rules

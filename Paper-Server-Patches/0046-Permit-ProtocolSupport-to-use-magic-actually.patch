@@ -1,4 +1,4 @@
-From cf1369763fbf432fd08ebfb289b914ac99466d45 Mon Sep 17 00:00:00 2001
+From 509d67a28ad4aaf981ac409ac66fafb1d1246057 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 17:30:00 +0800
 Subject: [PATCH] Permit ProtocolSupport to use magic actually

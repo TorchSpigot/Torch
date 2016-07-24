@@ -1,4 +1,4 @@
-From 30149aa5d1b9c0d8b5348f00bd0aaaa398c83d7d Mon Sep 17 00:00:00 2001
+From 53fc10f32db36774e2553fa47f5dcfd575a77018 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 23:07:05 +0800
 Subject: [PATCH] Add option to disable fast regeneration

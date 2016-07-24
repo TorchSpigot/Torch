@@ -1,4 +1,4 @@
-From 098a88d70c8d07a8af60ec82da3deee47fceb2a5 Mon Sep 17 00:00:00 2001
+From 4e3286a481ba34955b064fd708d855593ff2f691 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:11:25 +0800
 Subject: [PATCH] Fix import for threadsafe
