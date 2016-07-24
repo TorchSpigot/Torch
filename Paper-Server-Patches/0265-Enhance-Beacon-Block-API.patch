@@ -1,4 +1,4 @@
-From cc5344ba2c73d61a245d48464233373b591cce2a Mon Sep 17 00:00:00 2001
+From 3246ef8fe7e538d7c337b4a109474b80c58b1908 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 23 Jul 2016 23:00:29 +0800
 Subject: [PATCH] Enhance Beacon Block API

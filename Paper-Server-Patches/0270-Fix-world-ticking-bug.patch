@@ -1,0 +1,31 @@
+From a6faa81e96d6d8fea4d1af4a457d0ac8390caf69 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 24 Jul 2016 17:29:43 +0800
+Subject: [PATCH] Fix world ticking bug
+
+
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 284ecf9..f0ad9c3 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -922,13 +922,15 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+         MinecraftTimings.timeUpdateTimer.stopTiming(); // Spigot
+ 
+ 		this.cancelHeavyCalculationsForAllWorlds(false); // Migot
++
+         int i;
+ 
+-        for (WorldServer worldserver : this.worlds) { // CraftBukkit
++        for (i = 0; i < this.worlds.size(); ++i) { // CraftBukkit
+             long j = System.nanoTime();
+ 
+             // if (i == 0 || this.getAllowNether()) {
+-
++                WorldServer worldserver = this.worlds.get(i);
++				
+                 this.methodProfiler.a(worldserver.getWorldData().getName());
+                 /* Drop global time updates
+                 if (this.ticks % 20 == 0) {
+-- 
+2.8.2.windows.1
+

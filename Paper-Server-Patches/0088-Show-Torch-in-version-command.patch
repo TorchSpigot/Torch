@@ -1,4 +1,4 @@
-From 52a36060608001a8a01b254141380a9f6073bf9f Mon Sep 17 00:00:00 2001
+From 5fe39d07f496ce344eeeee146fc542197d51de68 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 16:38:13 +0800
 Subject: [PATCH] Show Torch in version command

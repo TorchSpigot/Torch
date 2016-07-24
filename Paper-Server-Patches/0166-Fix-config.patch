@@ -1,4 +1,4 @@
-From dc91201d2e30cc9e11919af2b9caaefa6efb7032 Mon Sep 17 00:00:00 2001
+From 0ec8cfa30101908897152f7d490432c42103665b Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 12 Jul 2016 03:14:07 +0800
 Subject: [PATCH] Fix config
