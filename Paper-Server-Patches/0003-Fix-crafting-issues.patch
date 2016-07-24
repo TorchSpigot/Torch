@@ -1,0 +1,63 @@
+From 4100378b0238ab55b0d7a650e253bb4c83b65d56 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Fri, 1 Jul 2016 13:30:39 +0800
+Subject: [PATCH] Fix crafting issues
+
+
+diff --git a/src/main/java/net/minecraft/server/Container.java b/src/main/java/net/minecraft/server/Container.java
+index 2757f58..2316fc1 100644
+--- a/src/main/java/net/minecraft/server/Container.java
++++ b/src/main/java/net/minecraft/server/Container.java
+@@ -22,14 +22,7 @@ import org.bukkit.inventory.InventoryView;
+ public abstract class Container {
+ 
+     public List<ItemStack> b = Lists.newArrayList();
+-    // TacoSpigot start - A lot of code expects get() to return null rather than throwing ArrayIndexOutOfBoundsException
+-    public List<Slot> c = new ArrayList<Slot>() {
+-        @Override
+-        public Slot get(int index) {
+-            return index < size() ? super.get(index) : null;
+-        }
+-    };
+-    // TacoSpigot end
++	public List<Slot> c = Lists.newArrayList(); // Torch - Don't bounds check slot numbers in packets
+     public int windowId;
+     private int dragType = -1;
+     private int g;
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index 623ebf8..47ff5f8 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -1682,7 +1682,6 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+     public void a(PacketPlayInWindowClick packetplayinwindowclick) {
+         PlayerConnectionUtils.ensureMainThread(packetplayinwindowclick, this, this.player.x());
+         if (this.player.dead) return; // CraftBukkit
+-        if (packetplayinwindowclick.b() < 0 || this.player.activeContainer.getSlot(packetplayinwindowclick.b()) == null) return; // TacoSpigot - ignore packets with invalid slot
+         this.player.resetIdleTimer();
+         if (this.player.activeContainer.windowId == packetplayinwindowclick.a() && this.player.activeContainer.c(this.player)) {
+             boolean cancelled = this.player.isSpectator(); // CraftBukkit - see below if
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryView.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryView.java
+index 0ab254e..b6c2f73 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryView.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryView.java
+@@ -10,9 +10,6 @@ import org.bukkit.inventory.InventoryView;
+ import org.bukkit.inventory.ItemStack;
+ 
+ import net.minecraft.server.Container;
+-// TacoSpigot start
+-import com.google.common.base.Preconditions;
+-// TacoSpigot end
+ 
+ public class CraftInventoryView extends InventoryView {
+     private final Container container;
+@@ -65,7 +62,6 @@ public class CraftInventoryView extends InventoryView {
+         if (slot == -999) {
+             return null;
+         }
+-        Preconditions.checkElementIndex(slot, container.c.size(), "slot"); // TacoSpigot - bounds check
+         return CraftItemStack.asCraftMirror(container.getSlot(slot).getItem());
+     }
+ 
+-- 
+2.8.2.windows.1
+

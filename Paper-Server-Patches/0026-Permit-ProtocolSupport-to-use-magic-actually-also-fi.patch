@@ -1,0 +1,30 @@
+From 449dec667d842dc6ecce314e31ce19d22bddff23 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Fri, 1 Jul 2016 17:30:00 +0800
+Subject: [PATCH] Permit ProtocolSupport to use magic actually, also fix
+ PacketDataSerializer
+
+
+diff --git a/src/main/java/net/minecraft/server/PacketDataSerializer.java b/src/main/java/net/minecraft/server/PacketDataSerializer.java
+index cad4694..727e085 100644
+--- a/src/main/java/net/minecraft/server/PacketDataSerializer.java
++++ b/src/main/java/net/minecraft/server/PacketDataSerializer.java
+@@ -236,12 +236,14 @@ public class PacketDataSerializer extends ByteBuf {
+     }
+ 
+     public PacketDataSerializer a(@Nullable ItemStack itemstack) {
++		/*
+ 		// TacoSpigot start - fire ItemSendEvent
+-        if (player == null) throw new UnsupportedOperationException("Can't write an ItemStack when a serializer doesn't know the player");
++        // if (player == null) throw new UnsupportedOperationException("Can't write an ItemStack when a serializer doesn't know the player"); // Torch - Permit ProtocolSupport to use magic
+         ItemSendEvent event = new ItemSendEvent(player.getBukkitEntity(), itemstack != null ? CraftItemStack.asBukkitCopy(itemstack) : null);
+         event.callEvent();
+         itemstack = CraftItemStack.asNMSCopy(event.getStack());
+         // TacoSpigot end
++		*/
+ 		
+         if (itemstack == null || itemstack.getItem() == null) { // CraftBukkit - NPE fix itemstack.getItem()
+             this.writeShort(-1);
+-- 
+2.8.2.windows.1
+

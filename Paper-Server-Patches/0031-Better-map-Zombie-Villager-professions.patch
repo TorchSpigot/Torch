@@ -1,0 +1,56 @@
+From cf8516cceb7d2b9b66b521a826387efa4f4d6b80 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 07:16:42 +0800
+Subject: [PATCH] Better map Zombie/Villager professions.
+
+
+diff --git a/src/main/java/net/minecraft/server/EULA.java b/src/main/java/net/minecraft/server/EULA.java
+index e34ca53..58df9e2 100644
+--- a/src/main/java/net/minecraft/server/EULA.java
++++ b/src/main/java/net/minecraft/server/EULA.java
+@@ -52,7 +52,7 @@ public class EULA {
+             fileoutputstream = new FileOutputStream(this.b);
+             properties.setProperty("eula", "true"); // Torch - auto
+             properties.store(fileoutputstream, "By changing the setting below to TRUE you are indicating your agreement to our EULA (https://account.mojang.com/documents/minecraft_eula)." +
+-                    "\nand also agreeing that tacos are tasty.");  // Paper - fix lag
++                    "\nand also agreeing that tacos are tasty, when you start the server, you will agree it defaultly.");  // Paper - fix lag // Torch - notice
+         } catch (Exception exception) {
+             EULA.a.warn("Failed to save " + this.b, exception);
+         } finally {
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftVillager.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftVillager.java
+index 7bb21db..bfa00ec 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftVillager.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftVillager.java
+@@ -39,12 +39,12 @@ public class CraftVillager extends CraftAgeable implements Villager, InventoryHo
+     }
+ 
+     public Profession getProfession() {
+-        return Profession.getProfession(getHandle().getProfession());
++         return Profession.values()[getHandle().getProfession() + 1]; // Offset by 1 from the zombie types
+     }
+ 
+     public void setProfession(Profession profession) {
+-        Validate.notNull(profession);
+-        getHandle().setProfession(profession.getId());
++		Validate.isTrue(0 < profession.ordinal() && profession.ordinal() < Profession.HUSK.ordinal(), "This profession is reserved for Zombies: ", profession);
++        getHandle().setProfession(profession.ordinal() - 1);
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftZombie.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftZombie.java
+index 6431d04..35b5480 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftZombie.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftZombie.java
+@@ -58,7 +58,7 @@ public class CraftZombie extends CraftMonster implements Zombie {
+ 
+     @Override
+     public Villager.Profession getVillagerProfession() {
+-        if (!isVillager()) return null;
+-        return Villager.Profession.getProfession(getHandle().getVillagerType());
++        // if (!isVillager()) return null; // Torch - better map Zombie/Villager professions.
++        return Villager.Profession.values()[getHandle().getVillagerType().ordinal()];
+     }
+ }
+-- 
+2.8.2.windows.1
+

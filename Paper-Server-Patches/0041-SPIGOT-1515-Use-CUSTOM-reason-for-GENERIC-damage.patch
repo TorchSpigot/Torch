@@ -1,0 +1,22 @@
+From 1b136004672e539ba7d2dedc31da04180f8745c8 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 13:50:36 +0800
+Subject: [PATCH] SPIGOT-1515: Use CUSTOM reason for GENERIC damage
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
+index fc5ba08..12bea04 100644
+--- a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
++++ b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
+@@ -549,7 +549,7 @@ public class CraftEventFactory {
+         } else if (source == DamageSource.FLY_INTO_WALL) {
+             cause = DamageCause.FLY_INTO_WALL;
+         } else if (source == DamageSource.GENERIC) {
+-            return new EntityDamageEvent(entity.getBukkitEntity(), null, modifiers, modifierFunctions);
++            cause = DamageCause.CUSTOM;
+         }
+ 
+         if (cause != null) {
+-- 
+2.8.2.windows.1
+

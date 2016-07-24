@@ -1,0 +1,60 @@
+From 8600a5ad7932b894840fcfc8a8917a4b9ed9446b Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 11 Jul 2016 22:49:08 +0800
+Subject: [PATCH] Forcibly broadcast passenger changes to fix weird client
+ riding issues.
+
+
+diff --git a/src/main/java/net/minecraft/server/Entity.java b/src/main/java/net/minecraft/server/Entity.java
+index af13bb1..9c68cc1 100644
+--- a/src/main/java/net/minecraft/server/Entity.java
++++ b/src/main/java/net/minecraft/server/Entity.java
+@@ -2081,6 +2081,12 @@ public abstract class Entity implements ICommandListener {
+ 
+             this.at = entity;
+             this.at.addRider(this, suppressEvents); // Paper
++			// Paper start - tell everyone about the passenger
++            net.minecraft.server.Packet packet = new net.minecraft.server.PacketPlayOutMount(this);
++            for (EntityHuman player : world.players) {
++                ((EntityPlayer) player).playerConnection.sendPacket(packet);
++            }
++            // Paper end
+             return true;
+         }
+     }
+@@ -2183,6 +2189,12 @@ public abstract class Entity implements ICommandListener {
+             // Paper end
+             this.passengers.remove(entity);
+             entity.j = 60;
++			// Paper start - tell everyone we don't have a passenger
++            net.minecraft.server.Packet packet = new net.minecraft.server.PacketPlayOutMount(this);
++            for (EntityHuman player : world.players) {
++                ((EntityPlayer) player).playerConnection.sendPacket(packet);
++            }
++            // Paper end
+         }
+     }
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+index 2a40bb3..0dc3053 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+@@ -589,6 +589,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+         return true;
+     }
+ 
++	/*
+     // Paper start - Ugly workaround for SPIGOT-1915 & GH-114
+     @Override
+     public boolean setPassenger(org.bukkit.entity.Entity passenger) {
+@@ -599,6 +600,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+         return wasSet;
+     }
+     // Paper end
++	*/
+ 
+     @Override
+     public void setSneaking(boolean sneak) {
+-- 
+2.8.2.windows.1
+

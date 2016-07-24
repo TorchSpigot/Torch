@@ -1,0 +1,158 @@
+From 10132322728d47b9c70ef50be7af43956a29ed94 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Fri, 1 Jul 2016 15:06:46 +0800
+Subject: [PATCH] Delay Chunk Unloads based on Player Movement, misc Toggleable
+ Elytra Wall Damage
+
+
+diff --git a/src/main/java/com/destroystokyo/paper/PaperWorldConfig.java b/src/main/java/com/destroystokyo/paper/PaperWorldConfig.java
+index 40ede20..82c757f 100644
+--- a/src/main/java/com/destroystokyo/paper/PaperWorldConfig.java
++++ b/src/main/java/com/destroystokyo/paper/PaperWorldConfig.java
+@@ -363,4 +363,18 @@ public class PaperWorldConfig {
+             log("Old Cannon Behaviors: This feature may not be working entirely properly at the moment");
+         }
+     }
++	
++	public long delayChunkUnloadsBy;
++    private void delayChunkUnloadsBy() {
++        delayChunkUnloadsBy = PaperConfig.getSeconds(getString("delay-chunk-unloads-by", "30s")); // Torch - keep default
++        if (delayChunkUnloadsBy > 0) {
++            log("Delaying chunk unloads by " + delayChunkUnloadsBy + " seconds");
++            delayChunkUnloadsBy *= 1000;
++        }
++    }
++	
++	public boolean elytraHitWallDamage = true;
++    private void elytraHitWallDamage() {
++        elytraHitWallDamage = getBoolean("elytra-hit-wall-damage", true);
++    }
+ }
+diff --git a/src/main/java/net/minecraft/server/Chunk.java b/src/main/java/net/minecraft/server/Chunk.java
+index e3cc816..a6cce55 100644
+--- a/src/main/java/net/minecraft/server/Chunk.java
++++ b/src/main/java/net/minecraft/server/Chunk.java
+@@ -27,6 +27,7 @@ public class Chunk {
+     private final byte[] g;
+     private final int[] h;
+     private final boolean[] i;
++	public Long scheduledForUnload; // Paper - delay chunk unloads
+     private boolean j;
+     public final World world;
+     public final int[] heightMap;
+diff --git a/src/main/java/net/minecraft/server/ChunkProviderServer.java b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+index 33b3db7..3dc17e8 100644
+--- a/src/main/java/net/minecraft/server/ChunkProviderServer.java
++++ b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+@@ -351,6 +351,19 @@ public class ChunkProviderServer implements IChunkProvider {
+                     }
+                 }
+             }
++			// Paper start - delayed chunk unloads
++            long now = System.currentTimeMillis();
++            long unloadAfter = world.paperConfig.delayChunkUnloadsBy;
++            if (unloadAfter > 0) {
++                //noinspection Convert2streamapi
++                for (Chunk chunk : chunks.values()) {
++                    if (chunk.scheduledForUnload != null && now - chunk.scheduledForUnload > unloadAfter) {
++                        chunk.scheduledForUnload = null;
++                        unload(chunk);
++                    }
++                }
++            }
++            // Paper end
+ 
+             this.chunkLoader.a();
+         }
+diff --git a/src/main/java/net/minecraft/server/EntityLiving.java b/src/main/java/net/minecraft/server/EntityLiving.java
+index 618a1f2..144bc24 100644
+--- a/src/main/java/net/minecraft/server/EntityLiving.java
++++ b/src/main/java/net/minecraft/server/EntityLiving.java
+@@ -1582,6 +1582,7 @@ public abstract class EntityLiving extends Entity {
+                     this.motY = 0.30000001192092896D;
+                 }
+             } else if (this.cC()) {
++				if(world.paperConfig.elytraHitWallDamage) { // Paper start - Toggleable Elytra Wall Damage
+                 if (this.motY > -0.5D) {
+                     this.fallDistance = 1.0F;
+                 }
+@@ -1631,6 +1632,7 @@ public abstract class EntityLiving extends Entity {
+                         this.damageEntity(DamageSource.FLY_INTO_WALL, f7);
+                     }
+                 }
++				} // Paper end - Elyta Wall Damage if statement
+ 
+                 if (this.onGround && !this.world.isClientSide) {
+                     if (getFlag(7) && !CraftEventFactory.callToggleGlideEvent(this, false).isCancelled()) // CraftBukkit
+diff --git a/src/main/java/net/minecraft/server/PlayerChunk.java b/src/main/java/net/minecraft/server/PlayerChunk.java
+index 89d63bc..2526621 100644
+--- a/src/main/java/net/minecraft/server/PlayerChunk.java
++++ b/src/main/java/net/minecraft/server/PlayerChunk.java
+@@ -32,8 +32,16 @@ public class PlayerChunk {
+         public void run() {
+             loadInProgress = false;
+             PlayerChunk.this.chunk = PlayerChunk.this.playerChunkMap.getWorld().getChunkProviderServer().getOrLoadChunkAt(location.x, location.z);
++			markChunkUsed(); // Paper - delay chunk unloads
+         }
+     };
++	// Paper start - delay chunk unloads
++    public final void markChunkUsed() {
++        if (chunk != null && chunk.scheduledForUnload != null) {
++            chunk.scheduledForUnload = null;
++        }
++    }
++    // Paper end
+     // CraftBukkit end
+ 
+     public PlayerChunk(PlayerChunkMap playerchunkmap, int i, int j) {
+@@ -42,6 +50,7 @@ public class PlayerChunk {
+         // CraftBukkit start
+         loadInProgress = true;
+         this.chunk = playerchunkmap.getWorld().getChunkProviderServer().getChunkAt(i, j, loadedRunnable, false);
++		markChunkUsed(); // Paper - delay chunk unloads
+         // CraftBukkit end
+     }
+ 
+@@ -110,6 +119,7 @@ public class PlayerChunk {
+             if (!loadInProgress) {
+                 loadInProgress = true;
+                 this.chunk = playerChunkMap.getWorld().getChunkProviderServer().getChunkAt(this.location.x, this.location.z, loadedRunnable, flag);
++				markChunkUsed(); // Paper - delay chunk unloads
+             }
+             // CraftBukkit end
+ 
+diff --git a/src/main/java/net/minecraft/server/PlayerChunkMap.java b/src/main/java/net/minecraft/server/PlayerChunkMap.java
+index e4d60fb..d26352b 100644
+--- a/src/main/java/net/minecraft/server/PlayerChunkMap.java
++++ b/src/main/java/net/minecraft/server/PlayerChunkMap.java
+@@ -463,7 +463,13 @@ public class PlayerChunkMap {
+         Chunk chunk = playerchunk.f();
+ 
+         if (chunk != null) {
+-            this.getWorld().getChunkProviderServer().unload(chunk);
++            // Paper start - delay chunk unloads
++            if (world.paperConfig.delayChunkUnloadsBy <= 0) {
++                this.getWorld().getChunkProviderServer().unload(chunk);
++            } else {
++                chunk.scheduledForUnload = System.currentTimeMillis();
++            }
++            // Paper end
+         }
+ 
+     }
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+index 58f5141..71da852 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+@@ -1546,7 +1546,7 @@ public class CraftWorld implements World {
+         ChunkProviderServer cps = world.getChunkProviderServer();
+         for (net.minecraft.server.Chunk chunk : cps.chunks.values()) {
+             // If in use, skip it
+-            if (isChunkInUse(chunk.locX, chunk.locZ)) {
++            if (isChunkInUse(chunk.locX, chunk.locZ) || chunk.scheduledForUnload != null) { // Paper - delayed chunk unloads
+                 continue;
+             }
+ 
+-- 
+2.8.2.windows.1
+

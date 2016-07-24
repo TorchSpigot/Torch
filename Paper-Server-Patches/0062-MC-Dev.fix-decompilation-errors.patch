@@ -1,0 +1,317 @@
+From be8e8a90b984c176071428f5db35377463103c55 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 11 Jul 2016 17:19:03 +0800
+Subject: [PATCH] MC Dev.fix-decompilation-errors
+
+
+diff --git a/src/main/java/net/minecraft/server/GameProfileBanList.java b/src/main/java/net/minecraft/server/GameProfileBanList.java
+new file mode 100644
+index 0000000..ff6af1a
+--- /dev/null
++++ b/src/main/java/net/minecraft/server/GameProfileBanList.java
+@@ -0,0 +1,60 @@
++package net.minecraft.server;
++
++import com.google.gson.JsonObject;
++import com.mojang.authlib.GameProfile;
++import java.io.File;
++import java.util.Iterator;
++
++public class GameProfileBanList extends JsonList<GameProfile, GameProfileBanEntry> {
++
++    public GameProfileBanList(File file) {
++        super(file);
++    }
++
++    protected JsonListEntry<GameProfile> a(JsonObject jsonobject) {
++        return new GameProfileBanEntry(jsonobject);
++    }
++
++    public boolean isBanned(GameProfile gameprofile) {
++        return this.d(gameprofile);
++    }
++
++    public String[] getEntries() {
++        String[] astring = new String[this.e().size()];
++        int i = 0;
++
++        GameProfileBanEntry gameprofilebanentry;
++
++        for (Iterator iterator = this.e().values().iterator(); iterator.hasNext(); astring[i++] = ((GameProfile) gameprofilebanentry.getKey()).getName()) {
++            gameprofilebanentry = (GameProfileBanEntry) iterator.next();
++        }
++
++        return astring;
++    }
++
++    protected String b(GameProfile gameprofile) {
++        return gameprofile.getId().toString();
++    }
++
++    public GameProfile a(String s) {
++        Iterator iterator = this.e().values().iterator();
++
++        GameProfileBanEntry gameprofilebanentry;
++
++        do {
++            if (!iterator.hasNext()) {
++                return null;
++            }
++
++            gameprofilebanentry = (GameProfileBanEntry) iterator.next();
++        } while (!s.equalsIgnoreCase(((GameProfile) gameprofilebanentry.getKey()).getName()));
++
++        return (GameProfile) gameprofilebanentry.getKey();
++    }
++
++    /* SportBukkit - fix decomp error
++     protected String a(Object object) {
++         return this.b((GameProfile) object);
++     }
++    SportBukkit */
++}
+diff --git a/src/main/java/net/minecraft/server/OpList.java b/src/main/java/net/minecraft/server/OpList.java
+new file mode 100644
+index 0000000..77643a8
+--- /dev/null
++++ b/src/main/java/net/minecraft/server/OpList.java
+@@ -0,0 +1,63 @@
++package net.minecraft.server;
++
++import com.google.gson.JsonObject;
++import com.mojang.authlib.GameProfile;
++import java.io.File;
++import java.util.Iterator;
++
++public class OpList extends JsonList<GameProfile, OpListEntry> {
++
++    public OpList(File file) {
++        super(file);
++    }
++
++    protected JsonListEntry<GameProfile> a(JsonObject jsonobject) {
++        return new OpListEntry(jsonobject);
++    }
++
++    public String[] getEntries() {
++        String[] astring = new String[this.e().size()];
++        int i = 0;
++
++        OpListEntry oplistentry;
++
++        for (Iterator iterator = this.e().values().iterator(); iterator.hasNext(); astring[i++] = ((GameProfile) oplistentry.getKey()).getName()) {
++            oplistentry = (OpListEntry) iterator.next();
++        }
++
++        return astring;
++    }
++
++    public int getLevel(GameProfile gameprofile) { // SportBukkit - rename method to avoid decomp error
++        OpListEntry oplistentry = (OpListEntry) this.get(gameprofile);
++
++        return oplistentry != null ? oplistentry.a() : 0;
++    }
++
++    public boolean b(GameProfile gameprofile) {
++        OpListEntry oplistentry = (OpListEntry) this.get(gameprofile);
++
++        return oplistentry != null ? oplistentry.b() : false;
++    }
++
++    protected String c(GameProfile gameprofile) {
++        return gameprofile.getId().toString();
++    }
++
++    public GameProfile a(String s) {
++        Iterator iterator = this.e().values().iterator();
++
++        OpListEntry oplistentry;
++
++        do {
++            if (!iterator.hasNext()) {
++                return null;
++            }
++
++            oplistentry = (OpListEntry) iterator.next();
++        } while (!s.equalsIgnoreCase(((GameProfile) oplistentry.getKey()).getName()));
++
++        return (GameProfile) oplistentry.getKey();
++    }
++
++}
+diff --git a/src/main/java/net/minecraft/server/PacketPlayInUseEntity.java b/src/main/java/net/minecraft/server/PacketPlayInUseEntity.java
+index 6464a84..8a9a493 100644
+--- a/src/main/java/net/minecraft/server/PacketPlayInUseEntity.java
++++ b/src/main/java/net/minecraft/server/PacketPlayInUseEntity.java
+@@ -16,7 +16,7 @@ public class PacketPlayInUseEntity implements Packet<PacketListenerPlayIn> {
+         this.action = PacketPlayInUseEntity.EnumEntityUseAction.ATTACK;
+     }
+ 
+-    public void a(PacketDataSerializer packetdataserializer) throws IOException {
++    public void a(PacketDataSerializer packetdataserializer) { // SportBukkit - remove throws
+         this.a = packetdataserializer.g();
+         this.action = (PacketPlayInUseEntity.EnumEntityUseAction) packetdataserializer.a(PacketPlayInUseEntity.EnumEntityUseAction.class);
+         if (this.action == PacketPlayInUseEntity.EnumEntityUseAction.INTERACT_AT) {
+@@ -29,7 +29,7 @@ public class PacketPlayInUseEntity implements Packet<PacketListenerPlayIn> {
+ 
+     }
+ 
+-    public void b(PacketDataSerializer packetdataserializer) throws IOException {
++    public void b(PacketDataSerializer packetdataserializer) { // SportBukkit - remove throws
+         packetdataserializer.d(this.a);
+         packetdataserializer.a((Enum) this.action);
+         if (this.action == PacketPlayInUseEntity.EnumEntityUseAction.INTERACT_AT) {
+diff --git a/src/main/java/net/minecraft/server/PacketPlayOutNamedSoundEffect.java b/src/main/java/net/minecraft/server/PacketPlayOutNamedSoundEffect.java
+new file mode 100644
+index 0000000..2db80e8
+--- /dev/null
++++ b/src/main/java/net/minecraft/server/PacketPlayOutNamedSoundEffect.java
+@@ -0,0 +1,53 @@
++package net.minecraft.server;
++
++import java.io.IOException;
++import org.apache.commons.lang3.Validate;
++
++public class PacketPlayOutNamedSoundEffect implements Packet<PacketListenerPlayOut> {
++
++    private SoundEffect a;
++    private SoundCategory b;
++    private int c;
++    private int d;
++    private int e;
++    private float f;
++    private int g;
++
++    public PacketPlayOutNamedSoundEffect() {}
++
++    public PacketPlayOutNamedSoundEffect(SoundEffect soundeffect, SoundCategory soundcategory, double d0, double d1, double d2, float f, float f1) {
++        Validate.notNull(soundeffect, "sound", new Object[0]);
++        this.a = soundeffect;
++        this.b = soundcategory;
++        this.c = (int) (d0 * 8.0D);
++        this.d = (int) (d1 * 8.0D);
++        this.e = (int) (d2 * 8.0D);
++        this.f = f;
++        this.g = (int) (f1 * 63.0F);
++        f1 = MathHelper.a(f1, 0.0F, 255.0F);
++    }
++
++    public void a(PacketDataSerializer packetdataserializer) throws IOException {
++        this.a = (SoundEffect) SoundEffect.a.getId(packetdataserializer.g());
++        this.b = (SoundCategory) packetdataserializer.a(SoundCategory.class);
++        this.c = packetdataserializer.readInt();
++        this.d = packetdataserializer.readInt();
++        this.e = packetdataserializer.readInt();
++        this.f = packetdataserializer.readFloat();
++        this.g = packetdataserializer.readUnsignedByte();
++    }
++
++    public void b(PacketDataSerializer packetdataserializer) throws IOException {
++        packetdataserializer.d(SoundEffect.a.a(this.a)); // SportBukkit - fix decompile error
++        packetdataserializer.a((Enum) this.b);
++        packetdataserializer.writeInt(this.c);
++        packetdataserializer.writeInt(this.d);
++        packetdataserializer.writeInt(this.e);
++        packetdataserializer.writeFloat(this.f);
++        packetdataserializer.writeByte(this.g);
++    }
++
++    public void a(PacketListenerPlayOut packetlistenerplayout) {
++        packetlistenerplayout.a(this);
++    }
++}
+diff --git a/src/main/java/net/minecraft/server/PlayerList.java b/src/main/java/net/minecraft/server/PlayerList.java
+index 07426c3..af54f04 100644
+--- a/src/main/java/net/minecraft/server/PlayerList.java
++++ b/src/main/java/net/minecraft/server/PlayerList.java
+@@ -775,7 +775,7 @@ public abstract class PlayerList {
+ 
+     public void f(EntityPlayer entityplayer) {
+         GameProfile gameprofile = entityplayer.getProfile();
+-        int i = this.isOp(gameprofile) ? this.operators.a(gameprofile) : 0;
++        int i = this.isOp(gameprofile) ? this.operators.getLevel(gameprofile) : 0; // SportBukkit - rename method to avoid decomp error
+ 
+         i = this.server.R() && this.server.worldServer[0].getWorldData().u() ? 4 : i;
+         i = this.t ? 4 : i;
+diff --git a/src/main/java/net/minecraft/server/ServerConnection.java b/src/main/java/net/minecraft/server/ServerConnection.java
+index 08634c3..421b978 100644
+--- a/src/main/java/net/minecraft/server/ServerConnection.java
++++ b/src/main/java/net/minecraft/server/ServerConnection.java
+@@ -170,7 +170,7 @@ public class ServerConnection {
+                             ServerConnection.e.warn("Failed to handle packet for " + networkmanager.getSocketAddress(), exception);
+                             final ChatComponentText chatcomponenttext = new ChatComponentText("Internal server error");
+ 
+-                            networkmanager.sendPacket(new PacketPlayOutKickDisconnect(chatcomponenttext), new GenericFutureListener() {
++                            networkmanager.sendPacket(new PacketPlayOutKickDisconnect(chatcomponenttext), new GenericFutureListener<Future<? super Void>>() { // SportBukkit - fix decomp error
+                                 public void operationComplete(Future future) throws Exception {
+                                     networkmanager.close(chatcomponenttext);
+                                 }
+diff --git a/src/main/java/net/minecraft/server/WhiteList.java b/src/main/java/net/minecraft/server/WhiteList.java
+new file mode 100644
+index 0000000..fa20183
+--- /dev/null
++++ b/src/main/java/net/minecraft/server/WhiteList.java
+@@ -0,0 +1,60 @@
++package net.minecraft.server;
++
++import com.google.gson.JsonObject;
++import com.mojang.authlib.GameProfile;
++import java.io.File;
++import java.util.Iterator;
++
++public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
++
++    public WhiteList(File file) {
++        super(file);
++    }
++
++    protected JsonListEntry<GameProfile> a(JsonObject jsonobject) {
++        return new WhiteListEntry(jsonobject);
++    }
++
++    public boolean isWhitelisted(GameProfile gameprofile) {
++        return this.d(gameprofile);
++    }
++
++    public String[] getEntries() {
++        String[] astring = new String[this.e().size()];
++        int i = 0;
++
++        WhiteListEntry whitelistentry;
++
++        for (Iterator iterator = this.e().values().iterator(); iterator.hasNext(); astring[i++] = ((GameProfile) whitelistentry.getKey()).getName()) {
++            whitelistentry = (WhiteListEntry) iterator.next();
++        }
++
++        return astring;
++    }
++
++    protected String b(GameProfile gameprofile) {
++        return gameprofile.getId().toString();
++    }
++
++    public GameProfile a(String s) {
++        Iterator iterator = this.e().values().iterator();
++
++        WhiteListEntry whitelistentry;
++
++        do {
++            if (!iterator.hasNext()) {
++                return null;
++            }
++
++            whitelistentry = (WhiteListEntry) iterator.next();
++        } while (!s.equalsIgnoreCase(((GameProfile) whitelistentry.getKey()).getName()));
++
++        return (GameProfile) whitelistentry.getKey();
++    }
++
++    /* SportBukkit - fix decomp error
++     protected String a(Object object) {
++         return this.b((GameProfile) object);
++     }
++    SportBukkit */
++}
+-- 
+2.8.2.windows.1
+

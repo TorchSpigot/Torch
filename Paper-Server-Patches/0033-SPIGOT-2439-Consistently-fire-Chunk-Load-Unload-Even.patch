@@ -1,0 +1,585 @@
+From 5b4d70c07dc5da1e3b7d209d7df97b6bb6d99625 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 07:43:37 +0800
+Subject: [PATCH] SPIGOT-2439: Consistently fire Chunk(Load|Unload)Event, miscs
+
+
+diff --git a/src/main/java/net/minecraft/server/Chunk.java b/src/main/java/net/minecraft/server/Chunk.java
+index 39ac84f..b2e7174 100644
+--- a/src/main/java/net/minecraft/server/Chunk.java
++++ b/src/main/java/net/minecraft/server/Chunk.java
+@@ -114,6 +114,7 @@ public class Chunk {
+         Arrays.fill(this.g, (byte) -1);
+         // CraftBukkit start
+         this.bukkitChunk = new org.bukkit.craftbukkit.CraftChunk(this);
++		this.chunkKey = ChunkCoordIntPair.a(this.locX, this.locZ);
+     }
+ 
+     public org.bukkit.Chunk bukkitChunk;
+@@ -905,7 +906,8 @@ public class Chunk {
+                 }
+             }
+ 
+-            this.world.c((Collection) newList);
++            // this.world.c((Collection) newList);
++			this.world.c(newList);
+             // CraftBukkit end
+         }
+ 
+@@ -1012,7 +1014,33 @@ public class Chunk {
+         return false;
+     }
+ 
+-    public void loadNearby(IChunkProvider ichunkprovider, ChunkGenerator chunkgenerator) {
++    // CraftBukkit start
++    public void loadNearby(IChunkProvider ichunkprovider, ChunkGenerator chunkgenerator, boolean newChunk) {
++        Server server = world.getServer();
++        if (server != null) {
++            /*
++             * If it's a new world, the first few chunks are generated inside
++             * the World constructor. We can't reliably alter that, so we have
++             * no way of creating a CraftWorld/CraftServer at that point.
++             */
++            server.getPluginManager().callEvent(new org.bukkit.event.world.ChunkLoadEvent(bukkitChunk, newChunk));
++        }
++
++        // Update neighbor counts
++        for (int x = -2; x < 3; x++) {
++            for (int z = -2; z < 3; z++) {
++                if (x == 0 && z == 0) {
++                    continue;
++                }
++
++                Chunk neighbor = getWorld().getChunkIfLoaded(locX + x, locZ + z);
++                if (neighbor != null) {
++                    neighbor.setNeighborLoaded(-x, -z);
++                    setNeighborLoaded(x, z);
++                }
++            }
++        }
++        // CraftBukkit end
+         world.timings.syncChunkLoadPostTimer.startTiming(); // Spigot
+         Chunk chunk = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.locX, this.locZ - 1); // Paper
+         Chunk chunk1 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.locX + 1, this.locZ); // Paper
+diff --git a/src/main/java/net/minecraft/server/ChunkProviderServer.java b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+index 3dc17e8..1eaf02d 100644
+--- a/src/main/java/net/minecraft/server/ChunkProviderServer.java
++++ b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+@@ -120,7 +120,7 @@ public class ChunkProviderServer implements IChunkProvider {
+             if (chunk != null) {
+                 this.chunks.put(ChunkCoordIntPair.a(i, j), chunk);
+                 chunk.addEntities();
+-                chunk.loadNearby(this, this.chunkGenerator);
++                chunk.loadNearby(this, this.chunkGenerator, false); // CraftBukkit
+             }
+         }
+ 
+@@ -189,38 +189,11 @@ public class ChunkProviderServer implements IChunkProvider {
+                 crashreportsystemdetails.a("Generator", (Object) this.chunkGenerator);
+                 throw new ReportedException(crashreport);
+             }
+-            newChunk = true; // CraftBukkit
+ 
+             this.chunks.put(k, chunk);
+             chunk.addEntities();
+ 
+-            // CraftBukkit start
+-            Server server = world.getServer();
+-            if (server != null) {
+-                /*
+-                 * If it's a new world, the first few chunks are generated inside
+-                 * the World constructor. We can't reliably alter that, so we have
+-                 * no way of creating a CraftWorld/CraftServer at that point.
+-                 */
+-                server.getPluginManager().callEvent(new org.bukkit.event.world.ChunkLoadEvent(chunk.bukkitChunk, newChunk));
+-            }
+-
+-            // Update neighbor counts
+-            for (int x = -2; x < 3; x++) {
+-                for (int z = -2; z < 3; z++) {
+-                    if (x == 0 && z == 0) {
+-                        continue;
+-                    }
+-
+-                    Chunk neighbor = MCUtil.getLoadedChunkWithoutMarkingActive(this, chunk.locX + x, chunk.locZ + z); // Paper
+-                    if (neighbor != null) {
+-                        neighbor.setNeighborLoaded(-x, -z);
+-                        chunk.setNeighborLoaded(x, z);
+-                    }
+-                }
+-            }
+-            // CraftBukkit end
+-            chunk.loadNearby(this, this.chunkGenerator);
++            chunk.loadNearby(this, this.chunkGenerator, true); // CraftBukkit
+             world.timings.syncChunkLoadTimer.stopTiming(); // Spigot
+         }
+ 
+@@ -319,34 +292,11 @@ public class ChunkProviderServer implements IChunkProvider {
+ 
+                     if (chunk != null && chunk.d) {
+                         chunk.setShouldUnload(false); // Paper
+-                        // CraftBukkit start
+-                        ChunkUnloadEvent event = new ChunkUnloadEvent(chunk.bukkitChunk);
+-                        this.world.getServer().getPluginManager().callEvent(event);
+-                        if (event.isCancelled()) {
++                         // CraftBukkit start - move unload logic to own method
++                        if (!unloadChunk(chunk, true)) {
+                             continue;
+                         }
+                         chunk.lightingQueue.processUnload(); // Paper
+-
+-                        // Update neighbor counts
+-                        for (int x = -2; x < 3; x++) {
+-                            for (int z = -2; z < 3; z++) {
+-                                if (x == 0 && z == 0) {
+-                                    continue;
+-                                }
+-
+-                                Chunk neighbor = MCUtil.getLoadedChunkWithoutMarkingActive(this, chunk.locX + x, chunk.locZ + z); // Paper
+-                                if (neighbor != null) {
+-                                    neighbor.setNeighborUnloaded(-x, -z);
+-                                    chunk.setNeighborUnloaded(x, z);
+-                                }
+-                            }
+-                        }
+-                        // CraftBukkit end
+-
+-                        chunk.removeEntities();
+-                        this.saveChunk(chunk);
+-                        this.saveChunkNOP(chunk);
+-                        this.chunks.remove(olong);
+                         ++i;
+                     }
+                 }
+@@ -370,6 +320,39 @@ public class ChunkProviderServer implements IChunkProvider {
+ 
+         return false;
+     }
++	
++	// CraftBukkit start
++    public boolean unloadChunk(Chunk chunk, boolean save) {
++        ChunkUnloadEvent event = new ChunkUnloadEvent(chunk.bukkitChunk);
++        this.world.getServer().getPluginManager().callEvent(event);
++        if (event.isCancelled()) {
++            return false;
++        }
++
++        // Update neighbor counts
++        for (int x = -2; x < 3; x++) {
++            for (int z = -2; z < 3; z++) {
++                if (x == 0 && z == 0) {
++                    continue;
++                }
++
++                Chunk neighbor = this.getChunkIfLoaded(chunk.locX + x, chunk.locZ + z);
++                if (neighbor != null) {
++                    neighbor.setNeighborUnloaded(-x, -z);
++                    chunk.setNeighborUnloaded(x, z);
++                }
++            }
++        }
++        // Moved from unloadChunks above
++        chunk.removeEntities();
++        if (save) {
++            this.saveChunk(chunk);
++            this.saveChunkNOP(chunk);
++        }
++        this.chunks.remove(chunk.chunkKey);
++        return true;
++    }
++    // CraftBukkit end
+ 
+     public boolean e() {
+         return !this.world.savingDisabled;
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 75dd6f9..6779069 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -776,6 +776,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 
+     public void D() {
+         MinecraftTimings.minecraftSchedulerTimer.startTiming(); // Paper
++		this.server.getScheduler().mainThreadHeartbeat(this.ticks); // CraftBukkit
+         this.methodProfiler.a("jobs");
+         Queue queue = this.j;
+ 
+diff --git a/src/main/java/net/minecraft/server/PathfinderGoalTempt.java b/src/main/java/net/minecraft/server/PathfinderGoalTempt.java
+new file mode 100644
+index 0000000..6fb99d9
+--- /dev/null
++++ b/src/main/java/net/minecraft/server/PathfinderGoalTempt.java
+@@ -0,0 +1,117 @@
++package net.minecraft.server;
++
++import com.google.common.collect.Sets;
++import java.util.Set;
++import javax.annotation.Nullable;
++
++import org.bukkit.craftbukkit.entity.CraftLivingEntity;
++import org.bukkit.craftbukkit.event.CraftEventFactory;
++import org.bukkit.event.entity.EntityTargetEvent;
++import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
++
++public class PathfinderGoalTempt extends PathfinderGoal {
++
++    private EntityCreature a;
++    private double b;
++    private double c;
++    private double d;
++    private double e;
++    private double f;
++    private double g;
++    private EntityLiving h; // CraftBukkit
++    private int i;
++    private boolean j;
++    private Set<Item> k;
++    private boolean l;
++
++    public PathfinderGoalTempt(EntityCreature entitycreature, double d0, Item item, boolean flag) {
++        this(entitycreature, d0, flag, Sets.newHashSet(new Item[] { item}));
++    }
++
++    public PathfinderGoalTempt(EntityCreature entitycreature, double d0, boolean flag, Set<Item> set) {
++        this.a = entitycreature;
++        this.b = d0;
++        this.k = set;
++        this.l = flag;
++        this.a(3);
++        if (!(entitycreature.getNavigation() instanceof Navigation)) {
++            throw new IllegalArgumentException("Unsupported mob type for TemptGoal");
++        }
++    }
++
++    public boolean a() {
++        if (this.i > 0) {
++            --this.i;
++            return false;
++        } else {
++            this.h = this.a.world.findNearbyPlayer(this.a, 10.0D);
++            // CraftBukkit start
++            // PAIL: rename
++			boolean tempt = this.h == null ? false : this.a(this.h.getItemInMainHand()) || this.a(this.h.getItemInOffHand());
++            if (tempt) {
++                EntityTargetLivingEntityEvent event = CraftEventFactory.callEntityTargetLivingEvent(this.a, this.h, EntityTargetEvent.TargetReason.TEMPT);
++                if (event.isCancelled()) {
++                    return false;
++                }
++                this.h = ((CraftLivingEntity) event.getTarget()).getHandle();
++            }
++            return tempt;
++            // CraftBukkit end
++        }
++    }
++
++    protected boolean a(@Nullable ItemStack itemstack) {
++        return itemstack == null ? false : this.k.contains(itemstack.getItem());
++    }
++
++    public boolean b() {
++        if (this.l) {
++            if (this.a.h(this.h) < 36.0D) {
++                if (this.h.e(this.c, this.d, this.e) > 0.010000000000000002D) {
++                    return false;
++                }
++
++                if (Math.abs((double) this.h.pitch - this.f) > 5.0D || Math.abs((double) this.h.yaw - this.g) > 5.0D) {
++                    return false;
++                }
++            } else {
++                this.c = this.h.locX;
++                this.d = this.h.locY;
++                this.e = this.h.locZ;
++            }
++
++            this.f = (double) this.h.pitch;
++            this.g = (double) this.h.yaw;
++        }
++
++        return this.a();
++    }
++
++    public void c() {
++        this.c = this.h.locX;
++        this.d = this.h.locY;
++        this.e = this.h.locZ;
++        this.j = true;
++    }
++
++    public void d() {
++        this.h = null;
++        this.a.getNavigation().o();
++        this.i = 100;
++        this.j = false;
++    }
++
++    public void e() {
++        this.a.getControllerLook().a(this.h, (float) (this.a.cF() + 20), (float) this.a.N());
++        if (this.a.h(this.h) < 6.25D) {
++            this.a.getNavigation().o();
++        } else {
++            this.a.getNavigation().a((Entity) this.h, this.b);
++        }
++
++    }
++
++    public boolean f() {
++        return this.j;
++    }
++}
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index f90b1d4..24b8145 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -1902,7 +1902,11 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+                     }
+ 
+                     event.setCancelled(cancelled);
++					Container oldContainer = this.player.activeContainer; // SPIGOT-1224
+                     server.getPluginManager().callEvent(event);
++					if (this.player.activeContainer != oldContainer) {
++                        return;
++                    }
+ 
+                     switch (event.getResult()) {
+                         case ALLOW:
+diff --git a/src/main/java/net/minecraft/server/PlayerList.java b/src/main/java/net/minecraft/server/PlayerList.java
+index 987e393..d342340 100644
+--- a/src/main/java/net/minecraft/server/PlayerList.java
++++ b/src/main/java/net/minecraft/server/PlayerList.java
+@@ -401,6 +401,8 @@ public abstract class PlayerList {
+         cserver.getPluginManager().callEvent(playerQuitEvent);
+         entityplayer.getBukkitEntity().disconnect(playerQuitEvent.getQuitMessage());
+         // CraftBukkit end
++		
++		entityplayer.k_();// SPIGOT-924 // PAIL: rename - playerTick
+         
+         this.savePlayerFile(entityplayer);
+         if (entityplayer.isPassenger()) {
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+index 71da852..a154012 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+@@ -209,53 +209,25 @@ public class CraftWorld implements World {
+             return false;
+         }
+ 
+-        return unloadChunk0(x, z, save, safe);
++        return unloadChunk0(x, z, save);
+     }
+ 
+-    private boolean unloadChunk0(int x, int z, boolean save, boolean safe) {
+-        // Paper start - Don't create a chunk just to unload it
++    private boolean unloadChunk0(int x, int z, boolean save) {
+         net.minecraft.server.Chunk chunk = world.getChunkProviderServer().getChunkIfLoaded(x, z);
+         if (chunk == null) {
+-            return false;
+-        }
+-        // Paper end
+-
+-        if (chunk.mustSave) {   // If chunk had previously been queued to save, must do save to avoid loss of that data
+-            save = true;
+-        }
+-
+-        chunk.removeEntities(); // Always remove entities - even if discarding, need to get them out of world table
+-
+-        if (save) {
+-            world.getChunkProviderServer().saveChunk(chunk);
+-            world.getChunkProviderServer().saveChunkNOP(chunk);
+-        }
+-
+-        world.getChunkProviderServer().unloadQueue.remove(ChunkCoordIntPair.a(x, z));
+-        world.getChunkProviderServer().chunks.remove(ChunkCoordIntPair.a(x, z));
+-
+-        // Update neighbor counts
+-        for (int xx = -2; xx < 3; xx++) {
+-            for (int zz = -2; zz < 3; zz++) {
+-                if (xx == 0 && zz == 0) {
+-                    continue;
+-                }
+-
+-                net.minecraft.server.Chunk neighbor = net.minecraft.server.MCUtil.getLoadedChunkWithoutMarkingActive(world, chunk.locX + x, chunk.locZ + z); // Paper
+-                if (neighbor != null) {
+-                    neighbor.setNeighborUnloaded(-xx, -zz);
+-                    chunk.setNeighborUnloaded(xx, zz);
+-                }
+-            }
+-        }
+-
+-        return true;
++			return true;
++		}
++		// If chunk had previously been queued to save, must do save to avoid loss of that data
++        return world.getChunkProviderServer().unloadChunk(chunk, chunk.mustSave || save);
+     }
+ 
+     public boolean regenerateChunk(int x, int z) {
+-        unloadChunk0(x, z, false, false);
++        if (!unloadChunk0(x, z, false)) {
++            return false;
++        }
+ 
+-        world.getChunkProviderServer().unloadQueue.remove(ChunkCoordIntPair.a(x, z));
++        final long chunkKey = ChunkCoordIntPair.a(x, z);
++        world.getChunkProviderServer().unloadQueue.remove(chunkKey);
+ 
+         net.minecraft.server.Chunk chunk = null;
+ 
+@@ -265,9 +237,14 @@ public class CraftWorld implements World {
+             playerChunk.chunk = chunk;
+         }
+ 
+-        chunkLoadPostProcess(chunk, x, z);
++         if (chunk != null) {
++            world.getChunkProviderServer().chunks.put(chunkKey, chunk);
+ 
+-        refreshChunk(x, z);
++			chunk.addEntities();
++            chunk.loadNearby(world.getChunkProviderServer(), world.getChunkProviderServer().chunkGenerator, true);
++
++            refreshChunk(x, z);
++        }
+ 
+         return chunk != null;
+     }
+@@ -305,43 +282,6 @@ public class CraftWorld implements World {
+         }
+         // Paper start - below is not updated for the new unload queue logic.
+         return world.getChunkProviderServer().getOrLoadChunkAt(x, z) != null;
+-        /*
+-
+-        world.getChunkProviderServer().unloadQueue.remove(ChunkCoordIntPair.a(x, z));
+-        net.minecraft.server.Chunk chunk = world.getChunkProviderServer().chunks.get(ChunkCoordIntPair.a(x, z));
+-
+-        if (chunk == null) {
+-            world.timings.syncChunkLoadTimer.startTiming(); // Spigot
+-            chunk = world.getChunkProviderServer().getOrLoadChunkAt(x, z);
+-            world.timings.syncChunkLoadTimer.stopTiming(); // Spigot
+-        }
+-        return chunk != null;*/ // Paper end
+-    }
+-
+-    private void chunkLoadPostProcess(net.minecraft.server.Chunk chunk, int cx, int cz) {
+-        if (chunk != null) {
+-            world.getChunkProviderServer().chunks.put(ChunkCoordIntPair.a(cx, cz), chunk);
+-
+-            chunk.addEntities();
+-
+-            // Update neighbor counts
+-            for (int x = -2; x < 3; x++) {
+-                for (int z = -2; z < 3; z++) {
+-                    if (x == 0 && z == 0) {
+-                        continue;
+-                    }
+-
+-                    net.minecraft.server.Chunk neighbor = net.minecraft.server.MCUtil.getLoadedChunkWithoutMarkingActive(world, chunk.locX + x, chunk.locZ + z); // Paper
+-                    if (neighbor != null) {
+-                        neighbor.setNeighborLoaded(-x, -z);
+-                        chunk.setNeighborLoaded(x, z);
+-                    }
+-                }
+-            }
+-            // CraftBukkit end
+-
+-            chunk.loadNearby(world.getChunkProviderServer(), world.getChunkProviderServer().chunkGenerator);
+-        }
+     }
+ 
+     public boolean isChunkLoaded(Chunk chunk) {
+@@ -362,7 +302,7 @@ public class CraftWorld implements World {
+         Validate.isTrue(item.getTypeId() != 0, "Cannot drop AIR.");
+         EntityItem entity = new EntityItem(world, loc.getX(), loc.getY(), loc.getZ(), CraftItemStack.asNMSCopy(item));
+         entity.pickupDelay = 10;
+-        world.addEntity(entity);
++        world.addEntity(entity, SpawnReason.CUSTOM); // Torch
+         // TODO this is inconsistent with how Entity.getBukkitEntity() works.
+         // However, this entity is not at the moment backed by a server entity class so it may be left.
+         return new CraftItem(world.getServer(), entity);
+diff --git a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOProvider.java b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOProvider.java
+index 4d2b371..e5c6a1e 100644
+--- a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOProvider.java
++++ b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOProvider.java
+@@ -49,27 +49,7 @@ class ChunkIOProvider implements AsynchronousExecutor.CallBackProvider<QueuedChu
+             queuedChunk.provider.world.timings.syncChunkLoadStructuresTimer.stopTiming(); // Spigot
+         }
+ 
+-        Server server = queuedChunk.provider.world.getServer();
+-        if (server != null) {
+-            server.getPluginManager().callEvent(new org.bukkit.event.world.ChunkLoadEvent(chunk.bukkitChunk, false));
+-        }
+-
+-        // Update neighbor counts
+-        for (int x = -2; x < 3; x++) {
+-            for (int z = -2; z < 3; z++) {
+-                if (x == 0 && z == 0) {
+-                    continue;
+-                }
+-
+-                Chunk neighbor = net.minecraft.server.MCUtil.getLoadedChunkWithoutMarkingActive(queuedChunk.provider, chunk.locX + x, chunk.locZ + z); // Paper
+-                if (neighbor != null) {
+-                    neighbor.setNeighborLoaded(-x, -z);
+-                    chunk.setNeighborLoaded(x, z);
+-                }
+-            }
+-        }
+-
+-        chunk.loadNearby(queuedChunk.provider, queuedChunk.provider.chunkGenerator);
++        chunk.loadNearby(queuedChunk.provider, queuedChunk.provider.chunkGenerator, false);
+     }
+ 
+     public void callStage3(QueuedChunk queuedChunk, Chunk chunk, Runnable runnable) throws RuntimeException {
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+index bac36e7..12bf4e6 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+@@ -405,12 +405,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+         getHandle().playerConnection.sendPacket(packet);
+     }
+ 	
+-	@Override
+     public void stopSound(Sound sound) {
+         stopSound(CraftSound.getSound(sound));
+     }
+ 
+-    @Override
+     public void stopSound(String sound) {
+         if (getHandle().playerConnection == null) return;
+         PacketDataSerializer packetdataserializer = new PacketDataSerializer(Unpooled.buffer());
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftVillager.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftVillager.java
+index 0329c26..3322f24 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftVillager.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftVillager.java
+@@ -43,7 +43,7 @@ public class CraftVillager extends CraftAgeable implements Villager, InventoryHo
+     }
+ 
+     public void setProfession(Profession profession) {
+-		Validate.isTrue(0 < profession.ordinal() && profession.ordinal() < Profession.HUSK.ordinal(), "This profession is reserved for Zombies: ", profession);
++		Validate.notNull(profession); // Torch
+         getHandle().setProfession(profession.getId() - 1);
+     }
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryDoubleChest.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryDoubleChest.java
+index 87252ca..7b07239 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryDoubleChest.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryDoubleChest.java
+@@ -7,6 +7,8 @@ import org.bukkit.inventory.DoubleChestInventory;
+ import org.bukkit.inventory.Inventory;
+ import org.bukkit.inventory.ItemStack;
+ 
++import org.bukkit.Location; // Torch
++
+ import net.minecraft.server.InventoryLargeChest;
+ 
+ public class CraftInventoryDoubleChest extends CraftInventory implements DoubleChestInventory {
+@@ -59,4 +61,9 @@ public class CraftInventoryDoubleChest extends CraftInventory implements DoubleC
+     public DoubleChest getHolder() {
+         return new DoubleChest(this);
+     }
++	
++	@Override
++    public Location getLocation() {
++        return getLeftSide().getLocation().add(getRightSide().getLocation()).multiply(0.5);
++    }
+ }
+-- 
+2.8.2.windows.1
+

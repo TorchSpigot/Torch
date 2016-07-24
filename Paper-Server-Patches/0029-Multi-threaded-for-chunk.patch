@@ -1,0 +1,125 @@
+From 9db28f0b84cb7eaf5fcc92d69e096a0e56f51aba Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 06:52:05 +0800
+Subject: [PATCH] Multi threaded for chunk
+
+
+diff --git a/src/main/java/net/minecraft/server/Chunk.java b/src/main/java/net/minecraft/server/Chunk.java
+index b6a07d1..39ac84f 100644
+--- a/src/main/java/net/minecraft/server/Chunk.java
++++ b/src/main/java/net/minecraft/server/Chunk.java
+@@ -19,6 +19,8 @@ import com.google.common.collect.Lists; // CraftBukkit
+ import org.bukkit.Bukkit; // CraftBukkit
+ import org.bukkit.craftbukkit.util.CraftMagicNumbers;
+ 
++import java.util.Queue;
++
+ public class Chunk {
+ 
+     private static final Logger e = LogManager.getLogger();
+@@ -36,7 +38,8 @@ public class Chunk {
+     public final int locZ;
+     private boolean m;
+     public final Map<BlockPosition, TileEntity> tileEntities;
+-    public final List<Entity>[] entitySlices; // Spigot
++    // public final List<Entity>[] entitySlices; // Spigot
++	public final Queue<Entity>[] entitySlices; // Hose
+     final PaperLightingQueue.LightingQueue lightingQueue = new PaperLightingQueue.LightingQueue(this); // Paper
+     private boolean done;
+     private boolean lit;
+@@ -91,10 +94,11 @@ public class Chunk {
+         this.g = new byte[256];
+         this.h = new int[256];
+         this.i = new boolean[256];
+-        this.tileEntities = Maps.newHashMap();
++		this.tileEntities = Maps.newConcurrentMap();
+         this.x = 4096;
+         this.y = Queues.newConcurrentLinkedQueue();
+-        this.entitySlices = (List[]) (new List[16]); // Spigot
++        // this.entitySlices = (List[]) (new List[16]); // Spigot
++		this.entitySlices = (Queue[]) (new ConcurrentLinkedQueue[16]); // Hose
+         this.world = world;
+         this.locX = i;
+         this.locZ = j;
+@@ -102,7 +106,8 @@ public class Chunk {
+         this.heightMap = new int[256];
+ 
+         for (int k = 0; k < this.entitySlices.length; ++k) {
+-            this.entitySlices[k] = new org.bukkit.craftbukkit.util.UnsafeList(); // Spigot
++            // this.entitySlices[k] = new org.bukkit.craftbukkit.util.UnsafeList(); // Spigot
++			this.entitySlices[k] = new ConcurrentLinkedQueue(); // Hose
+         }
+ 
+         Arrays.fill(this.h, -999);
+@@ -623,6 +628,7 @@ public class Chunk {
+             // Chunk.e.warn("Wrong location! (" + i + ", " + j + ") should be (" + this.locX + ", " + this.locZ + "), " + entity, new Object[] { entity});
+             Bukkit.getLogger().warning("Entity is at " + entity.locX + "," + entity.locZ + " (chunk " + i + "," + j + ") but was stored in chunk " + this.locX + "," + this.locZ);
+             // CraftBukkit end
++			new Exception("Stack trace").printStackTrace();
+             entity.die();
+         }
+ 
+@@ -825,8 +831,15 @@ public class Chunk {
+     public void addEntities() {
+         this.j = true;
+         this.world.b(this.tileEntities.values());
+-
+-        for (int i = 0; i < this.entitySlices.length; ++i) {
++		
++		Queue[] aentityslice = this.entitySlices; // Hose
++		int j = aentityslice.length;
++
++        for (int i = 0; i < j; ++i) {
++			Queue entityslice = aentityslice[i]; // Hose
++			
++			// Hose - async add entity
++			/*
+             Iterator iterator = this.entitySlices[i].iterator();
+ 
+             while (iterator.hasNext()) {
+@@ -834,6 +847,7 @@ public class Chunk {
+ 
+                 entity.at();
+             }
++			*/
+ 
+             this.world.a((Collection) this.entitySlices[i]);
+         }
+@@ -861,8 +875,11 @@ public class Chunk {
+ 
+             this.world.b(tileentity);
+         }
++		
++		Queue[] aentityslice = this.entitySlices; // Hose
++		int j = aentityslice.length;
+ 
+-        for (int i = 0; i < this.entitySlices.length; ++i) {
++        for (int i = 0; i < j; ++i) {
+             // CraftBukkit start
+             List<Entity> newList = Lists.newArrayList(this.entitySlices[i]);
+             java.util.Iterator<Entity> iter = newList.iterator();
+@@ -1365,7 +1382,7 @@ public class Chunk {
+         return this.tileEntities;
+     }
+ 
+-    public List<Entity>[] getEntitySlices() {
++    public Queue<Entity>[] getEntitySlices() { // Hose
+         return this.entitySlices;
+     }
+ 
+@@ -1415,4 +1432,12 @@ public class Chunk {
+ 
+         private EnumTileEntityState() {}
+     }
++	
++	class TraceException extends Exception {
++      public TraceException(String mID)
++      {
++        super("Entity Track - ERROR: " + mID); // Torch
++      }
++      
++    }
+ }
+-- 
+2.8.2.windows.1
+

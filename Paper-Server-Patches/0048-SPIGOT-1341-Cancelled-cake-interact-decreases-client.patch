@@ -1,0 +1,166 @@
+From 5ca4ff110f2bb0fea6bc67092e392bc4c4d2f937 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 14:04:48 +0800
+Subject: [PATCH] SPIGOT-1341: Cancelled cake interact decreases client hunger,
+ misc timings fixes
+
+
+diff --git a/src/main/java/net/minecraft/server/BlockCake.java b/src/main/java/net/minecraft/server/BlockCake.java
+index eab2ef2..6c02990 100644
+--- a/src/main/java/net/minecraft/server/BlockCake.java
++++ b/src/main/java/net/minecraft/server/BlockCake.java
+@@ -44,7 +44,7 @@ public class BlockCake extends Block {
+                 entityhuman.getFoodData().eat(event.getFoodLevel() - oldFoodLevel, 0.1F);
+             }
+ 
+-            ((EntityPlayer) entityhuman).playerConnection.sendPacket(new PacketPlayOutUpdateHealth(((EntityPlayer) entityhuman).getBukkitEntity().getScaledHealth(), entityhuman.getFoodData().foodLevel, entityhuman.getFoodData().saturationLevel));
++            ((EntityPlayer) entityhuman).getBukkitEntity().sendHealthUpdate();
+             // CraftBukkit end
+             int i = ((Integer) iblockdata.get(BlockCake.BITES)).intValue();
+ 
+diff --git a/src/main/java/net/minecraft/server/Chunk.java b/src/main/java/net/minecraft/server/Chunk.java
+index d433e87..907c02d 100644
+--- a/src/main/java/net/minecraft/server/Chunk.java
++++ b/src/main/java/net/minecraft/server/Chunk.java
+@@ -1041,7 +1041,7 @@ public class Chunk {
+             }
+         }
+         // CraftBukkit end
+-        world.timings.syncChunkLoadPostTimer.startTiming(); // Spigot
++        // world.timings.syncChunkLoadPostTimer.startTiming(); // Spigot
+         Chunk chunk = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.locX, this.locZ - 1); // Paper
+         Chunk chunk1 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.locX + 1, this.locZ); // Paper
+         Chunk chunk2 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.locX, this.locZ + 1); // Paper
+@@ -1066,7 +1066,7 @@ public class Chunk {
+                 chunk4.a(chunkgenerator);
+             }
+         }
+-        world.timings.syncChunkLoadPostTimer.stopTiming(); // Spigot
++        // world.timings.syncChunkLoadPostTimer.stopTiming(); // Spigot
+ 
+     }
+ 
+diff --git a/src/main/java/net/minecraft/server/ChunkRegionLoader.java b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+index f743681..649b52e 100644
+--- a/src/main/java/net/minecraft/server/ChunkRegionLoader.java
++++ b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+@@ -52,9 +52,9 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+     // CraftBukkit start - Add async variant, provide compatibility
+     @Nullable
+     public Chunk a(World world, int i, int j) throws IOException {
+-        world.timings.syncChunkLoadDataTimer.startTiming(); // Spigot
++        // world.timings.syncChunkLoadDataTimer.startTiming(); // Spigot
+         Object[] data = loadChunk(world, i, j);
+-        world.timings.syncChunkLoadDataTimer.stopTiming(); // Spigot
++        // world.timings.syncChunkLoadDataTimer.stopTiming(); // Spigot
+         if (data != null) {
+             Chunk chunk = (Chunk) data[0];
+             NBTTagCompound nbttagcompound = (NBTTagCompound) data[1];
+@@ -369,7 +369,7 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+ 
+     public synchronized void loadEntities(Chunk chunk, NBTTagCompound nbttagcompound, World world) { // Hose
+         // CraftBukkit end
+-        world.timings.syncChunkLoadEntitiesTimer.startTiming(); // Spigot
++        // world.timings.syncChunkLoadEntitiesTimer.startTiming(); // Spigot
+         NBTTagList nbttaglist1 = nbttagcompound.getList("Entities", 10);
+ 
+         if (nbttaglist1 != null) {
+@@ -380,8 +380,8 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+                 chunk.g(true);
+             }
+         }
+-        world.timings.syncChunkLoadEntitiesTimer.stopTiming(); // Spigot
+-        world.timings.syncChunkLoadTileEntitiesTimer.startTiming(); // Spigot
++        // world.timings.syncChunkLoadEntitiesTimer.stopTiming(); // Spigot
++        // world.timings.syncChunkLoadTileEntitiesTimer.startTiming(); // Spigot
+         NBTTagList nbttaglist2 = nbttagcompound.getList("TileEntities", 10);
+ 
+         if (nbttaglist2 != null) {
+@@ -394,8 +394,8 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+                 }
+             }
+         }
+-        world.timings.syncChunkLoadTileEntitiesTimer.stopTiming(); // Spigot
+-        world.timings.syncChunkLoadTileTicksTimer.startTiming(); // Spigot
++        // world.timings.syncChunkLoadTileEntitiesTimer.stopTiming(); // Spigot
++        // world.timings.syncChunkLoadTileTicksTimer.startTiming(); // Spigot
+ 
+         if (nbttagcompound.hasKeyOfType("TileTicks", 9)) {
+             NBTTagList nbttaglist3 = nbttagcompound.getList("TileTicks", 10);
+@@ -415,7 +415,7 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+                 }
+             }
+         }
+-        world.timings.syncChunkLoadTileTicksTimer.stopTiming(); // Spigot
++        // world.timings.syncChunkLoadTileTicksTimer.stopTiming(); // Spigot
+ 
+         // return chunk; // CraftBukkit
+     }
+diff --git a/src/main/java/net/minecraft/server/FoodMetaData.java b/src/main/java/net/minecraft/server/FoodMetaData.java
+index ebadb37..3fa56a5 100644
+--- a/src/main/java/net/minecraft/server/FoodMetaData.java
++++ b/src/main/java/net/minecraft/server/FoodMetaData.java
+@@ -33,7 +33,7 @@ public class FoodMetaData {
+             this.eat(event.getFoodLevel() - oldFoodLevel, itemfood.getSaturationModifier(itemstack));
+         }
+ 
+-        ((EntityPlayer) entityhuman).playerConnection.sendPacket(new PacketPlayOutUpdateHealth(((EntityPlayer) entityhuman).getBukkitEntity().getScaledHealth(), entityhuman.getFoodData().foodLevel, entityhuman.getFoodData().saturationLevel));
++        ((EntityPlayer) entityhuman).getBukkitEntity().sendHealthUpdate();
+         // CraftBukkit end
+     }
+ 
+diff --git a/src/main/java/net/minecraft/server/PlayerInteractManager.java b/src/main/java/net/minecraft/server/PlayerInteractManager.java
+index 6b65829..137c2cf 100644
+--- a/src/main/java/net/minecraft/server/PlayerInteractManager.java
++++ b/src/main/java/net/minecraft/server/PlayerInteractManager.java
+@@ -489,7 +489,9 @@ public class PlayerInteractManager {
+                 if (blockdata.getBlock() instanceof BlockDoor) {
+                     boolean bottom = blockdata.get(BlockDoor.HALF) == BlockDoor.EnumDoorHalf.LOWER;
+                     ((EntityPlayer) entityhuman).playerConnection.sendPacket(new PacketPlayOutBlockChange(world, bottom ? blockposition.up() : blockposition.down()));
+-                }
++				} else if (blockdata.getBlock() instanceof BlockCake) {
++                    ((EntityPlayer) entityhuman).getBukkitEntity().sendHealthUpdate(); // SPIGOT-1341 - reset health for cake
++				}
+                 result = (event.useItemInHand() != Event.Result.ALLOW) ? EnumInteractionResult.SUCCESS : EnumInteractionResult.PASS;
+             } else if (this.gamemode == WorldSettings.EnumGamemode.SPECTATOR) {
+                 TileEntity tileentity = world.getTileEntity(blockposition);
+diff --git a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOProvider.java b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOProvider.java
+index e5c6a1e..e53d88b92 100644
+--- a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOProvider.java
++++ b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOProvider.java
+@@ -44,9 +44,9 @@ class ChunkIOProvider implements AsynchronousExecutor.CallBackProvider<QueuedChu
+         chunk.addEntities();
+ 
+         if (queuedChunk.provider.chunkGenerator != null) {
+-            queuedChunk.provider.world.timings.syncChunkLoadStructuresTimer.startTiming(); // Spigot
++            // queuedChunk.provider.world.timings.syncChunkLoadStructuresTimer.startTiming(); // Spigot
+             queuedChunk.provider.chunkGenerator.recreateStructures(chunk, queuedChunk.x, queuedChunk.z);
+-            queuedChunk.provider.world.timings.syncChunkLoadStructuresTimer.stopTiming(); // Spigot
++            // queuedChunk.provider.world.timings.syncChunkLoadStructuresTimer.stopTiming(); // Spigot
+         }
+ 
+         chunk.loadNearby(queuedChunk.provider, queuedChunk.provider.chunkGenerator, false);
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+index 3dd5265..d1d958c 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+@@ -1415,11 +1415,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+         injectScaledMaxHealth(set, true);
+ 
+         getHandle().getDataWatcher().set(EntityLiving.HEALTH, (float) getScaledHealth());
+-        getHandle().playerConnection.sendPacket(new PacketPlayOutUpdateHealth(getScaledHealth(), getHandle().getFoodData().getFoodLevel(), getHandle().getFoodData().getSaturationLevel()));
++        sendHealthUpdate();
+         getHandle().playerConnection.sendPacket(new PacketPlayOutUpdateAttributes(getHandle().getId(), set));
+ 
+         getHandle().maxHealthCache = getMaxHealth();
+     }
++	
++	public void sendHealthUpdate() {
++        getHandle().playerConnection.sendPacket(new PacketPlayOutUpdateHealth(getScaledHealth(), getHandle().getFoodData().getFoodLevel(), getHandle().getFoodData().getSaturationLevel()));
++    }
+ 
+     public void injectScaledMaxHealth(Collection collection, boolean force) {
+         if (!scaledHealth && !force) {
+-- 
+2.8.2.windows.1
+

@@ -1,0 +1,36 @@
+From 6871bfb7976b43170a1d4a6e25a0c57cbbc646cd Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 13:55:29 +0800
+Subject: [PATCH] SPIGOT-1129: Fix spawning leash hitch without adjacent block
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+index a154012..3efdf90 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+@@ -1107,14 +1107,16 @@ public class CraftWorld implements World {
+                 }
+             }
+ 
+-            EnumDirection dir = CraftBlock.blockFaceToNotch(face).opposite();
+-            if (Painting.class.isAssignableFrom(clazz)) {
+-                entity = new EntityPainting(world, new BlockPosition((int) x, (int) y, (int) z), dir);
+-            } else if (ItemFrame.class.isAssignableFrom(clazz)) {
+-                entity = new EntityItemFrame(world, new BlockPosition((int) x, (int) y, (int) z), dir);
+-            } else if (LeashHitch.class.isAssignableFrom(clazz)) {
++            if (LeashHitch.class.isAssignableFrom(clazz)) {
+                 entity = new EntityLeash(world, new BlockPosition((int) x, (int) y, (int) z));
+                 entity.attachedToPlayer = true;
++			} else {
++                EnumDirection dir = CraftBlock.blockFaceToNotch(face).opposite();
++                if (Painting.class.isAssignableFrom(clazz)) {
++                    entity = new EntityPainting(world, new BlockPosition((int) x, (int) y, (int) z), dir);
++                } else if (ItemFrame.class.isAssignableFrom(clazz)) {
++                    entity = new EntityItemFrame(world, new BlockPosition((int) x, (int) y, (int) z), dir);
++                }
+             }
+ 
+             if (entity != null && !((EntityHanging) entity).survives()) {
+-- 
+2.8.2.windows.1
+
