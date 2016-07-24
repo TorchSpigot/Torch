@@ -1,4 +1,4 @@
-From 0c3606f349b1618145365639f33cd9ba1aef5782 Mon Sep 17 00:00:00 2001
+From 1a942e47edc8452f3aabb005c04480fe5261b8bd Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 17:38:25 +0800
 Subject: [PATCH] Fix PacketDataSerializer this time
