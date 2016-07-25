@@ -1,4 +1,4 @@
-From 6d2c81bbf99ec9fba539b6099e46622de70159e5 Mon Sep 17 00:00:00 2001
+From 6aa05bc0a440830dbdd8e6463910a54219b3cda5 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Wed, 20 Jul 2016 18:16:43 +0800
 Subject: [PATCH] Dont lookup game profiles that have no UUID and no name

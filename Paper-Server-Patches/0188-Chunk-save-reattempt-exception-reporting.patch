@@ -1,0 +1,22 @@
+From 97ad6b1cb2a2873aa662cc6c17901d5460d5dd81 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 25 Jul 2016 18:59:29 +0800
+Subject: [PATCH] Chunk save reattempt exception reporting
+
+
+diff --git a/src/main/java/net/minecraft/server/ChunkRegionLoader.java b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+index 7c504c2..d0a8230 100644
+--- a/src/main/java/net/minecraft/server/ChunkRegionLoader.java
++++ b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+@@ -192,7 +192,7 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+                         laste = exception; // Paper
+                     }
+                     try {Thread.sleep(10);} catch (InterruptedException e) {e.printStackTrace();} } // Paper
+-                    if (laste != null) { com.destroystokyo.paper.exception.ServerInternalException.reportInternalException(laste); laste.printStackTrace(); } // Paper
++                    if (laste != null) { com.destroystokyo.paper.exception.ServerInternalException.reportInternalException(laste); MinecraftServer.LOGGER.error("Failed to save chunk", laste); } // Paper  // PaperDragon - Not in upstream yet
+                 }
+                 synchronized (lock) { if (this.b.get(chunkcoordintpair) == nbttagcompound) { this.b.remove(chunkcoordintpair); } }// Paper - This will not equal if a newer version is still pending
+ 
+-- 
+2.8.2.windows.1
+

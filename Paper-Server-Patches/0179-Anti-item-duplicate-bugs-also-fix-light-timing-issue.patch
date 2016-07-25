@@ -1,4 +1,4 @@
-From ae4308342950f7777b15a485ae80908cbb9887b6 Mon Sep 17 00:00:00 2001
+From f602668c53a7c1c222e35b551a212d203be43cb4 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 24 Jul 2016 17:06:36 +0800
 Subject: [PATCH] Anti item duplicate bugs, also fix light timing issues.
