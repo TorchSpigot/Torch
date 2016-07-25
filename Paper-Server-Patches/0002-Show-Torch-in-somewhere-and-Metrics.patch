@@ -1,4 +1,4 @@
-From 67400e7613943e927e66417b58db5a2a2a07b121 Mon Sep 17 00:00:00 2001
+From a8723165a5cacf95b770fee3f21c53c8bc1cb78b Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 28 Jun 2016 17:18:45 +0800
 Subject: [PATCH] Show Torch in somewhere and Metrics

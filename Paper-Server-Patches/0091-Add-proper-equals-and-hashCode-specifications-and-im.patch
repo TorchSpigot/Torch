@@ -1,4 +1,4 @@
-From 4e4bdb8df44a31a28924ffbd3f4fe87ac62222d0 Mon Sep 17 00:00:00 2001
+From 7a4aab5005629b2142ff4eb9d238cbfe065a96b9 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 23:03:05 +0800
 Subject: [PATCH] Add proper equals and hashCode specifications and

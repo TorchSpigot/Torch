@@ -1,4 +1,4 @@
-From 5558058a17cf3c3ec709db5efbf5502a0548eb4e Mon Sep 17 00:00:00 2001
+From 79539478e653f56bb07046438c3d14de3216a4df Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 12:23:26 +0800
 Subject: [PATCH] Multi threaded ChunkMap, miscs
