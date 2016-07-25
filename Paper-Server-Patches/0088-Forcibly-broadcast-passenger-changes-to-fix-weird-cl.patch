@@ -1,4 +1,4 @@
-From 9e4b260dde82e04a3e73c1df46e2c2fd03a9fba6 Mon Sep 17 00:00:00 2001
+From 5b90a6b4dced33d6e4d4177b47cfed178ef407fb Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 22:49:08 +0800
 Subject: [PATCH] Forcibly broadcast passenger changes to fix weird client
