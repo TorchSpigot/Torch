@@ -18,7 +18,7 @@ Torch aims to be stable and fast.
 
 ####Features
 * All features of TacoSpigot/Paper/Spigot are included.
-* Backported latest changes from B/CB/Paper/Hose and more.
+* Backported latest changes from CB/Paper/SportBukkit and more.
 * Implement new chunk system for better performance and experience.
 * The asynchronous Anti-Xray inbult.
 * Multithreading computing, enjoy the server with multi-core CPU.

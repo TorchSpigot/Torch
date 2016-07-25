@@ -1,4 +1,4 @@
-From 55e649dda10dc1ec1e7a93d5cb63fed01e75a623 Mon Sep 17 00:00:00 2001
+From bd1031b263ee9d66c7315b1f887b05de0cdd76a1 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 14:59:34 +0800
 Subject: [PATCH] Fix missed case in top of nether void damage patch

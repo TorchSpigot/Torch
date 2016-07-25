@@ -1,0 +1,146 @@
+From e323cf0c4e2e68b2b5c44f2768dec9ab414d3fbc Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 25 Jul 2016 15:41:58 +0800
+Subject: [PATCH] Fix ticking bug, also optimize chunk exists checking
+
+
+diff --git a/src/main/java/net/minecraft/server/ChunkProviderServer.java b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+index a68188d..1623d40 100644
+--- a/src/main/java/net/minecraft/server/ChunkProviderServer.java
++++ b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+@@ -58,6 +58,24 @@ public class ChunkProviderServer implements IChunkProvider {
+ 	*/
+     // Paper end
+     public final WorldServer world;
++	
++	// Migot start
++    private ChunkRegionLoader checkedRegionLoader = null;
++
++    public boolean doesChunkExist(int x, int z) {
++        return this.doesChunkExist(new ChunkCoordIntPair(x, z));
++    }
++
++    public boolean doesChunkExist(ChunkCoordIntPair chunkcoordintpair) {
++        if(this.checkedRegionLoader == null && this.chunkLoader instanceof ChunkRegionLoader) {
++            this.checkedRegionLoader = (ChunkRegionLoader) this.chunkLoader;
++        }
++        if(this.checkedRegionLoader != null) {
++            return this.checkedRegionLoader.chunkExists(this.world, chunkcoordintpair);
++        }
++        return false;
++    }
++    // Migot end
+ 
+     public ChunkProviderServer(WorldServer worldserver, IChunkLoader ichunkloader, ChunkGenerator chunkgenerator) {
+         this.world = worldserver;
+diff --git a/src/main/java/net/minecraft/server/ChunkRegionLoader.java b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+index 4ded721..7c504c2 100644
+--- a/src/main/java/net/minecraft/server/ChunkRegionLoader.java
++++ b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+@@ -36,6 +36,15 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+     public boolean chunkExists(World world, int i, int j) {
+         ChunkCoordIntPair chunkcoordintpair = new ChunkCoordIntPair(i, j);
+ 		
++		// Migot start
++        return this.chunkExists(world, chunkcoordintpair);
++    }
++
++    public boolean chunkExists(World world, ChunkCoordIntPair chunkcoordintpair) {
++        int i = chunkcoordintpair.x;
++        int j = chunkcoordintpair.z;
++        // Migot end
++		
+         //if (this.c.contains(chunkcoordintpair)) { // Paper - Chunk queue improvements
+             if (this.b.containsKey(chunkcoordintpair)) {
+                 return true;
+diff --git a/src/main/java/net/minecraft/server/RegionFile.java b/src/main/java/net/minecraft/server/RegionFile.java
+index a6e6e26..3a9dc92 100644
+--- a/src/main/java/net/minecraft/server/RegionFile.java
++++ b/src/main/java/net/minecraft/server/RegionFile.java
+@@ -37,6 +37,18 @@ public class RegionFile {
+     private List<Boolean> f;
+     private int g;
+     private long h;
++	
++	// Migot start
++    private boolean[] existingChunkCache = new boolean[1024];
++
++    private boolean checkExistingChunkCache(int i, int j) {
++        return this.existingChunkCache[i + j * 32];
++    }
++
++    private void addCoordinatesToCache(int i, int j) {
++        this.existingChunkCache[i + j * 32] = true;
++    }
++    // Migot end
+ 
+     public RegionFile(File file) {
+         this.b = file;
+@@ -78,16 +90,8 @@ public class RegionFile {
+ 
+             int k;
+ 
+-            // Paper Start
+-            ByteBuffer header = ByteBuffer.allocate(8192);
+-            while (header.hasRemaining())  {
+-                if (this.c.getChannel().read(header) == -1) throw new EOFException();
+-            }
+-            header.clear();
+-            IntBuffer headerAsInts = header.asIntBuffer();
+-            // Paper End
+             for (j = 0; j < 1024; ++j) {
+-                k = headerAsInts.get(); // Paper
++                k = this.c.readInt();
+                 this.d[j] = k;
+                 if (k != 0 && (k >> 8) + (k & 255) <= this.f.size()) {
+                     for (int l = 0; l < (k & 255); ++l) {
+@@ -97,12 +101,11 @@ public class RegionFile {
+             }
+ 
+             for (j = 0; j < 1024; ++j) {
+-                k = headerAsInts.get(); // Paper
++                k = this.c.readInt();
+                 this.e[j] = k;
+             }
+         } catch (IOException ioexception) {
+             ioexception.printStackTrace();
+-            ServerInternalException.reportInternalException(ioexception); // Paper
+         }
+ 
+     }
+@@ -112,6 +115,11 @@ public class RegionFile {
+         if (this.d(i, j)) {
+             return false;
+         } else {
++			// Migot start
++            if(checkExistingChunkCache(i, j)) {
++                return true;
++            }
++            // Migot end
+             try {
+                 int k = this.e(i, j);
+ 
+@@ -134,6 +142,7 @@ public class RegionFile {
+ 
+                     byte b0 = this.c.readByte();
+                     if (b0 == 1 || b0 == 2) {
++						this.addCoordinatesToCache(i, j); // Migot
+                         return true;
+                     }
+                 }
+@@ -174,10 +183,12 @@ public class RegionFile {
+                             byte[] abyte;
+ 
+                             if (b0 == 1) {
++								this.addCoordinatesToCache(i, j); // Migot
+                                 abyte = new byte[j1 - 1];
+                                 this.c.read(abyte);
+                                 return new DataInputStream(new FastBufferedInputStream(new GZIPInputStream(new FastByteArrayInputStream(abyte))));
+                             } else if (b0 == 2) {
++								this.addCoordinatesToCache(i, j); // Migot
+                                 abyte = new byte[j1 - 1];
+                                 this.c.read(abyte);
+                                 return new DataInputStream(new FastBufferedInputStream(new InflaterInputStream(new FastByteArrayInputStream(abyte))));
+-- 
+2.8.2.windows.1
+
