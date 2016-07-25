@@ -1,4 +1,4 @@
-From 4d56d1a350137d3ea7a7e811a0901b2737e0846f Mon Sep 17 00:00:00 2001
+From 955547cafab0d74332d2b261ea9e169d8e519e3c Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 25 Jul 2016 02:59:27 +0800
 Subject: [PATCH] Do not stop server if it already stopped, miscs

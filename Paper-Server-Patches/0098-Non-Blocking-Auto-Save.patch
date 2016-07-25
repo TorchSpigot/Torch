@@ -1,4 +1,4 @@
-From 0e222a061a2cb8808f72e5d9bd3ab8bb427cfc68 Mon Sep 17 00:00:00 2001
+From 37fe45f541ccf573406b2f75af202be78ea70c6a Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 12 Jul 2016 04:11:46 +0800
 Subject: [PATCH] Non Blocking Auto Save

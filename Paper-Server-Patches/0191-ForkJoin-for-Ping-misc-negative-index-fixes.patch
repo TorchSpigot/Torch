@@ -1,4 +1,4 @@
-From f335467e84fb87a385f64ef28d409be9b1ae7cf0 Mon Sep 17 00:00:00 2001
+From 73bcf98d08d8cfcb795aaa04b86500f76008c5fc Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 25 Jul 2016 21:56:52 +0800
 Subject: [PATCH] ForkJoin for Ping, misc negative index fixes
@@ -241,6 +241,61 @@ index 3eca711..9fe8e9c 100644
          }
  
      }
+diff --git a/src/main/java/org/bukkit/command/defaults/GCCommand.java b/src/main/java/org/bukkit/command/defaults/GCCommand.java
+index b5ac6d9..30b7c32 100644
+--- a/src/main/java/org/bukkit/command/defaults/GCCommand.java
++++ b/src/main/java/org/bukkit/command/defaults/GCCommand.java
+@@ -10,6 +10,7 @@ import org.bukkit.command.CommandSender;
+ import org.bukkit.entity.Player;
+ import org.bukkit.util.StringUtil;
+ 
++import java.util.concurrent.RecursiveAction;
+ import java.util.ArrayList;
+ import java.util.Collections;
+ import java.util.List;
+@@ -26,18 +27,30 @@ public class GCCommand extends VanillaCommand {
+ 
+     @Override
+     public boolean execute(CommandSender sender, String currentAlias, String[] args) {
+-        if (!testPermission(sender)) return true;
+-
+-		long m1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+-        System.gc();
+-        System.runFinalization();
+-        long m2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+-        if (m2 < m1)
+-			sender.sendMessage(
+-			ChatColor.GOLD + "GC - Cleaned " + ChatColor.GREEN + ((m1 - m2) / 1024L / 1024L) + "MB" + ChatColor.GOLD + " memory.");
+-          else
+-            sender.sendMessage(ChatColor.GOLD + "GC - Memory not require clean now.");
+-
++        if (!testPermission(sender)) { return true; }
++		
++		GCTask task = new GCTask(sender);
++		task.fork();
++		
+         return true;
+     }
++	
++	public void task(CommandSender sender) {
++		long m1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
++		System.gc(); System.runFinalization();
++		long m2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
++				
++		if (m2 < m1) { sender.sendMessage(ChatColor.GOLD + "GC - Cleaned " + ChatColor.GREEN + ((m1 - m2) / 1024L / 1024L) + "MB" + ChatColor.GOLD + " memory."); }
++		else { sender.sendMessage(ChatColor.GOLD + "GC - Memory not require clean now."); }
++	}
++	
++	class GCTask extends RecursiveAction {
++		CommandSender sender;
++        GCTask(CommandSender sender) { this.sender = sender; }
++        
++        @Override
++        protected void compute() {
++            task(sender);
++        }
++    }
+ }
 diff --git a/src/main/resources/configurations/migot.yml b/src/main/resources/configurations/migot.yml
 index e6b9f73..444a7c6 100644
 --- a/src/main/resources/configurations/migot.yml

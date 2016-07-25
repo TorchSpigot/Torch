@@ -1,4 +1,4 @@
-From 301a53bd2cc1e076b640709dfc3a1a81a1044d8b Mon Sep 17 00:00:00 2001
+From e477d325b80b6aa67449ca8b149b17fb13e43a2c Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 16:16:47 +0800
 Subject: [PATCH] Block sketchy head items and blocks
