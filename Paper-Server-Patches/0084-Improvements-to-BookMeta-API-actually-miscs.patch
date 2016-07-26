@@ -1,4 +1,4 @@
-From 110a3ba7cc38a12503af2a1ccbb3f6c43ba538b8 Mon Sep 17 00:00:00 2001
+From 4259d1e74b7fd15e78ec40316bf9567f9915dd4f Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 18:08:11 +0800
 Subject: [PATCH] Improvements to BookMeta API actually, miscs
