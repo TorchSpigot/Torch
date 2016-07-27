@@ -1,4 +1,4 @@
-From dfd320db5d8d3c8890cad8873205701178430df4 Mon Sep 17 00:00:00 2001
+From 20c08d256d028c758c0ba976a803de1496002666 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Thu, 21 Jul 2016 18:44:18 +0800
 Subject: [PATCH] Lite optimize for, misc java internal optimize

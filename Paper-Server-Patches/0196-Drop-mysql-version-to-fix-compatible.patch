@@ -1,0 +1,22 @@
+From fd8b2bff90dac05b4e435bbd93a0d56b69540952 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Thu, 28 Jul 2016 03:38:09 +0800
+Subject: [PATCH] Drop mysql version to fix compatible.
+
+
+diff --git a/pom.xml b/pom.xml
+index 30643cc..9e86f5b 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -71,7 +71,7 @@
+         <dependency>
+             <groupId>mysql</groupId>
+             <artifactId>mysql-connector-java</artifactId>
+-            <version>6.0.3</version>
++            <version>5.1.39</version>
+             <scope>compile</scope>
+         </dependency>
+         <dependency>
+-- 
+2.8.2.windows.1
+
