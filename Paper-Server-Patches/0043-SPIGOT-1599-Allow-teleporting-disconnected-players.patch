@@ -1,4 +1,4 @@
-From ba8361a8a1456c5d1e871001b85fe31d822fb5de Mon Sep 17 00:00:00 2001
+From 34978b934590695eccec9f4c39a98b6e6a00fc7b Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 13:54:26 +0800
 Subject: [PATCH] SPIGOT-1599: Allow teleporting disconnected players
