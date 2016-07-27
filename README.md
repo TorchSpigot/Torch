@@ -14,6 +14,8 @@ Torch aims to be stable and fast.
 * Current developing version:  1.9.4
 * Recommanded(stable) version: R1.4.8-RELEASE
 
+For Minecraft **1.8**, *[Click Here](https://github.com/TorchSpigot/Torch-1.8)*
+
 (If you're running a previous Beta, upgrading is highly recommended.)
 
 ####Features
