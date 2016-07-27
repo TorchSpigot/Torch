@@ -1,4 +1,4 @@
-From 865d71c667a5d34fb4984a3c172e58a51be157e6 Mon Sep 17 00:00:00 2001
+From 926a7d92660612219a8b7d33e247db4a27ccb2e6 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Wed, 20 Jul 2016 22:21:40 +0800
 Subject: [PATCH] Fix the bukkit achievement command
