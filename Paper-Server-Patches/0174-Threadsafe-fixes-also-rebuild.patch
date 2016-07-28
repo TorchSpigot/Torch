@@ -1,4 +1,4 @@
-From e7ac9c9c3df7936db902d9694fd4f5ab16eaa6e2 Mon Sep 17 00:00:00 2001
+From a75b6ed269e08ce34b115aed57e45a0134089037 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 23 Jul 2016 16:14:58 +0800
 Subject: [PATCH] Threadsafe fixes, also rebuild
