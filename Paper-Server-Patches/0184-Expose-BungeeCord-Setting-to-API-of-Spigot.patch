@@ -1,4 +1,4 @@
-From c57a6e02cb30e62753765a15c3dcce96cdfdbda7 Mon Sep 17 00:00:00 2001
+From 58b06d98e53cb4ef0f1bc59cfebdca8d2676827f Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 25 Jul 2016 17:43:32 +0800
 Subject: [PATCH] Expose BungeeCord Setting to API of Spigot
