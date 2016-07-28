@@ -1,4 +1,4 @@
-From 4e8dcd94382db3eeff0d776f2196be2135f48252 Mon Sep 17 00:00:00 2001
+From be30d1e689bad83da101b5461ced7684e48b82f7 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Wed, 27 Jul 2016 08:44:54 +0800
 Subject: [PATCH] Add Command targets and Command utilities

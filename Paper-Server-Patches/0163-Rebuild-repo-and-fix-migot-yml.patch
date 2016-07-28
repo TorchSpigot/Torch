@@ -1,4 +1,4 @@
-From 1010d8d654f4a54341685c8a141397456f7adad9 Mon Sep 17 00:00:00 2001
+From 9479c51c618f08aab0a788be3958f2e6b84c2042 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Thu, 21 Jul 2016 03:26:29 +0800
 Subject: [PATCH] Rebuild repo and fix migot yml

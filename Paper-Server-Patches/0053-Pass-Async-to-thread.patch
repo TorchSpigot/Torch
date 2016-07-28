@@ -1,4 +1,4 @@
-From 9d2bf5debce2caf578ac8ee13c724d6a0da651be Mon Sep 17 00:00:00 2001
+From 6800ccbb0dc2bc36242dc13dd293a87d25ec3ab0 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 17:03:53 +0800
 Subject: [PATCH] Pass Async to thread

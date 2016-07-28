@@ -1,0 +1,200 @@
+From ff99ea6824e44f8ab9f5777af57372757e188b59 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Thu, 28 Jul 2016 21:35:00 +0800
+Subject: [PATCH] Fork reg, miscs
+
+
+diff --git a/src/main/java/co/aikar/timings/TimingHandler.java b/src/main/java/co/aikar/timings/TimingHandler.java
+index 0914417..6615ac0 100644
+--- a/src/main/java/co/aikar/timings/TimingHandler.java
++++ b/src/main/java/co/aikar/timings/TimingHandler.java
+@@ -109,7 +109,7 @@ class TimingHandler implements Timing {
+     public void stopTiming() {
+         if (enabled && --timingDepth == 0 && start != 0) {
+             if (!Bukkit.isPrimaryThread()) {
+-                Bukkit.getLogger().log(Level.SEVERE, "stopTiming called async for " + name);
++                Bukkit.getLogger().log(Level.SEVERE, "Timing issue occour in " + name + ", please report it to Torch!");
+                 new Throwable().printStackTrace();
+                 start = 0;
+                 return;
+diff --git a/src/main/java/net/minecraft/server/DedicatedServer.java b/src/main/java/net/minecraft/server/DedicatedServer.java
+index 70eb716..e947ad7 100644
+--- a/src/main/java/net/minecraft/server/DedicatedServer.java
++++ b/src/main/java/net/minecraft/server/DedicatedServer.java
+@@ -15,6 +15,7 @@ import java.util.Random;
+ import java.util.concurrent.TimeUnit;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
++import java.util.concurrent.RecursiveAction;
+ 
+ // CraftBukkit start
+ import java.io.PrintStream;
+@@ -27,6 +28,8 @@ import org.bukkit.craftbukkit.util.Waitable;
+ import org.bukkit.event.server.RemoteServerCommandEvent;
+ // CraftBukkit end
+ 
++import org.torch.light.LightRandom;
++
+ public class DedicatedServer extends MinecraftServer implements IMinecraftServer {
+ 
+     private static final Logger LOGGER = LogManager.getLogger();
+@@ -124,6 +127,8 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
+ 
+         DedicatedServer.LOGGER.info("Loading properties");
+         this.propertyManager = new PropertyManager(this.options); // CraftBukkit - CLI argument support
++		
++		/*
+         this.q = new EULA(new File("eula.txt"));
+         // Spigot Start
+         boolean eulaAgreed = Boolean.getBoolean( "com.mojang.eula.agree" );
+@@ -134,11 +139,13 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
+             System.err.println( "If you do not agree to the above EULA please stop your server and remove this flag immediately." );
+         }
+         // Spigot End
++		
+         if (!this.q.a() && !eulaAgreed) { // Spigot
+             DedicatedServer.LOGGER.info("You need to agree to the EULA in order to run the server. Go to eula.txt for more info.");
+             this.q.b();
+             return false;
+         } else {
++		*/
+             if (this.R()) {
+                 this.c("127.0.0.1");
+             } else {
+@@ -174,6 +181,7 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
+             if (this.P() < 0) {
+                 this.setPort(this.propertyManager.getInt("server-port", 25565));
+             }
++			
+             // Spigot start
+             this.a((PlayerList) (new DedicatedPlayerList(this)));
+             org.spigotmc.SpigotConfig.init((File) options.valueOf("spigot-settings"));
+@@ -194,19 +202,19 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
+             this.a(MinecraftEncryption.b());
+             DedicatedServer.LOGGER.info("Starting Minecraft server on " + (this.getServerIp().isEmpty() ? "*" : this.getServerIp()) + ":" + this.P());
+ 
+-        if (!org.spigotmc.SpigotConfig.lateBind) {
+-            try {
+-                this.am().a(inetaddress, this.P());
+-                if(this.getServerConnection().getPort() != this.getConfiguredPort()) {
+-                    DedicatedServer.LOGGER.info("Bound to port " + this.getServerConnection().getPort());
+-                }
+-            } catch (IOException ioexception) {
+-                DedicatedServer.LOGGER.warn("**** FAILED TO BIND TO PORT!");
+-                DedicatedServer.LOGGER.warn("The exception was: {}", new Object[] { ioexception.toString()});
+-                DedicatedServer.LOGGER.warn("Perhaps a server is already running on that port?");
+-                return false;
+-            }
+-        }
++			if (!org.spigotmc.SpigotConfig.lateBind) {
++				try {
++					this.am().a(inetaddress, this.P());
++					if(this.getServerConnection().getPort() != this.getConfiguredPort()) {
++						DedicatedServer.LOGGER.info("Bound to port " + this.getServerConnection().getPort());
++					}
++				} catch (IOException ioexception) {
++					DedicatedServer.LOGGER.warn("**** FAILED TO BIND TO PORT!");
++					DedicatedServer.LOGGER.warn("The exception was: {}", new Object[] { ioexception.toString()});
++					DedicatedServer.LOGGER.warn("Perhaps a server is already running on that port?");
++					return false;
++				}
++			}
+ 
+             // Spigot Start - Move DedicatedPlayerList up and bring plugin loading from CraftServer to here
+             // this.a((PlayerList) (new DedicatedPlayerList(this))); // CraftBukkit
+@@ -245,7 +253,7 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
+                 String s = this.propertyManager.getString("level-seed", "");
+                 String s1 = this.propertyManager.getString("level-type", "DEFAULT");
+                 String s2 = this.propertyManager.getString("generator-settings", "");
+-                long k = (new Random()).nextLong();
++                long k = (new LightRandom()).nextLong(); // Torch - use LightRNG
+ 
+                 if (!s.isEmpty()) {
+                     try {
+@@ -265,11 +273,14 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
+                     worldtype = WorldType.NORMAL;
+                 }
+ 
+-                this.ax();
++				/* this.ax(); // Torch start - fork
+                 this.getEnableCommandBlock();
+                 this.q();
+                 this.getSnooperEnabled();
+-                this.aF();
++                this.aF(); */ // Torch end
++				SubTask task_a = new SubTask();
++				task_a.fork();
++				
+                 this.c(this.propertyManager.getInt("max-build-height", 256));
+                 this.c((this.getMaxBuildHeight() + 8) / 16 * 16);
+                 this.c(MathHelper.clamp(this.getMaxBuildHeight(), 64, 256));
+@@ -277,8 +288,11 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
+                 TileEntitySkull.a(this.getUserCache());
+                 TileEntitySkull.a(this.ay());
+                 UserCache.a(this.getOnlineMode());
+-                DedicatedServer.LOGGER.info("Preparing level \"" + this.S() + "\"");
+-                this.a(this.S(), this.S(), k, worldtype, s2);
++				
++				String str = this.S();
++                DedicatedServer.LOGGER.info("Preparing level \"" + str + "\"");
++                this.a(str, str, k, worldtype, s2);
++				
+                 long i1 = System.nanoTime() - j;
+                 String s3 = String.format("%.3fs", new Object[] { Double.valueOf((double) i1 / 1.0E9D)});
+ 
+@@ -306,16 +320,16 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
+                 }
+                 // CraftBukkit end
+ 
+-        if (org.spigotmc.SpigotConfig.lateBind) {
+-            try {
+-                this.am().a(inetaddress, this.P());
+-            } catch (IOException ioexception) {
+-                DedicatedServer.LOGGER.warn("**** FAILED TO BIND TO PORT!");
+-                DedicatedServer.LOGGER.warn("The exception was: {}", new Object[] { ioexception.toString()});
+-                DedicatedServer.LOGGER.warn("Perhaps a server is already running on that port?");
+-                return false;
+-            }
+-        }
++				if (org.spigotmc.SpigotConfig.lateBind) {
++					try {
++						this.am().a(inetaddress, this.P());
++					} catch (IOException ioexception) {
++						DedicatedServer.LOGGER.warn("**** FAILED TO BIND TO PORT!");
++						DedicatedServer.LOGGER.warn("The exception was: {}", new Object[] { ioexception.toString()});
++						DedicatedServer.LOGGER.warn("Perhaps a server is already running on that port?");
++						return false;
++					}
++				}
+ 
+                 if (false && this.aP() > 0L) {  // Spigot - disable
+                     Thread thread1 = new Thread(new ThreadWatchdog(this));
+@@ -327,7 +341,24 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
+ 
+                 return true;
+             }
+-        }
++        // }
++    }
++	
++	class SubTask extends RecursiveAction {
++        SubTask() {}
++        
++        @Override
++        protected void compute() {
++            sub_task_a();
++        }     
++    }
++	
++	protected void sub_task_a() {
++        this.ax();
++        this.getEnableCommandBlock();
++        this.q();
++        this.getSnooperEnabled();
++        this.aF();
+     }
+ 
+     public String aK() {
+-- 
+2.8.2.windows.1
+

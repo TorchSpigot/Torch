@@ -1,4 +1,4 @@
-From c97ae25627fbb0011ce9818167e2fb129fabab96 Mon Sep 17 00:00:00 2001
+From 5730f22ab2556809897f05b5d9f1a6463ebe5ca3 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Wed, 20 Jul 2016 18:40:46 +0800
 Subject: [PATCH] Fix UUID duplicate
@@ -2325,7 +2325,7 @@ index bd14f1f..67e86e0 100644
 -	
  }
 diff --git a/src/main/java/net/minecraft/server/EntityHuman.java b/src/main/java/net/minecraft/server/EntityHuman.java
-index be9d53f..fcc906a 100644
+index be9d53f..fcc906ac 100644
 --- a/src/main/java/net/minecraft/server/EntityHuman.java
 +++ b/src/main/java/net/minecraft/server/EntityHuman.java
 @@ -10,10 +10,7 @@ import java.util.Iterator;
