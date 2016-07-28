@@ -1,4 +1,4 @@
-From eb8d12c5485a6bd9c526427201a9daf20cfbd1ea Mon Sep 17 00:00:00 2001
+From 4b6784d0928f7390844c6514166d38dbc162a348 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:58:00 +0800
 Subject: [PATCH] SPIGOT-1039: Improve DoubleChest semantics
