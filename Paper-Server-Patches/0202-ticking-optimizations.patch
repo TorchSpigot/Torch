@@ -1,0 +1,112 @@
+From 9d6e80b67d727949a324f55413766b1eba85a2f1 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Fri, 29 Jul 2016 09:37:59 +0800
+Subject: [PATCH] ticking optimizations
+
+
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index bf23f42..4bff0b1 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -828,7 +828,6 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+         if(this.autoSaveOrdered) {
+             this.autoSaveNextWorld();
+         }
+-		 
+ 		long tickTime = System.nanoTime() - i;
+         this.migot.checkTickTime(tickTime);
+         // Migot end
+@@ -900,14 +899,10 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 
+ 		this.cancelHeavyCalculationsForAllWorlds(false); // Migot
+ 
+-        int i;
+-
+-        for (i = 0; i < this.worlds.size(); ++i) { // CraftBukkit
++        for (WorldServer worldserver : this.worlds) { // CraftBukkit
+             long j = System.nanoTime();
+ 
+             // if (i == 0 || this.getAllowNether()) {
+-                WorldServer worldserver = this.worlds.get(i);
+-				
+                 this.methodProfiler.a(worldserver.getWorldData().getName());
+                 /* Drop global time updates
+                 if (this.ticks % 20 == 0) {
+@@ -976,15 +971,20 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+         }
+ 		
+ 		this.migot.cancelTimerTask(false); // Migot
+-
+         this.methodProfiler.c("connection");
++		
+         MinecraftTimings.connectionTimer.startTiming(); // Spigot
+         this.am().c();
+         MinecraftTimings.connectionTimer.stopTiming(); // Spigot
++		
+         this.methodProfiler.c("players");
++		
+         MinecraftTimings.playerListTimer.startTiming(); // Spigot
+-        this.v.tick();
++        // this.v.tick();
++		PlayerListTickTask playerlist_ticktask = new PlayerListTickTask(this.v);
++		playerlist_ticktask.fork();
+         MinecraftTimings.playerListTimer.stopTiming(); // Spigot
++		
+         this.methodProfiler.c("tickables");
+ 
+         MinecraftTimings.tickablesTimer.startTiming(); // Spigot
+@@ -997,8 +997,14 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+         this.methodProfiler.b();
+ 		processNetworkQueue(); // Paper
+     }
+-
++	
+ 	// Torch start
++	class PlayerListTickTask extends RecursiveAction {
++		PlayerList playerlist;
++		PlayerListTickTask(PlayerList playerlist) { this.playerlist = playerlist; }
++        public void compute() { playerlist.tick(); }
++    }
++	
+ 	class WorldTickThread extends Thread {
+ 		WorldServer worldserver;
+ 		WorldTickThread(WorldServer worldserver) {
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index 778d1ce..38020cd 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -3498,18 +3498,6 @@ public abstract class World implements IBlockAccess {
+         return this.B;
+     }
+ 	
+-	public class WT_Pool extends RecursiveAction {
+-
+-        public WT_Pool(){
+-            
+-        }
+-
+-        @Override
+-        protected void compute() {
+-            t();
+-        }
+-    }
+-	
+ 	class get_en extends RecursiveAction {
+         World world;
+         @Nullable Entity entity;
+diff --git a/src/main/java/net/minecraft/server/WorldServer.java b/src/main/java/net/minecraft/server/WorldServer.java
+index e4bf6f4..512bd85 100644
+--- a/src/main/java/net/minecraft/server/WorldServer.java
++++ b/src/main/java/net/minecraft/server/WorldServer.java
+@@ -266,7 +266,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
+         timings.doChunkUnload.stopTiming(); // Spigot
+         this.methodProfiler.c("tickPending");
+         timings.scheduledBlocks.startTiming(); // Paper
+-        this.a(false);
++        synchronized(this) { this.a(false); }
+         timings.scheduledBlocks.stopTiming(); // Paper
+         this.methodProfiler.c("tickBlocks");
+         timings.chunkTicks.startTiming(); // Paper
+-- 
+2.8.2.windows.1
+
