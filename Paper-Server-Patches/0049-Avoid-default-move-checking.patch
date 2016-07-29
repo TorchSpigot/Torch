@@ -1,4 +1,4 @@
-From 68e86a9804dd258010209783dce9950c7c796f25 Mon Sep 17 00:00:00 2001
+From fc0d5e28418de9d95eebfe33b2a1d024d963ec4e Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 14:30:35 +0800
 Subject: [PATCH] Avoid default move checking
