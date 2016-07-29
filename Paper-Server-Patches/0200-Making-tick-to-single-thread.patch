@@ -1,4 +1,4 @@
-From e78efaca7338e4ce6a56a4037197525f744fa9a4 Mon Sep 17 00:00:00 2001
+From f69845b59aa51c53de84cf9f40565a66c9897a01 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 29 Jul 2016 05:57:25 +0800
 Subject: [PATCH] Making tick to single thread.
