@@ -1,4 +1,4 @@
-From 16a59683e77772304e1cab87f58e3778a40072df Mon Sep 17 00:00:00 2001
+From d9f4ed59268c0d0ba9625d5472fb003295708e85 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 29 Jul 2016 10:39:31 +0800
 Subject: [PATCH] Make alternative falling block ground detection configurable
@@ -27,6 +27,21 @@ index db60c35..5c2c525 100644
 +        altFallingBlockOnGround = getBoolean("use-alternate-fallingblock-onGround-detection", false);
 +    }
  }
+diff --git a/src/main/java/net/minecraft/server/ChunkProviderServer.java b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+index 67a5547..b5c727e 100644
+--- a/src/main/java/net/minecraft/server/ChunkProviderServer.java
++++ b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+@@ -182,7 +182,9 @@ public class ChunkProviderServer implements IChunkProvider {
+                 ChunkIOExecutor.queueChunkLoad(world, loader, this, i, j, runnable);
+                 return null;
+             } else {
+-				chunk = ChunkIOExecutor.syncChunkLoad(world, loader, this, i, j);
++				synchronized(this) {
++					chunk = ChunkIOExecutor.syncChunkLoad(world, loader, this, i, j);
++				}
+             }
+         } else if (chunk == null && generate) {
+             chunk = originalGetChunkAt(i, j);
 diff --git a/src/main/java/net/minecraft/server/Entity.java b/src/main/java/net/minecraft/server/Entity.java
 index ac329ce..65fdce1 100644
 --- a/src/main/java/net/minecraft/server/Entity.java

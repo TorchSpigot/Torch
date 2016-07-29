@@ -1,4 +1,4 @@
-From 15b3ec46b091b7626dcd94ac3c916b60b4279c59 Mon Sep 17 00:00:00 2001
+From 12bc0fdff8ea5730799d10d5f46c346179ba83cc Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 13:57:22 +0800
 Subject: [PATCH] SPIGOT-1181: Ensure Minecart command updates visually

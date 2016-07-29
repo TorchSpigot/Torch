@@ -1,4 +1,4 @@
-From 96f8feaeabfbe60573384643c9fd58e9a6db62ec Mon Sep 17 00:00:00 2001
+From 56decbef7cdaa11154a6c99733748eb2915421e8 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 23 Jul 2016 22:45:14 +0800
 Subject: [PATCH] Implement basic Beacon Block API
