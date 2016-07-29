@@ -1,4 +1,4 @@
-From 7079d9a15f33c3636f0e8013e3f73ac0c0fb32fd Mon Sep 17 00:00:00 2001
+From f47bdd153e97b78c8aadee992cfa53f19ae44480 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 05:32:00 +0800
 Subject: [PATCH] Component support for signs

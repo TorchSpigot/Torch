@@ -1,4 +1,4 @@
-From c199fb87353d0f5b0c90543cb726f3b7fc900415 Mon Sep 17 00:00:00 2001
+From 2b10152228844e2acf0198e3fa961dad169880c9 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 01:08:10 +0800
 Subject: [PATCH] Normalize UUID case and Simplify login message

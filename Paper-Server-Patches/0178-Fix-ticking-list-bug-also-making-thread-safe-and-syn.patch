@@ -1,4 +1,4 @@
-From 8caa1b89a29b462fa14d98b9fd226e67b5d94e04 Mon Sep 17 00:00:00 2001
+From 972e35fe9df47822e96bdc693918614b54a473b6 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 24 Jul 2016 00:15:49 +0800
 Subject: [PATCH] Fix ticking list bug, also making thread safe and sync issues

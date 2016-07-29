@@ -1,4 +1,4 @@
-From c724e9c2ccbed13ada55b92c2ae81b7a4b201ee9 Mon Sep 17 00:00:00 2001
+From e6f1152f107e3ac70a9ee0c324cf85499b900f3d Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 06:22:01 +0800
 Subject: [PATCH] Access items by EquipmentSlot
