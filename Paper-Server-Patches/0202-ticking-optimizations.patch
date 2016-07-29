@@ -1,11 +1,26 @@
-From 9d6e80b67d727949a324f55413766b1eba85a2f1 Mon Sep 17 00:00:00 2001
+From 27ab18f8fbeb86b14e63679780da89217f3a10f1 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 29 Jul 2016 09:37:59 +0800
 Subject: [PATCH] ticking optimizations
 
 
+diff --git a/src/main/java/net/minecraft/server/ChunkProviderServer.java b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+index b399f6a..67a5547 100644
+--- a/src/main/java/net/minecraft/server/ChunkProviderServer.java
++++ b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+@@ -182,9 +182,7 @@ public class ChunkProviderServer implements IChunkProvider {
+                 ChunkIOExecutor.queueChunkLoad(world, loader, this, i, j, runnable);
+                 return null;
+             } else {
+-                synchronized(this) {
+-					chunk = ChunkIOExecutor.syncChunkLoad(world, loader, this, i, j);
+-				}
++				chunk = ChunkIOExecutor.syncChunkLoad(world, loader, this, i, j);
+             }
+         } else if (chunk == null && generate) {
+             chunk = originalGetChunkAt(i, j);
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index bf23f42..4bff0b1 100644
+index bf23f42..3f3feb5 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
 @@ -828,7 +828,6 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
@@ -32,6 +47,19 @@ index bf23f42..4bff0b1 100644
                  this.methodProfiler.a(worldserver.getWorldData().getName());
                  /* Drop global time updates
                  if (this.ticks % 20 == 0) {
+@@ -925,9 +920,9 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+                 try {
+                     worldserver.timings.doTick.startTiming(); // Spigot
+ 					// Torch start
+-					Thread worldtick = new Thread(new WorldTickThread(worldserver), "World Ticking Thread");
+-                    // worldserver.doTick();
+-					worldtick.start(); // do server tick
++					// Thread worldtick = new Thread(new WorldTickThread(worldserver), "World Ticking Thread");
++                    worldserver.doTick();
++					// worldtick.start(); // do server tick
+ 					// Torch end
+                     worldserver.timings.doTick.stopTiming(); // Spigot
+                 } catch (Throwable throwable) {
 @@ -976,15 +971,20 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
          }
  		
@@ -72,9 +100,18 @@ index bf23f42..4bff0b1 100644
  		WorldServer worldserver;
  		WorldTickThread(WorldServer worldserver) {
 diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
-index 778d1ce..38020cd 100644
+index 778d1ce..e08eaa7 100644
 --- a/src/main/java/net/minecraft/server/World.java
 +++ b/src/main/java/net/minecraft/server/World.java
+@@ -1688,7 +1688,7 @@ public abstract class World implements IBlockAccess {
+             // Paper end
+             tickPosition = (tickPosition < entityList.size()) ? tickPosition : 0;
+             entity = (Entity) this.entityList.get(this.tickPosition);
+-			synchronized(this) { tick_hose(entity); }
++			tick_hose(entity);
+             // CraftBukkit end
+         }
+         guardEntityList = false; // Spigot
 @@ -3498,18 +3498,6 @@ public abstract class World implements IBlockAccess {
          return this.B;
      }
@@ -95,18 +132,18 @@ index 778d1ce..38020cd 100644
          World world;
          @Nullable Entity entity;
 diff --git a/src/main/java/net/minecraft/server/WorldServer.java b/src/main/java/net/minecraft/server/WorldServer.java
-index e4bf6f4..512bd85 100644
+index e4bf6f4..49812d9 100644
 --- a/src/main/java/net/minecraft/server/WorldServer.java
 +++ b/src/main/java/net/minecraft/server/WorldServer.java
-@@ -266,7 +266,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
-         timings.doChunkUnload.stopTiming(); // Spigot
-         this.methodProfiler.c("tickPending");
-         timings.scheduledBlocks.startTiming(); // Paper
--        this.a(false);
-+        synchronized(this) { this.a(false); }
-         timings.scheduledBlocks.stopTiming(); // Paper
-         this.methodProfiler.c("tickBlocks");
-         timings.chunkTicks.startTiming(); // Paper
+@@ -251,7 +251,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
+ 
+         timings.doChunkUnload.startTiming(); // Spigot
+         this.methodProfiler.c("chunkSource");
+-		synchronized(this) { this.chunkProvider.unloadChunks(); }
++		this.chunkProvider.unloadChunks();
+         int j = this.a(1.0F);
+ 
+         if (j != this.af()) {
 -- 
 2.8.2.windows.1
 
