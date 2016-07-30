@@ -1,0 +1,43 @@
+From ce3b98b6cfc6bc89ac7dc290e8b679ba6c639f52 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 30 Jul 2016 17:54:06 +0800
+Subject: [PATCH] Synchronized nbt load
+
+
+diff --git a/src/main/java/net/minecraft/server/NBTTagByteArray.java b/src/main/java/net/minecraft/server/NBTTagByteArray.java
+index a5b79ef..ceecfe8 100644
+--- a/src/main/java/net/minecraft/server/NBTTagByteArray.java
++++ b/src/main/java/net/minecraft/server/NBTTagByteArray.java
+@@ -20,14 +20,14 @@ public class NBTTagByteArray extends NBTBase {
+         dataoutput.write(this.data);
+     }
+ 
+-    void load(DataInput datainput, int i, NBTReadLimiter nbtreadlimiter) throws IOException {
++    synchronized void load(DataInput datainput, int i, NBTReadLimiter nbtreadlimiter) throws IOException {
+         nbtreadlimiter.a(192L);
+         int j = datainput.readInt();
+         com.google.common.base.Preconditions.checkArgument( j < 1 << 24);
+ 
+         nbtreadlimiter.a((long) (8 * j));
+         this.data = new byte[j];
+-        datainput.readFully(this.data);
++		datainput.readFully(this.data);
+     }
+ 
+     public byte getTypeId() {
+diff --git a/src/main/java/net/minecraft/server/NBTTagCompound.java b/src/main/java/net/minecraft/server/NBTTagCompound.java
+index 7fa49dd..f4801e2 100644
+--- a/src/main/java/net/minecraft/server/NBTTagCompound.java
++++ b/src/main/java/net/minecraft/server/NBTTagCompound.java
+@@ -383,7 +383,7 @@ public class NBTTagCompound extends NBTBase {
+         NBTBase nbtbase = NBTBase.createTag(b0);
+ 
+         try {
+-            nbtbase.load(datainput, i, nbtreadlimiter);
++			nbtbase.load(datainput, i, nbtreadlimiter);
+             return nbtbase;
+         } catch (IOException ioexception) {
+             CrashReport crashreport = CrashReport.a(ioexception, "Loading NBT data");
+-- 
+2.8.2.windows.1
+
