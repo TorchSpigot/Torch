@@ -1,0 +1,51 @@
+From ce3e936e69d0995b8b6dcae37d3a248829cb60e3 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 30 Jul 2016 15:30:24 +0800
+Subject: [PATCH] Fork/Join for playerlist.
+
+
+diff --git a/src/main/java/net/minecraft/server/PlayerList.java b/src/main/java/net/minecraft/server/PlayerList.java
+index f4503f8..55d570e 100644
+--- a/src/main/java/net/minecraft/server/PlayerList.java
++++ b/src/main/java/net/minecraft/server/PlayerList.java
+@@ -41,6 +41,8 @@ import org.bukkit.util.Vector;
+ import org.spigotmc.event.player.PlayerSpawnLocationEvent;
+ // CraftBukkit end
+ 
++import java.util.concurrent.RecursiveAction; // Torch
++
+ public abstract class PlayerList {
+ 
+     public static final File a = new File("banned-players.json");
+@@ -87,8 +89,26 @@ public abstract class PlayerList {
+         this.l.a(false);
+         this.maxPlayers = 8;
+     }
+-
+-    public void a(NetworkManager networkmanager, EntityPlayer entityplayer) {
++	
++	// Torch start
++	public void a(NetworkManager networkmanager, EntityPlayer entityplayer) {
++		NetworkTask task = new NetworkTask(networkmanager, entityplayer);
++		task.fork();
++	}
++	
++	class NetworkTask extends RecursiveAction {
++        NetworkManager networkmanager; EntityPlayer entityplayer;
++        public NetworkTask(NetworkManager networkmanager, EntityPlayer entityplayer) {
++            this.networkmanager = networkmanager; this.entityplayer = entityplayer;
++        }
++        @Override
++        protected void compute() {
++            a_task(networkmanager, entityplayer);
++        }
++	}
++
++    public void a_task(NetworkManager networkmanager, EntityPlayer entityplayer) {
++		// Torch end
+         GameProfile gameprofile = entityplayer.getProfile();
+         UserCache usercache = this.server.getUserCache();
+         GameProfile gameprofile1 = usercache.a(gameprofile.getId());
+-- 
+2.8.2.windows.1
+

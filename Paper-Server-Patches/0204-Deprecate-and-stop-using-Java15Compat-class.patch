@@ -1,4 +1,4 @@
-From 7bcdd918543d67a6c03687b1e31d63149c08ec17 Mon Sep 17 00:00:00 2001
+From af5c4580bd1819a3e796cf28200fae96ae4ebf4a Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 30 Jul 2016 03:46:41 +0800
 Subject: [PATCH] Deprecate and stop using Java15Compat class.

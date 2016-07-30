@@ -1,4 +1,4 @@
-From 9888c731c5ffcccb4f1c4b9f728bbafcc86c5f76 Mon Sep 17 00:00:00 2001
+From 9c48cb7bb81db0e6cb9cc068cc76a796ad578472 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 29 Jul 2016 04:49:44 +0800
 Subject: [PATCH] Fix TrigMath
