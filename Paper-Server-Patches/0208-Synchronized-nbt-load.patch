@@ -1,11 +1,11 @@
-From b841d41a31153b87e1fc03ca0fb3d6134b04db2c Mon Sep 17 00:00:00 2001
+From a1a6be6094a01cfd28c06e9ff1f4e3d778f64f6d Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 30 Jul 2016 16:12:29 +0800
 Subject: [PATCH] Synchronized nbt load
 
 
 diff --git a/src/main/java/net/minecraft/server/ChunkRegionLoader.java b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
-index d0a8230..6ac58f0 100644
+index d0a8230..17e814d 100644
 --- a/src/main/java/net/minecraft/server/ChunkRegionLoader.java
 +++ b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
 @@ -81,7 +81,9 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
@@ -19,6 +19,15 @@ index d0a8230..6ac58f0 100644
  
              if (nbttagcompound == null) {
                  return null;
+@@ -205,7 +207,7 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+         }
+     }
+ 
+-    private void b(ChunkCoordIntPair chunkcoordintpair, NBTTagCompound nbttagcompound) throws IOException {
++    private synchronized void b(ChunkCoordIntPair chunkcoordintpair, NBTTagCompound nbttagcompound) throws IOException {
+         DataOutputStream dataoutputstream = RegionFileCache.d(this.d, chunkcoordintpair.x, chunkcoordintpair.z);
+ 
+         NBTCompressedStreamTools.a(nbttagcompound, (DataOutput) dataoutputstream);
 diff --git a/src/main/java/net/minecraft/server/NBTTagByteArray.java b/src/main/java/net/minecraft/server/NBTTagByteArray.java
 index a5b79ef..974619d 100644
 --- a/src/main/java/net/minecraft/server/NBTTagByteArray.java

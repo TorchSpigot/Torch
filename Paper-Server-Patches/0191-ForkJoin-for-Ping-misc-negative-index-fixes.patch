@@ -1,4 +1,4 @@
-From a46daeeabfe68e92e68b350c7b6a337fe05644b0 Mon Sep 17 00:00:00 2001
+From 05a79146edf5c7ba59c7c09793dc765219493d31 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 25 Jul 2016 21:56:52 +0800
 Subject: [PATCH] ForkJoin for Ping, misc negative index fixes
