@@ -1,4 +1,4 @@
-From 732622cd35217b9fdce38479527ca00a2aa019f8 Mon Sep 17 00:00:00 2001
+From 95af2ce1d1fd5daff33d30d1529c4f0732d96adc Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 16:47:09 +0800
 Subject: [PATCH] Optimize isInvalidYLocation, getType and getBlockData

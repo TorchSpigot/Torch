@@ -1,9 +1,24 @@
-From 894679069db7422fee46b12456fe0ff475df23a7 Mon Sep 17 00:00:00 2001
+From b841d41a31153b87e1fc03ca0fb3d6134b04db2c Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 30 Jul 2016 16:12:29 +0800
 Subject: [PATCH] Synchronized nbt load
 
 
+diff --git a/src/main/java/net/minecraft/server/ChunkRegionLoader.java b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+index d0a8230..6ac58f0 100644
+--- a/src/main/java/net/minecraft/server/ChunkRegionLoader.java
++++ b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+@@ -81,7 +81,9 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+ 
+         if (nbttagcompound == null) {
+             // CraftBukkit start
+-            nbttagcompound = RegionFileCache.c(this.d, i, j);
++			synchronized(this) {
++				nbttagcompound = RegionFileCache.c(this.d, i, j);
++			}
+ 
+             if (nbttagcompound == null) {
+                 return null;
 diff --git a/src/main/java/net/minecraft/server/NBTTagByteArray.java b/src/main/java/net/minecraft/server/NBTTagByteArray.java
 index a5b79ef..974619d 100644
 --- a/src/main/java/net/minecraft/server/NBTTagByteArray.java
