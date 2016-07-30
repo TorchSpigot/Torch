@@ -1,0 +1,24 @@
+From 894679069db7422fee46b12456fe0ff475df23a7 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 30 Jul 2016 16:12:29 +0800
+Subject: [PATCH] Synchronized nbt load
+
+
+diff --git a/src/main/java/net/minecraft/server/NBTTagByteArray.java b/src/main/java/net/minecraft/server/NBTTagByteArray.java
+index a5b79ef..974619d 100644
+--- a/src/main/java/net/minecraft/server/NBTTagByteArray.java
++++ b/src/main/java/net/minecraft/server/NBTTagByteArray.java
+@@ -27,7 +27,9 @@ public class NBTTagByteArray extends NBTBase {
+ 
+         nbtreadlimiter.a((long) (8 * j));
+         this.data = new byte[j];
+-        datainput.readFully(this.data);
++		synchronized(this) {
++			datainput.readFully(this.data);
++		}
+     }
+ 
+     public byte getTypeId() {
+-- 
+2.8.2.windows.1
+
