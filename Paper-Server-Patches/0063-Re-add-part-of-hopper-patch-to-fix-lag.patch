@@ -1,4 +1,4 @@
-From e56b19e60ebe5e94f956c1bea4cd7c84f2591813 Mon Sep 17 00:00:00 2001
+From 6cd5690d2df0d1b6ece76389fdad9d0cb5790cec Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:22:10 +0800
 Subject: [PATCH] Re-add part of hopper patch to fix lag

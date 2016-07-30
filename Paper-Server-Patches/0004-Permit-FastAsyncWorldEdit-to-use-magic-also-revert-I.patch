@@ -1,4 +1,4 @@
-From 441b1d77990422eff80698e6a97a0c48bf6f1263 Mon Sep 17 00:00:00 2001
+From 0c3b3aca17bd63a03afa09ec820a272ee0207e5c Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 13:34:37 +0800
 Subject: [PATCH] Permit FastAsyncWorldEdit to use magic, also revert

@@ -1,7 +1,7 @@
-From d395abc0cefa3506e739f29aec9771574b65ea0b Mon Sep 17 00:00:00 2001
+From 604833f23ba0a48c58841ee008d530337af5c6c8 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 30 Jul 2016 16:05:46 +0800
-Subject: [PATCH] SPIGOT-1388: Branchless NibbleArray
+Subject: [PATCH] Synchronized nbt load
 
 
 diff --git a/src/main/java/net/minecraft/server/NibbleArray.java b/src/main/java/net/minecraft/server/NibbleArray.java
@@ -66,6 +66,22 @@ index 0000000..d31b092
 +    }
 +}
 \ No newline at end of file
+diff --git a/src/main/java/net/minecraft/server/RegionFile.java b/src/main/java/net/minecraft/server/RegionFile.java
+index 9fe8e9c..6e1b28f 100644
+--- a/src/main/java/net/minecraft/server/RegionFile.java
++++ b/src/main/java/net/minecraft/server/RegionFile.java
+@@ -348,7 +348,9 @@ public class RegionFile {
+ 
+         public void close() {
+             // RegionFile.this.a(this.b, this.c, this.buf, this.count);
+-			RegionFile.this.a(this.b, this.c, this.array, this.length); // Torch
+-        }
++			synchronized(this) {
++				RegionFile.this.a(this.b, this.c, this.array, this.length); // Torch
++			}
++		}
+     }
+ }
 -- 
 2.8.2.windows.1
 
