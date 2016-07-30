@@ -1,4 +1,4 @@
-From 8b11a95930c2d9642a3c2b08d4d2b3f2b55b5385 Mon Sep 17 00:00:00 2001
+From 8833a39458f7416f3fad45ef7f37667c2e42deda Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 22:58:02 +0800
 Subject: [PATCH] Dont be so noisy with debug messages
@@ -142,7 +142,7 @@ index c0c884c..263f4c0 100644
      // Paper end
  }
 diff --git a/src/main/java/org/bukkit/plugin/java/PluginClassLoader.java b/src/main/java/org/bukkit/plugin/java/PluginClassLoader.java
-index 99b5cc4..9c7c5d7 100644
+index 99b5cc4e..9c7c5d7 100644
 --- a/src/main/java/org/bukkit/plugin/java/PluginClassLoader.java
 +++ b/src/main/java/org/bukkit/plugin/java/PluginClassLoader.java
 @@ -38,6 +38,7 @@ public final class PluginClassLoader extends URLClassLoader { // Spigot
