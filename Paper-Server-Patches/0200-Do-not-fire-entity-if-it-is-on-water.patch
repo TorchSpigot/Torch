@@ -1,4 +1,4 @@
-From faa73d213b595dac39ce9554fe0fbbe3943dfbb4 Mon Sep 17 00:00:00 2001
+From 93f064032ac450f25f397392a3a803e97e9c3a5d Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 29 Jul 2016 07:51:23 +0800
 Subject: [PATCH] Do not fire entity if it is on water.

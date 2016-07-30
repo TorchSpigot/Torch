@@ -1,4 +1,4 @@
-From d95e654f71dd17d2c5ed0cab2e1b8ed23a9f4352 Mon Sep 17 00:00:00 2001
+From 0e77949d3543f55448bf771b33f6fb6f503173b3 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 30 Jul 2016 21:18:43 +0800
 Subject: [PATCH] Synchronized timings
@@ -157,6 +157,19 @@ index 3f3feb5..a29e0fa 100644
          }
  		
  		// Migot start
+diff --git a/src/main/java/net/minecraft/server/NBTTagCompound.java b/src/main/java/net/minecraft/server/NBTTagCompound.java
+index 7fa49dd..1b2cd19 100644
+--- a/src/main/java/net/minecraft/server/NBTTagCompound.java
++++ b/src/main/java/net/minecraft/server/NBTTagCompound.java
+@@ -40,7 +40,7 @@ public class NBTTagCompound extends NBTBase {
+             byte b0;
+ 
+             while ((b0 = a(datainput, nbtreadlimiter)) != 0) {
+-                String s = b(datainput, nbtreadlimiter);
++                String s = getStoredString(b(datainput, nbtreadlimiter), true); // Migot
+ 
+                 nbtreadlimiter.a((long) (224 + 16 * s.length()));
+                 NBTBase nbtbase = a(b0, s, datainput, i + 1, nbtreadlimiter);
 diff --git a/src/main/java/net/minecraft/server/StructureGenerator.java b/src/main/java/net/minecraft/server/StructureGenerator.java
 index f48a692..85b34ce 100644
 --- a/src/main/java/net/minecraft/server/StructureGenerator.java

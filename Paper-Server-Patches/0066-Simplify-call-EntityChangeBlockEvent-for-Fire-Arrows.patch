@@ -1,4 +1,4 @@
-From 148bbd4fb5841f5fad2682c5b13ce7e9ff2b0765 Mon Sep 17 00:00:00 2001
+From 06257f00ee5f3f9aa5c923eebd1b93ac2099af3f Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:29:33 +0800
 Subject: [PATCH] Simplify call EntityChangeBlockEvent for Fire Arrows hitting
