@@ -1,4 +1,4 @@
-From b401c9d9c356a836b6bddddb37c36754fe70830d Mon Sep 17 00:00:00 2001
+From a34f1a70f152423d9239fe67ea0a1f8ee08df51d Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 12 Jul 2016 16:20:51 +0800
 Subject: [PATCH] Async event

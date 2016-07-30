@@ -1,0 +1,71 @@
+From b568aad5a6d3175e95aa3028702a03b7ba21e9e1 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 30 Jul 2016 16:05:46 +0800
+Subject: [PATCH] SPIGOT-1388: Branchless NibbleArray
+
+
+diff --git a/src/main/java/net/minecraft/server/NibbleArray.java b/src/main/java/net/minecraft/server/NibbleArray.java
+new file mode 100644
+index 0000000..d31b092
+--- /dev/null
++++ b/src/main/java/net/minecraft/server/NibbleArray.java
+@@ -0,0 +1,55 @@
++package net.minecraft.server;
++
++public class NibbleArray {
++
++    private final byte[] a;
++
++    public NibbleArray() {
++        this.a = new byte[2048];
++    }
++
++    public NibbleArray(byte[] abyte) {
++        this.a = abyte;
++        if (abyte.length != 2048) {
++            throw new IllegalArgumentException("ChunkNibbleArrays should be 2048 bytes not: " + abyte.length);
++        }
++    }
++
++    public int a(int i, int j, int k) {
++        return this.a(this.b(i, j, k));
++    }
++
++    public void a(int i, int j, int k, int l) {
++        this.a(this.b(i, j, k), l);
++    }
++
++    private int b(int i, int j, int k) {
++        return j << 8 | k << 4 | i;
++    }
++
++    public int a(int i) {
++        int j = this.c(i);
++
++        return this.a[j] >> ((i & 1) << 2) & 15; // Spigot
++    }
++
++    public void a(int i, int j) {
++        int k = this.c(i);
++        // Spigot start
++        int shift = (i & 1) << 2;
++        this.a[k] = (byte) (this.a[k] & ~(15 << shift) | (j & 15) << shift);
++        // Spigot end
++    }
++
++    private boolean b(int i) {
++        return (i & 1) == 0;
++    }
++
++    private int c(int i) {
++        return i >> 1;
++    }
++
++    public byte[] asBytes() {
++        return this.a;
++    }
++}
+\ No newline at end of file
+-- 
+2.8.2.windows.1
+
