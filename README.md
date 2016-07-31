@@ -50,3 +50,7 @@ Have an idea for an optimization, or found a bug?
 * Let me know what you've tested / what may need further testing
 * Also see **Contributing.md**
 * Feel free to open a PR or issue.
+
+####Entity performance test
+
+![Result](http://i1.piimg.com/1949/d617db7d55cd75ab.png) 
