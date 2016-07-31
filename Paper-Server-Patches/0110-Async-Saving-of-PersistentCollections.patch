@@ -1,4 +1,4 @@
-From 1d69582bb5d3cd4ea37892f9b06fe49c64f92518 Mon Sep 17 00:00:00 2001
+From cd78880eb11068b33ec16b96f4e1d4b71ef3234d Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 12 Jul 2016 17:56:17 +0800
 Subject: [PATCH] Async-Saving-of-PersistentCollections

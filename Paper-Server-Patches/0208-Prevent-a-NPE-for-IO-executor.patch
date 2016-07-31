@@ -1,4 +1,4 @@
-From 9e7ff7453bd169c3b3abedded5d70bdf7269e4b5 Mon Sep 17 00:00:00 2001
+From ff77d3a227b9470659dd93e801beda2498cb8dfb Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 31 Jul 2016 15:04:11 +0800
 Subject: [PATCH] Prevent a NPE for IO executor.
