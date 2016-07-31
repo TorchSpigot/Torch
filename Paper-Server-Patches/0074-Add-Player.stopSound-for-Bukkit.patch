@@ -1,4 +1,4 @@
-From e758d95bcfdf1d1e980f65c6094dbd0eafa8a360 Mon Sep 17 00:00:00 2001
+From eedb4e8b64f0215b1a8ade3025b40fe7340a3c32 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:49:58 +0800
 Subject: [PATCH] Add Player.stopSound for Bukkit

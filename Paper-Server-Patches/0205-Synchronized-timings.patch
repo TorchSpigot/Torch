@@ -1,4 +1,4 @@
-From 91da32b3c3fb47a98bf2490ec8b40d804a706ef5 Mon Sep 17 00:00:00 2001
+From d662866ba51d1301bd80a1c6f144e6bc33d9264c Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 30 Jul 2016 21:18:43 +0800
 Subject: [PATCH] Synchronized timings
@@ -157,11 +157,56 @@ index 3f3feb5..a29e0fa 100644
          }
  		
  		// Migot start
+diff --git a/src/main/java/net/minecraft/server/NBTCompressedStreamTools.java b/src/main/java/net/minecraft/server/NBTCompressedStreamTools.java
+index b2d5254..e26c6f3 100644
+--- a/src/main/java/net/minecraft/server/NBTCompressedStreamTools.java
++++ b/src/main/java/net/minecraft/server/NBTCompressedStreamTools.java
+@@ -1,7 +1,7 @@
+ package net.minecraft.server;
+ 
+-import java.io.BufferedInputStream;
+-import java.io.BufferedOutputStream;
++import org.torch.util.io.FastBufferedInputStream;
++import org.torch.util.io.FastBufferedOutputStream;
+ import java.io.DataInput;
+ import java.io.DataInputStream;
+ import java.io.DataOutput;
+@@ -15,7 +15,7 @@ import java.util.zip.GZIPOutputStream;
+ public class NBTCompressedStreamTools {
+ 
+     public static NBTTagCompound a(InputStream inputstream) throws IOException {
+-        DataInputStream datainputstream = new DataInputStream(new BufferedInputStream(new GZIPInputStream(inputstream)));
++        DataInputStream datainputstream = new DataInputStream(new FastBufferedInputStream(new GZIPInputStream(inputstream)));
+ 
+         NBTTagCompound nbttagcompound;
+ 
+@@ -29,7 +29,7 @@ public class NBTCompressedStreamTools {
+     }
+ 
+     public static void a(NBTTagCompound nbttagcompound, OutputStream outputstream) throws IOException {
+-        DataOutputStream dataoutputstream = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(outputstream)));
++        DataOutputStream dataoutputstream = new DataOutputStream(new FastBufferedOutputStream(new GZIPOutputStream(outputstream)));
+ 
+         try {
+             a(nbttagcompound, (DataOutput) dataoutputstream);
 diff --git a/src/main/java/net/minecraft/server/NBTTagCompound.java b/src/main/java/net/minecraft/server/NBTTagCompound.java
-index 7fa49dd..1b2cd19 100644
+index 7fa49dd..11de8e8 100644
 --- a/src/main/java/net/minecraft/server/NBTTagCompound.java
 +++ b/src/main/java/net/minecraft/server/NBTTagCompound.java
-@@ -40,7 +40,7 @@ public class NBTTagCompound extends NBTBase {
+@@ -10,10 +10,11 @@ import java.util.Set;
+ import java.util.UUID;
+ import java.util.Map.Entry;
+ import javax.annotation.Nullable;
++import java.util.concurrent.ConcurrentHashMap;
+ 
+ public class NBTTagCompound extends NBTBase {
+ 
+-    public Map<String, NBTBase> map = Maps.newHashMap(); // Paper
++    public Map<String, NBTBase> map = new ConcurrentHashMap(); // Paper
+ 
+     public NBTTagCompound() {}
+ 
+@@ -40,7 +41,7 @@ public class NBTTagCompound extends NBTBase {
              byte b0;
  
              while ((b0 = a(datainput, nbtreadlimiter)) != 0) {
@@ -226,55 +271,6 @@ index 760ec34..e5ca6f1 100644
          if (data != null) {
              Chunk chunk = (Chunk) data[0];
              NBTTagCompound nbttagcompound = (NBTTagCompound) data[1];
-diff --git a/src/main/java/net/minecraft/server/NBTCompressedStreamTools.java b/src/main/java/net/minecraft/server/NBTCompressedStreamTools.java
-index b2d5254..e26c6f3 100644
---- a/src/main/java/net/minecraft/server/NBTCompressedStreamTools.java
-+++ b/src/main/java/net/minecraft/server/NBTCompressedStreamTools.java
-@@ -1,7 +1,7 @@
- package net.minecraft.server;
- 
--import java.io.BufferedInputStream;
--import java.io.BufferedOutputStream;
-+import org.torch.util.io.FastBufferedInputStream;
-+import org.torch.util.io.FastBufferedOutputStream;
- import java.io.DataInput;
- import java.io.DataInputStream;
- import java.io.DataOutput;
-@@ -15,7 +15,7 @@ import java.util.zip.GZIPOutputStream;
- public class NBTCompressedStreamTools {
- 
-     public static NBTTagCompound a(InputStream inputstream) throws IOException {
--        DataInputStream datainputstream = new DataInputStream(new BufferedInputStream(new GZIPInputStream(inputstream)));
-+        DataInputStream datainputstream = new DataInputStream(new FastBufferedInputStream(new GZIPInputStream(inputstream)));
- 
-         NBTTagCompound nbttagcompound;
- 
-@@ -29,7 +29,7 @@ public class NBTCompressedStreamTools {
-     }
- 
-     public static void a(NBTTagCompound nbttagcompound, OutputStream outputstream) throws IOException {
--        DataOutputStream dataoutputstream = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(outputstream)));
-+        DataOutputStream dataoutputstream = new DataOutputStream(new FastBufferedOutputStream(new GZIPOutputStream(outputstream)));
- 
-         try {
-             a(nbttagcompound, (DataOutput) dataoutputstream);
-diff --git a/src/main/java/net/minecraft/server/NBTTagCompound.java b/src/main/java/net/minecraft/server/NBTTagCompound.java
-index 1b2cd19..11de8e8 100644
---- a/src/main/java/net/minecraft/server/NBTTagCompound.java
-+++ b/src/main/java/net/minecraft/server/NBTTagCompound.java
-@@ -10,10 +10,11 @@ import java.util.Set;
- import java.util.UUID;
- import java.util.Map.Entry;
- import javax.annotation.Nullable;
-+import java.util.concurrent.ConcurrentHashMap;
- 
- public class NBTTagCompound extends NBTBase {
- 
--    public Map<String, NBTBase> map = Maps.newHashMap(); // Paper
-+    public Map<String, NBTBase> map = new ConcurrentHashMap(); // Paper
- 
-     public NBTTagCompound() {}
- 
 -- 
 2.8.2.windows.1
 
