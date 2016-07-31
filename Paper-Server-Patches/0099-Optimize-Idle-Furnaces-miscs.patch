@@ -1,4 +1,4 @@
-From 17c1363936b98a0ef02e0e31a3ac00dcf909efc6 Mon Sep 17 00:00:00 2001
+From fee61b3396de3ee4eac295e84bfbf03893c4f3e1 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 12 Jul 2016 04:14:07 +0800
 Subject: [PATCH] Optimize Idle Furnaces, miscs

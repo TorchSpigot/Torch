@@ -1,4 +1,4 @@
-From afebfb054f71126c6c20cb5d1a08e786522d3a00 Mon Sep 17 00:00:00 2001
+From 262dbd94bd02ecbb715fb78d35f5d8677a37a679 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:28:10 +0800
 Subject: [PATCH] SPIGOT-2501: Remove period from default quit message
