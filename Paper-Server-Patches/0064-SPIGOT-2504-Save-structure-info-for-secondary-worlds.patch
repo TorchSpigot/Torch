@@ -1,4 +1,4 @@
-From 293abc6cef3fa2a47b0b60e8badfe2f4820fddef Mon Sep 17 00:00:00 2001
+From 65e742ce51d84f58e727c80d625490749a439df1 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:27:27 +0800
 Subject: [PATCH] SPIGOT-2504: Save structure info for secondary worlds

@@ -1,11 +1,11 @@
-From 82123cb77219f2bc23a4f54d9ef558693aa0fdde Mon Sep 17 00:00:00 2001
+From 862e04293d61b525e7be3f2a1138cad3ce26518d Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Thu, 28 Jul 2016 03:38:09 +0800
 Subject: [PATCH] Drop mysql version to fix compatible.
 
 
 diff --git a/pom.xml b/pom.xml
-index 30643cc..981faa8 100644
+index 6510fbd..2880912 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -65,13 +65,13 @@
