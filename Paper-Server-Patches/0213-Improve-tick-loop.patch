@@ -1,39 +1,13 @@
-From db18cb299e7cc3acc6006ed30c12edfdbe73c06f Mon Sep 17 00:00:00 2001
+From 735ed872a4c6bf76aee092b6aa008e3bc7f1e9c9 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 1 Aug 2016 17:46:12 +0800
 Subject: [PATCH] Improve tick loop
 
-
-diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 3195c60..0f0b54b 100644
---- a/src/main/java/net/minecraft/server/MinecraftServer.java
-+++ b/src/main/java/net/minecraft/server/MinecraftServer.java
-@@ -663,11 +663,19 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
-                 this.q.setMOTD(new ChatComponentText(this.motd));
-                 this.q.setServerInfo(new ServerPing.ServerData("1.9.4", 110));
-                 this.a(this.q);
-+				
-+				// Torch start - checking this only once
-+				for (WorldServer worldserver : this.worlds) {
-+					if (worldserver.getWorldData().isHardcore() && worldserver.getDifficulty() != EnumDifficulty.HARD) {
-+						worldserver.getWorldData().setDifficulty(EnumDifficulty.HARD);
-+					}
-+				}
-+				// Torch end
- 
-                 // Spigot start
-                 Arrays.fill( recentTps, 20 );
-                 long start = System.nanoTime(), lastTick = start - TICK_TIME, catchupTime = 0, curTime, wait, tickSection = start; // Paper - Further improve server tick loop
--                while (this.isRunning) {
-+				while (this.isRunning) { // Only run once above this, but per tick after this.
-                     curTime = System.nanoTime();
-                     // Paper start - Further improve server tick loop
-                     wait = TICK_TIME - (curTime - lastTick);
 @@ -1018,7 +1026,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
  		PlayerListTickTask(PlayerList playerlist) { this.playerlist = playerlist; }
          public void compute() { playerlist.tick(); }
      }
--	
+-
 +	/*
  	class WorldTickThread extends Thread {
  		WorldServer worldserver;
@@ -43,10 +17,11 @@ index 3195c60..0f0b54b 100644
          public void run() { worldserver.doTick(); }
      }
 -	/*
-+	
++
  	class EntityTickThread extends Thread {
  		WorldServer worldserver;
  		EntityTickThread(WorldServer worldserver) {
+
 diff --git a/src/main/java/net/minecraft/server/WorldServer.java b/src/main/java/net/minecraft/server/WorldServer.java
 index 49812d9..e642de7 100644
 --- a/src/main/java/net/minecraft/server/WorldServer.java
