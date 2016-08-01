@@ -1,4 +1,4 @@
-From 48bdc245fa77ab274d3f9aeea6cb8d0fcdb91ac2 Mon Sep 17 00:00:00 2001
+From d0baf9cfab2912e48022be02985c12e698b6c0e1 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 28 Jun 2016 17:18:45 +0800
 Subject: [PATCH] Show Torch in somewhere and Metrics
@@ -15,7 +15,7 @@ index 927418f..4da5248 100644
 -    <version>1.9.4-R0.1</version>
 -    <name>TacoSpigot</name>
 -    <url>https://github.com/TacoSpigot/TacoSpigot</url>
-+    <version>1.9.4-R1.4</version>
++    <version>1.9.4-R1.5</version>
 +    <name>Torch</name>
 +    <url>https://github.com/TorchSpigot/Torch</url>
  
