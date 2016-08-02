@@ -1,4 +1,4 @@
-From cf0be82c26a6be21d0a7e88ea9b96e1ea7629021 Mon Sep 17 00:00:00 2001
+From faed7f55dcc1b201e567ab434857bb71d0df332f Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 25 Jul 2016 18:59:29 +0800
 Subject: [PATCH] Chunk save reattempt exception reporting
