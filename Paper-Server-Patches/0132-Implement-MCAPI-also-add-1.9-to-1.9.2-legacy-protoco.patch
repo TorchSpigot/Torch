@@ -1,4 +1,4 @@
-From 6b0f36f23c1ed83a7f15c71994c6f24a39bab203 Mon Sep 17 00:00:00 2001
+From a9dd8a68e5619a9fb15629603b9c121b7f969911 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 05:17:08 +0800
 Subject: [PATCH] Implement MCAPI also add 1.9 to 1.9.2 legacy protocol support

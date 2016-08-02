@@ -1,4 +1,4 @@
-From e10edddb64cf5caaa609925d3b656afeb2374d5c Mon Sep 17 00:00:00 2001
+From f3d6df079a599ee9b3c871f5cd3a92397e7b7be0 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 16:54:14 +0800
 Subject: [PATCH] Fix exception that shouldnt throw

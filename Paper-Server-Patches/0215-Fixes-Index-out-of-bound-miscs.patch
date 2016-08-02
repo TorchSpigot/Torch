@@ -1,0 +1,53 @@
+From 2d5ffaa0593f6d2759135f53c9737130752731a6 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Tue, 2 Aug 2016 18:43:41 +0800
+Subject: [PATCH] Fixes Index out of bound, miscs
+
+
+diff --git a/src/main/java/net/minecraft/server/ChunkRegionLoader.java b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+index 07f83a9..5c092e5 100644
+--- a/src/main/java/net/minecraft/server/ChunkRegionLoader.java
++++ b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+@@ -185,7 +185,9 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+                 if (nbttagcompound != null) {
+                     int attempts = 0; Exception laste = null; while (attempts++ < 5) { // Paper
+                     try {
+-                        this.b(chunkcoordintpair, nbttagcompound);
++						synchronized(this) {
++							this.b(chunkcoordintpair, nbttagcompound);
++						}
+                         laste = null; break; // Paper
+                     } catch (Exception exception) {
+                         //ChunkRegionLoader.a.error("Failed to save chunk", exception); // Paper
+diff --git a/src/main/java/net/minecraft/server/NetworkManager.java b/src/main/java/net/minecraft/server/NetworkManager.java
+index 7372a1b..3d4be7f 100644
+--- a/src/main/java/net/minecraft/server/NetworkManager.java
++++ b/src/main/java/net/minecraft/server/NetworkManager.java
+@@ -238,7 +238,9 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
+     }
+ 
+     public void a() {
+-        this.m();
++		synchronized(this) {
++			this.m();
++		}
+         if (this.m instanceof ITickable) {
+             ((ITickable) this.m).c();
+         }
+diff --git a/src/main/java/org/bukkit/command/SimpleCommandMap.java b/src/main/java/org/bukkit/command/SimpleCommandMap.java
+index 6e7b80d..7f6cab7 100644
+--- a/src/main/java/org/bukkit/command/SimpleCommandMap.java
++++ b/src/main/java/org/bukkit/command/SimpleCommandMap.java
+@@ -234,7 +234,8 @@ public class SimpleCommandMap implements CommandMap {
+      */
+     public List<String> tabComplete(CommandSender sender, String cmdLine, Location location) {
+ 		if (config.getDisableTabComplete()) {
+-			return null;
++			ArrayList<String> completions = new ArrayList<String>();
++			return completions;
+ 		}
+ 		
+         Validate.notNull(sender, "Sender cannot be null");
+-- 
+2.8.2.windows.1
+

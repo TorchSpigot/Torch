@@ -1,4 +1,4 @@
-From 1f2692f6fbfb4a9abf7df9c6ac6d8494e4fd8c66 Mon Sep 17 00:00:00 2001
+From bc422b885977721eeb2574ea8643f9318a36965b Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 14:21:41 +0800
 Subject: [PATCH] Use arrays for the DataWatcher
