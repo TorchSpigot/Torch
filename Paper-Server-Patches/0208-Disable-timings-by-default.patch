@@ -1,4 +1,4 @@
-From 5450a151ff98083557c6414314c2899b34dc371e Mon Sep 17 00:00:00 2001
+From 42a3b6f6bea6383e40725037c5288e9a63570097 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 31 Jul 2016 16:38:35 +0800
 Subject: [PATCH] Disable timings by default.

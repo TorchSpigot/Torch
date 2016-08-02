@@ -1,4 +1,4 @@
-From 7e8c542fa8a335a43aa1564a00fd21d0a751a5d5 Mon Sep 17 00:00:00 2001
+From 692aa61e5479a6afa6c559fa0671d8fa07781398 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 06:21:03 +0800
 Subject: [PATCH] Fix passenger desync

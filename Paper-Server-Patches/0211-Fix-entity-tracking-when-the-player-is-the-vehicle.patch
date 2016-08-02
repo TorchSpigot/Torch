@@ -1,4 +1,4 @@
-From b6c007ba82f6ec0e90bf448b48aa27acea12250f Mon Sep 17 00:00:00 2001
+From ecc54309399e5cafa3ab6b5722560fb8d3ab3fcf Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 1 Aug 2016 05:13:56 +0800
 Subject: [PATCH] Fix entity tracking when the player is the vehicle

@@ -1,4 +1,4 @@
-From 8312b3d18742ad6783fa2a677701f9375d127a1b Mon Sep 17 00:00:00 2001
+From 504651473ec1ab129c21f69cfd5d650de66e5b6f Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 06:38:55 +0800
 Subject: [PATCH] Log unhandled plugin exceptions as errors

@@ -1,4 +1,4 @@
-From 10f9d98783cd0ddcab76a94ad4b0fa179a651c48 Mon Sep 17 00:00:00 2001
+From 404bf090f5d998fc0e4698624398b2b2333801ff Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 03:47:21 +0800
 Subject: [PATCH] Fix self-damage being cancelled by FF/PvP rules
