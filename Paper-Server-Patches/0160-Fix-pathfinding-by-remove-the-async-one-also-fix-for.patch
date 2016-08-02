@@ -1,4 +1,4 @@
-From 2338b34f3a5b256beb676e051b98e4ee403cd7c4 Mon Sep 17 00:00:00 2001
+From 60de58ce9abc85fcba4522223f39fa853f0ec97f Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Wed, 20 Jul 2016 23:53:13 +0800
 Subject: [PATCH] Fix pathfinding by remove the async one, also fix for FAWE

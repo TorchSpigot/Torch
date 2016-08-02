@@ -1,0 +1,234 @@
+From a1ead53109b44906c100f14bca7f58ae3ba671f1 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Wed, 3 Aug 2016 00:02:11 +0800
+Subject: [PATCH] Synchronized chunk load event also prevent NPE on UUID lookup
+
+
+diff --git a/src/main/java/net/minecraft/server/Chunk.java b/src/main/java/net/minecraft/server/Chunk.java
+index d7d5c0b..4ccd05f 100644
+--- a/src/main/java/net/minecraft/server/Chunk.java
++++ b/src/main/java/net/minecraft/server/Chunk.java
+@@ -1042,7 +1042,9 @@ public class Chunk {
+              * the World constructor. We can't reliably alter that, so we have
+              * no way of creating a CraftWorld/CraftServer at that point.
+              */
+-			server.getPluginManager().callEvent(new org.bukkit.event.world.ChunkLoadEvent(bukkitChunk, newChunk));
++			synchronized(this) {
++				server.getPluginManager().callEvent(new org.bukkit.event.world.ChunkLoadEvent(bukkitChunk, newChunk));
++			}
+         }
+ 
+         // Update neighbor counts
+diff --git a/src/main/java/net/minecraft/server/ChunkRegionLoader.java b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+index 5c092e5..b6504ba2 100644
+--- a/src/main/java/net/minecraft/server/ChunkRegionLoader.java
++++ b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+@@ -185,9 +185,7 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+                 if (nbttagcompound != null) {
+                     int attempts = 0; Exception laste = null; while (attempts++ < 5) { // Paper
+                     try {
+-						synchronized(this) {
+-							this.b(chunkcoordintpair, nbttagcompound);
+-						}
++						this.b(chunkcoordintpair, nbttagcompound);
+                         laste = null; break; // Paper
+                     } catch (Exception exception) {
+                         //ChunkRegionLoader.a.error("Failed to save chunk", exception); // Paper
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 3195c60..8259096 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -138,6 +138,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 
+     // CraftBukkit start
+     public List<WorldServer> worlds = new ArrayList<WorldServer>();
++	// public List<WorldServer> worlds = Collections.synchronizedList(new ArrayList<WorldServer>());
+     public org.bukkit.craftbukkit.CraftServer server;
+     public OptionSet options;
+     public org.bukkit.command.ConsoleCommandSender console;
+@@ -238,9 +239,6 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+         this.b("menu.loadingLevel");
+         this.worldServer = new WorldServer[3];
+         int worldCount = 3;
+-		
+-		ChunkGenTask chunk_task = new ChunkGenTask();
+-		chunk_task.fork();
+ 
+         for (int j = 0; j < worldCount; ++j) {
+             WorldServer world;
+@@ -354,15 +352,8 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+         this.v.setPlayerFileData(this.worldServer);
+         this.a(this.getDifficulty());
+ 		
+-        // this.l(); // Removed to the head
+-		// ChunkGenTask chunk_task = new ChunkGenTask();
+-		// chunk_task.fork();
++        this.l();
+     }
+-	
+-	class ChunkGenTask extends RecursiveAction {
+-        public ChunkGenTask() {}
+-        @Override protected void compute() { l(); }
+-	}
+ 
+     protected void l() {
+         boolean flag = true;
+@@ -408,11 +399,11 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 			SpigotWorldConfig.ChunkPool.invoke(new ChunkGen_Pool(worldserver, chunkgen_list)); // Torch
+         }
+ 
+-        for (WorldServer world : this.worlds) {
+-            this.server.getPluginManager().callEvent(new org.bukkit.event.world.WorldLoadEvent(world.getWorld()));
+-        }
++		for (WorldServer world : this.worlds) {
++			this.server.getPluginManager().callEvent(new org.bukkit.event.world.WorldLoadEvent(world.getWorld()));
++		}
++		this.t();
+         // CraftBukkit end
+-        this.t();
+     }
+ 
+     protected void a(String s, IDataManager idatamanager) {
+@@ -860,7 +851,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+         this.methodProfiler.b();
+ 
+         org.spigotmc.WatchdogThread.tick(); // Spigot
+-        PaperLightingQueue.processQueue(startTime); // Paper
++		PaperLightingQueue.processQueue(startTime); // Paper
+         co.aikar.timings.TimingsManager.FULL_SERVER_TICK.stopTiming(); // Paper
+     }
+ 
+diff --git a/src/main/java/net/minecraft/server/PlayerList.java b/src/main/java/net/minecraft/server/PlayerList.java
+index 0bbf30b..4c1bd59 100644
+--- a/src/main/java/net/minecraft/server/PlayerList.java
++++ b/src/main/java/net/minecraft/server/PlayerList.java
+@@ -10,6 +10,7 @@ import java.net.SocketAddress;
+ import java.text.SimpleDateFormat;
+ import java.util.ArrayList;
+ import java.util.Collection;
++import java.util.concurrent.ConcurrentHashMap;
+ import java.util.Iterator;
+ import java.util.List;
+ import java.util.Set;
+@@ -52,8 +53,8 @@ public abstract class PlayerList {
+     private static final SimpleDateFormat g = new SimpleDateFormat("yyyy-MM-dd \'at\' HH:mm:ss z");
+     private final MinecraftServer server;
+     public final List<EntityPlayer> players = new java.util.concurrent.CopyOnWriteArrayList(); // CraftBukkit - ArrayList -> CopyOnWriteArrayList: Iterator safety
+-    // private final Map<UUID, EntityPlayer> j = Maps.newHashMap();
+-	private final Map<UUID, EntityPlayer> j = Maps.newConcurrentMap();
++    private final Map<UUID, EntityPlayer> j = Maps.newHashMap();
++	// private final Map<UUID, EntityPlayer> j = new ConcurrentHashMap();
+     private final GameProfileBanList k;
+     private final IpBanList l;
+     private final OpList operators;
+@@ -82,7 +83,7 @@ public abstract class PlayerList {
+         this.operators = new OpList(PlayerList.c);
+         this.whitelist = new WhiteList(PlayerList.d);
+         // this.o = Maps.newHashMap();
+-		this.o = Maps.newConcurrentMap();
++		this.o = new ConcurrentHashMap();
+         this.server = minecraftserver;
+         this.k.a(false);
+         this.l.a(false);
+@@ -369,7 +370,7 @@ public abstract class PlayerList {
+     public void onPlayerJoin(EntityPlayer entityplayer, String joinMessage) { // CraftBukkit added param
+         this.players.add(entityplayer);
+         this.playersByName.put(entityplayer.getName(), entityplayer); // Spigot
+-        this.j.put(entityplayer.getUniqueID(), entityplayer);
++		this.j.put(entityplayer.getUniqueID(), entityplayer);
+         // this.sendAll(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, new EntityPlayer[] { entityplayer})); // CraftBukkit - replaced with loop below
+         WorldServer worldserver = this.server.getWorldServer(entityplayer.dimension);
+ 
+@@ -683,7 +684,7 @@ public abstract class PlayerList {
+             worldserver.addEntity(entityplayer1);
+             // this.players.add(entityplayer1);
+             this.playersByName.put(entityplayer1.getName(), entityplayer1); // Spigot
+-            this.j.put(entityplayer1.getUniqueID(), entityplayer1);
++			this.j.put(entityplayer1.getUniqueID(), entityplayer1);
+         }
+         // entityplayer1.syncInventory();
+         entityplayer1.setHealth(entityplayer1.getHealth());
+@@ -1373,7 +1374,7 @@ public abstract class PlayerList {
+     }
+ 
+     public EntityPlayer a(UUID uuid) {
+-        return (EntityPlayer) this.j.get(uuid);
++		return (EntityPlayer) this.j.get(uuid);
+     }
+ 
+     public boolean f(GameProfile gameprofile) {
+diff --git a/src/main/java/net/minecraft/server/RegionFile.java b/src/main/java/net/minecraft/server/RegionFile.java
+index 9fe8e9c..5496d2a 100644
+--- a/src/main/java/net/minecraft/server/RegionFile.java
++++ b/src/main/java/net/minecraft/server/RegionFile.java
+@@ -348,7 +348,9 @@ public class RegionFile {
+ 
+         public void close() {
+             // RegionFile.this.a(this.b, this.c, this.buf, this.count);
+-			RegionFile.this.a(this.b, this.c, this.array, this.length); // Torch
++			synchronized(this) {
++				RegionFile.this.a(this.b, this.c, this.array, this.length); // Torch
++			}
+         }
+     }
+ }
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index e08eaa7..e97f1ef 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -21,7 +21,7 @@ import com.google.common.collect.Sets;
+ 
+ import com.destroystokyo.paper.IOStatCommand;
+ import com.destroystokyo.paper.PaperConfig;
+-import java.util.concurrent.CopyOnWriteArrayList;
++import java.util.concurrent.ConcurrentHashMap;
+ 
+ // CraftBukkit start
+ import com.google.common.collect.Maps;
+@@ -93,7 +93,7 @@ public abstract class World implements IBlockAccess {
+     private final Set<TileEntity> tileEntityListUnload = Sets.newConcurrentHashSet(); // Paper
+     public final List<EntityHuman> players = new CopyOnWriteArrayList<EntityHuman>();
+     public final Queue<Entity> j = Queues.newConcurrentLinkedQueue();
+-    protected final Map<Integer, Entity> entitiesById = Maps.newConcurrentMap();
++    protected final Map<Integer, Entity> entitiesById = new ConcurrentHashMap();
+     private long I = 16777215L;
+     private int J;
+     protected int l = (new Random()).nextInt();
+diff --git a/src/main/java/net/minecraft/server/WorldMap.java b/src/main/java/net/minecraft/server/WorldMap.java
+index a0810fa..200d1c3 100644
+--- a/src/main/java/net/minecraft/server/WorldMap.java
++++ b/src/main/java/net/minecraft/server/WorldMap.java
+@@ -16,6 +16,8 @@ import org.bukkit.craftbukkit.CraftWorld;
+ import org.bukkit.craftbukkit.map.CraftMapView;
+ // CraftBukkit end
+ 
++import java.util.concurrent.ConcurrentHashMap;
++
+ public class WorldMap extends PersistentBase {
+ 
+     public int centerX;
+@@ -26,7 +28,7 @@ public class WorldMap extends PersistentBase {
+     public byte[] colors = new byte[16384];
+     public List<WorldMap.WorldMapHumanTracker> h = Lists.newArrayList();
+     // public Map<EntityHuman, WorldMap.WorldMapHumanTracker> j = Maps.newHashMap(); // Spigot
+-	public final Map<EntityHuman, WorldMap.WorldMapHumanTracker> j = Maps.newConcurrentMap();
++	public final Map<EntityHuman, WorldMap.WorldMapHumanTracker> j = new ConcurrentHashMap();
+     public Map<UUID, MapIcon> decorations = Maps.newLinkedHashMap(); // Spigot
+     private org.bukkit.craftbukkit.map.RenderData vanillaRender = new org.bukkit.craftbukkit.map.RenderData(); // Paper
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index 3d35e09..0777115 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -441,7 +441,7 @@ public final class CraftServer implements Server {
+ 
+     @Override
+     public Player getPlayer(UUID id) {
+-        EntityPlayer player = playerList.a(id);
++		EntityPlayer player = playerList.a(id);
+ 
+         if (player != null) {
+             return player.getBukkitEntity();
+-- 
+2.8.2.windows.1
+
