@@ -1,4 +1,4 @@
-From 04255c3c8eb0b5aa7d1b2b3bf693651ca5ed4623 Mon Sep 17 00:00:00 2001
+From 6fc8e3cb09c48e48544b44b23c32892ba73c454e Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 18:17:21 +0800
 Subject: [PATCH] Re-add ArrowCollideEvent
