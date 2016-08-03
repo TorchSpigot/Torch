@@ -1,4 +1,4 @@
-From a1ead53109b44906c100f14bca7f58ae3ba671f1 Mon Sep 17 00:00:00 2001
+From b1672d69bf66b896c847547258531e3bf519ce8f Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Wed, 3 Aug 2016 00:02:11 +0800
 Subject: [PATCH] Synchronized chunk load event also prevent NPE on UUID lookup
@@ -98,6 +98,19 @@ index 3195c60..8259096 100644
          co.aikar.timings.TimingsManager.FULL_SERVER_TICK.stopTiming(); // Paper
      }
  
+diff --git a/src/main/java/net/minecraft/server/NavigationListener.java b/src/main/java/net/minecraft/server/NavigationListener.java
+index a10e349..ab37d6f 100644
+--- a/src/main/java/net/minecraft/server/NavigationListener.java
++++ b/src/main/java/net/minecraft/server/NavigationListener.java
+@@ -13,7 +13,7 @@ public class NavigationListener implements IWorldAccess {
+ 
+     public NavigationListener() {}
+ 	
+-	private final ConcurrentLinkedHashMap<EntityInsentient, NavigationAbstract> navigators = new ConcurrentLinkedHashMap.Builder<EntityInsentient, NavigationAbstract>().maximumWeightedCapacity(1000).build();
++	private final ConcurrentLinkedHashMap<EntityInsentient, NavigationAbstract> navigators = new ConcurrentLinkedHashMap.Builder<EntityInsentient, NavigationAbstract>().maximumWeightedCapacity(128).build();
+ 
+     public void a(final World world, final BlockPosition blockPosition, final IBlockData blockData, final IBlockData blockData2, final int n) {
+ 		if (!a(world, blockPosition, blockData, blockData2)) {
 diff --git a/src/main/java/net/minecraft/server/PlayerList.java b/src/main/java/net/minecraft/server/PlayerList.java
 index 0bbf30b..4c1bd59 100644
 --- a/src/main/java/net/minecraft/server/PlayerList.java
@@ -157,23 +170,27 @@ index 0bbf30b..4c1bd59 100644
      }
  
      public boolean f(GameProfile gameprofile) {
-diff --git a/src/main/java/net/minecraft/server/RegionFile.java b/src/main/java/net/minecraft/server/RegionFile.java
-index 9fe8e9c..5496d2a 100644
---- a/src/main/java/net/minecraft/server/RegionFile.java
-+++ b/src/main/java/net/minecraft/server/RegionFile.java
-@@ -348,7 +348,9 @@ public class RegionFile {
+diff --git a/src/main/java/net/minecraft/server/RegionFileCache.java b/src/main/java/net/minecraft/server/RegionFileCache.java
+index 53e3463..0053a2a 100644
+--- a/src/main/java/net/minecraft/server/RegionFileCache.java
++++ b/src/main/java/net/minecraft/server/RegionFileCache.java
+@@ -10,10 +10,13 @@ import java.util.Iterator;
+ import java.util.Map;
+ import com.destroystokyo.paper.PaperConfig; // Paper
+ import java.util.LinkedHashMap; // Paper
++import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap; // Torch
  
-         public void close() {
-             // RegionFile.this.a(this.b, this.c, this.buf, this.count);
--			RegionFile.this.a(this.b, this.c, this.array, this.length); // Torch
-+			synchronized(this) {
-+				RegionFile.this.a(this.b, this.c, this.array, this.length); // Torch
-+			}
-         }
-     }
- }
+ public class RegionFileCache {
+ 
+-    public static final Map<File, RegionFile> a = new LinkedHashMap(PaperConfig.regionFileCacheSize, 0.75f, true); // Spigot - private -> public, Paper - HashMap -> LinkedHashMap
++    // public static final Map<File, RegionFile> a = new LinkedHashMap(PaperConfig.regionFileCacheSize, 0.75f, true); // Spigot - private -> public, Paper - HashMap -> LinkedHashMap
++	
++	public static final ConcurrentLinkedHashMap<File, RegionFile> a = new ConcurrentLinkedHashMap.Builder<File, RegionFile>().maximumWeightedCapacity(PaperConfig.regionFileCacheSize).build();
+ 
+     // Paper start
+     public static synchronized RegionFile a(File file, int i, int j) {
 diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
-index e08eaa7..e97f1ef 100644
+index e08eaa7..c401c50 100644
 --- a/src/main/java/net/minecraft/server/World.java
 +++ b/src/main/java/net/minecraft/server/World.java
 @@ -21,7 +21,7 @@ import com.google.common.collect.Sets;
@@ -185,7 +202,15 @@ index e08eaa7..e97f1ef 100644
  
  // CraftBukkit start
  import com.google.common.collect.Maps;
-@@ -93,7 +93,7 @@ public abstract class World implements IBlockAccess {
+@@ -44,6 +44,7 @@ import com.google.common.collect.Queues;
+ import java.util.Queue;
+ import java.util.concurrent.RecursiveAction;
+ import com.google.common.collect.Sets;
++import java.util.Collections;
+ 
+ // Paper start
+ import java.util.Set;
+@@ -93,7 +94,7 @@ public abstract class World implements IBlockAccess {
      private final Set<TileEntity> tileEntityListUnload = Sets.newConcurrentHashSet(); // Paper
      public final List<EntityHuman> players = new CopyOnWriteArrayList<EntityHuman>();
      public final Queue<Entity> j = Queues.newConcurrentLinkedQueue();
@@ -194,6 +219,21 @@ index e08eaa7..e97f1ef 100644
      private long I = 16777215L;
      private int J;
      protected int l = (new Random()).nextInt();
+@@ -129,11 +130,11 @@ public abstract class World implements IBlockAccess {
+     public boolean pvpMode;
+     public boolean keepSpawnInMemory = true;
+     public ChunkGenerator generator;
+-
+     public boolean captureBlockStates = false;
+     public boolean captureTreeGeneration = false;
+-    public ArrayList<BlockState> capturedBlockStates= new ArrayList<BlockState>(){
+-        @Override
++	
++	public ArrayList<BlockState> capturedBlockStates= new ArrayList<BlockState>(){
++		@Override
+         public boolean add( BlockState blockState ) {
+             Iterator<BlockState> blockStateIterator = this.iterator();
+             while( blockStateIterator.hasNext() ) {
 diff --git a/src/main/java/net/minecraft/server/WorldMap.java b/src/main/java/net/minecraft/server/WorldMap.java
 index a0810fa..200d1c3 100644
 --- a/src/main/java/net/minecraft/server/WorldMap.java

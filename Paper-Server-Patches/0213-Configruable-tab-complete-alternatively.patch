@@ -1,4 +1,4 @@
-From 52bd250d34d5c209a3086c621a94e8e2915f282b Mon Sep 17 00:00:00 2001
+From 763cf3fcb2869f02abc127d49d60f4c17a2e09b6 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 2 Aug 2016 09:19:14 +0800
 Subject: [PATCH] Configruable tab complete alternatively
