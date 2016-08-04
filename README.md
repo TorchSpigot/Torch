@@ -12,7 +12,7 @@ that aims to fix gameplay and inconsistencies, optimizations and multi-threaded 
 
 Torch aims to be stable and fast.
 * Current developing version:  1.9.4
-* Recommanded(stable) version: R1.5.5-RELEASE
+* Recommanded(stable) version: R1.5.6-RELEASE
 
 For Minecraft **1.8**, *[Click Here](https://github.com/TorchSpigot/Torch-1.8)*
 
