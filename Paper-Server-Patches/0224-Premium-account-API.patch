@@ -1,0 +1,151 @@
+From fdf49e40e82be2a85ddbcbe15a0d2cdae0ae7d3b Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 6 Aug 2016 04:02:01 +0800
+Subject: [PATCH] Premium account API
+
+
+diff --git a/src/main/java/net/minecraft/server/LoginListener.java b/src/main/java/net/minecraft/server/LoginListener.java
+index 0e0ff36..c06fadf 100644
+--- a/src/main/java/net/minecraft/server/LoginListener.java
++++ b/src/main/java/net/minecraft/server/LoginListener.java
+@@ -20,16 +20,21 @@ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+ // CraftBukkit start
++// import org.bukkit.Bukkit;
+ import org.bukkit.craftbukkit.util.Waitable;
+ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+ import org.bukkit.event.player.PlayerPreLoginEvent;
+ // CraftBukkit end
+ 
++import org.torch.light.LightRandom;
++import org.torch.event.PremiumAccountLoginEvent;
++import org.torch.event.PremiumAccountPreLoginEvent;
++
+ public class LoginListener implements PacketLoginInListener, ITickable {
+ 
+     private static final AtomicInteger b = new AtomicInteger(0);
+     private static final Logger c = LogManager.getLogger();
+-    private static final Random random = new Random();
++    private static final LightRandom random = new LightRandom(); // Torch
+     private final byte[] e = new byte[4];
+     private final MinecraftServer server;
+     public final NetworkManager networkManager;
+@@ -40,6 +45,7 @@ public class LoginListener implements PacketLoginInListener, ITickable {
+     private SecretKey loginKey;
+     private EntityPlayer l;
+     public String hostname = ""; // CraftBukkit - add field
++	private boolean isPremiumAccount = false; // Torch - add flag to mark premium account
+ 
+     public LoginListener(MinecraftServer minecraftserver, NetworkManager networkmanager) {
+         this.g = LoginListener.EnumProtocolState.HELLO;
+@@ -142,6 +148,7 @@ public class LoginListener implements PacketLoginInListener, ITickable {
+ 
+             this.networkManager.sendPacket(new PacketLoginOutSuccess(this.i));
+             EntityPlayer entityplayer = this.server.getPlayerList().a(this.i.getId());
++			final org.bukkit.craftbukkit.CraftServer craftserver = LoginListener.this.server.server; if(this.isPremiumAccount) { craftserver.getPluginManager().callEvent(new PremiumAccountLoginEvent(this.getGameProfile().getName())); } // Torch - call premium account login event
+ 
+             if (entityplayer != null) {
+                 this.g = LoginListener.EnumProtocolState.DELAY_ACCEPT;
+@@ -161,10 +168,20 @@ public class LoginListener implements PacketLoginInListener, ITickable {
+         return this.i != null ? this.i.toString() + " (" + this.networkManager.getSocketAddress().toString() + ")" : String.valueOf(this.networkManager.getSocketAddress());
+     }
+ 
++	protected final GameProfile getGameProfile() { return this.i; } // Torch - OBFHELPER
+     public void a(PacketLoginInStart packetlogininstart) {
+         Validate.validState(this.g == LoginListener.EnumProtocolState.HELLO, "Unexpected hello packet", new Object[0]);
+         this.i = packetlogininstart.a();
+-        if (this.server.getOnlineMode() && !this.networkManager.isLocal()) {
++		// Torch start
++		boolean onlineMode = this.server.getOnlineMode(); final org.bukkit.craftbukkit.CraftServer craftserver = LoginListener.this.server.server;
++		if (!onlineMode) {
++			PremiumAccountPreLoginEvent event = new PremiumAccountPreLoginEvent(this.getGameProfile().getName());
++			this.isPremiumAccount = true;
++			craftserver.getPluginManager().callEvent(event);
++			this.isPremiumAccount = event.isPremiumAccount(); // Update flag to allow custom status
++		}
++        if (onlineMode && !this.networkManager.isLocal()) {
++			// Torch end
+             this.g = LoginListener.EnumProtocolState.KEY;
+             this.networkManager.sendPacket(new PacketLoginOutEncryptionBegin(this.j, this.server.O().getPublic(), this.e));
+         } else {
+diff --git a/src/main/java/org/torch/event/PremiumAccountLoginEvent.java b/src/main/java/org/torch/event/PremiumAccountLoginEvent.java
+new file mode 100644
+index 0000000..b0f6bd6
+--- /dev/null
++++ b/src/main/java/org/torch/event/PremiumAccountLoginEvent.java
+@@ -0,0 +1,27 @@
++package org.torch.event;
++ 
++import org.bukkit.event.Event;
++import org.bukkit.event.HandlerList;
++ 
++public class PremiumAccountLoginEvent extends Event {
++    private static final HandlerList HANDLERS = new HandlerList();
++
++    private final String playerName;
++
++    public PremiumAccountLoginEvent(String playerName) {
++        this.playerName = playerName;
++    }
++
++    public String getPlayerName() {
++        return this.playerName;
++    }
++
++    @Override
++    public HandlerList getHandlers() {
++        return HANDLERS;
++    }
++
++    public static HandlerList getHandlerList() {
++        return HANDLERS;
++    }
++}
+\ No newline at end of file
+diff --git a/src/main/java/org/torch/event/PremiumAccountPreLoginEvent.java b/src/main/java/org/torch/event/PremiumAccountPreLoginEvent.java
+new file mode 100644
+index 0000000..af88834
+--- /dev/null
++++ b/src/main/java/org/torch/event/PremiumAccountPreLoginEvent.java
+@@ -0,0 +1,36 @@
++package org.torch.event;
++
++import org.bukkit.event.Event;
++import org.bukkit.event.HandlerList;
++
++public class PremiumAccountPreLoginEvent extends Event {
++    private static final HandlerList HANDLERS = new HandlerList();
++    
++    private final String playerName;
++	private boolean isPremiumAccount = true;
++    
++    public PremiumAccountPreLoginEvent(String playerName) {
++        this.playerName = playerName;
++    }
++    
++    public String getPlayerName() {
++        return this.playerName;
++    }
++    
++    public boolean isPremiumAccount() {
++        return this.isPremiumAccount;
++    }
++    
++    public void setOnlinePlayer(boolean isPremiumAccount) {
++        this.isPremiumAccount = isPremiumAccount;
++    }
++    
++    @Override
++    public HandlerList getHandlers() {
++        return HANDLERS;
++    }
++    
++    public static HandlerList getHandlerList() {
++        return HANDLERS;
++    }
++}
+\ No newline at end of file
+-- 
+2.8.2.windows.1
+
