@@ -1,4 +1,4 @@
-From 5c026e87a599f41a9fbb5989dde45b91fa63a7ff Mon Sep 17 00:00:00 2001
+From 6b67db7610e2af5f97abd7330a39807c5c4cab28 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 30 Jul 2016 15:45:17 +0800
 Subject: [PATCH] SPIGOT-2559: Kill all entities when called with setHealth(0)
