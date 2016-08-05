@@ -1,11 +1,11 @@
-From 0a8191aad928a5050dd21972fb1d7016a3bd02a4 Mon Sep 17 00:00:00 2001
+From 4529185324c623a7b1dfea65ff7f1deb430afa45 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 5 Aug 2016 13:31:51 +0800
 Subject: [PATCH] Fix offline-mode bungee UUIDs, also fix config
 
 
 diff --git a/src/main/java/com/destroystokyo/paper/PaperConfig.java b/src/main/java/com/destroystokyo/paper/PaperConfig.java
-index bd48a55..472c65c 100644
+index bd48a55..1db7e66 100644
 --- a/src/main/java/com/destroystokyo/paper/PaperConfig.java
 +++ b/src/main/java/com/destroystokyo/paper/PaperConfig.java
 @@ -268,4 +268,9 @@ public class PaperConfig {
@@ -67,7 +67,7 @@ index 8259096..dcfd876 100644
              this.methodProfiler.a("save");
              this.v.savePlayers();
 diff --git a/src/main/java/net/minecraft/server/NameReferencingFileConverter.java b/src/main/java/net/minecraft/server/NameReferencingFileConverter.java
-index e015242..2bc7013 100644
+index e015242..306a431 100644
 --- a/src/main/java/net/minecraft/server/NameReferencingFileConverter.java
 +++ b/src/main/java/net/minecraft/server/NameReferencingFileConverter.java
 @@ -65,7 +65,8 @@ public class NameReferencingFileConverter {
@@ -115,7 +115,7 @@ index 76753cf..6831280 100644
  			a_task.fork();
  		} else { packetstatusinlistener.a(this); }
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 0777115..28fff85 100644
+index 0777115..6580c48 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -1406,7 +1406,8 @@ public final class CraftServer implements Server {

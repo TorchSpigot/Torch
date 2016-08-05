@@ -1,4 +1,4 @@
-From ca97437799eb0a92ae5f021ea1e6fd7a7e20d288 Mon Sep 17 00:00:00 2001
+From a8c2575e8fa3f0d11576d046be6e064189392b07 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 25 Jul 2016 19:21:43 +0800
 Subject: [PATCH] Adds the ability to store hidden metadata in item lore

@@ -1,4 +1,4 @@
-From 48e52c31fc1efa6389c7337689c93977e212a574 Mon Sep 17 00:00:00 2001
+From f7fdb431799e81359c41bd15635b6e11658201eb Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:53:30 +0800
 Subject: [PATCH] SPIGOT-2376: Way to distinguish Zombie professions, and
