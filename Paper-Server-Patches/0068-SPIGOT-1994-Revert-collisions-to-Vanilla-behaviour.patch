@@ -1,4 +1,4 @@
-From 282d0547eadb88e955eaca129fa9f784d1097ac3 Mon Sep 17 00:00:00 2001
+From e3af6bef284587b0d4255e00bb89a38a94b49246 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:32:54 +0800
 Subject: [PATCH] SPIGOT-1994: Revert collisions to Vanilla behaviour

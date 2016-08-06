@@ -1,11 +1,11 @@
-From c2ba30f928243e73620dd92f1dcc37120f8245e8 Mon Sep 17 00:00:00 2001
+From e5db26c2387f934efc5964fd7685fe4f9d6ecda0 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 6 Aug 2016 04:02:01 +0800
 Subject: [PATCH] Premium account API
 
 
 diff --git a/src/main/java/net/minecraft/server/LoginListener.java b/src/main/java/net/minecraft/server/LoginListener.java
-index 0e0ff36..9d73312 100644
+index 0e0ff36..77aafcd 100644
 --- a/src/main/java/net/minecraft/server/LoginListener.java
 +++ b/src/main/java/net/minecraft/server/LoginListener.java
 @@ -20,16 +20,21 @@ import org.apache.logging.log4j.LogManager;
@@ -39,19 +39,21 @@ index 0e0ff36..9d73312 100644
  
      public LoginListener(MinecraftServer minecraftserver, NetworkManager networkmanager) {
          this.g = LoginListener.EnumProtocolState.HELLO;
-@@ -142,6 +148,11 @@ public class LoginListener implements PacketLoginInListener, ITickable {
+@@ -142,6 +148,13 @@ public class LoginListener implements PacketLoginInListener, ITickable {
  
              this.networkManager.sendPacket(new PacketLoginOutSuccess(this.i));
              EntityPlayer entityplayer = this.server.getPlayerList().a(this.i.getId());
-+			// PremiumAccountLoginEvent event = new PremiumAccountLoginEvent(this.getGameProfile().getName());
-+			if(this.isPremiumAccount) { // Torch - call premium account login event
++			
++			// Torch start
++			if(this.isPremiumAccount) {
 +				PremiumAccountLoginEvent event = new PremiumAccountLoginEvent(this.getGameProfile().getName());
 +				event.callEvent();
 +			}
++			// Torch end
  
              if (entityplayer != null) {
                  this.g = LoginListener.EnumProtocolState.DELAY_ACCEPT;
-@@ -161,10 +172,20 @@ public class LoginListener implements PacketLoginInListener, ITickable {
+@@ -161,10 +174,20 @@ public class LoginListener implements PacketLoginInListener, ITickable {
          return this.i != null ? this.i.toString() + " (" + this.networkManager.getSocketAddress().toString() + ")" : String.valueOf(this.networkManager.getSocketAddress());
      }
  

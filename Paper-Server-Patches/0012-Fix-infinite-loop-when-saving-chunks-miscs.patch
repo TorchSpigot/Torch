@@ -1,4 +1,4 @@
-From eb53e2b109d1193f0a9156caca47f959d165b20c Mon Sep 17 00:00:00 2001
+From 8b2e2d9ce41b9a412945f63bdfb2649c8d00b35d Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 14:56:12 +0800
 Subject: [PATCH] Fix infinite loop when saving chunks, miscs

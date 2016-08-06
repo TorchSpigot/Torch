@@ -1,4 +1,4 @@
-From 123195eb878966863a52b03529b8650984203e3e Mon Sep 17 00:00:00 2001
+From fa1bf06f2c120037d2f996c3ac5b402805fac0d8 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 29 Jul 2016 09:37:59 +0800
 Subject: [PATCH] ticking optimizations
