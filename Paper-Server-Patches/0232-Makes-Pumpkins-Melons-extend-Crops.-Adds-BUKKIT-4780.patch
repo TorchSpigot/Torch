@@ -1,0 +1,24 @@
+From 4dfd4572bb0ebfd1c4c65272ed24ce000b637a8f Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 7 Aug 2016 03:07:06 +0800
+Subject: [PATCH] Makes Pumpkins, Melons extend Crops. Adds BUKKIT-4780
+
+
+diff --git a/src/main/java/org/bukkit/Material.java b/src/main/java/org/bukkit/Material.java
+index 18f6e3d..fe326be 100644
+--- a/src/main/java/org/bukkit/Material.java
++++ b/src/main/java/org/bukkit/Material.java
+@@ -175,8 +175,8 @@ public enum Material {
+     IRON_FENCE(101),
+     THIN_GLASS(102),
+     MELON_BLOCK(103),
+-    PUMPKIN_STEM(104, MaterialData.class),
+-    MELON_STEM(105, MaterialData.class),
++    PUMPKIN_STEM(104, Crops.class),
++    MELON_STEM(105, Crops.class),
+     VINE(106, Vine.class),
+     FENCE_GATE(107, Gate.class),
+     BRICK_STAIRS(108, Stairs.class),
+-- 
+2.8.2.windows.1
+

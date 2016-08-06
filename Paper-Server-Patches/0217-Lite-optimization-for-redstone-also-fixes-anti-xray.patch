@@ -1,4 +1,4 @@
-From 722a78245d7e92da67943db8021580297b958d17 Mon Sep 17 00:00:00 2001
+From 17dc5656f36c93482d1239c442bedac4803fe135 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Thu, 4 Aug 2016 03:28:00 +0800
 Subject: [PATCH] Lite optimization for redstone, also fixes anti-xray
