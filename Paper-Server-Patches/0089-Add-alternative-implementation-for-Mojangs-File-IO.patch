@@ -1,4 +1,4 @@
-From 4737334f7af8d08cf977b2f944118c3b94c7ab26 Mon Sep 17 00:00:00 2001
+From b1e28dd518c0b35994fbcb409513b4cf33663b01 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 22:42:24 +0800
 Subject: [PATCH] Add alternative implementation for Mojangs File IO.

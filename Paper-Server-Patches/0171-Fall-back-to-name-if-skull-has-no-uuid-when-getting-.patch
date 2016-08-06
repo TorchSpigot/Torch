@@ -1,4 +1,4 @@
-From 44b64a4442aabca6a4b6ea78955517f77008793e Mon Sep 17 00:00:00 2001
+From b5cc13f9dc27392f8f26d38ac1c5e57770b92f57 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 22 Jul 2016 17:00:40 +0800
 Subject: [PATCH] Fall back to name if skull has no uuid when getting player,
@@ -6,7 +6,7 @@ Subject: [PATCH] Fall back to name if skull has no uuid when getting player,
 
 
 diff --git a/pom.xml b/pom.xml
-index 9a2a936..d3b1cad 100644
+index ae3c932..21daa45 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -51,6 +51,11 @@

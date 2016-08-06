@@ -1,4 +1,4 @@
-From 1ee2caa767b2fecd07d781d043728c18f76f893a Mon Sep 17 00:00:00 2001
+From 01faf268e3c8d82979f8926ad6504c45e170ae2e Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 14:15:10 +0800
 Subject: [PATCH] Re-bounds check slot numbers in packets by a safe way
