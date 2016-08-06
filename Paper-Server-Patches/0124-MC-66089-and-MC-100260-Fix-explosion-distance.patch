@@ -1,4 +1,4 @@
-From b08c4e8a34802c0ae8f717dfefe9b1df3e5ca221 Mon Sep 17 00:00:00 2001
+From 7f629f228be83fa4e9f22a7518ef73451e023a68 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 03:44:17 +0800
 Subject: [PATCH] MC-66089 and MC-100260 Fix explosion distance

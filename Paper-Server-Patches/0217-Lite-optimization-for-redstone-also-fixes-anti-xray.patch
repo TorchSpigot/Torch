@@ -1,4 +1,4 @@
-From a2b6c2e6b96b674ded70ac84be5bb01b5e7b3a5e Mon Sep 17 00:00:00 2001
+From 6603a7f76601c4268b3be66737f2ba6aa9f81010 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Thu, 4 Aug 2016 03:28:00 +0800
 Subject: [PATCH] Lite optimization for redstone, also fixes anti-xray
@@ -680,6 +680,32 @@ index 6663b69..fdf0060 100644
                  ;
              }
  
+diff --git a/src/main/java/net/minecraft/server/ChunkProviderServer.java b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+index a9569c7..b429fd8 100644
+--- a/src/main/java/net/minecraft/server/ChunkProviderServer.java
++++ b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+@@ -31,12 +31,11 @@ public class ChunkProviderServer implements IChunkProvider {
+ 
+     private static final Logger a = LogManager.getLogger();
+     public final it.unimi.dsi.fastutil.longs.LongSet unloadQueue = new it.unimi.dsi.fastutil.longs.LongArraySet(); // PAIL: private -> public // Paper
+-	public final Map<Long, Chunk> chunks = Maps.newConcurrentMap(); // Hose
++	// public final Map<Long, Chunk> chunks = Maps.newConcurrentMap(); // Hose
+     public final ChunkGenerator chunkGenerator;
+     private final IChunkLoader chunkLoader;
+     // Paper start
+     protected Chunk lastChunkByPos = null;
+-	/*
+     public Long2ObjectOpenHashMap<Chunk> chunks = new Long2ObjectOpenHashMap<Chunk>(8192) {
+ 
+         @Override
+@@ -55,7 +54,6 @@ public class ChunkProviderServer implements IChunkProvider {
+             return super.remove(key);
+         }
+     }; // CraftBukkit
+-	*/
+     // Paper end
+     public final WorldServer world;
+ 	
 diff --git a/src/main/java/net/minecraft/server/NetworkManager.java b/src/main/java/net/minecraft/server/NetworkManager.java
 index 3d4be7f..5942a4c 100644
 --- a/src/main/java/net/minecraft/server/NetworkManager.java

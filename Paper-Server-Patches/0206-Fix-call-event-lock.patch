@@ -1,4 +1,4 @@
-From fd3c9a60facd1ef69b3b0fdc6c721f5fa961e366 Mon Sep 17 00:00:00 2001
+From 79c10d66b152d514f9996b853e40926a08a51c92 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 31 Jul 2016 14:58:57 +0800
 Subject: [PATCH] Fix call event lock
