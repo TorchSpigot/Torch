@@ -13,9 +13,9 @@ index bd48a55..1db7e66 100644
          disableFastRegeneration = getBoolean("settings.disable-fast-regeneration", false);
      }
 +	
-+	public static boolean compatibleOfflineBungeeModeUUIDs = false;
-+   private static void compatibleOfflineBungeeModeUUIDs() {
-+        compatibleOfflineBungeeModeUUIDs = getBoolean("settings.compatible-offline-bungee-uuids", false);
++	public static boolean bungeeOnlineMode = false;
++   private static void bungeeOnlineMode() {
++        bungeeOnlineMode = getBoolean("settings.bungee-online-mode", false);
 +    }
  }
 diff --git a/src/main/java/de/minetick/MigotConfig.java b/src/main/java/de/minetick/MigotConfig.java
@@ -76,7 +76,7 @@ index e015242..306a431 100644
  
 -        if (minecraftserver.getOnlineMode() || org.spigotmc.SpigotConfig.bungee) { // Spigot: bungee = online mode, for now.
 +        if (minecraftserver.getOnlineMode()
-+                || (org.spigotmc.SpigotConfig.bungee && !com.destroystokyo.paper.PaperConfig.compatibleOfflineBungeeModeUUIDs)) { // Spigot: bungee = online mode, for now.  // Paper: fix offline UUIDs
++                || (org.spigotmc.SpigotConfig.bungee && com.destroystokyo.paper.PaperConfig.bungeeOnlineMode)) { // Spigot: bungee = online mode, for now.  // Paper - fix offline UUIDs
              minecraftserver.getGameProfileRepository().findProfilesByNames(astring, Agent.MINECRAFT, profilelookupcallback);
          } else {
              String[] astring1 = astring;
@@ -124,7 +124,7 @@ index 0777115..6580c48 100644
              // Only fetch an online UUID in online mode
 -            if ( MinecraftServer.getServer().getOnlineMode() || org.spigotmc.SpigotConfig.bungee )
 +            if ( MinecraftServer.getServer().getOnlineMode()
-+                    || (org.spigotmc.SpigotConfig.bungee && !com.destroystokyo.paper.PaperConfig.compatibleOfflineBungeeModeUUIDs)) // Paper: fix offline UUIDs
++                    || (org.spigotmc.SpigotConfig.bungee && com.destroystokyo.paper.PaperConfig.bungeeOnlineMode)) // Paper - fix offline UUIDs
              {
                  profile = console.getUserCache().getProfile( name );
              }
