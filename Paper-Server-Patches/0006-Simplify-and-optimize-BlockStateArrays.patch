@@ -163,7 +163,7 @@ index b62beb3..0a8ab9d 100644
              entries[i] = iterator.next();
          }
 -        Arrays.sort(entries, (entry1, entry2) -> keyComparator.compare(entry1.getKey(), entry2.getKey()));
-+        Arrays.sort(entries, (entry1, entry2) -> Integer.compare(indexer.applyAsInt(entry1.getKey()), indexer.applyAsInt(entry2.getKey())));
++        Arrays.parallelSort(entries, (entry1, entry2) -> Integer.compare(indexer.applyAsInt(entry1.getKey()), indexer.applyAsInt(entry2.getKey())));
          Preconditions.checkArgument(!iterator.hasNext(), "Got more than expected %s entries", size);
 -        int[] ids = Arrays.stream(entries).map(Entry::getKey).mapToInt(indexer::getId).toArray(); // Don't worry, its sorted by key id ;)
 +        int[] ids = Arrays.stream(entries).map(Map.Entry::getKey).mapToInt(indexer).toArray(); // Don't worry, its sorted by key id ;)
