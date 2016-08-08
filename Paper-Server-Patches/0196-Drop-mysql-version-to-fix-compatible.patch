@@ -1,4 +1,4 @@
-From 87dac5e177f6185a77c09f6857c8fea51bb7870a Mon Sep 17 00:00:00 2001
+From 7094841374e6a67f2e29bb88d8b04c25ebd43378 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Thu, 28 Jul 2016 03:38:09 +0800
 Subject: [PATCH] Drop mysql version to fix compatible.

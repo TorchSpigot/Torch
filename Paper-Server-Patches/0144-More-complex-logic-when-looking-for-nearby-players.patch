@@ -1,4 +1,4 @@
-From 0785c88c6782406173b241c495e64b731f365c5c Mon Sep 17 00:00:00 2001
+From cb2980b65a61cfe6847f0aa869e3b2da496a796b Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 06:42:22 +0800
 Subject: [PATCH] More complex logic when looking for nearby players

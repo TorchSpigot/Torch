@@ -1,4 +1,4 @@
-From 4e15b88db53cab3be962366561183548c94c7660 Mon Sep 17 00:00:00 2001
+From cf5024e9aa6fef33bfb286322a30e50a29f5dbb5 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 25 Jul 2016 15:41:58 +0800
 Subject: [PATCH] Fix ticking bug, also optimize chunk exists checking
