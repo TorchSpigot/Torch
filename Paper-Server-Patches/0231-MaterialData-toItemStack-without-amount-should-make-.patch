@@ -1,0 +1,59 @@
+From 28909c635c4eda101264e4e848929e9f9d52db69 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 7 Aug 2016 03:09:17 +0800
+Subject: [PATCH] MaterialData#toItemStack without amount should make 1 item by
+ default
+
+
+diff --git a/src/main/java/org/bukkit/configuration/file/YamlRepresenter.java b/src/main/java/org/bukkit/configuration/file/YamlRepresenter.java
+new file mode 100644
+index 0000000..4597e33
+--- /dev/null
++++ b/src/main/java/org/bukkit/configuration/file/YamlRepresenter.java
+@@ -0,0 +1,43 @@
++package org.bukkit.configuration.file;
++
++import java.util.LinkedHashMap;
++import java.util.Map;
++
++import org.bukkit.configuration.ConfigurationSection;
++import org.bukkit.configuration.serialization.ConfigurationSerializable;
++import org.bukkit.configuration.serialization.ConfigurationSerialization;
++
++import org.yaml.snakeyaml.nodes.Node;
++import org.yaml.snakeyaml.representer.Represent;
++import org.yaml.snakeyaml.representer.Representer;
++
++public class YamlRepresenter extends Representer {
++
++    public YamlRepresenter() {
++        Map<Class<?>, Represent> reordered = new LinkedHashMap<Class<?>, Represent>();
++        reordered.put(ConfigurationSerializable.class, new RepresentConfigurationSerializable());
++        reordered.put(ConfigurationSection.class, new RepresentConfigurationSection());
++        reordered.putAll(this.multiRepresenters);
++        this.multiRepresenters.clear();
++        this.multiRepresenters.putAll(reordered);
++    }
++
++    private class RepresentConfigurationSection extends RepresentMap {
++        @Override
++        public Node representData(Object data) {
++            return super.representData(((ConfigurationSection) data).getValues(false));
++        }
++    }
++
++    private class RepresentConfigurationSerializable extends RepresentMap {
++        @Override
++        public Node representData(Object data) {
++            ConfigurationSerializable serializable = (ConfigurationSerializable) data;
++            Map<String, Object> values = new LinkedHashMap<String, Object>();
++            values.put(ConfigurationSerialization.SERIALIZED_TYPE_KEY, ConfigurationSerialization.getAlias(serializable.getClass()));
++            values.putAll(serializable.serialize());
++
++            return super.representData(values);
++        }
++    }
++}
+-- 
+2.8.2.windows.1
+

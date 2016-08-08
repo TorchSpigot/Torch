@@ -1,4 +1,4 @@
-From 9ade307d7c3d783c5e5c0ad3e4aafd72d0c9c892 Mon Sep 17 00:00:00 2001
+From b347689d529049c562486156247ee161b510bbcc Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 12 Jul 2016 05:15:36 +0800
 Subject: [PATCH] Readd-Chunk-Access-Cache-in-World

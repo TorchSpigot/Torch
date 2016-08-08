@@ -1,0 +1,27 @@
+From 3d02563a6d524b1e34c1e46c903cb756a04763ee Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 1 Aug 2016 17:28:37 +0800
+Subject: [PATCH] Re-track players that dismount from other players
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityPlayer.java b/src/main/java/net/minecraft/server/EntityPlayer.java
+index 76e5188..de23f7c 100644
+--- a/src/main/java/net/minecraft/server/EntityPlayer.java
++++ b/src/main/java/net/minecraft/server/EntityPlayer.java
+@@ -647,6 +647,13 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
+         if (entity1 != entity && this.playerConnection != null) {
+             this.playerConnection.a(this.locX, this.locY, this.locZ, this.yaw, this.pitch);
+         }
++		// Paper start - "Fixes" an issue in which the vehicle player would not be notified that the passenger dismounted
++        if (entity instanceof EntityPlayer) {
++            WorldServer worldServer = (WorldServer) entity.getWorld();
++            worldServer.tracker.untrackEntity(this);
++            worldServer.tracker.track(this);
++        }
++        // Paper end
+ 
+     }
+ 
+-- 
+2.8.2.windows.1
+

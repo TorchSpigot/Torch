@@ -1,0 +1,72 @@
+From aa3a2d1db7b63874946b1818cac3f27941723601 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Tue, 26 Jul 2016 14:48:29 +0800
+Subject: [PATCH] Synchronized block action, misc region loader fixes
+
+
+diff --git a/src/main/java/net/minecraft/server/ChunkRegionLoader.java b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+index 7c504c2..0260857 100644
+--- a/src/main/java/net/minecraft/server/ChunkRegionLoader.java
++++ b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+@@ -80,15 +80,13 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+         NBTTagCompound nbttagcompound = (NBTTagCompound) this.b.get(chunkcoordintpair);
+ 
+         if (nbttagcompound == null) {
+-            // CraftBukkit start
+-            nbttagcompound = RegionFileCache.c(this.d, i, j);
++            DataInputStream datainputstream = RegionFileCache.c(this.d, i, j);
+ 
+-            if (nbttagcompound == null) {
++            if (datainputstream == null) {
+                 return null;
+             }
+ 
+-            nbttagcompound = this.e.a((DataConverterType) DataConverterTypes.CHUNK, nbttagcompound);
+-            // CraftBukkit end
++            nbttagcompound = this.e.a((DataConverterType) DataConverterTypes.CHUNK, NBTCompressedStreamTools.a(datainputstream));
+         }
+ 
+         return this.a(world, i, j, nbttagcompound);
+diff --git a/src/main/java/net/minecraft/server/NBTTagCompound.java b/src/main/java/net/minecraft/server/NBTTagCompound.java
+index 1b2cd19..7fa49dd 100644
+--- a/src/main/java/net/minecraft/server/NBTTagCompound.java
++++ b/src/main/java/net/minecraft/server/NBTTagCompound.java
+@@ -40,7 +40,7 @@ public class NBTTagCompound extends NBTBase {
+             byte b0;
+ 
+             while ((b0 = a(datainput, nbtreadlimiter)) != 0) {
+-                String s = getStoredString(b(datainput, nbtreadlimiter), true); // Migot
++                String s = b(datainput, nbtreadlimiter);
+ 
+                 nbtreadlimiter.a((long) (224 + 16 * s.length()));
+                 NBTBase nbtbase = a(b0, s, datainput, i + 1, nbtreadlimiter);
+diff --git a/src/main/java/net/minecraft/server/WorldServer.java b/src/main/java/net/minecraft/server/WorldServer.java
+index 45d2c54..e5b40bc 100644
+--- a/src/main/java/net/minecraft/server/WorldServer.java
++++ b/src/main/java/net/minecraft/server/WorldServer.java
+@@ -1254,14 +1254,14 @@ public class WorldServer extends World implements IAsyncTaskHandler {
+ 
+         BlockActionData blockactiondata1;
+ 
+-        do {
+-            if (!iterator.hasNext()) {
+-                this.S[this.T].add(blockactiondata);
+-                return;
+-            }
+-
+-            blockactiondata1 = (BlockActionData) iterator.next();
+-        } while (!blockactiondata1.equals(blockactiondata));
++		synchronized(this) {
++			do {
++				if (!iterator.hasNext()) {
++					this.S[this.T].add(blockactiondata); return;
++				}
++				blockactiondata1 = (BlockActionData) iterator.next();
++			} while (!blockactiondata1.equals(blockactiondata));
++		}
+ 
+     }
+ 
+-- 
+2.8.2.windows.1
+
