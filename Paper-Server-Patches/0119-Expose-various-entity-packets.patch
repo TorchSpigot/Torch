@@ -1,4 +1,4 @@
-From f1242e0a178662eb8d252adf0465d8556f945437 Mon Sep 17 00:00:00 2001
+From e03325af8e0b987872a3b103541cae74a082cb2c Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 00:12:52 +0800
 Subject: [PATCH] Expose various entity packets

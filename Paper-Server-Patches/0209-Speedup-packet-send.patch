@@ -1,4 +1,4 @@
-From 46ef15c0c0c1f7b93e8f97f3d580e54aaab3c504 Mon Sep 17 00:00:00 2001
+From 00fbc8d1d0aeaf14ab80e4b50c581eaf6d72671a Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 1 Aug 2016 00:16:47 +0800
 Subject: [PATCH] Speedup packet send
