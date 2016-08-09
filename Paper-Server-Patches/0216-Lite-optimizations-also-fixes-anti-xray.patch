@@ -1,4 +1,4 @@
-From 4d4857cd98392ce09fafded041e432b67e3cfb19 Mon Sep 17 00:00:00 2001
+From 2ba98641588954313c65ec13467f295209c3a486 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Thu, 4 Aug 2016 03:28:00 +0800
 Subject: [PATCH] Lite optimizations, also fixes anti-xray

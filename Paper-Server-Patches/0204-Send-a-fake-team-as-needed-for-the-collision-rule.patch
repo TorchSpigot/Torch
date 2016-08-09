@@ -1,4 +1,4 @@
-From 7b8c69de069f1fcc357e33d1aee1491f48d2317b Mon Sep 17 00:00:00 2001
+From cff65cc1d9e54e803cccff12fa9d7ceaeac1e039 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 31 Jul 2016 14:36:26 +0800
 Subject: [PATCH] Send a fake team as needed for the collision rule

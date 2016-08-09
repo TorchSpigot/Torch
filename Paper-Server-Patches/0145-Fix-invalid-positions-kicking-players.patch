@@ -1,4 +1,4 @@
-From 201f7185388f8a5168fe40422b4271819dc0ac56 Mon Sep 17 00:00:00 2001
+From 6b4584f147e75d9ea3068fced25b8f92d865f7ad Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 06:45:35 +0800
 Subject: [PATCH] Fix invalid positions kicking players
