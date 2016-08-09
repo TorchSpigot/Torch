@@ -1,4 +1,4 @@
-From 7edd8a7c25cae596d5346adf0f225b2a05f123ec Mon Sep 17 00:00:00 2001
+From 611c66905b0acfa983f71ef520fa914b2e1cef0d Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 00:28:18 +0800
 Subject: [PATCH] Make AsyncPlayerPreLoginEvent more versatile

@@ -1,4 +1,4 @@
-From b0c39ce4df39cbd62b5a946ca874a7241c0fffe1 Mon Sep 17 00:00:00 2001
+From 2fe0a7dad36c84e1a6a662f612e94527d56868fa Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 26 Jul 2016 16:24:14 +0800
 Subject: [PATCH] SPIGOT-2552: Aliases for Vanilla commands, miscs

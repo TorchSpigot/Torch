@@ -1,4 +1,4 @@
-From f83fab8fc3d15904e3d734833ca110648b52ebca Mon Sep 17 00:00:00 2001
+From 3aab2cc5f3c410250540e6d603771fd68deb9271 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 14:07:52 +0800
 Subject: [PATCH] Simplify and optimize BlockStateArrays
@@ -120,7 +120,7 @@ index 67e12b6..c17b4fb 100644
  
      public int getValueId(T value);
 diff --git a/src/main/java/net/techcable/tacospigot/ImmutableArrayMap.java b/src/main/java/net/techcable/tacospigot/ImmutableArrayMap.java
-index b62beb3..0a8ab9d 100644
+index b62beb3..c8fc195 100644
 --- a/src/main/java/net/techcable/tacospigot/ImmutableArrayMap.java
 +++ b/src/main/java/net/techcable/tacospigot/ImmutableArrayMap.java
 @@ -16,9 +16,7 @@ import com.google.common.base.Preconditions;

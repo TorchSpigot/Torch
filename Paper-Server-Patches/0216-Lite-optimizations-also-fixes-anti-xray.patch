@@ -1,4 +1,4 @@
-From c51e94459565c1cc2ae3cd3f5b5e406ca9a9adb3 Mon Sep 17 00:00:00 2001
+From 836393da6265457d186ed478a63cd4dd444d8763 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Thu, 4 Aug 2016 03:28:00 +0800
 Subject: [PATCH] Lite optimizations, also fixes anti-xray
@@ -122,6 +122,37 @@ index 4f6b4d9..45f2427 100644
                  for (int z = zMin; z < zMax; z++) {
                      // Shift the initial value of x and increment by 3 in engine mode 3
                      int x;
+diff --git a/src/main/java/net/minecraft/server/BiomeBase.java b/src/main/java/net/minecraft/server/BiomeBase.java
+index 0f90a26..d79880b 100644
+--- a/src/main/java/net/minecraft/server/BiomeBase.java
++++ b/src/main/java/net/minecraft/server/BiomeBase.java
+@@ -355,25 +355,10 @@ public abstract class BiomeBase {
+         static {
+             try {
+                 BiomeBase.SyntheticClass_1.a[EnumCreatureType.MONSTER.ordinal()] = 1;
+-            } catch (NoSuchFieldError nosuchfielderror) {
+-                ;
+-            }
+-
+-            try {
+                 BiomeBase.SyntheticClass_1.a[EnumCreatureType.CREATURE.ordinal()] = 2;
+-            } catch (NoSuchFieldError nosuchfielderror1) {
+-                ;
+-            }
+-
+-            try {
+                 BiomeBase.SyntheticClass_1.a[EnumCreatureType.WATER_CREATURE.ordinal()] = 3;
+-            } catch (NoSuchFieldError nosuchfielderror2) {
+-                ;
+-            }
+-
+-            try {
+                 BiomeBase.SyntheticClass_1.a[EnumCreatureType.AMBIENT.ordinal()] = 4;
+-            } catch (NoSuchFieldError nosuchfielderror3) {
++            } catch (NoSuchFieldError nosuchfielderror) {
+                 ;
+             }
+ 
 diff --git a/src/main/java/net/minecraft/server/BlockButtonAbstract.java b/src/main/java/net/minecraft/server/BlockButtonAbstract.java
 index 04cff3d..f7b3cce 100644
 --- a/src/main/java/net/minecraft/server/BlockButtonAbstract.java
@@ -162,6 +193,37 @@ index 04cff3d..f7b3cce 100644
                  BlockButtonAbstract.SyntheticClass_1.a[EnumDirection.DOWN.ordinal()] = 6;
              } catch (NoSuchFieldError nosuchfielderror5) {
                  ;
+diff --git a/src/main/java/net/minecraft/server/BlockCocoa.java b/src/main/java/net/minecraft/server/BlockCocoa.java
+index e9920ae..e0d4cbd 100644
+--- a/src/main/java/net/minecraft/server/BlockCocoa.java
++++ b/src/main/java/net/minecraft/server/BlockCocoa.java
+@@ -158,25 +158,10 @@ public class BlockCocoa extends BlockFacingHorizontal implements IBlockFragilePl
+         static {
+             try {
+                 BlockCocoa.SyntheticClass_1.a[EnumDirection.SOUTH.ordinal()] = 1;
+-            } catch (NoSuchFieldError nosuchfielderror) {
+-                ;
+-            }
+-
+-            try {
+                 BlockCocoa.SyntheticClass_1.a[EnumDirection.NORTH.ordinal()] = 2;
+-            } catch (NoSuchFieldError nosuchfielderror1) {
+-                ;
+-            }
+-
+-            try {
+                 BlockCocoa.SyntheticClass_1.a[EnumDirection.WEST.ordinal()] = 3;
+-            } catch (NoSuchFieldError nosuchfielderror2) {
+-                ;
+-            }
+-
+-            try {
+                 BlockCocoa.SyntheticClass_1.a[EnumDirection.EAST.ordinal()] = 4;
+-            } catch (NoSuchFieldError nosuchfielderror3) {
++            } catch (NoSuchFieldError nosuchfielderror) {
+                 ;
+             }
+ 
 diff --git a/src/main/java/net/minecraft/server/BlockDoor.java b/src/main/java/net/minecraft/server/BlockDoor.java
 index a6e99a8..1af454b 100644
 --- a/src/main/java/net/minecraft/server/BlockDoor.java
@@ -444,411 +506,6 @@ index 1c25171..1319db0 100644
 -            try {
                  BlockMinecartDetector.SyntheticClass_1.a[BlockMinecartTrackAbstract.EnumTrackPosition.EAST_WEST.ordinal()] = 10;
 -            } catch (NoSuchFieldError nosuchfielderror14) {
-+            } catch (NoSuchFieldError nosuchfielderror) {
-                 ;
-             }
- 
-diff --git a/src/main/java/net/minecraft/server/BlockRedstoneOre.java b/src/main/java/net/minecraft/server/BlockRedstoneOre.java
-index 3117e58..bc8ac2d 100644
---- a/src/main/java/net/minecraft/server/BlockRedstoneOre.java
-+++ b/src/main/java/net/minecraft/server/BlockRedstoneOre.java
-@@ -97,14 +97,6 @@ public class BlockRedstoneOre extends Block {
- 
-     public void dropNaturally(World world, BlockPosition blockposition, IBlockData iblockdata, float f, int i) {
-         super.dropNaturally(world, blockposition, iblockdata, f, i);
--        /* CraftBukkit start - Delegated to getExpDrop
--        if (this.getDropType(iblockdata, world.random, i) != Item.getItemOf(this)) {
--            int j = 1 + world.random.nextInt(5);
--
--            this.dropExperience(world, blockposition, j);
--        }
--        // */
--
-     }
- 
-     @Override
-diff --git a/src/main/java/net/minecraft/server/BlockRedstoneTorch.java b/src/main/java/net/minecraft/server/BlockRedstoneTorch.java
-index cf24c45..446b4b8 100644
---- a/src/main/java/net/minecraft/server/BlockRedstoneTorch.java
-+++ b/src/main/java/net/minecraft/server/BlockRedstoneTorch.java
-@@ -25,8 +25,7 @@ public class BlockRedstoneTorch extends BlockTorch {
-             list.add(new BlockRedstoneTorch.RedstoneUpdateInfo(blockposition, world.getTime()));
-         }
- 
--        int i = 0;
--
-+		int i = 0;
-         for (int j = 0; j < list.size(); ++j) {
-             BlockRedstoneTorch.RedstoneUpdateInfo blockredstonetorch_redstoneupdateinfo = (BlockRedstoneTorch.RedstoneUpdateInfo) list.get(j);
- 
-@@ -60,11 +59,8 @@ public class BlockRedstoneTorch extends BlockTorch {
-             }
-             // Paper end
-             EnumDirection[] aenumdirection = EnumDirection.values();
--            int i = aenumdirection.length;
--
--            for (int j = 0; j < i; ++j) {
--                EnumDirection enumdirection = aenumdirection[j];
- 
-+            for (EnumDirection enumdirection : aenumdirection) {
-                 world.applyPhysics(blockposition.shift(enumdirection), this);
-             }
-         }
-@@ -80,11 +76,8 @@ public class BlockRedstoneTorch extends BlockTorch {
-             }
-             // Paper end
-             EnumDirection[] aenumdirection = EnumDirection.values();
--            int i = aenumdirection.length;
--
--            for (int j = 0; j < i; ++j) {
--                EnumDirection enumdirection = aenumdirection[j];
- 
-+            for (EnumDirection enumdirection : aenumdirection) {
-                 world.applyPhysics(blockposition.shift(enumdirection), this);
-             }
-         }
-diff --git a/src/main/java/net/minecraft/server/BlockRedstoneWire.java b/src/main/java/net/minecraft/server/BlockRedstoneWire.java
-index bc132b3..df04253 100644
---- a/src/main/java/net/minecraft/server/BlockRedstoneWire.java
-+++ b/src/main/java/net/minecraft/server/BlockRedstoneWire.java
-@@ -18,7 +18,26 @@ public class BlockRedstoneWire extends Block {
-     public static final BlockStateEnum<BlockRedstoneWire.EnumRedstoneWireConnection> SOUTH = BlockStateEnum.of("south", BlockRedstoneWire.EnumRedstoneWireConnection.class);
-     public static final BlockStateEnum<BlockRedstoneWire.EnumRedstoneWireConnection> WEST = BlockStateEnum.of("west", BlockRedstoneWire.EnumRedstoneWireConnection.class);
-     public static final BlockStateInteger POWER = BlockStateInteger.of("power", 0, 15);
--    protected static final AxisAlignedBB[] f = new AxisAlignedBB[] { new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 0.8125D, 0.0625D, 0.8125D), new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 0.8125D, 0.0625D, 1.0D), new AxisAlignedBB(0.0D, 0.0D, 0.1875D, 0.8125D, 0.0625D, 0.8125D), new AxisAlignedBB(0.0D, 0.0D, 0.1875D, 0.8125D, 0.0625D, 1.0D), new AxisAlignedBB(0.1875D, 0.0D, 0.0D, 0.8125D, 0.0625D, 0.8125D), new AxisAlignedBB(0.1875D, 0.0D, 0.0D, 0.8125D, 0.0625D, 1.0D), new AxisAlignedBB(0.0D, 0.0D, 0.0D, 0.8125D, 0.0625D, 0.8125D), new AxisAlignedBB(0.0D, 0.0D, 0.0D, 0.8125D, 0.0625D, 1.0D), new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 1.0D, 0.0625D, 0.8125D), new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 1.0D, 0.0625D, 1.0D), new AxisAlignedBB(0.0D, 0.0D, 0.1875D, 1.0D, 0.0625D, 0.8125D), new AxisAlignedBB(0.0D, 0.0D, 0.1875D, 1.0D, 0.0625D, 1.0D), new AxisAlignedBB(0.1875D, 0.0D, 0.0D, 1.0D, 0.0625D, 0.8125D), new AxisAlignedBB(0.1875D, 0.0D, 0.0D, 1.0D, 0.0625D, 1.0D), new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.0625D, 0.8125D), new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.0625D, 1.0D)};
-+	
-+    protected static final AxisAlignedBB[] f = new AxisAlignedBB[] {
-+		new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 0.8125D, 0.0625D, 0.8125D), 
-+		new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 0.8125D, 0.0625D, 1.0D), 
-+		new AxisAlignedBB(0.0D, 0.0D, 0.1875D, 0.8125D, 0.0625D, 0.8125D), 
-+		new AxisAlignedBB(0.0D, 0.0D, 0.1875D, 0.8125D, 0.0625D, 1.0D), 
-+		new AxisAlignedBB(0.1875D, 0.0D, 0.0D, 0.8125D, 0.0625D, 0.8125D), 
-+		new AxisAlignedBB(0.1875D, 0.0D, 0.0D, 0.8125D, 0.0625D, 1.0D), 
-+		new AxisAlignedBB(0.0D, 0.0D, 0.0D, 0.8125D, 0.0625D, 0.8125D), 
-+		new AxisAlignedBB(0.0D, 0.0D, 0.0D, 0.8125D, 0.0625D, 1.0D), 
-+		new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 1.0D, 0.0625D, 0.8125D), 
-+		new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 1.0D, 0.0625D, 1.0D), 
-+		new AxisAlignedBB(0.0D, 0.0D, 0.1875D, 1.0D, 0.0625D, 0.8125D), 
-+		new AxisAlignedBB(0.0D, 0.0D, 0.1875D, 1.0D, 0.0625D, 1.0D), 
-+		new AxisAlignedBB(0.1875D, 0.0D, 0.0D, 1.0D, 0.0625D, 0.8125D), 
-+		new AxisAlignedBB(0.1875D, 0.0D, 0.0D, 1.0D, 0.0625D, 1.0D), 
-+		new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.0625D, 0.8125D), 
-+		new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.0625D, 1.0D)
-+	};
-+	
-     private boolean g = true;
-     private final Set<BlockPosition> B = Sets.newConcurrentHashSet(); private final Set<BlockPosition> blocksToUpdate = B; // Paper - OBFHELPER
- 
-@@ -206,11 +225,8 @@ public class BlockRedstoneWire extends Block {
- 
- 
-             EnumDirection[] aenumdirection = EnumDirection.values();
--            int i1 = aenumdirection.length;
--
--            for (int j1 = 0; j1 < i1; ++j1) {
--                EnumDirection enumdirection1 = aenumdirection[j1];
- 
-+            for (EnumDirection enumdirection1 : aenumdirection) {
-                 this.B.add(blockposition.shift(enumdirection1));
-             }
-         }
-@@ -283,11 +299,8 @@ public class BlockRedstoneWire extends Block {
-         super.remove(world, blockposition, iblockdata);
-         if (!world.isClientSide) {
-             EnumDirection[] aenumdirection = EnumDirection.values();
--            int i = aenumdirection.length;
--
--            for (int j = 0; j < i; ++j) {
--                EnumDirection enumdirection = aenumdirection[j];
- 
-+            for (EnumDirection enumdirection : aenumdirection) {
-                 world.applyPhysics(blockposition.shift(enumdirection), this);
-             }
- 
-@@ -463,39 +476,17 @@ public class BlockRedstoneWire extends Block {
- 
-     static class SyntheticClass_1 {
- 
--        static final int[] a;
-+        static final int[] a = new int[EnumBlockRotation.values().length];
-         static final int[] b = new int[EnumBlockMirror.values().length];
- 
-         static {
-             try {
-                 BlockRedstoneWire.SyntheticClass_1.b[EnumBlockMirror.LEFT_RIGHT.ordinal()] = 1;
--            } catch (NoSuchFieldError nosuchfielderror) {
--                ;
--            }
--
--            try {
-                 BlockRedstoneWire.SyntheticClass_1.b[EnumBlockMirror.FRONT_BACK.ordinal()] = 2;
--            } catch (NoSuchFieldError nosuchfielderror1) {
--                ;
--            }
--
--            a = new int[EnumBlockRotation.values().length];
--
--            try {
-                 BlockRedstoneWire.SyntheticClass_1.a[EnumBlockRotation.CLOCKWISE_180.ordinal()] = 1;
--            } catch (NoSuchFieldError nosuchfielderror2) {
--                ;
--            }
--
--            try {
-                 BlockRedstoneWire.SyntheticClass_1.a[EnumBlockRotation.COUNTERCLOCKWISE_90.ordinal()] = 2;
--            } catch (NoSuchFieldError nosuchfielderror3) {
--                ;
--            }
--
--            try {
-                 BlockRedstoneWire.SyntheticClass_1.a[EnumBlockRotation.CLOCKWISE_90.ordinal()] = 3;
--            } catch (NoSuchFieldError nosuchfielderror4) {
-+            } catch (NoSuchFieldError nosuchfielderror) {
-                 ;
-             }
- 
-diff --git a/src/main/java/net/minecraft/server/BlockTrapdoor.java b/src/main/java/net/minecraft/server/BlockTrapdoor.java
-index 17adbb2..88065de 100644
---- a/src/main/java/net/minecraft/server/BlockTrapdoor.java
-+++ b/src/main/java/net/minecraft/server/BlockTrapdoor.java
-@@ -165,7 +165,6 @@ public class BlockTrapdoor extends Block {
-         case 3:
-             return 2;
- 
--        case 4:
-         default:
-             return 3;
-         }
-@@ -209,28 +208,12 @@ public class BlockTrapdoor extends Block {
-         static {
-             try {
-                 BlockTrapdoor.SyntheticClass_1.a[EnumDirection.NORTH.ordinal()] = 1;
--            } catch (NoSuchFieldError nosuchfielderror) {
--                ;
--            }
--
--            try {
-                 BlockTrapdoor.SyntheticClass_1.a[EnumDirection.SOUTH.ordinal()] = 2;
--            } catch (NoSuchFieldError nosuchfielderror1) {
--                ;
--            }
--
--            try {
-                 BlockTrapdoor.SyntheticClass_1.a[EnumDirection.WEST.ordinal()] = 3;
--            } catch (NoSuchFieldError nosuchfielderror2) {
--                ;
--            }
--
--            try {
-                 BlockTrapdoor.SyntheticClass_1.a[EnumDirection.EAST.ordinal()] = 4;
--            } catch (NoSuchFieldError nosuchfielderror3) {
-+            } catch (NoSuchFieldError nosuchfielderror) {
-                 ;
-             }
--
-         }
-     }
- 
-diff --git a/src/main/java/net/minecraft/server/BlockTripwireHook.java b/src/main/java/net/minecraft/server/BlockTripwireHook.java
-index 6663b69..fdf0060 100644
---- a/src/main/java/net/minecraft/server/BlockTripwireHook.java
-+++ b/src/main/java/net/minecraft/server/BlockTripwireHook.java
-@@ -289,25 +289,10 @@ public class BlockTripwireHook extends Block {
-         static {
-             try {
-                 BlockTripwireHook.SyntheticClass_1.a[EnumDirection.EAST.ordinal()] = 1;
--            } catch (NoSuchFieldError nosuchfielderror) {
--                ;
--            }
--
--            try {
-                 BlockTripwireHook.SyntheticClass_1.a[EnumDirection.WEST.ordinal()] = 2;
--            } catch (NoSuchFieldError nosuchfielderror1) {
--                ;
--            }
--
--            try {
-                 BlockTripwireHook.SyntheticClass_1.a[EnumDirection.SOUTH.ordinal()] = 3;
--            } catch (NoSuchFieldError nosuchfielderror2) {
--                ;
--            }
--
--            try {
-                 BlockTripwireHook.SyntheticClass_1.a[EnumDirection.NORTH.ordinal()] = 4;
--            } catch (NoSuchFieldError nosuchfielderror3) {
-+            } catch (NoSuchFieldError nosuchfielderror) {
-                 ;
-             }
- 
-diff --git a/src/main/java/net/minecraft/server/ChunkProviderServer.java b/src/main/java/net/minecraft/server/ChunkProviderServer.java
-index a9569c7..b429fd8 100644
---- a/src/main/java/net/minecraft/server/ChunkProviderServer.java
-+++ b/src/main/java/net/minecraft/server/ChunkProviderServer.java
-@@ -31,12 +31,11 @@ public class ChunkProviderServer implements IChunkProvider {
- 
-     private static final Logger a = LogManager.getLogger();
-     public final it.unimi.dsi.fastutil.longs.LongSet unloadQueue = new it.unimi.dsi.fastutil.longs.LongArraySet(); // PAIL: private -> public // Paper
--	public final Map<Long, Chunk> chunks = Maps.newConcurrentMap(); // Hose
-+	// public final Map<Long, Chunk> chunks = Maps.newConcurrentMap(); // Hose
-     public final ChunkGenerator chunkGenerator;
-     private final IChunkLoader chunkLoader;
-     // Paper start
-     protected Chunk lastChunkByPos = null;
--	/*
-     public Long2ObjectOpenHashMap<Chunk> chunks = new Long2ObjectOpenHashMap<Chunk>(8192) {
- 
-         @Override
-@@ -55,7 +54,6 @@ public class ChunkProviderServer implements IChunkProvider {
-             return super.remove(key);
-         }
-     }; // CraftBukkit
--	*/
-     // Paper end
-     public final WorldServer world;
- 	
-diff --git a/src/main/java/net/minecraft/server/NetworkManager.java b/src/main/java/net/minecraft/server/NetworkManager.java
-index 3d4be7f..5942a4c 100644
---- a/src/main/java/net/minecraft/server/NetworkManager.java
-+++ b/src/main/java/net/minecraft/server/NetworkManager.java
-@@ -221,11 +221,15 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
-                 while (!this.i.isEmpty()) {
-                     NetworkManager.QueuedPacket networkmanager_queuedpacket = (NetworkManager.QueuedPacket) this.i.peek(); // Paper - Async-Anti-Xray - poll() -> peek()
- 
--                    if (networkmanager_queuedpacket.a instanceof PacketPlayOutMapChunk && !((PacketPlayOutMapChunk) networkmanager_queuedpacket.a).isReady()) { // Paper - Async-Anti-Xray - Return false if the queue contains a not ready chunk packet
--                        return false; // Paper - Aync-Anti-Xray
-+					if (networkmanager_queuedpacket != null) { // Paper - Aync-Anti-Xray - Fix NPE (possible vanilla bug caused by handleDisconnection())
-+                        if (networkmanager_queuedpacket.a instanceof PacketPlayOutMapChunk && !((PacketPlayOutMapChunk) networkmanager_queuedpacket.a).isReady()) { // Paper - Async-Anti-Xray - Return false if the queue contains a not ready chunk packet
-+                            return false; // Paper - Aync-Anti-Xray
-+                        } else {
-+                            this.i.poll(); // Paper - Async-Anti-Xray - poll() here
-+                            this.a(networkmanager_queuedpacket.a, networkmanager_queuedpacket.b);
-+                        }
-                     } else {
--                        this.i.poll(); // Paper - Async-Anti-Xray - poll() here
--                        this.a(networkmanager_queuedpacket.a, networkmanager_queuedpacket.b);
-+                        this.i.poll(); // Paper - Aync-Anti-Xray - The queue is probably empty but if the queue really contains null, remove it to avoid an endless loop
-                     }
-                 }
-             } finally {
-diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
-index cc95786..4d81044 100644
---- a/src/main/java/net/minecraft/server/PlayerConnection.java
-+++ b/src/main/java/net/minecraft/server/PlayerConnection.java
-@@ -2053,6 +2053,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
-                 }
-             }
- 			
-+			/*
- 			// Paper start - Block sketchy heads
-             if (itemstack != null && (Item.getId(itemstack.getItem()) == Item.getId(Items.SKULL) && itemstack.getData() == 3 || Item.getId(itemstack.getItem()) == Block.getId(Blocks.SKULL))) {
-                 if (com.destroystokyo.paper.ItemFilter.isHeadSketchy(itemstack)) {
-@@ -2061,6 +2062,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
-                 }
-             }
-             // Paper end
-+			*/
- 
-             boolean flag1 = packetplayinsetcreativeslot.a() >= 1 && packetplayinsetcreativeslot.a() <= 45;
-             // CraftBukkit - Add invalidItems check
-diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
-index c401c50..0a3e6e4 100644
---- a/src/main/java/net/minecraft/server/World.java
-+++ b/src/main/java/net/minecraft/server/World.java
-@@ -561,6 +561,7 @@ public abstract class World implements IBlockAccess {
-     }
- 
-     public void applyPhysics(BlockPosition blockposition, Block block) {
-+		this.paperConfig.antiXrayInstance.updateNearbyBlocks(this, blockposition); // Paper - Anti-Xray
-         if (captureBlockStates) { return; } // Paper - Cancel all physics during placement
-         this.e(blockposition.west(), block);
-         this.e(blockposition.east(), block);
-@@ -568,7 +569,6 @@ public abstract class World implements IBlockAccess {
-         this.e(blockposition.up(), block);
-         this.e(blockposition.north(), block);
-         this.e(blockposition.south(), block);
--		this.paperConfig.antiXrayInstance.updateNearbyBlocks(this, blockposition); // Paper - Anti-Xray
-     }
- 
-     public void a(BlockPosition blockposition, Block block, EnumDirection enumdirection) {
-diff --git a/src/main/java/org/bukkit/craftbukkit/block/CraftBlock.java b/src/main/java/org/bukkit/craftbukkit/block/CraftBlock.java
-index 807d6da..95b5e10 100644
---- a/src/main/java/org/bukkit/craftbukkit/block/CraftBlock.java
-+++ b/src/main/java/org/bukkit/craftbukkit/block/CraftBlock.java
-@@ -136,16 +136,6 @@ public class CraftBlock implements Block {
-         IBlockData blockData = getNMSBlock(type).fromLegacyData(data);
-         BlockPosition position = new BlockPosition(x, y, z);
- 		
--		// Paper start - Unnecessary, root issue is CB TE's fixer getting too involved. Also potential data issues.
--        /*
--		// SPIGOT-611: need to do this to prevent glitchiness. Easier to handle this here (like /setblock) than to fix weirdness in tile entity cleanup
--        // Paper start - If we're setting air, we need to explicitly tell it to send to clients
--        int flag = (type == 0) ? 2 : 0;
--        chunk.getHandle().getWorld().setTypeAndData(position, Blocks.AIR.getBlockData(), flag);
--        // Paper end
--		*/
--        // Paper end
--		
-         if (applyPhysics) {
-             return chunk.getHandle().getWorld().setTypeAndData(position, blockData, 3);
-         } else {
-diff --git a/src/main/java/net/minecraft/server/BiomeBase.java b/src/main/java/net/minecraft/server/BiomeBase.java
-index 0f90a26..d79880b 100644
---- a/src/main/java/net/minecraft/server/BiomeBase.java
-+++ b/src/main/java/net/minecraft/server/BiomeBase.java
-@@ -355,25 +355,10 @@ public abstract class BiomeBase {
-         static {
-             try {
-                 BiomeBase.SyntheticClass_1.a[EnumCreatureType.MONSTER.ordinal()] = 1;
--            } catch (NoSuchFieldError nosuchfielderror) {
--                ;
--            }
--
--            try {
-                 BiomeBase.SyntheticClass_1.a[EnumCreatureType.CREATURE.ordinal()] = 2;
--            } catch (NoSuchFieldError nosuchfielderror1) {
--                ;
--            }
--
--            try {
-                 BiomeBase.SyntheticClass_1.a[EnumCreatureType.WATER_CREATURE.ordinal()] = 3;
--            } catch (NoSuchFieldError nosuchfielderror2) {
--                ;
--            }
--
--            try {
-                 BiomeBase.SyntheticClass_1.a[EnumCreatureType.AMBIENT.ordinal()] = 4;
--            } catch (NoSuchFieldError nosuchfielderror3) {
-+            } catch (NoSuchFieldError nosuchfielderror) {
-                 ;
-             }
- 
-diff --git a/src/main/java/net/minecraft/server/BlockCocoa.java b/src/main/java/net/minecraft/server/BlockCocoa.java
-index e9920ae..e0d4cbd 100644
---- a/src/main/java/net/minecraft/server/BlockCocoa.java
-+++ b/src/main/java/net/minecraft/server/BlockCocoa.java
-@@ -158,25 +158,10 @@ public class BlockCocoa extends BlockFacingHorizontal implements IBlockFragilePl
-         static {
-             try {
-                 BlockCocoa.SyntheticClass_1.a[EnumDirection.SOUTH.ordinal()] = 1;
--            } catch (NoSuchFieldError nosuchfielderror) {
--                ;
--            }
--
--            try {
-                 BlockCocoa.SyntheticClass_1.a[EnumDirection.NORTH.ordinal()] = 2;
--            } catch (NoSuchFieldError nosuchfielderror1) {
--                ;
--            }
--
--            try {
-                 BlockCocoa.SyntheticClass_1.a[EnumDirection.WEST.ordinal()] = 3;
--            } catch (NoSuchFieldError nosuchfielderror2) {
--                ;
--            }
--
--            try {
-                 BlockCocoa.SyntheticClass_1.a[EnumDirection.EAST.ordinal()] = 4;
--            } catch (NoSuchFieldError nosuchfielderror3) {
 +            } catch (NoSuchFieldError nosuchfielderror) {
                  ;
              }
@@ -1175,6 +832,165 @@ index 28b06ab..cbaab87 100644
                  ;
              }
  
+diff --git a/src/main/java/net/minecraft/server/BlockRedstoneOre.java b/src/main/java/net/minecraft/server/BlockRedstoneOre.java
+index 3117e58..bc8ac2d 100644
+--- a/src/main/java/net/minecraft/server/BlockRedstoneOre.java
++++ b/src/main/java/net/minecraft/server/BlockRedstoneOre.java
+@@ -97,14 +97,6 @@ public class BlockRedstoneOre extends Block {
+ 
+     public void dropNaturally(World world, BlockPosition blockposition, IBlockData iblockdata, float f, int i) {
+         super.dropNaturally(world, blockposition, iblockdata, f, i);
+-        /* CraftBukkit start - Delegated to getExpDrop
+-        if (this.getDropType(iblockdata, world.random, i) != Item.getItemOf(this)) {
+-            int j = 1 + world.random.nextInt(5);
+-
+-            this.dropExperience(world, blockposition, j);
+-        }
+-        // */
+-
+     }
+ 
+     @Override
+diff --git a/src/main/java/net/minecraft/server/BlockRedstoneTorch.java b/src/main/java/net/minecraft/server/BlockRedstoneTorch.java
+index cf24c45..446b4b8 100644
+--- a/src/main/java/net/minecraft/server/BlockRedstoneTorch.java
++++ b/src/main/java/net/minecraft/server/BlockRedstoneTorch.java
+@@ -25,8 +25,7 @@ public class BlockRedstoneTorch extends BlockTorch {
+             list.add(new BlockRedstoneTorch.RedstoneUpdateInfo(blockposition, world.getTime()));
+         }
+ 
+-        int i = 0;
+-
++		int i = 0;
+         for (int j = 0; j < list.size(); ++j) {
+             BlockRedstoneTorch.RedstoneUpdateInfo blockredstonetorch_redstoneupdateinfo = (BlockRedstoneTorch.RedstoneUpdateInfo) list.get(j);
+ 
+@@ -60,11 +59,8 @@ public class BlockRedstoneTorch extends BlockTorch {
+             }
+             // Paper end
+             EnumDirection[] aenumdirection = EnumDirection.values();
+-            int i = aenumdirection.length;
+-
+-            for (int j = 0; j < i; ++j) {
+-                EnumDirection enumdirection = aenumdirection[j];
+ 
++            for (EnumDirection enumdirection : aenumdirection) {
+                 world.applyPhysics(blockposition.shift(enumdirection), this);
+             }
+         }
+@@ -80,11 +76,8 @@ public class BlockRedstoneTorch extends BlockTorch {
+             }
+             // Paper end
+             EnumDirection[] aenumdirection = EnumDirection.values();
+-            int i = aenumdirection.length;
+-
+-            for (int j = 0; j < i; ++j) {
+-                EnumDirection enumdirection = aenumdirection[j];
+ 
++            for (EnumDirection enumdirection : aenumdirection) {
+                 world.applyPhysics(blockposition.shift(enumdirection), this);
+             }
+         }
+diff --git a/src/main/java/net/minecraft/server/BlockRedstoneWire.java b/src/main/java/net/minecraft/server/BlockRedstoneWire.java
+index bc132b3..df04253 100644
+--- a/src/main/java/net/minecraft/server/BlockRedstoneWire.java
++++ b/src/main/java/net/minecraft/server/BlockRedstoneWire.java
+@@ -18,7 +18,26 @@ public class BlockRedstoneWire extends Block {
+     public static final BlockStateEnum<BlockRedstoneWire.EnumRedstoneWireConnection> SOUTH = BlockStateEnum.of("south", BlockRedstoneWire.EnumRedstoneWireConnection.class);
+     public static final BlockStateEnum<BlockRedstoneWire.EnumRedstoneWireConnection> WEST = BlockStateEnum.of("west", BlockRedstoneWire.EnumRedstoneWireConnection.class);
+     public static final BlockStateInteger POWER = BlockStateInteger.of("power", 0, 15);
+-    protected static final AxisAlignedBB[] f = new AxisAlignedBB[] { new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 0.8125D, 0.0625D, 0.8125D), new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 0.8125D, 0.0625D, 1.0D), new AxisAlignedBB(0.0D, 0.0D, 0.1875D, 0.8125D, 0.0625D, 0.8125D), new AxisAlignedBB(0.0D, 0.0D, 0.1875D, 0.8125D, 0.0625D, 1.0D), new AxisAlignedBB(0.1875D, 0.0D, 0.0D, 0.8125D, 0.0625D, 0.8125D), new AxisAlignedBB(0.1875D, 0.0D, 0.0D, 0.8125D, 0.0625D, 1.0D), new AxisAlignedBB(0.0D, 0.0D, 0.0D, 0.8125D, 0.0625D, 0.8125D), new AxisAlignedBB(0.0D, 0.0D, 0.0D, 0.8125D, 0.0625D, 1.0D), new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 1.0D, 0.0625D, 0.8125D), new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 1.0D, 0.0625D, 1.0D), new AxisAlignedBB(0.0D, 0.0D, 0.1875D, 1.0D, 0.0625D, 0.8125D), new AxisAlignedBB(0.0D, 0.0D, 0.1875D, 1.0D, 0.0625D, 1.0D), new AxisAlignedBB(0.1875D, 0.0D, 0.0D, 1.0D, 0.0625D, 0.8125D), new AxisAlignedBB(0.1875D, 0.0D, 0.0D, 1.0D, 0.0625D, 1.0D), new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.0625D, 0.8125D), new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.0625D, 1.0D)};
++	
++    protected static final AxisAlignedBB[] f = new AxisAlignedBB[] {
++		new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 0.8125D, 0.0625D, 0.8125D), 
++		new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 0.8125D, 0.0625D, 1.0D), 
++		new AxisAlignedBB(0.0D, 0.0D, 0.1875D, 0.8125D, 0.0625D, 0.8125D), 
++		new AxisAlignedBB(0.0D, 0.0D, 0.1875D, 0.8125D, 0.0625D, 1.0D), 
++		new AxisAlignedBB(0.1875D, 0.0D, 0.0D, 0.8125D, 0.0625D, 0.8125D), 
++		new AxisAlignedBB(0.1875D, 0.0D, 0.0D, 0.8125D, 0.0625D, 1.0D), 
++		new AxisAlignedBB(0.0D, 0.0D, 0.0D, 0.8125D, 0.0625D, 0.8125D), 
++		new AxisAlignedBB(0.0D, 0.0D, 0.0D, 0.8125D, 0.0625D, 1.0D), 
++		new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 1.0D, 0.0625D, 0.8125D), 
++		new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 1.0D, 0.0625D, 1.0D), 
++		new AxisAlignedBB(0.0D, 0.0D, 0.1875D, 1.0D, 0.0625D, 0.8125D), 
++		new AxisAlignedBB(0.0D, 0.0D, 0.1875D, 1.0D, 0.0625D, 1.0D), 
++		new AxisAlignedBB(0.1875D, 0.0D, 0.0D, 1.0D, 0.0625D, 0.8125D), 
++		new AxisAlignedBB(0.1875D, 0.0D, 0.0D, 1.0D, 0.0625D, 1.0D), 
++		new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.0625D, 0.8125D), 
++		new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.0625D, 1.0D)
++	};
++	
+     private boolean g = true;
+     private final Set<BlockPosition> B = Sets.newConcurrentHashSet(); private final Set<BlockPosition> blocksToUpdate = B; // Paper - OBFHELPER
+ 
+@@ -206,11 +225,8 @@ public class BlockRedstoneWire extends Block {
+ 
+ 
+             EnumDirection[] aenumdirection = EnumDirection.values();
+-            int i1 = aenumdirection.length;
+-
+-            for (int j1 = 0; j1 < i1; ++j1) {
+-                EnumDirection enumdirection1 = aenumdirection[j1];
+ 
++            for (EnumDirection enumdirection1 : aenumdirection) {
+                 this.B.add(blockposition.shift(enumdirection1));
+             }
+         }
+@@ -283,11 +299,8 @@ public class BlockRedstoneWire extends Block {
+         super.remove(world, blockposition, iblockdata);
+         if (!world.isClientSide) {
+             EnumDirection[] aenumdirection = EnumDirection.values();
+-            int i = aenumdirection.length;
+-
+-            for (int j = 0; j < i; ++j) {
+-                EnumDirection enumdirection = aenumdirection[j];
+ 
++            for (EnumDirection enumdirection : aenumdirection) {
+                 world.applyPhysics(blockposition.shift(enumdirection), this);
+             }
+ 
+@@ -463,39 +476,17 @@ public class BlockRedstoneWire extends Block {
+ 
+     static class SyntheticClass_1 {
+ 
+-        static final int[] a;
++        static final int[] a = new int[EnumBlockRotation.values().length];
+         static final int[] b = new int[EnumBlockMirror.values().length];
+ 
+         static {
+             try {
+                 BlockRedstoneWire.SyntheticClass_1.b[EnumBlockMirror.LEFT_RIGHT.ordinal()] = 1;
+-            } catch (NoSuchFieldError nosuchfielderror) {
+-                ;
+-            }
+-
+-            try {
+                 BlockRedstoneWire.SyntheticClass_1.b[EnumBlockMirror.FRONT_BACK.ordinal()] = 2;
+-            } catch (NoSuchFieldError nosuchfielderror1) {
+-                ;
+-            }
+-
+-            a = new int[EnumBlockRotation.values().length];
+-
+-            try {
+                 BlockRedstoneWire.SyntheticClass_1.a[EnumBlockRotation.CLOCKWISE_180.ordinal()] = 1;
+-            } catch (NoSuchFieldError nosuchfielderror2) {
+-                ;
+-            }
+-
+-            try {
+                 BlockRedstoneWire.SyntheticClass_1.a[EnumBlockRotation.COUNTERCLOCKWISE_90.ordinal()] = 2;
+-            } catch (NoSuchFieldError nosuchfielderror3) {
+-                ;
+-            }
+-
+-            try {
+                 BlockRedstoneWire.SyntheticClass_1.a[EnumBlockRotation.CLOCKWISE_90.ordinal()] = 3;
+-            } catch (NoSuchFieldError nosuchfielderror4) {
++            } catch (NoSuchFieldError nosuchfielderror) {
+                 ;
+             }
+ 
 diff --git a/src/main/java/net/minecraft/server/BlockSapling.java b/src/main/java/net/minecraft/server/BlockSapling.java
 index b7776fb..43f6f10 100644
 --- a/src/main/java/net/minecraft/server/BlockSapling.java
@@ -1255,6 +1071,48 @@ index 0c69994..81b7dd8 100644
                  ;
              }
  
+diff --git a/src/main/java/net/minecraft/server/BlockTrapdoor.java b/src/main/java/net/minecraft/server/BlockTrapdoor.java
+index 17adbb2..88065de 100644
+--- a/src/main/java/net/minecraft/server/BlockTrapdoor.java
++++ b/src/main/java/net/minecraft/server/BlockTrapdoor.java
+@@ -165,7 +165,6 @@ public class BlockTrapdoor extends Block {
+         case 3:
+             return 2;
+ 
+-        case 4:
+         default:
+             return 3;
+         }
+@@ -209,28 +208,12 @@ public class BlockTrapdoor extends Block {
+         static {
+             try {
+                 BlockTrapdoor.SyntheticClass_1.a[EnumDirection.NORTH.ordinal()] = 1;
+-            } catch (NoSuchFieldError nosuchfielderror) {
+-                ;
+-            }
+-
+-            try {
+                 BlockTrapdoor.SyntheticClass_1.a[EnumDirection.SOUTH.ordinal()] = 2;
+-            } catch (NoSuchFieldError nosuchfielderror1) {
+-                ;
+-            }
+-
+-            try {
+                 BlockTrapdoor.SyntheticClass_1.a[EnumDirection.WEST.ordinal()] = 3;
+-            } catch (NoSuchFieldError nosuchfielderror2) {
+-                ;
+-            }
+-
+-            try {
+                 BlockTrapdoor.SyntheticClass_1.a[EnumDirection.EAST.ordinal()] = 4;
+-            } catch (NoSuchFieldError nosuchfielderror3) {
++            } catch (NoSuchFieldError nosuchfielderror) {
+                 ;
+             }
+-
+         }
+     }
+ 
 diff --git a/src/main/java/net/minecraft/server/BlockTripwire.java b/src/main/java/net/minecraft/server/BlockTripwire.java
 index 4cef2d6..9c3198f 100644
 --- a/src/main/java/net/minecraft/server/BlockTripwire.java
@@ -1297,6 +1155,37 @@ index 4cef2d6..9c3198f 100644
 -            try {
                  BlockTripwire.SyntheticClass_1.a[EnumBlockRotation.CLOCKWISE_90.ordinal()] = 3;
 -            } catch (NoSuchFieldError nosuchfielderror4) {
++            } catch (NoSuchFieldError nosuchfielderror) {
+                 ;
+             }
+ 
+diff --git a/src/main/java/net/minecraft/server/BlockTripwireHook.java b/src/main/java/net/minecraft/server/BlockTripwireHook.java
+index 6663b69..fdf0060 100644
+--- a/src/main/java/net/minecraft/server/BlockTripwireHook.java
++++ b/src/main/java/net/minecraft/server/BlockTripwireHook.java
+@@ -289,25 +289,10 @@ public class BlockTripwireHook extends Block {
+         static {
+             try {
+                 BlockTripwireHook.SyntheticClass_1.a[EnumDirection.EAST.ordinal()] = 1;
+-            } catch (NoSuchFieldError nosuchfielderror) {
+-                ;
+-            }
+-
+-            try {
+                 BlockTripwireHook.SyntheticClass_1.a[EnumDirection.WEST.ordinal()] = 2;
+-            } catch (NoSuchFieldError nosuchfielderror1) {
+-                ;
+-            }
+-
+-            try {
+                 BlockTripwireHook.SyntheticClass_1.a[EnumDirection.SOUTH.ordinal()] = 3;
+-            } catch (NoSuchFieldError nosuchfielderror2) {
+-                ;
+-            }
+-
+-            try {
+                 BlockTripwireHook.SyntheticClass_1.a[EnumDirection.NORTH.ordinal()] = 4;
+-            } catch (NoSuchFieldError nosuchfielderror3) {
 +            } catch (NoSuchFieldError nosuchfielderror) {
                  ;
              }
@@ -1381,6 +1270,32 @@ index 283c116..5e49a6c 100644
                  ;
              }
  
+diff --git a/src/main/java/net/minecraft/server/ChunkProviderServer.java b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+index a9569c7..b429fd8 100644
+--- a/src/main/java/net/minecraft/server/ChunkProviderServer.java
++++ b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+@@ -31,12 +31,11 @@ public class ChunkProviderServer implements IChunkProvider {
+ 
+     private static final Logger a = LogManager.getLogger();
+     public final it.unimi.dsi.fastutil.longs.LongSet unloadQueue = new it.unimi.dsi.fastutil.longs.LongArraySet(); // PAIL: private -> public // Paper
+-	public final Map<Long, Chunk> chunks = Maps.newConcurrentMap(); // Hose
++	// public final Map<Long, Chunk> chunks = Maps.newConcurrentMap(); // Hose
+     public final ChunkGenerator chunkGenerator;
+     private final IChunkLoader chunkLoader;
+     // Paper start
+     protected Chunk lastChunkByPos = null;
+-	/*
+     public Long2ObjectOpenHashMap<Chunk> chunks = new Long2ObjectOpenHashMap<Chunk>(8192) {
+ 
+         @Override
+@@ -55,7 +54,6 @@ public class ChunkProviderServer implements IChunkProvider {
+             return super.remove(key);
+         }
+     }; // CraftBukkit
+-	*/
+     // Paper end
+     public final WorldServer world;
+ 	
 diff --git a/src/main/java/net/minecraft/server/ContainerAnvil.java b/src/main/java/net/minecraft/server/ContainerAnvil.java
 index 309fa9f..c2df08c 100644
 --- a/src/main/java/net/minecraft/server/ContainerAnvil.java
@@ -2190,11 +2105,51 @@ index 0000000..c3aa69b
 +
 +    }
 +}
+diff --git a/src/main/java/net/minecraft/server/NetworkManager.java b/src/main/java/net/minecraft/server/NetworkManager.java
+index 3d4be7f..5942a4c 100644
+--- a/src/main/java/net/minecraft/server/NetworkManager.java
++++ b/src/main/java/net/minecraft/server/NetworkManager.java
+@@ -221,11 +221,15 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
+                 while (!this.i.isEmpty()) {
+                     NetworkManager.QueuedPacket networkmanager_queuedpacket = (NetworkManager.QueuedPacket) this.i.peek(); // Paper - Async-Anti-Xray - poll() -> peek()
+ 
+-                    if (networkmanager_queuedpacket.a instanceof PacketPlayOutMapChunk && !((PacketPlayOutMapChunk) networkmanager_queuedpacket.a).isReady()) { // Paper - Async-Anti-Xray - Return false if the queue contains a not ready chunk packet
+-                        return false; // Paper - Aync-Anti-Xray
++					if (networkmanager_queuedpacket != null) { // Paper - Aync-Anti-Xray - Fix NPE (possible vanilla bug caused by handleDisconnection())
++                        if (networkmanager_queuedpacket.a instanceof PacketPlayOutMapChunk && !((PacketPlayOutMapChunk) networkmanager_queuedpacket.a).isReady()) { // Paper - Async-Anti-Xray - Return false if the queue contains a not ready chunk packet
++                            return false; // Paper - Aync-Anti-Xray
++                        } else {
++                            this.i.poll(); // Paper - Async-Anti-Xray - poll() here
++                            this.a(networkmanager_queuedpacket.a, networkmanager_queuedpacket.b);
++                        }
+                     } else {
+-                        this.i.poll(); // Paper - Async-Anti-Xray - poll() here
+-                        this.a(networkmanager_queuedpacket.a, networkmanager_queuedpacket.b);
++                        this.i.poll(); // Paper - Aync-Anti-Xray - The queue is probably empty but if the queue really contains null, remove it to avoid an endless loop
+                     }
+                 }
+             } finally {
 diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
-index 4d81044..048d7b8 100644
+index cc95786..048d7b8 100644
 --- a/src/main/java/net/minecraft/server/PlayerConnection.java
 +++ b/src/main/java/net/minecraft/server/PlayerConnection.java
-@@ -2605,147 +2605,36 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+@@ -2053,6 +2053,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+                 }
+             }
+ 			
++			/*
+ 			// Paper start - Block sketchy heads
+             if (itemstack != null && (Item.getId(itemstack.getItem()) == Item.getId(Items.SKULL) && itemstack.getData() == 3 || Item.getId(itemstack.getItem()) == Block.getId(Blocks.SKULL))) {
+                 if (com.destroystokyo.paper.ItemFilter.isHeadSketchy(itemstack)) {
+@@ -2061,6 +2062,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+                 }
+             }
+             // Paper end
++			*/
+ 
+             boolean flag1 = packetplayinsetcreativeslot.a() >= 1 && packetplayinsetcreativeslot.a() <= 45;
+             // CraftBukkit - Add invalidItems check
+@@ -2603,147 +2605,36 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
  
      static class SyntheticClass_1 {
  
@@ -2402,6 +2357,26 @@ index fb962d9..9df3cdd 100644
                  ;
              }
  
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index c401c50..0a3e6e4 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -561,6 +561,7 @@ public abstract class World implements IBlockAccess {
+     }
+ 
+     public void applyPhysics(BlockPosition blockposition, Block block) {
++		this.paperConfig.antiXrayInstance.updateNearbyBlocks(this, blockposition); // Paper - Anti-Xray
+         if (captureBlockStates) { return; } // Paper - Cancel all physics during placement
+         this.e(blockposition.west(), block);
+         this.e(blockposition.east(), block);
+@@ -568,7 +569,6 @@ public abstract class World implements IBlockAccess {
+         this.e(blockposition.up(), block);
+         this.e(blockposition.north(), block);
+         this.e(blockposition.south(), block);
+-		this.paperConfig.antiXrayInstance.updateNearbyBlocks(this, blockposition); // Paper - Anti-Xray
+     }
+ 
+     public void a(BlockPosition blockposition, Block block, EnumDirection enumdirection) {
 diff --git a/src/main/java/net/minecraft/server/WorldGenVillagePieces.java b/src/main/java/net/minecraft/server/WorldGenVillagePieces.java
 index 35d3ed1..7a29ed7 100644
 --- a/src/main/java/net/minecraft/server/WorldGenVillagePieces.java
@@ -2433,6 +2408,27 @@ index 35d3ed1..7a29ed7 100644
                  ;
              }
  
+diff --git a/src/main/java/org/bukkit/craftbukkit/block/CraftBlock.java b/src/main/java/org/bukkit/craftbukkit/block/CraftBlock.java
+index 807d6da..95b5e10 100644
+--- a/src/main/java/org/bukkit/craftbukkit/block/CraftBlock.java
++++ b/src/main/java/org/bukkit/craftbukkit/block/CraftBlock.java
+@@ -136,16 +136,6 @@ public class CraftBlock implements Block {
+         IBlockData blockData = getNMSBlock(type).fromLegacyData(data);
+         BlockPosition position = new BlockPosition(x, y, z);
+ 		
+-		// Paper start - Unnecessary, root issue is CB TE's fixer getting too involved. Also potential data issues.
+-        /*
+-		// SPIGOT-611: need to do this to prevent glitchiness. Easier to handle this here (like /setblock) than to fix weirdness in tile entity cleanup
+-        // Paper start - If we're setting air, we need to explicitly tell it to send to clients
+-        int flag = (type == 0) ? 2 : 0;
+-        chunk.getHandle().getWorld().setTypeAndData(position, Blocks.AIR.getBlockData(), flag);
+-        // Paper end
+-		*/
+-        // Paper end
+-		
+         if (applyPhysics) {
+             return chunk.getHandle().getWorld().setTypeAndData(position, blockData, 3);
+         } else {
 diff --git a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
 index b8eeec3..158255f 100644
 --- a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
