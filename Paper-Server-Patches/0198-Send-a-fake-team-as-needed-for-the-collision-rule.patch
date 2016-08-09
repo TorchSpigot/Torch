@@ -1,0 +1,37 @@
+From 03b523dbe1a78c31a9af1954de13d36da43de533 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 31 Jul 2016 14:36:26 +0800
+Subject: [PATCH] Send a fake team as needed for the collision rule
+
+
+diff --git a/src/main/java/net/minecraft/server/PlayerList.java b/src/main/java/net/minecraft/server/PlayerList.java
+index f4503f8..99bb20e 100644
+--- a/src/main/java/net/minecraft/server/PlayerList.java
++++ b/src/main/java/net/minecraft/server/PlayerList.java
+@@ -242,7 +242,7 @@ public abstract class PlayerList {
+     }
+ 
+     public void sendScoreboard(ScoreboardServer scoreboardserver, EntityPlayer entityplayer) {
+-        Set hashset = Sets.newConcurrentHashSet();
++        Set hashset = Sets.newHashSet();
+         Iterator iterator = scoreboardserver.getTeams().iterator();
+ 
+         while (iterator.hasNext()) {
+@@ -257,6 +257,14 @@ public abstract class PlayerList {
+             if (scoreboardobjective != null && !hashset.contains(scoreboardobjective)) {
+                 List list = scoreboardserver.getScoreboardScorePacketsForObjective(scoreboardobjective);
+                 Iterator iterator1 = list.iterator();
++				
++				// Paper start - Send a fake team to the client to initialize collision rule if no others exist
++				if (!com.destroystokyo.paper.PaperConfig.enablePlayerCollisions && !iterator.hasNext()) {
++					String teamName = org.apache.commons.lang3.StringUtils.left("collideRule_" + entityplayer.getWorld().random.nextInt(), 16);
++					entityplayer.playerConnection.sendPacket(new PacketPlayOutScoreboardTeam(new ScoreboardTeam(scoreboardserver, teamName), 0));
++					return;
++				}
++				// Paper end
+ 
+                 while (iterator1.hasNext()) {
+                     Packet packet = (Packet) iterator1.next();
+-- 
+2.8.2.windows.1
+

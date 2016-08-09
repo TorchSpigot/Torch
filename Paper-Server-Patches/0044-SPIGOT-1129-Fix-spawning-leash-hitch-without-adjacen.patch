@@ -1,4 +1,4 @@
-From 0a0098715c1f8eed0331309ba1d5aedfd94c480a Mon Sep 17 00:00:00 2001
+From 58782c618db4bdcc7bf2bec01cbf2b1214c4a885 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 13:55:29 +0800
 Subject: [PATCH] SPIGOT-1129: Fix spawning leash hitch without adjacent block

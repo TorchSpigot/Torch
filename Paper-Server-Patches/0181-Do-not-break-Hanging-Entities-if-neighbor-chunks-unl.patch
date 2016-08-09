@@ -1,0 +1,3554 @@
+From 35a547d523b8b3c6f14f437d3b2a619d1f8b33b4 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 25 Jul 2016 18:19:21 +0800
+Subject: [PATCH] Do not break Hanging Entities if neighbor chunks unloaded,
+ miscs
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityHanging.java b/src/main/java/net/minecraft/server/EntityHanging.java
+index 6c65d4a..cca1196 100644
+--- a/src/main/java/net/minecraft/server/EntityHanging.java
++++ b/src/main/java/net/minecraft/server/EntityHanging.java
+@@ -134,6 +134,7 @@ public abstract class EntityHanging extends Entity {
+     }
+ 
+     public boolean survives() {
++		if (!world.getChunkAt((int) locX >> 4, (int) locZ >> 4).areNeighborsLoaded(1)) return true; // PaperDragon - Import Patch From EMC
+         if (!this.world.getCubes(this, this.getBoundingBox()).isEmpty()) {
+             return false;
+         } else {
+diff --git a/src/main/java/net/minecraft/server/RegionFile.java b/src/main/java/net/minecraft/server/RegionFile.java
+index ad8ea4c..3eca711 100644
+--- a/src/main/java/net/minecraft/server/RegionFile.java
++++ b/src/main/java/net/minecraft/server/RegionFile.java
+@@ -3,17 +3,16 @@ package net.minecraft.server;
+ import com.destroystokyo.paper.exception.ServerInternalException;
+ import com.google.common.collect.Lists;
+ 
+-// Torch start
++/* // Torch start
+ import java.io.BufferedInputStream;
+ import java.io.BufferedOutputStream;
+ import java.io.ByteArrayInputStream;
+ import java.io.ByteArrayOutputStream;
+-/*
++*/
+ import org.torch.util.io.FastBufferedInputStream;
+ import org.torch.util.io.FastBufferedOutputStream;
+ import org.torch.util.io.FastByteArrayInputStream;
+ import org.torch.util.io.FastByteArrayOutputStream;
+-*/
+ // Torch end
+ 
+ import java.io.DataInputStream;
+@@ -188,12 +187,12 @@ public class RegionFile {
+ 								this.addCoordinatesToCache(i, j); // Migot
+                                 abyte = new byte[j1 - 1];
+                                 this.c.read(abyte);
+-                                return new DataInputStream(new BufferedInputStream(new GZIPInputStream(new ByteArrayInputStream(abyte))));
++                                return new DataInputStream(new FastBufferedInputStream(new GZIPInputStream(new FastByteArrayInputStream(abyte))));
+                             } else if (b0 == 2) {
+ 								this.addCoordinatesToCache(i, j); // Migot
+                                 abyte = new byte[j1 - 1];
+                                 this.c.read(abyte);
+-                                return new DataInputStream(new BufferedInputStream(new InflaterInputStream(new ByteArrayInputStream(abyte))));
++                                return new DataInputStream(new FastBufferedInputStream(new InflaterInputStream(new FastByteArrayInputStream(abyte))));
+                             } else {
+                                 return null;
+                             }
+@@ -207,7 +206,7 @@ public class RegionFile {
+     }
+ 
+     public DataOutputStream b(int i, int j) {
+-        return this.d(i, j) ? null : new DataOutputStream(new BufferedOutputStream(new DeflaterOutputStream(new RegionFile.ChunkBuffer(i, j))));
++        return this.d(i, j) ? null : new DataOutputStream(new FastBufferedOutputStream(new DeflaterOutputStream(new RegionFile.ChunkBuffer(i, j))));
+     }
+ 
+     protected synchronized void a(int i, int j, byte[] abyte, int k) {
+@@ -322,7 +321,7 @@ public class RegionFile {
+ 
+     }
+ 
+-    class ChunkBuffer extends ByteArrayOutputStream { // Torch
++    class ChunkBuffer extends FastByteArrayOutputStream { // Torch
+ 
+         private int b;
+         private int c;
+@@ -334,7 +333,8 @@ public class RegionFile {
+         }
+ 
+         public void close() {
+-            RegionFile.this.a(this.b, this.c, this.buf, this.count);
++            // RegionFile.this.a(this.b, this.c, this.buf, this.count);
++			RegionFile.this.a(this.b, this.c, this.array, this.length); // Torch
+         }
+     }
+ }
+diff --git a/src/main/java/org/torch/util/Arrays.java b/src/main/java/org/torch/util/Arrays.java
+new file mode 100644
+index 0000000..e10e679
+--- /dev/null
++++ b/src/main/java/org/torch/util/Arrays.java
+@@ -0,0 +1,442 @@
++package org.torch.util;
++
++/**
++ * From fastutil project.
++ * @Link: https://github.com/vigna/fastutil
++ */
++
++/*		 
++ * Copyright (C) 2002-2016 Sebastiano Vigna
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License. 
++ */
++
++import it.unimi.dsi.fastutil.ints.IntComparator;
++
++import java.util.ArrayList;
++import java.util.concurrent.ForkJoinPool;
++import java.util.concurrent.RecursiveAction;
++
++/** A class providing static methods and objects that do useful things with arrays.
++ *
++ * <p>In addition to commodity methods, this class contains {@link Swapper}-based implementations
++ * of {@linkplain #quickSort(int, int, IntComparator, Swapper) quicksort} and of
++ * a stable, in-place {@linkplain #mergeSort(int, int, IntComparator, Swapper) mergesort}. These
++ * generic sorting methods can be used to sort any kind of list, but they find their natural
++ * usage, for instance, in sorting arrays in parallel.
++ *
++ * @see Arrays
++ */
++
++public class Arrays {
++	
++	private Arrays() {}
++
++	/** This is a safe value used by {@link ArrayList} (as of Java 7) to avoid
++	 *  throwing {@link OutOfMemoryError} on some JVMs. We adopt the same value. */
++    public static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
++
++    /** Ensures that a range given by its first (inclusive) and last (exclusive) elements fits an array of given length.
++	 *
++	 * <P>This method may be used whenever an array range check is needed.
++	 *
++	 * @param arrayLength an array length.
++	 * @param from a start index (inclusive).
++	 * @param to an end index (inclusive).
++	 * @throws IllegalArgumentException if <code>from</code> is greater than <code>to</code>.
++	 * @throws ArrayIndexOutOfBoundsException if <code>from</code> or <code>to</code> are greater than <code>arrayLength</code> or negative.
++	 */
++	public static void ensureFromTo( final int arrayLength, final int from, final int to ) {
++		if ( from < 0 ) throw new ArrayIndexOutOfBoundsException( "Start index (" + from + ") is negative" );
++		if ( from > to ) throw new IllegalArgumentException( "Start index (" + from + ") is greater than end index (" + to + ")" );
++		if ( to > arrayLength ) throw new ArrayIndexOutOfBoundsException( "End index (" + to + ") is greater than array length (" + arrayLength + ")" );
++	}
++
++	/** Ensures that a range given by an offset and a length fits an array of given length.
++	 *
++	 * <P>This method may be used whenever an array range check is needed.
++	 *
++	 * @param arrayLength an array length.
++	 * @param offset a start index for the fragment
++	 * @param length a length (the number of elements in the fragment).
++	 * @throws IllegalArgumentException if <code>length</code> is negative.
++	 * @throws ArrayIndexOutOfBoundsException if <code>offset</code> is negative or <code>offset</code>+<code>length</code> is greater than <code>arrayLength</code>.
++	 */
++	public static void ensureOffsetLength( final int arrayLength, final int offset, final int length ) {
++		if ( offset < 0 ) throw new ArrayIndexOutOfBoundsException( "Offset (" + offset + ") is negative" );
++		if ( length < 0 ) throw new IllegalArgumentException( "Length (" + length + ") is negative" );
++		if ( offset + length > arrayLength ) throw new ArrayIndexOutOfBoundsException( "Last index (" + ( offset + length ) + ") is greater than array length (" + arrayLength + ")" );
++	}
++
++	/**
++	 * Transforms two consecutive sorted ranges into a single sorted range. The initial ranges are
++	 * <code>[first..middle)</code> and <code>[middle..last)</code>, and the resulting range is
++	 * <code>[first..last)</code>. Elements in the first input range will precede equal elements in
++	 * the second.
++	 */
++	private static void inPlaceMerge( final int from, int mid, final int to, final IntComparator comp, final Swapper swapper ) {
++		if ( from >= mid || mid >= to ) return;
++		if ( to - from == 2 ) {
++			if ( comp.compare( mid, from ) < 0 ) swapper.swap( from, mid );
++			return;
++		}
++
++		int firstCut;
++		int secondCut;
++
++		if ( mid - from > to - mid ) {
++			firstCut = from + ( mid - from ) / 2;
++			secondCut = lowerBound( mid, to, firstCut, comp );
++		}
++		else {
++			secondCut = mid + ( to - mid ) / 2;
++			firstCut = upperBound( from, mid, secondCut, comp );
++		}
++
++		int first2 = firstCut;
++		int middle2 = mid;
++		int last2 = secondCut;
++		if ( middle2 != first2 && middle2 != last2 ) {
++			int first1 = first2;
++			int last1 = middle2;
++			while ( first1 < --last1 )
++				swapper.swap( first1++, last1 );
++			first1 = middle2;
++			last1 = last2;
++			while ( first1 < --last1 )
++				swapper.swap( first1++, last1 );
++			first1 = first2;
++			last1 = last2;
++			while ( first1 < --last1 )
++				swapper.swap( first1++, last1 );
++		}
++
++		mid = firstCut + ( secondCut - mid );
++		inPlaceMerge( from, firstCut, mid, comp, swapper );
++		inPlaceMerge( mid, secondCut, to, comp, swapper );
++	}
++
++	/**
++	 * Performs a binary search on an already-sorted range: finds the first position where an
++	 * element can be inserted without violating the ordering. Sorting is by a user-supplied
++	 * comparison function.
++	 * 
++	 * @param from the index of the first element (inclusive) to be included in the binary search.
++	 * @param to the index of the last element (exclusive) to be included in the binary search.
++	 * @param pos the position of the element to be searched for.
++	 * @param comp the comparison function.
++	 * @return the largest index i such that, for every j in the range <code>[first..i)</code>,
++	 * <code>comp.compare(j, pos)</code> is <code>true</code>.
++	 */
++	private static int lowerBound( int from, final int to, final int pos, final IntComparator comp ) {
++		// if (comp==null) throw new NullPointerException();
++		int len = to - from;
++		while ( len > 0 ) {
++			int half = len / 2;
++			int middle = from + half;
++			if ( comp.compare( middle, pos ) < 0 ) {
++				from = middle + 1;
++				len -= half + 1;
++			}
++			else {
++				len = half;
++			}
++		}
++		return from;
++	}
++
++
++	/**
++	 * Performs a binary search on an already sorted range: finds the last position where an element
++	 * can be inserted without violating the ordering. Sorting is by a user-supplied comparison
++	 * function.
++	 * 
++	 * @param from the index of the first element (inclusive) to be included in the binary search.
++	 * @param to the index of the last element (exclusive) to be included in the binary search.
++	 * @param pos the position of the element to be searched for.
++	 * @param comp the comparison function.
++	 * @return The largest index i such that, for every j in the range <code>[first..i)</code>,
++	 * <code>comp.compare(pos, j)</code> is <code>false</code>.
++	 */
++	private static int upperBound( int from, final int mid, final int pos, final IntComparator comp ) {
++		// if (comp==null) throw new NullPointerException();
++		int len = mid - from;
++		while ( len > 0 ) {
++			int half = len / 2;
++			int middle = from + half;
++			if ( comp.compare( pos, middle ) < 0 ) {
++				len = half;
++			}
++			else {
++				from = middle + 1;
++				len -= half + 1;
++			}
++		}
++		return from;
++	}
++
++	/**
++	 * Returns the index of the median of the three indexed chars.
++	 */
++	private static int med3( final int a, final int b, final int c, final IntComparator comp ) {
++		int ab = comp.compare( a, b );
++		int ac = comp.compare( a, c );
++		int bc = comp.compare( b, c );
++		return ( ab < 0 ?
++				( bc < 0 ? b : ac < 0 ? c : a ) :
++				( bc > 0 ? b : ac > 0 ? c : a ) );
++	}
++
++	 private static final int MERGESORT_NO_REC = 16;
++
++	 /** Sorts the specified range of elements using the specified swapper and according to the order induced by the specified
++	 * comparator using mergesort.
++	 * 
++	 * <p>This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
++	 * of the sort. The sorting algorithm is an in-place mergesort that is significantly slower than a 
++	 * standard mergesort, as its running time is <i>O</i>(<var>n</var>&nbsp;(log&nbsp;<var>n</var>)<sup>2</sup>), but it does not allocate additional memory; as a result, it can be
++	 * used as a generic sorting algorithm.
++	 * 
++	 * @param from the index of the first element (inclusive) to be sorted.
++	 * @param to the index of the last element (exclusive) to be sorted.
++	 * @param c the comparator to determine the order of the generic data (arguments are positions).
++	 * @param swapper an object that knows how to swap the elements at any two positions.
++	 */
++	public static void mergeSort( final int from, final int to, final IntComparator c, final Swapper swapper ) {
++		/*
++		 * We retain the same method signature as quickSort. Given only a comparator and swapper we
++		 * do not know how to copy and move elements from/to temporary arrays. Hence, in contrast to
++		 * the JDK mergesorts this is an "in-place" mergesort, i.e. does not allocate any temporary
++		 * arrays. A non-inplace mergesort would perhaps be faster in most cases, but would require
++		 * non-intuitive delegate objects...
++		 */
++		final int length = to - from;
++
++		// Insertion sort on smallest arrays
++		if ( length < MERGESORT_NO_REC ) {
++			for ( int i = from; i < to; i++ ) {
++				for ( int j = i; j > from && ( c.compare( j - 1, j ) > 0 ); j-- ) {
++					swapper.swap( j, j - 1 );
++				}
++			}
++			return;
++		}
++
++		// Recursively sort halves
++		int mid = ( from + to ) >>> 1;
++		mergeSort( from, mid, c, swapper );
++		mergeSort( mid, to, c, swapper );
++
++		// If list is already sorted, nothing left to do. This is an
++		// optimization that results in faster sorts for nearly ordered lists.
++		if ( c.compare( mid - 1, mid ) <= 0 ) return;
++
++		// Merge sorted halves
++		inPlaceMerge( from, mid, to, c, swapper );
++	}
++
++	/** Swaps two sequences of elements using a provided swapper.
++	 *
++	 * @param swapper the swapper.
++	 * @param a a position in {@code x}.
++	 * @param b another position in {@code x}.
++	 * @param n the number of elements to exchange starting at {@code a} and {@code b}.
++	 */
++	protected static void swap( final Swapper swapper, int a, int b, final int n ) {
++		for ( int i = 0; i < n; i++, a++, b++ ) swapper.swap( a, b );
++	}
++
++	private static final int QUICKSORT_NO_REC = 16;
++	private static final int PARALLEL_QUICKSORT_NO_FORK = 8192;
++	private static final int QUICKSORT_MEDIAN_OF_9 = 128;
++
++	protected static class ForkJoinGenericQuickSort extends RecursiveAction {
++		private static final long serialVersionUID = 1L;
++		private final int from;
++		private final int to;
++		private final IntComparator comp;
++		private final Swapper swapper;
++
++		public ForkJoinGenericQuickSort( final int from, final int to, final IntComparator comp, final Swapper swapper ) {
++			this.from = from;
++			this.to = to;
++			this.comp = comp;
++			this.swapper = swapper;
++		}
++
++		@Override
++		protected void compute() {
++			final int len = to - from;
++			if ( len < PARALLEL_QUICKSORT_NO_FORK ) {
++				quickSort( from, to, comp, swapper );
++				return;
++			}
++			// Choose a partition element, v
++			int m = from + len / 2;
++			int l = from;
++			int n = to - 1;
++			int s = len / 8;
++			l = med3( l, l + s, l + 2 * s, comp );
++			m = med3( m - s, m, m + s, comp );
++			n = med3( n - 2 * s, n - s, n, comp );
++			m = med3( l, m, n, comp );
++			// Establish Invariant: v* (<v)* (>v)* v*
++			int a = from, b = a, c = to - 1, d = c;
++			while ( true ) {
++				int comparison;
++				while ( b <= c && ( ( comparison = comp.compare( b, m ) ) <= 0 ) ) {
++					if ( comparison == 0 ) {
++						// Fix reference to pivot if necessary
++						if ( a == m ) m = b;
++						else if ( b == m ) m = a;
++						swapper.swap( a++, b );
++					}
++					b++;
++				}
++				while ( c >= b && ( ( comparison = comp.compare( c, m ) ) >= 0 ) ) {
++					if ( comparison == 0 ) {
++						// Fix reference to pivot if necessary
++						if ( c == m ) m = d;
++						else if ( d == m ) m = c;
++						swapper.swap( c, d-- );
++					}
++					c--;
++				}
++				if ( b > c ) break;
++				// Fix reference to pivot if necessary
++				if ( b == m ) m = d;
++				else if ( c == m ) m = c;
++				swapper.swap( b++, c-- );
++			}
++
++			// Swap partition elements back to middle
++			s = Math.min( a - from, b - a );
++			swap( swapper, from, b - s, s );
++			s = Math.min( d - c, to - d - 1 );
++			swap( swapper, b, to - s, s );
++
++			// Recursively sort non-partition-elements
++			int t;
++			s = b - a;
++			t = d - c;
++			if ( s > 1 && t > 1 ) invokeAll( new ForkJoinGenericQuickSort( from, from + s, comp, swapper ), new ForkJoinGenericQuickSort( to - t, to, comp, swapper ) );
++			else if ( s > 1 ) invokeAll( new ForkJoinGenericQuickSort( from, from + s, comp, swapper ) );
++			else invokeAll( new ForkJoinGenericQuickSort( to - t, to, comp, swapper ) );
++		}
++	}
++
++	/** Sorts the specified range of elements using the specified swapper and according to the order induced by the specified
++	 * comparator using a parallel quicksort. 
++	 * 
++	 * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
++	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</i>, 23(11), pages
++	 * 1249&minus;1265, 1993.
++	 * 
++	 * <p>This implementation uses a {@link ForkJoinPool} executor service with {@link Runtime#availableProcessors()} parallel threads.
++	 * 
++	 * @param from the index of the first element (inclusive) to be sorted.
++	 * @param to the index of the last element (exclusive) to be sorted.
++	 * @param comp the comparator to determine the order of the generic data.
++	 * @param swapper an object that knows how to swap the elements at any two positions.
++	 * 
++	 */
++	public static void parallelQuickSort( final int from, final int to, final IntComparator comp, final Swapper swapper ) {
++		final ForkJoinPool pool = new ForkJoinPool( Runtime.getRuntime().availableProcessors() );
++		pool.invoke( new ForkJoinGenericQuickSort( from, to, comp, swapper ) );
++		pool.shutdown();
++	}
++
++
++	/** Sorts the specified range of elements using the specified swapper and according to the order induced by the specified
++	 * comparator using parallel quicksort. 
++	 * 
++	 * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
++	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</i>, 23(11), pages
++	 * 1249&minus;1265, 1993.
++	 * 
++	 * <p>This implementation uses a {@link ForkJoinPool} executor service with {@link Runtime#availableProcessors()} parallel threads.
++	 * 
++	 * @param from the index of the first element (inclusive) to be sorted.
++	 * @param to the index of the last element (exclusive) to be sorted.
++	 * @param comp the comparator to determine the order of the generic data.
++	 * @param swapper an object that knows how to swap the elements at any two positions.
++	 * 
++	 */
++	public static void quickSort( final int from, final int to, final IntComparator comp, final Swapper swapper ) {
++		final int len = to - from;
++		// Insertion sort on smallest arrays
++		if ( len < QUICKSORT_NO_REC ) {
++			for ( int i = from; i < to; i++ )
++				for ( int j = i; j > from && ( comp.compare( j - 1, j ) > 0 ); j-- ) {
++					swapper.swap( j, j - 1 );
++				}
++			return;
++		}
++
++		// Choose a partition element, v
++		int m = from + len / 2; // Small arrays, middle element
++		int l = from;
++		int n = to - 1;
++		if ( len > QUICKSORT_MEDIAN_OF_9 ) { // Big arrays, pseudomedian of 9
++			int s = len / 8;
++			l = med3( l, l + s, l + 2 * s, comp );
++			m = med3( m - s, m, m + s, comp );
++			n = med3( n - 2 * s, n - s, n, comp );
++		}
++		m = med3( l, m, n, comp ); // Mid-size, med of 3
++		// int v = x[m];
++
++		int a = from;
++		int b = a;
++		int c = to - 1;
++		// Establish Invariant: v* (<v)* (>v)* v*
++		int d = c;
++		while ( true ) {
++			int comparison;
++			while ( b <= c && ( ( comparison = comp.compare( b, m ) ) <= 0 ) ) {
++				if ( comparison == 0 ) {
++					// Fix reference to pivot if necessary
++					if ( a == m ) m = b;
++					else if ( b == m ) m = a;
++					swapper.swap( a++, b );
++				}
++				b++;
++			}
++			while ( c >= b && ( ( comparison = comp.compare( c, m ) ) >= 0 ) ) {
++				if ( comparison == 0 ) {
++					// Fix reference to pivot if necessary
++					if ( c == m ) m = d;
++					else if ( d == m ) m = c;
++					swapper.swap( c, d-- );
++				}
++				c--;
++			}
++			if ( b > c ) break;
++			// Fix reference to pivot if necessary
++			if ( b == m ) m = d;
++			else if ( c == m ) m = c;
++			swapper.swap( b++, c-- );
++		}
++
++		// Swap partition elements back to middle
++		int s;
++		s = Math.min( a - from, b - a );
++		swap( swapper, from, b - s, s );
++		s = Math.min( d - c, to - d - 1 );
++		swap( swapper, b, to - s, s );
++
++		// Recursively sort non-partition-elements
++		if ( ( s = b - a ) > 1 ) quickSort( from, from + s, comp, swapper );
++		if ( ( s = d - c ) > 1 ) quickSort( to - s, to, comp, swapper );
++	}
++}
+diff --git a/src/main/java/org/torch/util/Hash.java b/src/main/java/org/torch/util/Hash.java
+new file mode 100644
+index 0000000..9f35834
+--- /dev/null
++++ b/src/main/java/org/torch/util/Hash.java
+@@ -0,0 +1,178 @@
++package org.torch.util;
++
++/**
++ * From fastutil project.
++ * @Link: https://github.com/vigna/fastutil
++ */
++
++/*		 
++ * Copyright (C) 2002-2016 Sebastiano Vigna
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License. 
++ */
++
++
++/** Basic data for all hash-based classes.
++ *
++ * <h2>Historical note</h2>
++ * 
++ * <p><strong>Warning:</strong> the following comments are here for historical reasons,
++ * and apply just to the <em>double hash</em> classes that can be optionally generated.
++ * The standard <code>fastutil</code> distribution since 6.1.0 uses linear-probing hash
++ * tables, and tables are always sized as powers of two. 
++ *
++ * <p>The classes in <code>fastutil</code> are built around open-addressing hashing
++ * implemented <em>via</em> double hashing. Following Knuth's suggestions in the third volume of <em>The Art of Computer
++ * Programming</em>, we use for the table size a prime <var>p</var> such that
++ * <var>p</var>-2 is also prime. In this way hashing is implemented with modulo <var>p</var>,
++ * and secondary hashing with modulo <var>p</var>-2.
++ *
++ * <p>Entries in a table can be in three states: {@link #FREE}, {@link #OCCUPIED} or {@link #REMOVED}.
++ * The naive handling of removed entries requires that you search for a free entry as if they were occupied. However,
++ * <code>fastutil</code> implements two useful optimizations, based on the following invariant:
++ * <blockquote>
++ * Let <var>i</var><sub>0</sub>, <var>i</var><sub>1</sub>, &hellip;, <var>i</var><sub><var>p</var>-1</sub> be
++ * the permutation of the table indices induced by the key <var>k</var>, that is, <var>i</var><sub>0</sub> is the hash
++ * of <var>k</var> and the following indices are obtained by adding (modulo <var>p</var>) the secondary hash plus one.
++ * If there is a {@link #OCCUPIED} entry with key <var>k</var>, its index in the sequence above comes <em>before</em>
++ * the indices of any {@link #REMOVED} entries with key <var>k</var>.
++ * </blockquote>
++ * 
++ * <p>When we search for the key <var>k</var> we scan the entries in the
++ * sequence <var>i</var><sub>0</sub>, <var>i</var><sub>1</sub>, &hellip;,
++ * <var>i</var><sub><var>p</var>-1</sub> and stop when <var>k</var> is found,
++ * when we finished the sequence or when we find a {@link #FREE} entry. Note
++ * that the correctness of this procedure it is not completely trivial. Indeed,
++ * when we stop at a {@link #REMOVED} entry with key <var>k</var> we must rely
++ * on the invariant to be sure that no {@link #OCCUPIED} entry with the same
++ * key can appear later. If we insert and remove frequently the same entries,
++ * this optimization can be very effective (note, however, that when using
++ * objects as keys or values deleted entries are set to a special fixed value to
++ * optimize garbage collection).
++ *
++ * <p>Moreover, during the probe we keep the index of the first {@link #REMOVED} entry we meet. 
++ * If we actually have to insert a new element, we use that 
++ * entry if we can, thus avoiding to pollute another {@link #FREE} entry. Since this position comes
++ * <i>a fortiori</i> before any {@link #REMOVED} entries with the same key, we are also keeping the invariant true.
++ */
++
++public interface Hash {
++
++	/** The initial default size of a hash table. */
++	final public int DEFAULT_INITIAL_SIZE = 16;
++	/** The default load factor of a hash table. */
++	final public float DEFAULT_LOAD_FACTOR = .75f;
++	/** The load factor for a (usually small) table that is meant to be particularly fast. */
++	final public float FAST_LOAD_FACTOR = .5f;
++	/** The load factor for a (usually very small) table that is meant to be extremely fast. */
++	final public float VERY_FAST_LOAD_FACTOR = .25f;
++
++	/** A generic hash strategy.
++	 *
++	 * <P>Custom hash structures (e.g., {@link
++	 * it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet}) allow to hash objects
++	 * using arbitrary functions, a typical example being that of {@linkplain
++	 * it.unimi.dsi.fastutil.ints.IntArrays#HASH_STRATEGY arrays}. Of course,
++	 * one has to compare objects for equality consistently with the chosen
++	 * function. A <em>hash strategy</em>, thus, specifies an {@linkplain
++	 * #equals(Object,Object) equality method} and a {@linkplain
++	 * #hashCode(Object) hash function}, with the obvious property that
++	 * equal objects must have the same hash code.
++	 *
++	 * <P>Note that the {@link #equals(Object,Object) equals()} method of a strategy must 
++	 * be able to handle <code>null</code>, too.
++	 */
++
++	public interface Strategy<K> {
++
++		/** Returns the hash code of the specified object with respect to this hash strategy.
++		 *
++		 * @param o an object (or <code>null</code>).
++		 * @return the hash code of the given object with respect to this hash strategy.
++		 */
++
++		public int hashCode( K o );
++
++		/** Returns true if the given objects are equal with respect to this hash strategy.
++		 *
++		 * @param a an object (or <code>null</code>).
++		 * @param b another object (or <code>null</code>).
++		 * @return true if the two specified objects are equal with respect to this hash strategy.
++		 */
++		public boolean equals( K a, K b );
++	}
++
++	/** The default growth factor of a hash table. */
++	final public int DEFAULT_GROWTH_FACTOR = 16;
++	/** The state of a free hash table entry. */
++	final public byte FREE = 0;
++	/** The state of a occupied hash table entry. */
++	final public byte OCCUPIED = -1;
++	/** The state of a hash table entry freed by a deletion. */
++	final public byte REMOVED = 1;
++	 
++	/** A list of primes to be used as table sizes. The <var>i</var>-th element is 
++	 *  the largest prime <var>p</var> smaller than 2<sup>(<var>i</var>+28)/16</sup> 
++	 * and such that <var>p</var>-2 is also prime (or 1, for the first few entries). */
++
++	final public int PRIMES[] = { 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 5, 5, 5, 5, 5, 5, 7, 7, 7,
++								  7, 7, 7, 7, 7, 7, 7, 7, 13, 13, 13, 13, 13, 13, 13, 13, 19, 19, 19, 19, 19,
++								  19, 19, 19, 19, 19, 19, 19, 31, 31, 31, 31, 31, 31, 31, 43, 43, 43, 43, 43,
++								  43, 43, 43, 61, 61, 61, 61, 61, 73, 73, 73, 73, 73, 73, 73, 103, 103, 109,
++								  109, 109, 109, 109, 139, 139, 151, 151, 151, 151, 181, 181, 193, 199, 199,
++								  199, 229, 241, 241, 241, 271, 283, 283, 313, 313, 313, 349, 349, 349, 349,
++								  421, 433, 463, 463, 463, 523, 523, 571, 601, 619, 661, 661, 661, 661, 661,
++								  823, 859, 883, 883, 883, 1021, 1063, 1093, 1153, 1153, 1231, 1321, 1321,
++								  1429, 1489, 1489, 1621, 1699, 1789, 1873, 1951, 2029, 2131, 2143, 2311,
++								  2383, 2383, 2593, 2731, 2803, 3001, 3121, 3259, 3391, 3583, 3673, 3919,
++								  4093, 4273, 4423, 4651, 4801, 5023, 5281, 5521, 5743, 5881, 6301, 6571,
++								  6871, 7129, 7489, 7759, 8089, 8539, 8863, 9283, 9721, 10141, 10531, 11071,
++								  11551, 12073, 12613, 13009, 13759, 14323, 14869, 15649, 16363, 17029,
++								  17839, 18541, 19471, 20233, 21193, 22159, 23059, 24181, 25171, 26263,
++								  27541, 28753, 30013, 31321, 32719, 34213, 35731, 37309, 38923, 40639,
++								  42463, 44281, 46309, 48313, 50461, 52711, 55051, 57529, 60091, 62299,
++								  65521, 68281, 71413, 74611, 77713, 81373, 84979, 88663, 92671, 96739,
++								  100801, 105529, 109849, 115021, 120079, 125509, 131011, 136861, 142873,
++								  149251, 155863, 162751, 169891, 177433, 185071, 193381, 202129, 211063,
++								  220021, 229981, 240349, 250969, 262111, 273643, 285841, 298411, 311713,
++								  325543, 339841, 355009, 370663, 386989, 404269, 422113, 440809, 460081,
++								  480463, 501829, 524221, 547399, 571603, 596929, 623353, 651019, 679909,
++								  709741, 741343, 774133, 808441, 844201, 881539, 920743, 961531, 1004119,
++								  1048573, 1094923, 1143283, 1193911, 1246963, 1302181, 1359733, 1420039,
++								  1482853, 1548541, 1616899, 1688413, 1763431, 1841293, 1922773, 2008081,
++								  2097133, 2189989, 2286883, 2388163, 2493853, 2604013, 2719669, 2840041,
++								  2965603, 3097123, 3234241, 3377191, 3526933, 3682363, 3845983, 4016041,
++								  4193803, 4379719, 4573873, 4776223, 4987891, 5208523, 5439223, 5680153,
++								  5931313, 6194191, 6468463, 6754879, 7053331, 7366069, 7692343, 8032639,
++								  8388451, 8759953, 9147661, 9552733, 9975193, 10417291, 10878619, 11360203,
++								  11863153, 12387841, 12936529, 13509343, 14107801, 14732413, 15384673,
++								  16065559, 16777141, 17519893, 18295633, 19105483, 19951231, 20834689,
++								  21757291, 22720591, 23726449, 24776953, 25873963, 27018853, 28215619,
++								  29464579, 30769093, 32131711, 33554011, 35039911, 36591211, 38211163,
++								  39903121, 41669479, 43514521, 45441199, 47452879, 49553941, 51747991,
++								  54039079, 56431513, 58930021, 61539091, 64263571, 67108669, 70079959,
++								  73182409, 76422793, 79806229, 83339383, 87029053, 90881083, 94906249,
++								  99108043, 103495879, 108077731, 112863013, 117860053, 123078019, 128526943,
++								  134217439, 140159911, 146365159, 152845393, 159612601, 166679173,
++								  174058849, 181765093, 189812341, 198216103, 206991601, 216156043,
++								  225726379, 235720159, 246156271, 257054491, 268435009, 280319203,
++								  292730833, 305691181, 319225021, 333358513, 348117151, 363529759,
++								  379624279, 396432481, 413983771, 432312511, 451452613, 471440161,
++								  492312523, 514109251, 536870839, 560640001, 585461743, 611382451,
++								  638450569, 666717199, 696235363, 727060069, 759249643, 792864871,
++								  827967631, 864625033, 902905501, 942880663, 984625531, 1028218189,
++								  1073741719, 1121280091, 1170923713, 1222764841, 1276901371, 1333434301,
++								  1392470281, 1454120779, 1518500173, 1585729993, 1655935399, 1729249999,
++								  1805811253, 1885761133, 1969251079, 2056437379, 2147482951 };
++
++}
+diff --git a/src/main/java/org/torch/util/Swapper.java b/src/main/java/org/torch/util/Swapper.java
+new file mode 100644
+index 0000000..d56cd22
+--- /dev/null
++++ b/src/main/java/org/torch/util/Swapper.java
+@@ -0,0 +1,36 @@
++package org.torch.util;
++
++/**
++ * From fastutil project.
++ * @Link: https://github.com/vigna/fastutil
++ */
++
++/*		 
++ * Copyright (C) 2010-2016 Sebastiano Vigna
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License. 
++ */
++
++/** An object that can swap elements whose position is specified by integers 
++ *
++ * @see Arrays#quickSort(int, int, it.unimi.dsi.fastutil.ints.IntComparator, Swapper)
++ */
++
++public interface Swapper {
++	/** Swaps the data at the given positions.
++	 * 
++	 * @param a the first position to swap.
++	 * @param b the second position to swap.
++	 */
++	void swap( int a, int b );
++}
+diff --git a/src/main/java/org/torch/util/bytes/ByteArrays.java b/src/main/java/org/torch/util/bytes/ByteArrays.java
+new file mode 100644
+index 0000000..a52c650
+--- /dev/null
++++ b/src/main/java/org/torch/util/bytes/ByteArrays.java
+@@ -0,0 +1,1454 @@
++package org.torch.util.bytes;
++
++/**
++ * From fastutil project.
++ * @Link: https://github.com/vigna/fastutil
++ */
++
++/*       
++ * Copyright (C) 2002-2014 Sebastiano Vigna 
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License. 
++ *
++ *
++ *
++ * For the sorting and binary search code:
++ *
++ * Copyright (C) 1999 CERN - European Organization for Nuclear Research.
++ *
++ *   Permission to use, copy, modify, distribute and sell this software and
++ *   its documentation for any purpose is hereby granted without fee,
++ *   provided that the above copyright notice appear in all copies and that
++ *   both that copyright notice and this permission notice appear in
++ *   supporting documentation. CERN makes no representations about the
++ *   suitability of this software for any purpose. It is provided "as is"
++ *   without expressed or implied warranty. 
++ */
++
++import org.torch.util.Arrays;
++import org.torch.util.Hash;
++import java.util.Random;
++
++/** A class providing static methods and objects that do useful things with type-specific arrays.
++ *
++ * <p>In particular, the <code>ensureCapacity()</code>, <code>grow()</code>,
++ * <code>trim()</code> and <code>setLength()</code> methods allow to handle
++ * arrays much like array lists. This can be very useful when efficiency (or
++ * syntactic simplicity) reasons make array lists unsuitable.
++ *
++ * <P>Note that {@link it.unimi.dsi.fastutil.io.BinIO} and {@link it.unimi.dsi.fastutil.io.TextIO}
++ * contain several methods make it possible to load and save arrays of primitive types as sequences
++ * of elements in {@link java.io.DataInput} format (i.e., not as objects) or as sequences of lines of text.
++ *
++ * @see java.util.Arrays
++ */
++public class ByteArrays {
++ private ByteArrays() {}
++ /** A static, final, empty array. */
++ public final static byte[] EMPTY_ARRAY = {};
++ /** Ensures that an array can contain the given number of entries.
++     *
++     * <P>If you cannot foresee whether this array will need again to be
++     * enlarged, you should probably use <code>grow()</code> instead.
++     *
++     * @param array an array.
++     * @param length the new minimum length for this array.
++     * @return <code>array</code>, if it contains <code>length</code> entries or more; otherwise,
++     * an array with <code>length</code> entries whose first <code>array.length</code>
++     * entries are the same as those of <code>array</code>.
++     */
++ public static byte[] ensureCapacity( final byte[] array, final int length ) {
++  if ( length > array.length ) {
++   final byte t[] =
++    new byte[ length ];
++   System.arraycopy( array, 0, t, 0, array.length );
++   return t;
++  }
++  return array;
++ }
++ /** Ensures that an array can contain the given number of entries, preserving just a part of the array.
++     *
++     * @param array an array.
++     * @param length the new minimum length for this array.
++     * @param preserve the number of elements of the array that must be preserved in case a new allocation is necessary.
++     * @return <code>array</code>, if it can contain <code>length</code> entries or more; otherwise,
++     * an array with <code>length</code> entries whose first <code>preserve</code>
++     * entries are the same as those of <code>array</code>.
++     */
++ public static byte[] ensureCapacity( final byte[] array, final int length, final int preserve ) {
++  if ( length > array.length ) {
++   final byte t[] =
++    new byte[ length ];
++   System.arraycopy( array, 0, t, 0, preserve );
++   return t;
++  }
++  return array;
++ }
++ /** Grows the given array to the maximum between the given length and
++     * the current length multiplied by two, provided that the given
++     * length is larger than the current length.
++     *
++     * <P>If you want complete control on the array growth, you
++     * should probably use <code>ensureCapacity()</code> instead.
++     *
++     * @param array an array.
++     * @param length the new minimum length for this array.
++     * @return <code>array</code>, if it can contain <code>length</code>
++     * entries; otherwise, an array with
++     * max(<code>length</code>,<code>array.length</code>/φ) entries whose first
++     * <code>array.length</code> entries are the same as those of <code>array</code>.
++     * */
++ public static byte[] grow( final byte[] array, final int length ) {
++  if ( length > array.length ) {
++   final int newLength = (int)Math.max( Math.min( 2L * array.length, Arrays.MAX_ARRAY_SIZE ), length );
++   final byte t[] =
++    new byte[ newLength ];
++   System.arraycopy( array, 0, t, 0, array.length );
++   return t;
++  }
++  return array;
++ }
++ /** Grows the given array to the maximum between the given length and
++     * the current length multiplied by two, provided that the given
++     * length is larger than the current length, preserving just a part of the array.
++     *
++     * <P>If you want complete control on the array growth, you
++     * should probably use <code>ensureCapacity()</code> instead.
++     *
++     * @param array an array.
++     * @param length the new minimum length for this array.
++     * @param preserve the number of elements of the array that must be preserved in case a new allocation is necessary.
++     * @return <code>array</code>, if it can contain <code>length</code>
++     * entries; otherwise, an array with
++     * max(<code>length</code>,<code>array.length</code>/φ) entries whose first
++     * <code>preserve</code> entries are the same as those of <code>array</code>.
++     * */
++ public static byte[] grow( final byte[] array, final int length, final int preserve ) {
++  if ( length > array.length ) {
++   final int newLength = (int)Math.max( Math.min( 2L * array.length, Arrays.MAX_ARRAY_SIZE ), length );
++   final byte t[] =
++    new byte[ newLength ];
++   System.arraycopy( array, 0, t, 0, preserve );
++   return t;
++  }
++  return array;
++ }
++ /** Trims the given array to the given length.
++     *
++     * @param array an array.
++     * @param length the new maximum length for the array.
++     * @return <code>array</code>, if it contains <code>length</code>
++     * entries or less; otherwise, an array with
++     * <code>length</code> entries whose entries are the same as
++     * the first <code>length</code> entries of <code>array</code>.
++     * 
++     */
++ public static byte[] trim( final byte[] array, final int length ) {
++  if ( length >= array.length ) return array;
++  final byte t[] =
++   length == 0 ? EMPTY_ARRAY : new byte[ length ];
++  System.arraycopy( array, 0, t, 0, length );
++  return t;
++ }
++ /** Sets the length of the given array.
++     *
++     * @param array an array.
++     * @param length the new length for the array.
++     * @return <code>array</code>, if it contains exactly <code>length</code>
++     * entries; otherwise, if it contains <em>more</em> than
++     * <code>length</code> entries, an array with <code>length</code> entries
++     * whose entries are the same as the first <code>length</code> entries of
++     * <code>array</code>; otherwise, an array with <code>length</code> entries
++     * whose first <code>array.length</code> entries are the same as those of
++     * <code>array</code>.
++     * 
++     */
++ public static byte[] setLength( final byte[] array, final int length ) {
++  if ( length == array.length ) return array;
++  if ( length < array.length ) return trim( array, length );
++  return ensureCapacity( array, length );
++ }
++ /** Returns a copy of a portion of an array.
++     *
++     * @param array an array.
++     * @param offset the first element to copy.
++     * @param length the number of elements to copy.
++     * @return a new array containing <code>length</code> elements of <code>array</code> starting at <code>offset</code>.
++     */
++ public static byte[] copy( final byte[] array, final int offset, final int length ) {
++  ensureOffsetLength( array, offset, length );
++  final byte[] a =
++   length == 0 ? EMPTY_ARRAY : new byte[ length ];
++  System.arraycopy( array, offset, a, 0, length );
++  return a;
++ }
++ /** Returns a copy of an array.
++     *
++     * @param array an array.
++     * @return a copy of <code>array</code>.
++     */
++ public static byte[] copy( final byte[] array ) {
++  return array.clone();
++ }
++ /** Fills the given array with the given value.
++     *
++     * <P>This method uses a backward loop. It is significantly faster than the corresponding
++     * method in {@link java.util.Arrays}.
++     *
++     * @param array an array.
++     * @param value the new value for all elements of the array.
++     */
++ public static void fill( final byte[] array, final byte value ) {
++  int i = array.length;
++  while( i-- != 0 ) array[ i ] = value;
++ }
++ /** Fills a portion of the given array with the given value.
++     *
++     * <P>If possible (i.e., <code>from</code> is 0) this method uses a
++     * backward loop. In this case, it is significantly faster than the
++     * corresponding method in {@link java.util.Arrays}.
++     *
++     * @param array an array.
++     * @param from the starting index of the portion to fill (inclusive).
++     * @param to the end index of the portion to fill (exclusive).
++     * @param value the new value for all elements of the specified portion of the array.
++     */
++ public static void fill( final byte[] array, final int from, int to, final byte value ) {
++  ensureFromTo( array, from, to );
++  if ( from == 0 ) while( to-- != 0 ) array[ to ] = value;
++  else for( int i = from; i < to; i++ ) array[ i ] = value;
++ }
++ /** Returns true if the two arrays are elementwise equal.
++     *
++     * @param a1 an array.
++     * @param a2 another array.
++     * @return true if the two arrays are of the same length, and their elements are equal.
++     * @deprecated Please use the corresponding {@link java.util.Arrays} method, which is intrinsified in recent JVMs.
++     */
++ @Deprecated
++ public static boolean equals( final byte[] a1, final byte a2[] ) {
++  int i = a1.length;
++  if ( i != a2.length ) return false;
++  while( i-- != 0 ) if (! ( (a1[ i ]) == (a2[ i ]) ) ) return false;
++  return true;
++ }
++ /** Ensures that a range given by its first (inclusive) and last (exclusive) elements fits an array.
++     *
++     * <P>This method may be used whenever an array range check is needed.
++     *
++     * @param a an array.
++     * @param from a start index (inclusive).
++     * @param to an end index (exclusive).
++     * @throws IllegalArgumentException if <code>from</code> is greater than <code>to</code>.
++     * @throws ArrayIndexOutOfBoundsException if <code>from</code> or <code>to</code> are greater than the array length or negative.
++     */
++ public static void ensureFromTo( final byte[] a, final int from, final int to ) {
++  Arrays.ensureFromTo( a.length, from, to );
++ }
++ /** Ensures that a range given by an offset and a length fits an array.
++     *
++     * <P>This method may be used whenever an array range check is needed.
++     *
++     * @param a an array.
++     * @param offset a start index.
++     * @param length a length (the number of elements in the range).
++     * @throws IllegalArgumentException if <code>length</code> is negative.
++     * @throws ArrayIndexOutOfBoundsException if <code>offset</code> is negative or <code>offset</code>+<code>length</code> is greater than the array length.
++     */
++ public static void ensureOffsetLength( final byte[] a, final int offset, final int length ) {
++  Arrays.ensureOffsetLength( a.length, offset, length );
++ }
++ private static final int SMALL = 7;
++ private static final int MEDIUM = 50;
++ private static void swap( final byte x[], final int a, final int b ) {
++  final byte t = x[ a ];
++  x[ a ] = x[ b ];
++  x[ b ] = t;
++ }
++ private static void vecSwap( final byte[] x, int a, int b, final int n ) {
++  for( int i = 0; i < n; i++, a++, b++ ) swap( x, a, b );
++ }
++ private static int med3( final byte x[], final int a, final int b, final int c, ByteComparator comp ) {
++  int ab = comp.compare( x[ a ], x[ b ] );
++  int ac = comp.compare( x[ a ], x[ c ] );
++  int bc = comp.compare( x[ b ], x[ c ] );
++  return ( ab < 0 ?
++   ( bc < 0 ? b : ac < 0 ? c : a ) :
++   ( bc > 0 ? b : ac > 0 ? c : a ) );
++ }
++ private static void selectionSort( final byte[] a, final int from, final int to, final ByteComparator comp ) {
++  for( int i = from; i < to - 1; i++ ) {
++   int m = i;
++   for( int j = i + 1; j < to; j++ ) if ( comp.compare( a[ j ], a[ m ] ) < 0 ) m = j;
++   if ( m != i ) {
++    final byte u = a[ i ];
++    a[ i ] = a[ m ];
++    a[ m ] = u;
++   }
++  }
++ }
++ private static void insertionSort( final byte[] a, final int from, final int to, final ByteComparator comp ) {
++  for ( int i = from; ++i < to; ) {
++   byte t = a[ i ];
++   int j = i;
++   for ( byte u = a[ j - 1 ]; comp.compare( t, u ) < 0; u = a[ --j - 1 ] ) {
++    a[ j ] = u;
++    if ( from == j - 1 ) {
++     --j;
++     break;
++    }
++   }
++   a[ j ] = t;
++  }
++ }
++ @SuppressWarnings("unchecked")
++ private static void selectionSort( final byte[] a, final int from, final int to ) {
++  for( int i = from; i < to - 1; i++ ) {
++   int m = i;
++   for( int j = i + 1; j < to; j++ ) if ( ( (a[ j ]) < (a[ m ]) ) ) m = j;
++   if ( m != i ) {
++    final byte u = a[ i ];
++    a[ i ] = a[ m ];
++    a[ m ] = u;
++   }
++  }
++ }
++ @SuppressWarnings("unchecked")
++ private static void insertionSort( final byte[] a, final int from, final int to ) {
++  for ( int i = from; ++i < to; ) {
++   byte t = a[ i ];
++   int j = i;
++   for ( byte u = a[ j - 1 ]; ( (t) < (u) ); u = a[ --j - 1 ] ) {
++    a[ j ] = u;
++    if ( from == j - 1 ) {
++     --j;
++     break;
++    }
++   }
++   a[ j ] = t;
++  }
++ }
++ /** Sorts the specified range of elements according to the order induced by the specified
++     * comparator using quicksort. 
++     * 
++     * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
++     * McIlroy, “Engineering a Sort Function”, <i>Software: Practice and Experience</i>, 23(11), pages
++     * 1249−1265, 1993.
++     *
++     * <p>Note that this implementation does not allocate any object, contrarily to the implementation
++     * used to sort primitive types in {@link java.util.Arrays}, which switches to mergesort on large inputs.
++     * 
++     * @param x the array to be sorted.
++     * @param from the index of the first element (inclusive) to be sorted.
++     * @param to the index of the last element (exclusive) to be sorted.
++     * @param comp the comparator to determine the sorting order.
++     * 
++     */
++ public static void quickSort( final byte[] x, final int from, final int to, final ByteComparator comp ) {
++  final int len = to - from;
++  // Selection sort on smallest arrays
++  if ( len < SMALL ) {
++   selectionSort( x, from, to, comp );
++   return;
++  }
++  // Choose a partition element, v
++  int m = from + len / 2; // Small arrays, middle element
++  if ( len > SMALL ) {
++   int l = from;
++   int n = to - 1;
++   if ( len > MEDIUM ) { // Big arrays, pseudomedian of 9
++    int s = len / 8;
++    l = med3( x, l, l + s, l + 2 * s, comp );
++    m = med3( x, m - s, m, m + s, comp );
++    n = med3( x, n - 2 * s, n - s, n, comp );
++   }
++   m = med3( x, l, m, n, comp ); // Mid-size, med of 3
++  }
++  final byte v = x[ m ];
++  // Establish Invariant: v* (<v)* (>v)* v*
++  int a = from, b = a, c = to - 1, d = c;
++  while(true) {
++   int comparison;
++   while ( b <= c && ( comparison = comp.compare( x[ b ], v ) ) <= 0 ) {
++    if ( comparison == 0 ) swap( x, a++, b );
++    b++;
++   }
++   while (c >= b && ( comparison = comp.compare( x[ c ], v ) ) >=0 ) {
++    if ( comparison == 0 ) swap( x, c, d-- );
++    c--;
++   }
++   if ( b > c ) break;
++   swap( x, b++, c-- );
++  }
++  // Swap partition elements back to middle
++  int s, n = to;
++  s = Math.min( a - from, b - a );
++  vecSwap( x, from, b - s, s );
++  s = Math.min( d - c, n - d - 1 );
++  vecSwap( x, b, n - s, s );
++  // Recursively sort non-partition-elements
++  if ( ( s = b - a ) > 1 ) quickSort( x, from, from + s, comp );
++  if ( ( s = d - c ) > 1 ) quickSort( x, n - s, n, comp );
++ }
++ /** Sorts an array according to the order induced by the specified
++     * comparator using quicksort. 
++     * 
++     * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
++     * McIlroy, “Engineering a Sort Function”, <i>Software: Practice and Experience</i>, 23(11), pages
++     * 1249−1265, 1993.
++     * 
++     * <p>Note that this implementation does not allocate any object, contrarily to the implementation
++     * used to sort primitive types in {@link java.util.Arrays}, which switches to mergesort on large inputs.
++     * 
++     * @param x the array to be sorted.
++     * @param comp the comparator to determine the sorting order.
++     * 
++     */
++ public static void quickSort( final byte[] x, final ByteComparator comp ) {
++  quickSort( x, 0, x.length, comp );
++ }
++ @SuppressWarnings("unchecked")
++ private static int med3( final byte x[], final int a, final int b, final int c ) {
++  int ab = ( (x[ a ]) < (x[ b ]) ? -1 : ( (x[ a ]) == (x[ b ]) ? 0 : 1 ) );
++  int ac = ( (x[ a ]) < (x[ c ]) ? -1 : ( (x[ a ]) == (x[ c ]) ? 0 : 1 ) );
++  int bc = ( (x[ b ]) < (x[ c ]) ? -1 : ( (x[ b ]) == (x[ c ]) ? 0 : 1 ) );
++  return ( ab < 0 ?
++   ( bc < 0 ? b : ac < 0 ? c : a ) :
++   ( bc > 0 ? b : ac > 0 ? c : a ) );
++ }
++ /** Sorts the specified range of elements according to the natural ascending order using quicksort.
++     * 
++     * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
++     * McIlroy, “Engineering a Sort Function”, <i>Software: Practice and Experience</i>, 23(11), pages
++     * 1249−1265, 1993.
++     * 
++     * <p>Note that this implementation does not allocate any object, contrarily to the implementation
++     * used to sort primitive types in {@link java.util.Arrays}, which switches to mergesort on large inputs.
++     * 
++     * @param x the array to be sorted.
++     * @param from the index of the first element (inclusive) to be sorted.
++     * @param to the index of the last element (exclusive) to be sorted.
++     */
++ @SuppressWarnings("unchecked")
++ public static void quickSort( final byte[] x, final int from, final int to ) {
++  final int len = to - from;
++  // Selection sort on smallest arrays
++  if ( len < SMALL ) {
++   selectionSort( x, from, to );
++   return;
++  }
++  // Choose a partition element, v
++  int m = from + len / 2; // Small arrays, middle element
++  if ( len > SMALL ) {
++   int l = from;
++   int n = to - 1;
++   if ( len > MEDIUM ) { // Big arrays, pseudomedian of 9
++    int s = len / 8;
++    l = med3( x, l, l + s, l + 2 * s );
++    m = med3( x, m - s, m, m + s );
++    n = med3( x, n - 2 * s, n - s, n );
++   }
++   m = med3( x, l, m, n ); // Mid-size, med of 3
++  }
++  final byte v = x[ m ];
++  // Establish Invariant: v* (<v)* (>v)* v*
++  int a = from, b = a, c = to - 1, d = c;
++  while(true) {
++   int comparison;
++   while ( b <= c && ( comparison = ( (x[ b ]) < (v) ? -1 : ( (x[ b ]) == (v) ? 0 : 1 ) ) ) <= 0 ) {
++    if ( comparison == 0 ) swap( x, a++, b );
++    b++;
++   }
++   while (c >= b && ( comparison = ( (x[ c ]) < (v) ? -1 : ( (x[ c ]) == (v) ? 0 : 1 ) ) ) >=0 ) {
++    if ( comparison == 0 ) swap( x, c, d-- );
++    c--;
++   }
++   if ( b > c ) break;
++   swap( x, b++, c-- );
++  }
++  // Swap partition elements back to middle
++  int s, n = to;
++  s = Math.min( a - from, b - a );
++  vecSwap( x, from, b - s, s );
++  s = Math.min( d - c, n - d - 1 );
++  vecSwap( x, b, n - s, s );
++  // Recursively sort non-partition-elements
++  if ( ( s = b - a ) > 1 ) quickSort( x, from, from + s );
++  if ( ( s = d - c ) > 1 ) quickSort( x, n - s, n );
++ }
++ /** Sorts an array according to the natural ascending order using quicksort.
++     * 
++     * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
++     * McIlroy, “Engineering a Sort Function”, <i>Software: Practice and Experience</i>, 23(11), pages
++     * 1249−1265, 1993.
++     * 
++     * <p>Note that this implementation does not allocate any object, contrarily to the implementation
++     * used to sort primitive types in {@link java.util.Arrays}, which switches to mergesort on large inputs.
++     * 
++     * @param x the array to be sorted.
++     * 
++     */
++ public static void quickSort( final byte[] x ) {
++  quickSort( x, 0, x.length );
++ }
++ /** Sorts the specified range of elements according to the natural ascending order using mergesort, using a given pre-filled support array.
++     * 
++     * <p>This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
++     * of the sort. Moreover, no support arrays will be allocated. 
++      
++     * @param a the array to be sorted.
++     * @param from the index of the first element (inclusive) to be sorted.
++     * @param to the index of the last element (exclusive) to be sorted.
++     * @param supp a support array containing at least <code>to</code> elements, and whose entries are identical to those
++     * of {@code a} in the specified range.
++     */
++ @SuppressWarnings("unchecked")
++ public static void mergeSort( final byte a[], final int from, final int to, final byte supp[] ) {
++  int len = to - from;
++  // Insertion sort on smallest arrays
++  if ( len < SMALL ) {
++   insertionSort( a, from, to );
++   return;
++  }
++  // Recursively sort halves of a into supp
++  final int mid = ( from + to ) >>> 1;
++  mergeSort( supp, from, mid, a );
++  mergeSort( supp, mid, to, a );
++  // If list is already sorted, just copy from supp to a.  This is an
++  // optimization that results in faster sorts for nearly ordered lists.
++  if ( ( (supp[ mid - 1 ]) <= (supp[ mid ]) ) ) {
++   System.arraycopy( supp, from, a, from, len );
++   return;
++  }
++  // Merge sorted halves (now in supp) into a
++  for( int i = from, p = from, q = mid; i < to; i++ ) {
++   if ( q >= to || p < mid && ( (supp[ p ]) <= (supp[ q ]) ) ) a[ i ] = supp[ p++ ];
++   else a[ i ] = supp[ q++ ];
++  }
++ }
++ /** Sorts the specified range of elements according to the natural ascending order using mergesort.
++     * 
++     * <p>This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
++     * of the sort. An array as large as <code>a</code> will be allocated by this method.
++      
++     * @param a the array to be sorted.
++     * @param from the index of the first element (inclusive) to be sorted.
++     * @param to the index of the last element (exclusive) to be sorted.
++     */
++ public static void mergeSort( final byte a[], final int from, final int to ) {
++  mergeSort( a, from, to, a.clone() );
++ }
++ /**    Sorts an array according to the natural ascending order using mergesort.
++     * 
++     * <p>This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
++     * of the sort. An array as large as <code>a</code> will be allocated by this method.
++      
++     * @param a the array to be sorted.
++     */
++ public static void mergeSort( final byte a[] ) {
++  mergeSort( a, 0, a.length );
++ }
++ /** Sorts the specified range of elements according to the order induced by the specified
++     * comparator using mergesort, using a given pre-filled support array.
++     * 
++     * <p>This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
++     * of the sort. Moreover, no support arrays will be allocated.
++      
++     * @param a the array to be sorted.
++     * @param from the index of the first element (inclusive) to be sorted.
++     * @param to the index of the last element (exclusive) to be sorted.
++     * @param comp the comparator to determine the sorting order.
++     * @param supp a support array containing at least <code>to</code> elements, and whose entries are identical to those
++     * of {@code a} in the specified range.
++     */
++ @SuppressWarnings("unchecked")
++ public static void mergeSort( final byte a[], final int from, final int to, ByteComparator comp, final byte supp[] ) {
++  int len = to - from;
++  // Insertion sort on smallest arrays
++  if ( len < SMALL ) {
++   insertionSort( a, from, to, comp );
++   return;
++     }
++  // Recursively sort halves of a into supp
++  final int mid = ( from + to ) >>> 1;
++  mergeSort( supp, from, mid, comp, a );
++  mergeSort( supp, mid, to, comp, a );
++  // If list is already sorted, just copy from supp to a.  This is an
++  // optimization that results in faster sorts for nearly ordered lists.
++  if ( comp.compare( supp[ mid - 1 ], supp[ mid ] ) <= 0 ) {
++   System.arraycopy( supp, from, a, from, len );
++   return;
++  }
++  // Merge sorted halves (now in supp) into a
++  for( int i = from, p = from, q = mid; i < to; i++ ) {
++   if ( q >= to || p < mid && comp.compare( supp[ p ], supp[ q ] ) <= 0 ) a[ i ] = supp[ p++ ];
++   else a[ i ] = supp[ q++ ];
++  }
++ }
++ /** Sorts the specified range of elements according to the order induced by the specified
++     * comparator using mergesort.
++     * 
++     * <p>This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
++     * of the sort. An array as large as <code>a</code> will be allocated by this method.
++     *
++     * @param a the array to be sorted.
++     * @param from the index of the first element (inclusive) to be sorted.
++     * @param to the index of the last element (exclusive) to be sorted.
++     * @param comp the comparator to determine the sorting order.
++     */
++ public static void mergeSort( final byte a[], final int from, final int to, ByteComparator comp ) {
++  mergeSort( a, from, to, comp, a.clone() );
++ }
++ /** Sorts an array according to the order induced by the specified
++     * comparator using mergesort.
++     * 
++     * <p>This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
++     * of the sort.  An array as large as <code>a</code> will be allocated by this method.
++      
++     * @param a the array to be sorted.
++     * @param comp the comparator to determine the sorting order.
++     */
++ public static void mergeSort( final byte a[], ByteComparator comp ) {
++  mergeSort( a, 0, a.length, comp );
++ }
++ /**
++     * Searches a range of the specified array for the specified value using 
++     * the binary search algorithm. The range must be sorted prior to making this call. 
++     * If it is not sorted, the results are undefined. If the range contains multiple elements with 
++     * the specified value, there is no guarantee which one will be found.
++     *
++     * @param a the array to be searched.
++     * @param from  the index of the first element (inclusive) to be searched.
++     * @param to  the index of the last element (exclusive) to be searched.
++     * @param key the value to be searched for.
++     * @return index of the search key, if it is contained in the array;
++     *             otherwise, <samp>(-(<i>insertion point</i>) - 1)</samp>.  The <i>insertion
++     *             point</i> is defined as the the point at which the value would
++     *             be inserted into the array: the index of the first
++     *             element greater than the key, or the length of the array, if all
++     *             elements in the array are less than the specified key.  Note
++     *             that this guarantees that the return value will be >= 0 if
++     *             and only if the key is found.
++     * @see java.util.Arrays
++     */
++ @SuppressWarnings({"unchecked","rawtypes"})
++ public static int binarySearch( final byte[] a, int from, int to, final byte key ) {
++  byte midVal;
++  to--;
++  while (from <= to) {
++   final int mid = (from + to) >>> 1;
++   midVal = a[ mid ];
++   if (midVal < key) from = mid + 1;
++   else if (midVal > key) to = mid - 1;
++   else return mid;
++        }
++  return -( from + 1 );
++ }
++ /**
++     * Searches an array for the specified value using 
++     * the binary search algorithm. The range must be sorted prior to making this call. 
++     * If it is not sorted, the results are undefined. If the range contains multiple elements with 
++     * the specified value, there is no guarantee which one will be found.
++     *
++     * @param a the array to be searched.
++     * @param key the value to be searched for.
++     * @return index of the search key, if it is contained in the array;
++     *             otherwise, <samp>(-(<i>insertion point</i>) - 1)</samp>.  The <i>insertion
++     *             point</i> is defined as the the point at which the value would
++     *             be inserted into the array: the index of the first
++     *             element greater than the key, or the length of the array, if all
++     *             elements in the array are less than the specified key.  Note
++     *             that this guarantees that the return value will be >= 0 if
++     *             and only if the key is found.
++     * @see java.util.Arrays
++     */
++ public static int binarySearch( final byte[] a, final byte key ) {
++  return binarySearch( a, 0, a.length, key );
++ }
++ /**
++     * Searches a range of the specified array for the specified value using 
++     * the binary search algorithm and a specified comparator. The range must be sorted following the comparator prior to making this call. 
++     * If it is not sorted, the results are undefined. If the range contains multiple elements with 
++     * the specified value, there is no guarantee which one will be found.
++     *
++     * @param a the array to be searched.
++     * @param from  the index of the first element (inclusive) to be searched.
++     * @param to  the index of the last element (exclusive) to be searched.
++     * @param key the value to be searched for.
++     * @param c a comparator.
++     * @return index of the search key, if it is contained in the array;
++     *             otherwise, <samp>(-(<i>insertion point</i>) - 1)</samp>.  The <i>insertion
++     *             point</i> is defined as the the point at which the value would
++     *             be inserted into the array: the index of the first
++     *             element greater than the key, or the length of the array, if all
++     *             elements in the array are less than the specified key.  Note
++     *             that this guarantees that the return value will be >= 0 if
++     *             and only if the key is found.
++     * @see java.util.Arrays
++     */
++ public static int binarySearch( final byte[] a, int from, int to, final byte key, final ByteComparator c ) {
++  byte midVal;
++  to--;
++  while (from <= to) {
++   final int mid = (from + to) >>> 1;
++   midVal = a[ mid ];
++   final int cmp = c.compare( midVal, key );
++   if ( cmp < 0 ) from = mid + 1;
++   else if (cmp > 0) to = mid - 1;
++   else return mid; // key found
++  }
++  return -( from + 1 );
++ }
++ /**
++     * Searches an array for the specified value using 
++     * the binary search algorithm and a specified comparator. The range must be sorted following the comparator prior to making this call. 
++     * If it is not sorted, the results are undefined. If the range contains multiple elements with 
++     * the specified value, there is no guarantee which one will be found.
++     *
++     * @param a the array to be searched.
++     * @param key the value to be searched for.
++     * @param c a comparator.
++     * @return index of the search key, if it is contained in the array;
++     *             otherwise, <samp>(-(<i>insertion point</i>) - 1)</samp>.  The <i>insertion
++     *             point</i> is defined as the the point at which the value would
++     *             be inserted into the array: the index of the first
++     *             element greater than the key, or the length of the array, if all
++     *             elements in the array are less than the specified key.  Note
++     *             that this guarantees that the return value will be >= 0 if
++     *             and only if the key is found.
++     * @see java.util.Arrays
++     */
++ public static int binarySearch( final byte[] a, final byte key, final ByteComparator c ) {
++  return binarySearch( a, 0, a.length, key, c );
++ }
++ /** The size of a digit used during radix sort (must be a power of 2). */
++ private static final int DIGIT_BITS = 8;
++ /** The mask to extract a digit of {@link #DIGIT_BITS} bits. */
++ private static final int DIGIT_MASK = ( 1 << DIGIT_BITS ) - 1;
++ /** The number of digits per element. */
++ private static final int DIGITS_PER_ELEMENT = Byte.SIZE / DIGIT_BITS;
++ /** This method fixes negative numbers so that the combination exponent/significand is lexicographically sorted. */
++ /** Sorts the specified array using radix sort.
++     * 
++     * <p>The sorting algorithm is a tuned radix sort adapted from Peter M. McIlroy, Keith Bostic and M. Douglas
++     * McIlroy, “Engineering radix sort”, <i>Computing Systems</i>, 6(1), pages 5−27 (1993),
++     * and further improved using the digit-oracle idea described by
++     * Juha Kärkkäinen and Tommi Rantala in “Engineering radix sort for strings”,
++     * <i>String Processing and Information Retrieval, 15th International Symposium</i>, volume 5280 of
++     * Lecture Notes in Computer Science, pages 3−14, Springer (2008).
++     *
++     * <p>This implementation is significantly faster than quicksort 
++     * already at small sizes (say, more than 10000 elements), but it can only
++     * sort in ascending order. 
++     * It will allocate a support array of bytes with the same number of elements as the array to be sorted.
++     * 
++     * @param a the array to be sorted.
++     */
++ public static void radixSort( final byte[] a ) {
++  radixSort( a, 0, a.length );
++ }
++ /** Sorts the specified array using radix sort.
++     * 
++     * <p>The sorting algorithm is a tuned radix sort adapted from Peter M. McIlroy, Keith Bostic and M. Douglas
++     * McIlroy, “Engineering radix sort”, <i>Computing Systems</i>, 6(1), pages 5−27 (1993),
++     * and further improved using the digit-oracle idea described by
++     * Juha Kärkkäinen and Tommi Rantala in “Engineering radix sort for strings”,
++     * <i>String Processing and Information Retrieval, 15th International Symposium</i>, volume 5280 of
++     * Lecture Notes in Computer Science, pages 3−14, Springer (2008).
++     *
++     * <p>This implementation is significantly faster than quicksort 
++     * already at small sizes (say, more than 10000 elements), but it can only
++     * sort in ascending order. 
++     * It will allocate a support array of bytes with the same number of elements as the array to be sorted.
++     * 
++     * @param a the array to be sorted.
++     * @param from the index of the first element (inclusive) to be sorted.
++     * @param to the index of the last element (exclusive) to be sorted.
++     */
++ public static void radixSort( final byte[] a, final int from, final int to ) {
++  final int maxLevel = DIGITS_PER_ELEMENT - 1;
++  final int stackSize = ( ( 1 << DIGIT_BITS ) - 1 ) * ( DIGITS_PER_ELEMENT - 1 ) + 1;
++  final int[] offsetStack = new int[ stackSize ];
++  int offsetPos = 0;
++  final int[] lengthStack = new int[ stackSize ];
++  int lengthPos = 0;
++  final int[] levelStack = new int[ stackSize ];
++  int levelPos = 0;
++  offsetStack[ offsetPos++ ] = from;
++  lengthStack[ lengthPos++ ] = to - from;
++  levelStack[ levelPos++ ] = 0;
++  final int[] count = new int[ 1 << DIGIT_BITS ];
++  final int[] pos = new int[ 1 << DIGIT_BITS ];
++  final byte[] digit = new byte[ to - from ];
++  while( offsetPos > 0 ) {
++   final int first = offsetStack[ --offsetPos ];
++   final int length = lengthStack[ --lengthPos ];
++   final int level = levelStack[ --levelPos ];
++   final int signMask = level % DIGITS_PER_ELEMENT == 0 ? 1 << DIGIT_BITS - 1 : 0;
++   if ( length < MEDIUM ) {
++    selectionSort( a, first, first + length );
++    continue;
++   }
++   final int shift = ( DIGITS_PER_ELEMENT - 1 - level % DIGITS_PER_ELEMENT ) * DIGIT_BITS; // This is the shift that extract the right byte from a key
++   // Count keys.
++   for( int i = length; i-- != 0; ) digit[ i ] = (byte)( ( ( (a[ first + i ]) >>> shift ) & DIGIT_MASK ) ^ signMask );
++   for( int i = length; i-- != 0; ) count[ digit[ i ] & 0xFF ]++;
++   // Compute cumulative distribution and push non-singleton keys on stack.
++   int lastUsed = -1;
++   for( int i = 0, p = 0; i < 1 << DIGIT_BITS; i++ ) {
++    if ( count[ i ] != 0 ) {
++     lastUsed = i;
++     if ( level < maxLevel && count[ i ] > 1 ){
++      //System.err.println( " Pushing " + new StackEntry( first + pos[ i - 1 ], first + pos[ i ], level + 1 ) );
++      offsetStack[ offsetPos++ ] = p + first;
++      lengthStack[ lengthPos++ ] = count[ i ];
++      levelStack[ levelPos++ ] = level + 1;
++     }
++    }
++    pos[ i ] = ( p += count[ i ] );
++   }
++   // When all slots are OK, the last slot is necessarily OK.
++   final int end = length - count[ lastUsed ];
++   count[ lastUsed ] = 0;
++   // i moves through the start of each block
++   for( int i = 0, c = -1, d; i < end; i += count[ c ], count[ c ] = 0 ) {
++    byte t = a[ i + first ];
++    c = digit[ i ] & 0xFF;
++    while( ( d = --pos[ c ] ) > i ) {
++     final byte z = t;
++     final int zz = c;
++     t = a[ d + first ];
++     c = digit[ d ] & 0xFF;
++     a[ d + first ] = z;
++     digit[ d ] = (byte)zz;
++    }
++    a[ i + first ] = t;
++   }
++  }
++ }
++ private static void insertionSortIndirect( final int[] perm, final byte[] a, final int from, final int to ) {
++  for ( int i = from; ++i < to; ) {
++   int t = perm[ i ];
++   int j = i;
++   for ( int u = perm[ j - 1 ]; ( (a[ t ]) < (a[ u ]) ); u = perm[ --j - 1 ] ) {
++    perm[ j ] = u;
++    if ( from == j - 1 ) {
++     --j;
++     break;
++    }
++   }
++   perm[ j ] = t;
++  }
++ }
++ /** Sorts the specified array using indirect radix sort.
++     * 
++     * <p>The sorting algorithm is a tuned radix sort adapted from Peter M. McIlroy, Keith Bostic and M. Douglas
++     * McIlroy, “Engineering radix sort”, <i>Computing Systems</i>, 6(1), pages 5−27 (1993),
++     * and further improved using the digit-oracle idea described by
++     * Juha Kärkkäinen and Tommi Rantala in “Engineering radix sort for strings”,
++     * <i>String Processing and Information Retrieval, 15th International Symposium</i>, volume 5280 of
++     * Lecture Notes in Computer Science, pages 3−14, Springer (2008).
++     *
++     * <p>This method implement an <em>indirect</em> sort. The elements of <code>perm</code> (which must
++     * be exactly the numbers in the interval <code>[0..perm.length)</code>) will be permuted so that
++     * <code>a[ perm[ i ] ] <= a[ perm[ i + 1 ] ]</code>.
++     *
++     * <p>This implementation is significantly faster than quicksort (unstable) or mergesort (stable)
++     * already at small sizes (say, more than 10000 elements), but it can only
++     * sort in ascending order. 
++     * It will allocate a support array of bytes with the same number of elements as the array to be sorted,
++     * and, in the stable case, a further support array as large as <code>perm</code> (note that the stable
++     * version is slightly faster).
++     * 
++     * @param perm a permutation array indexing <code>a</code>.
++     * @param a the array to be sorted.
++     * @param stable whether the sorting algorithm should be stable.
++     */
++ public static void radixSortIndirect( final int[] perm, final byte[] a, final boolean stable ) {
++  radixSortIndirect( perm, a, 0, perm.length, stable );
++ }
++ /** Sorts the specified array using indirect radix sort.
++     * 
++     * <p>The sorting algorithm is a tuned radix sort adapted from Peter M. McIlroy, Keith Bostic and M. Douglas
++     * McIlroy, “Engineering radix sort”, <i>Computing Systems</i>, 6(1), pages 5−27 (1993),
++     * and further improved using the digit-oracle idea described by
++     * Juha Kärkkäinen and Tommi Rantala in “Engineering radix sort for strings”,
++     * <i>String Processing and Information Retrieval, 15th International Symposium</i>, volume 5280 of
++     * Lecture Notes in Computer Science, pages 3−14, Springer (2008).
++     *
++     * <p>This method implement an <em>indirect</em> sort. The elements of <code>perm</code> (which must
++     * be exactly the numbers in the interval <code>[0..perm.length)</code>) will be permuted so that
++     * <code>a[ perm[ i ] ] <= a[ perm[ i + 1 ] ]</code>.
++     *
++     * <p>This implementation is significantly faster than quicksort (unstable) or mergesort (stable)
++     * already at small sizes (say, more than 10000 elements), but it can only
++     * sort in ascending order. 
++     * It will allocate a support array of bytes with the same number of elements as the array to be sorted,
++     * and, in the stable case, a further support array as large as <code>perm</code> (note that the stable
++     * version is slightly faster).
++     * 
++     * @param perm a permutation array indexing <code>a</code>.
++     * @param a the array to be sorted.
++     * @param from the index of the first element of <code>perm</code> (inclusive) to be permuted.
++     * @param to the index of the last element of <code>perm</code> (exclusive) to be permuted.
++     * @param stable whether the sorting algorithm should be stable.
++     */
++ public static void radixSortIndirect( final int[] perm, final byte[] a, final int from, final int to, final boolean stable ) {
++  final int maxLevel = DIGITS_PER_ELEMENT - 1;
++  final int stackSize = ( ( 1 << DIGIT_BITS ) - 1 ) * ( DIGITS_PER_ELEMENT - 1 ) + 1;
++  final int[] offsetStack = new int[ stackSize ];
++  int offsetPos = 0;
++  final int[] lengthStack = new int[ stackSize ];
++  int lengthPos = 0;
++  final int[] levelStack = new int[ stackSize ];
++  int levelPos = 0;
++  offsetStack[ offsetPos++ ] = from;
++  lengthStack[ lengthPos++ ] = to - from;
++  levelStack[ levelPos++ ] = 0;
++  final int[] count = new int[ 1 << DIGIT_BITS ];
++  final int[] pos = stable ? null : new int[ 1 << DIGIT_BITS ];
++  final int[] support = stable ? new int[ perm.length ] : null;
++  final byte[] digit = new byte[ to - from ];
++  while( offsetPos > 0 ) {
++   final int first = offsetStack[ --offsetPos ];
++   final int length = lengthStack[ --lengthPos ];
++   final int level = levelStack[ --levelPos ];
++   final int signMask = level % DIGITS_PER_ELEMENT == 0 ? 1 << DIGIT_BITS - 1 : 0;
++   if ( length < MEDIUM ) {
++    insertionSortIndirect( perm, a, first, first + length );
++    continue;
++   }
++   final int shift = ( DIGITS_PER_ELEMENT - 1 - level % DIGITS_PER_ELEMENT ) * DIGIT_BITS; // This is the shift that extract the right byte from a key
++   // Count keys.
++   for( int i = length; i-- != 0; ) digit[ i ] = (byte)( ( ( (a[ perm[ first + i ] ]) >>> shift ) & DIGIT_MASK ) ^ signMask );
++   for( int i = length; i-- != 0; ) count[ digit[ i ] & 0xFF ]++;
++   // Compute cumulative distribution and push non-singleton keys on stack.
++   int lastUsed = -1;
++   for( int i = 0, p = 0; i < 1 << DIGIT_BITS; i++ ) {
++    if ( count[ i ] != 0 ) {
++     lastUsed = i;
++     if ( level < maxLevel && count[ i ] > 1 ){
++      offsetStack[ offsetPos++ ] = p + first;
++      lengthStack[ lengthPos++ ] = count[ i ];
++      levelStack[ levelPos++ ] = level + 1;
++     }
++    }
++    if ( stable ) count[ i ] = p += count[ i ];
++    else pos[ i ] = ( p += count[ i ] );
++   }
++   if ( stable ) {
++    for( int i = length; i-- != 0; ) support[ --count[ digit[ i ] & 0xFF ] ] = perm[ first + i ];
++    System.arraycopy( support, 0, perm, first, length );
++    it.unimi.dsi.fastutil.ints.IntArrays.fill( count, 0 );
++   }
++   else {
++    // When all slots are OK, the last slot is necessarily OK.
++    final int end = length - count[ lastUsed ];
++    count[ lastUsed ] = 0;
++    // i moves through the start of each block
++    for( int i = 0, c = -1, d; i < end; i += count[ c ], count[ c ] = 0 ) {
++     int t = perm[ i + first ];
++     c = digit[ i ] & 0xFF;
++     while( ( d = --pos[ c ] ) > i ) {
++      final int z = t;
++      final int zz = c;
++      t = perm[ d + first ];
++      c = digit[ d ] & 0xFF;
++      perm[ d + first ] = z;
++      digit[ d ] = (byte)zz;
++     }
++     perm[ i + first ] = t;
++    }
++   }
++  }
++ }
++ private static void selectionSort( final byte[] a, final byte[] b, final int from, final int to ) {
++  for( int i = from; i < to - 1; i++ ) {
++   int m = i;
++   for( int j = i + 1; j < to; j++ )
++    if ( a[ j ] < a[ m ] || a[ j ] == a[ m ] && b[ j ] < b[ m ] ) m = j;
++   if ( m != i ) {
++    byte t = a[ i ];
++    a[ i ] = a[ m ];
++    a[ m ] = t;
++    t = b[ i ];
++    b[ i ] = b[ m ];
++    b[ m ] = t;
++   }
++  }
++ }
++ /** Sorts the specified pair of arrays lexicographically using radix sort.
++     * <p>The sorting algorithm is a tuned radix sort adapted from Peter M. McIlroy, Keith Bostic and M. Douglas
++     * McIlroy, “Engineering radix sort”, <i>Computing Systems</i>, 6(1), pages 5−27 (1993),
++     * and further improved using the digit-oracle idea described by
++     * Juha Kärkkäinen and Tommi Rantala in “Engineering radix sort for strings”,
++     * <i>String Processing and Information Retrieval, 15th International Symposium</i>, volume 5280 of
++     * Lecture Notes in Computer Science, pages 3−14, Springer (2008).
++     *
++     * <p>This method implements a <em>lexicographical</em> sorting of the arguments. Pairs of elements
++     * in the same position in the two provided arrays will be considered a single key, and permuted
++     * accordingly. In the end, either <code>a[ i ] < a[ i + 1 ]</code> or <code>a[ i ] == a[ i + 1 ]</code> and <code>b[ i ] <= b[ i + 1 ]</code>.
++     *
++     * <p>This implementation is significantly faster than quicksort 
++     * already at small sizes (say, more than 10000 elements), but it can only
++     * sort in ascending order. It will allocate a support array of bytes with the same number of elements as the arrays to be sorted.
++     * 
++     * @param a the first array to be sorted.
++     * @param b the second array to be sorted.
++     */
++ public static void radixSort( final byte[] a, final byte[] b ) {
++  radixSort( a, b, 0, a.length );
++ }
++ /** Sorts the specified pair of arrays lexicographically using radix sort.
++     * 
++     * <p>The sorting algorithm is a tuned radix sort adapted from Peter M. McIlroy, Keith Bostic and M. Douglas
++     * McIlroy, “Engineering radix sort”, <i>Computing Systems</i>, 6(1), pages 5−27 (1993),
++     * and further improved using the digit-oracle idea described by
++     * Juha Kärkkäinen and Tommi Rantala in “Engineering radix sort for strings”,
++     * <i>String Processing and Information Retrieval, 15th International Symposium</i>, volume 5280 of
++     * Lecture Notes in Computer Science, pages 3−14, Springer (2008).
++     *
++     * <p>This method implements a <em>lexicographical</em> sorting of the arguments. Pairs of elements
++     * in the same position in the two provided arrays will be considered a single key, and permuted
++     * accordingly. In the end, either <code>a[ i ] < a[ i + 1 ]</code> or <code>a[ i ] == a[ i + 1 ]</code> and <code>b[ i ] <= b[ i + 1 ]</code>.
++     *
++     * <p>This implementation is significantly faster than quicksort 
++     * already at small sizes (say, more than 10000 elements), but it can only
++     * sort in ascending order. It will allocate a support array of bytes with the same number of elements as the arrays to be sorted.
++     * 
++     * @param a the first array to be sorted.
++     * @param b the second array to be sorted.
++     * @param from the index of the first element (inclusive) to be sorted.
++     * @param to the index of the last element (exclusive) to be sorted.
++     */
++ public static void radixSort( final byte[] a, final byte[] b, final int from, final int to ) {
++  final int layers = 2;
++  if ( a.length != b.length ) throw new IllegalArgumentException( "Array size mismatch." );
++  final int maxLevel = DIGITS_PER_ELEMENT * layers - 1;
++  final int stackSize = ( ( 1 << DIGIT_BITS ) - 1 ) * ( layers * DIGITS_PER_ELEMENT - 1 ) + 1;
++  final int[] offsetStack = new int[ stackSize ];
++  int offsetPos = 0;
++  final int[] lengthStack = new int[ stackSize ];
++  int lengthPos = 0;
++  final int[] levelStack = new int[ stackSize ];
++  int levelPos = 0;
++  offsetStack[ offsetPos++ ] = from;
++  lengthStack[ lengthPos++ ] = to - from;
++  levelStack[ levelPos++ ] = 0;
++  final int[] count = new int[ 1 << DIGIT_BITS ];
++  final int[] pos = new int[ 1 << DIGIT_BITS ];
++  final byte[] digit = new byte[ to - from ];
++  while( offsetPos > 0 ) {
++   final int first = offsetStack[ --offsetPos ];
++   final int length = lengthStack[ --lengthPos ];
++   final int level = levelStack[ --levelPos ];
++   final int signMask = level % DIGITS_PER_ELEMENT == 0 ? 1 << DIGIT_BITS - 1 : 0;
++   if ( length < MEDIUM ) {
++    selectionSort( a, b, first, first + length );
++    continue;
++   }
++   final byte[] k = level < DIGITS_PER_ELEMENT ? a : b; // This is the key array
++   final int shift = ( DIGITS_PER_ELEMENT - 1 - level % DIGITS_PER_ELEMENT ) * DIGIT_BITS; // This is the shift that extract the right byte from a key
++   // Count keys.
++   for( int i = length; i-- != 0; ) digit[ i ] = (byte)( ( ( (k[ first + i ]) >>> shift ) & DIGIT_MASK ) ^ signMask );
++   for( int i = length; i-- != 0; ) count[ digit[ i ] & 0xFF ]++;
++   // Compute cumulative distribution and push non-singleton keys on stack.
++   int lastUsed = -1;
++   for( int i = 0, p = 0; i < 1 << DIGIT_BITS; i++ ) {
++    if ( count[ i ] != 0 ) {
++     lastUsed = i;
++     if ( level < maxLevel && count[ i ] > 1 ){
++      offsetStack[ offsetPos++ ] = p + first;
++      lengthStack[ lengthPos++ ] = count[ i ];
++      levelStack[ levelPos++ ] = level + 1;
++     }
++    }
++    pos[ i ] = ( p += count[ i ] );
++   }
++   // When all slots are OK, the last slot is necessarily OK.
++   final int end = length - count[ lastUsed ];
++   count[ lastUsed ] = 0;
++   // i moves through the start of each block
++   for( int i = 0, c = -1, d; i < end; i += count[ c ], count[ c ] = 0 ) {
++    byte t = a[ i + first ];
++    byte u = b[ i + first ];
++    c = digit[ i ] & 0xFF;
++    while( ( d = --pos[ c ] ) > i ) {
++     byte z = t;
++     final int zz = c;
++     t = a[ d + first ];
++     a[ d + first ] = z;
++     z = u;
++     u = b[ d + first ];
++     b[ d + first ] = z;
++     c = digit[ d ] & 0xFF;
++     digit[ d ] = (byte)zz;
++    }
++    a[ i + first ] = t;
++    b[ i + first ] = u;
++   }
++  }
++ }
++ private static void insertionSortIndirect( final int[] perm, final byte[] a, final byte[] b, final int from, final int to ) {
++  for ( int i = from; ++i < to; ) {
++   int t = perm[ i ];
++   int j = i;
++   for ( int u = perm[ j - 1 ]; ( (a[ t ]) < (a[ u ]) ) || ( (a[ t ]) == (a[ u ]) ) && ( (b[ t ]) < (b[ u ]) ); u = perm[ --j - 1 ] ) {
++    perm[ j ] = u;
++    if ( from == j - 1 ) {
++     --j;
++     break;
++    }
++   }
++   perm[ j ] = t;
++  }
++ }
++ /** Sorts the specified pair of arrays lexicographically using indirect radix sort.
++     * 
++     * <p>The sorting algorithm is a tuned radix sort adapted from Peter M. McIlroy, Keith Bostic and M. Douglas
++     * McIlroy, “Engineering radix sort”, <i>Computing Systems</i>, 6(1), pages 5−27 (1993),
++     * and further improved using the digit-oracle idea described by
++     * Juha Kärkkäinen and Tommi Rantala in “Engineering radix sort for strings”,
++     * <i>String Processing and Information Retrieval, 15th International Symposium</i>, volume 5280 of
++     * Lecture Notes in Computer Science, pages 3−14, Springer (2008).
++     *
++     * <p>This method implement an <em>indirect</em> sort. The elements of <code>perm</code> (which must
++     * be exactly the numbers in the interval <code>[0..perm.length)</code>) will be permuted so that
++     * <code>a[ perm[ i ] ] <= a[ perm[ i + 1 ] ]</code>.
++     *
++     * <p>This implementation is significantly faster than quicksort (unstable) or mergesort (stable)
++     * already at small sizes (say, more than 10000 elements), but it can only
++     * sort in ascending order. 
++     * It will allocate a support array of bytes with the same number of elements as the array to be sorted,
++     * and, in the stable case, a further support array as large as <code>perm</code> (note that the stable
++     * version is slightly faster).
++     * 
++     * @param perm a permutation array indexing <code>a</code>.
++     * @param a the array to be sorted.
++     * @param b the second array to be sorted.
++     * @param stable whether the sorting algorithm should be stable.
++     */
++ public static void radixSortIndirect( final int[] perm, final byte[] a, final byte[] b, final boolean stable ) {
++  radixSortIndirect( perm, a, b, 0, perm.length, stable );
++ }
++ /** Sorts the specified pair of arrays lexicographically using indirect radix sort.
++     * 
++     * <p>The sorting algorithm is a tuned radix sort adapted from Peter M. McIlroy, Keith Bostic and M. Douglas
++     * McIlroy, “Engineering radix sort”, <i>Computing Systems</i>, 6(1), pages 5−27 (1993),
++     * and further improved using the digit-oracle idea described by
++     * Juha Kärkkäinen and Tommi Rantala in “Engineering radix sort for strings”,
++     * <i>String Processing and Information Retrieval, 15th International Symposium</i>, volume 5280 of
++     * Lecture Notes in Computer Science, pages 3−14, Springer (2008).
++     *
++     * <p>This method implement an <em>indirect</em> sort. The elements of <code>perm</code> (which must
++     * be exactly the numbers in the interval <code>[0..perm.length)</code>) will be permuted so that
++     * <code>a[ perm[ i ] ] <= a[ perm[ i + 1 ] ]</code>.
++     *
++     * <p>This implementation is significantly faster than quicksort (unstable) or mergesort (stable)
++     * already at small sizes (say, more than 10000 elements), but it can only
++     * sort in ascending order. 
++     * It will allocate a support array of bytes with the same number of elements as the array to be sorted,
++     * and, in the stable case, a further support array as large as <code>perm</code> (note that the stable
++     * version is slightly faster).
++     * 
++     * @param perm a permutation array indexing <code>a</code>.
++     * @param a the array to be sorted.
++     * @param b the second array to be sorted.
++     * @param from the index of the first element of <code>perm</code> (inclusive) to be permuted.
++     * @param to the index of the last element of <code>perm</code> (exclusive) to be permuted.
++     * @param stable whether the sorting algorithm should be stable.
++     */
++ public static void radixSortIndirect( final int[] perm, final byte[] a, final byte[] b, final int from, final int to, final boolean stable ) {
++  final int layers = 2;
++  if ( a.length != b.length ) throw new IllegalArgumentException( "Array size mismatch." );
++  final int maxLevel = DIGITS_PER_ELEMENT * layers - 1;
++  final int stackSize = ( ( 1 << DIGIT_BITS ) - 1 ) * ( layers * DIGITS_PER_ELEMENT - 1 ) + 1;
++  final int[] offsetStack = new int[ stackSize ];
++  int offsetPos = 0;
++  final int[] lengthStack = new int[ stackSize ];
++  int lengthPos = 0;
++  final int[] levelStack = new int[ stackSize ];
++  int levelPos = 0;
++  offsetStack[ offsetPos++ ] = from;
++  lengthStack[ lengthPos++ ] = to - from;
++  levelStack[ levelPos++ ] = 0;
++  final int[] count = new int[ 1 << DIGIT_BITS ];
++  final int[] pos = stable ? null : new int[ 1 << DIGIT_BITS ];
++  final int[] support = stable ? new int[ perm.length ] : null;
++  final byte[] digit = new byte[ to - from ];
++  while( offsetPos > 0 ) {
++   final int first = offsetStack[ --offsetPos ];
++   final int length = lengthStack[ --lengthPos ];
++   final int level = levelStack[ --levelPos ];
++   final int signMask = level % DIGITS_PER_ELEMENT == 0 ? 1 << DIGIT_BITS - 1 : 0;
++   if ( length < MEDIUM ) {
++    insertionSortIndirect( perm, a, b, first, first + length );
++    continue;
++   }
++   final byte[] k = level < DIGITS_PER_ELEMENT ? a : b; // This is the key array
++   final int shift = ( DIGITS_PER_ELEMENT - 1 - level % DIGITS_PER_ELEMENT ) * DIGIT_BITS; // This is the shift that extract the right byte from a key
++   // Count keys.
++   for( int i = length; i-- != 0; ) digit[ i ] = (byte)( ( ( (k[ perm[ first + i ] ]) >>> shift ) & DIGIT_MASK ) ^ signMask );
++   for( int i = length; i-- != 0; ) count[ digit[ i ] & 0xFF ]++;
++   // Compute cumulative distribution and push non-singleton keys on stack.
++   int lastUsed = -1;
++   for( int i = 0, p = 0; i < 1 << DIGIT_BITS; i++ ) {
++    if ( count[ i ] != 0 ) {
++     lastUsed = i;
++     if ( level < maxLevel && count[ i ] > 1 ){
++      offsetStack[ offsetPos++ ] = p + first;
++      lengthStack[ lengthPos++ ] = count[ i ];
++      levelStack[ levelPos++ ] = level + 1;
++     }
++    }
++    if ( stable ) count[ i ] = p += count[ i ];
++    else pos[ i ] = ( p += count[ i ] );
++   }
++   if ( stable ) {
++    for( int i = length; i-- != 0; ) support[ --count[ digit[ i ] & 0xFF ] ] = perm[ first + i ];
++    System.arraycopy( support, 0, perm, first, length );
++    it.unimi.dsi.fastutil.ints.IntArrays.fill( count, 0 );
++   }
++   else {
++    // When all slots are OK, the last slot is necessarily OK.
++    final int end = length - count[ lastUsed ];
++    count[ lastUsed ] = 0;
++    // i moves through the start of each block
++    for( int i = 0, c = -1, d; i < end; i += count[ c ], count[ c ] = 0 ) {
++     int t = perm[ i + first ];
++     c = digit[ i ] & 0xFF;
++     while( ( d = --pos[ c ] ) > i ) {
++      final int z = t;
++      final int zz = c;
++      t = perm[ d + first ];
++      c = digit[ d ] & 0xFF;
++      perm[ d + first ] = z;
++      digit[ d ] = (byte)zz;
++     }
++     perm[ i + first ] = t;
++    }
++   }
++  }
++ }
++ private static void selectionSort( final byte[][] a, final int from, final int to, final int level ) {
++  final int layers = a.length;
++  final int firstLayer = level / DIGITS_PER_ELEMENT;
++  for( int i = from; i < to - 1; i++ ) {
++   int m = i;
++   for( int j = i + 1; j < to; j++ ) {
++    for( int p = firstLayer; p < layers; p++ ) {
++     if ( a[ p ][ j ] < a[ p ][ m ] ) {
++      m = j;
++      break;
++     }
++     else if ( a[ p ][ j ] > a[ p ][ m ] ) break;
++    }
++   }
++   if ( m != i ) {
++    for( int p = layers; p-- != 0; ) {
++     final byte u = a[ p ][ i ];
++     a[ p ][ i ] = a[ p ][ m ];
++     a[ p ][ m ] = u;
++    }
++   }
++  }
++ }
++ /** Sorts the specified array of arrays lexicographically using radix sort.
++     * 
++     * <p>The sorting algorithm is a tuned radix sort adapted from Peter M. McIlroy, Keith Bostic and M. Douglas
++     * McIlroy, “Engineering radix sort”, <i>Computing Systems</i>, 6(1), pages 5−27 (1993),
++     * and further improved using the digit-oracle idea described by
++     * Juha Kärkkäinen and Tommi Rantala in “Engineering radix sort for strings”,
++     * <i>String Processing and Information Retrieval, 15th International Symposium</i>, volume 5280 of
++     * Lecture Notes in Computer Science, pages 3−14, Springer (2008).
++     *
++     * <p>This method implements a <em>lexicographical</em> sorting of the provided arrays. Tuples of elements
++     * in the same position will be considered a single key, and permuted
++     * accordingly.
++     *
++     * <p>This implementation is significantly faster than quicksort 
++     * already at small sizes (say, more than 10000 elements), but it can only
++     * sort in ascending order. It will allocate a support array of bytes with the same number of elements as the arrays to be sorted.
++     * 
++     * @param a an array containing arrays of equal length to be sorted lexicographically in parallel.
++     */
++ public static void radixSort( final byte[][] a ) {
++  radixSort( a, 0, a[ 0 ].length );
++ }
++ /** Sorts the specified array of arrays lexicographically using radix sort.
++     * 
++     * <p>The sorting algorithm is a tuned radix sort adapted from Peter M. McIlroy, Keith Bostic and M. Douglas
++     * McIlroy, “Engineering radix sort”, <i>Computing Systems</i>, 6(1), pages 5−27 (1993),
++     * and further improved using the digit-oracle idea described by
++     * Juha Kärkkäinen and Tommi Rantala in “Engineering radix sort for strings”,
++     * <i>String Processing and Information Retrieval, 15th International Symposium</i>, volume 5280 of
++     * Lecture Notes in Computer Science, pages 3−14, Springer (2008).
++     *
++     * <p>This method implements a <em>lexicographical</em> sorting of the provided arrays. Tuples of elements
++     * in the same position will be considered a single key, and permuted
++     * accordingly.
++     *
++     * <p>This implementation is significantly faster than quicksort 
++     * already at small sizes (say, more than 10000 elements), but it can only
++     * sort in ascending order. It will allocate a support array of bytes with the same number of elements as the arrays to be sorted.
++     * 
++     * @param a an array containing arrays of equal length to be sorted lexicographically in parallel.
++     * @param from the index of the first element (inclusive) to be sorted.
++     * @param to the index of the last element (exclusive) to be sorted.
++     */
++ public static void radixSort( final byte[][] a, final int from, final int to ) {
++  final int layers = a.length;
++  final int maxLevel = DIGITS_PER_ELEMENT * layers - 1;
++  for( int p = layers, l = a[ 0 ].length; p-- != 0; ) if ( a[ p ].length != l ) throw new IllegalArgumentException( "The array of index " + p + " has not the same length of the array of index 0." );
++  final int stackSize = ( ( 1 << DIGIT_BITS ) - 1 ) * ( layers * DIGITS_PER_ELEMENT - 1 ) + 1;
++  final int[] offsetStack = new int[ stackSize ];
++  int offsetPos = 0;
++  final int[] lengthStack = new int[ stackSize ];
++  int lengthPos = 0;
++  final int[] levelStack = new int[ stackSize ];
++  int levelPos = 0;
++  offsetStack[ offsetPos++ ] = from;
++  lengthStack[ lengthPos++ ] = to - from;
++  levelStack[ levelPos++ ] = 0;
++  final int[] count = new int[ 1 << DIGIT_BITS ];
++  final int[] pos = new int[ 1 << DIGIT_BITS ];
++  final byte[] digit = new byte[ to - from ];
++  final byte[] t = new byte[ layers ];
++  while( offsetPos > 0 ) {
++   final int first = offsetStack[ --offsetPos ];
++   final int length = lengthStack[ --lengthPos ];
++   final int level = levelStack[ --levelPos ];
++   final int signMask = level % DIGITS_PER_ELEMENT == 0 ? 1 << DIGIT_BITS - 1 : 0;
++   if ( length < MEDIUM ) {
++    selectionSort( a, first, first + length, level );
++    continue;
++   }
++   final byte[] k = a[ level / DIGITS_PER_ELEMENT ]; // This is the key array
++   final int shift = ( DIGITS_PER_ELEMENT - 1 - level % DIGITS_PER_ELEMENT ) * DIGIT_BITS; // This is the shift that extract the right byte from a key
++   // Count keys.
++   for( int i = length; i-- != 0; ) digit[ i ] = (byte)( ( (k[ first + i ]) >>> shift & DIGIT_MASK ) ^ signMask );
++   for( int i = length; i-- != 0; ) count[ digit[ i ] & 0xFF ]++;
++   // Compute cumulative distribution and push non-singleton keys on stack.
++   int lastUsed = -1;
++   for( int i = 0, p = 0; i < 1 << DIGIT_BITS; i++ ) {
++    if ( count[ i ] != 0 ) {
++     lastUsed = i;
++     if ( level < maxLevel && count[ i ] > 1 ){
++      offsetStack[ offsetPos++ ] = p + first;
++      lengthStack[ lengthPos++ ] = count[ i ];
++      levelStack[ levelPos++ ] = level + 1;
++     }
++    }
++    pos[ i ] = ( p += count[ i ] );
++   }
++   // When all slots are OK, the last slot is necessarily OK.
++   final int end = length - count[ lastUsed ];
++   count[ lastUsed ] = 0;
++   // i moves through the start of each block
++   for( int i = 0, c = -1, d; i < end; i += count[ c ], count[ c ] = 0 ) {
++    for( int p = layers; p-- != 0; ) t[ p ] = a[ p ][ i + first ];
++    c = digit[ i ] & 0xFF;
++     while( ( d = --pos[ c ] ) > i ) {
++     for( int p = layers; p-- != 0; ) {
++      final byte u = t[ p ];
++      t[ p ] = a[ p ][ d + first ];
++      a[ p ][ d + first ] = u;
++     }
++     final int zz = c;
++     c = digit[ d ] & 0xFF;
++     digit[ d ] = (byte)zz;
++    }
++    for( int p = layers; p-- != 0; ) a[ p ][ i + first ] = t[ p ];
++   }
++  }
++ }
++ /** Shuffles the specified array fragment using the specified pseudorandom number generator.
++     * 
++     * @param a the array to be shuffled.
++     * @param from the index of the first element (inclusive) to be shuffled.
++     * @param to the index of the last element (exclusive) to be shuffled.
++     * @param random a pseudorandom number generator (please use a <a href="http://dsiutils.dsi.unimi.it/docs/it/unimi/dsi/util/XorShiftStarRandom.html">XorShift*</a> generator).
++     * @return <code>a</code>.
++     */
++ public static byte[] shuffle( final byte[] a, final int from, final int to, final Random random ) {
++  for( int i = to - from; i-- != 0; ) {
++   final int p = random.nextInt( i + 1 );
++   final byte t = a[ from + i ];
++   a[ from + i ] = a[ from + p ];
++   a[ from + p ] = t;
++  }
++  return a;
++ }
++ /** Shuffles the specified array using the specified pseudorandom number generator.
++     * 
++     * @param a the array to be shuffled.
++     * @param random a pseudorandom number generator (please use a <a href="http://dsiutils.dsi.unimi.it/docs/it/unimi/dsi/util/XorShiftStarRandom.html">XorShift*</a> generator).
++     * @return <code>a</code>.
++     */
++ public static byte[] shuffle( final byte[] a, final Random random ) {
++  for( int i = a.length; i-- != 0; ) {
++   final int p = random.nextInt( i + 1 );
++   final byte t = a[ i ];
++   a[ i ] = a[ p ];
++   a[ p ] = t;
++  }
++  return a;
++ }
++ /** Reverses the order of the elements in the specified array.
++     * 
++     * @param a the array to be reversed.
++     * @return <code>a</code>.
++     */
++ public static byte[] reverse( final byte[] a ) {
++  final int length = a.length;
++  for( int i = length / 2; i-- != 0; ) {
++   final byte t = a[ length - i - 1 ];
++   a[ length - i - 1 ] = a[ i ];
++   a[ i ] = t;
++  }
++  return a;
++ }
++ /** Reverses the order of the elements in the specified array fragment.
++     * 
++     * @param a the array to be reversed.
++     * @param from the index of the first element (inclusive) to be reversed.
++     * @param to the index of the last element (exclusive) to be reversed.
++     * @return <code>a</code>.
++     */
++ public static byte[] reverse( final byte[] a, final int from, final int to ) {
++  final int length = to - from;
++  for( int i = length / 2; i-- != 0; ) {
++   final byte t = a[ from + length - i - 1 ];
++   a[ from + length - i - 1 ] = a[ from + i ];
++   a[ from + i ] = t;
++  }
++  return a;
++ }
++ /** A type-specific content-based hash strategy for arrays. */
++ private static final class ArrayHashStrategy implements Hash.Strategy<byte[]>, java.io.Serializable {
++  private static final long serialVersionUID = -7046029254386353129L;
++  public int hashCode( final byte[] o ) {
++   return java.util.Arrays.hashCode( o );
++  }
++  public boolean equals( final byte[] a, final byte[] b ) {
++   return java.util.Arrays.equals( a, b );
++  }
++ }
++ /** A type-specific content-based hash strategy for arrays.
++     *
++     * <P>This hash strategy may be used in custom hash collections whenever keys are
++     * arrays, and they must be considered equal by content. This strategy
++     * will handle <code>null</code> correctly, and it is serializable.
++     */
++ public final static Hash.Strategy<byte[]> HASH_STRATEGY = new ArrayHashStrategy();
++}
+\ No newline at end of file
+diff --git a/src/main/java/org/torch/util/bytes/ByteComparator.java b/src/main/java/org/torch/util/bytes/ByteComparator.java
+new file mode 100644
+index 0000000..f66cd6c
+--- /dev/null
++++ b/src/main/java/org/torch/util/bytes/ByteComparator.java
+@@ -0,0 +1,46 @@
++package org.torch.util.bytes;
++
++/**
++ * From fastutil project.
++ * @Link: https://github.com/vigna/fastutil
++ */
++
++/*       
++ * Copyright (C) 2002-2014 Sebastiano Vigna 
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License. 
++ */
++ 
++import java.util.Comparator;
++
++/** A type-specific {@link Comparator}; provides methods to compare two primitive types both as objects
++ * and as primitive types. 
++ *
++ * <P>Note that <code>fastutil</code> provides a corresponding abstract class that
++ * can be used to implement this interface just by specifying the type-specific
++ * comparator.
++ *
++ * @see Comparator
++ */
++public interface ByteComparator extends Comparator<Byte> {
++	
++ /** Compares the given primitive types.
++     *
++     * @see java.util.Comparator
++     * @return A positive integer, zero, or a negative integer if the first
++     * argument is greater than, equal to, or smaller than, respectively, the
++     * second one.
++     */
++ public int compare( byte k1, byte k2 );
++ 
++}
+\ No newline at end of file
+diff --git a/src/main/java/org/torch/util/ints/IntComparator.java b/src/main/java/org/torch/util/ints/IntComparator.java
+new file mode 100644
+index 0000000..def5f56
+--- /dev/null
++++ b/src/main/java/org/torch/util/ints/IntComparator.java
+@@ -0,0 +1,44 @@
++package org.torch.util.ints;
++
++/**
++ * From fastutil project.
++ * @Link: https://github.com/vigna/fastutil
++ */
++
++/*       
++ * Copyright (C) 2002-2014 Sebastiano Vigna 
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License. 
++ */
++ 
++import java.util.Comparator;
++
++/** A type-specific {@link Comparator}; provides methods to compare two primitive types both as objects
++ * and as primitive types. 
++ *
++ * <P>Note that <code>fastutil</code> provides a corresponding abstract class that
++ * can be used to implement this interface just by specifying the type-specific
++ * comparator.
++ *
++ * @see Comparator
++ */
++public interface IntComparator extends Comparator<Integer> {
++ /** Compares the given primitive types.
++     *
++     * @see java.util.Comparator
++     * @return A positive integer, zero, or a negative integer if the first
++     * argument is greater than, equal to, or smaller than, respectively, the
++     * second one.
++     */
++ public int compare( int k1, int k2 );
++}
+\ No newline at end of file
+diff --git a/src/main/java/org/torch/util/io/FastBufferedInputStream.java b/src/main/java/org/torch/util/io/FastBufferedInputStream.java
+new file mode 100644
+index 0000000..ad0bb8b
+--- /dev/null
++++ b/src/main/java/org/torch/util/io/FastBufferedInputStream.java
+@@ -0,0 +1,551 @@
++package org.torch.util.io;
++
++/**
++ * From fastutil project.
++ * @Link: https://github.com/vigna/fastutil
++ */
++
++/*		 
++ * Copyright (C) 2005-2016 Sebastiano Vigna
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License. 
++ */
++
++import org.torch.util.bytes.ByteArrays;
++import org.torch.util.io.RepositionableStream;
++
++import java.io.IOException;
++import java.io.InputStream;
++import java.nio.channels.FileChannel;
++import java.util.EnumSet;
++
++/** Lightweight, unsynchronized, aligned input stream buffering class with
++ *  {@linkplain #skip(long) true skipping},
++ *  {@linkplain MeasurableStream measurability}, 
++ *  {@linkplain RepositionableStream repositionability} 
++ *  and {@linkplain #readLine(byte[], int, int, EnumSet) line reading} support.
++ *
++ * <P>This class provides buffering for input streams, but it does so with 
++ * purposes and an internal logic that are radically different from the ones
++ * adopted in {@link java.io.BufferedInputStream}. The main features follow.
++ * 
++ * <ul>
++ * <li><P>There is no support for marking. All methods are unsychronized.
++ * 
++ * <li><P>As an additional feature, this class implements the {@link
++ * RepositionableStream} and {@link MeasurableStream} interfaces.  
++ * An instance of this class will try to cast
++ * the underlying byte stream to a {@link RepositionableStream} and to fetch by
++ * reflection the {@link java.nio.channels.FileChannel} underlying the given
++ * output stream, in this order. If either reference can be successfully
++ * fetched, you can use {@link #position(long)} to reposition the stream.
++ * Much in the same way, an instance of this class will try to cast the
++ * the underlying byte stream to a {@link MeasurableStream}, and if this
++ * operation is successful, or if a {@link java.nio.channels.FileChannel} can
++ * be detected, then {@link #position()} and {@link #length()} will work as expected.
++ * 
++ * 
++ * <li><p>Due to erratic and unpredictable behaviour of {@link InputStream#skip(long)},
++ * which does not correspond to its specification and which Sun refuses to fix
++ * (see <a href="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6222822">bug 6222822</a>;
++ * don't be fooled by the &ldquo;closed, fixed&rdquo; label),
++ * this class peeks at the underlying stream and if it is {@link System#in} it uses
++ * repeated reads instead of calling {@link InputStream#skip(long)} on the underlying stream; moreover,
++ * skips and reads are tried alternately, so to guarantee that skipping
++ * less bytes than requested can be caused only by reaching the end of file.
++ *
++ * <li><p>This class keeps also track of the number of bytes read so far, so
++ * to be able to implement {@link MeasurableStream#position()}
++ * independently of underlying input stream.
++ * 
++ * <li><p>This class has limited support for 
++ * {@linkplain #readLine(byte[], int, int, EnumSet) &ldquo;reading a line&rdquo;}
++ * (whatever that means) from the underlying input stream. You can choose the set of
++ * {@linkplain FastBufferedInputStream.LineTerminator line terminators} that
++ * delimit lines.
++ *
++ * </ul>
++ * 
++ * <p><strong>Warning:</strong> Since <code>fastutil</code> 6.0.0, this class detects
++ * a implementations of {@link MeasurableStream} instead of subclasses <code>MeasurableInputStream</code> (which is deprecated).
++ * 
++ * @since 4.4
++ */
++
++public class FastBufferedInputStream extends MeasurableInputStream implements RepositionableStream {
++
++	/** The default size of the internal buffer in bytes (8Ki). */
++	public final static int DEFAULT_BUFFER_SIZE = 8 * 1024;
++
++	/** An enumeration of the supported line terminators. */
++	public static enum LineTerminator {
++		/** A carriage return (CR, ASCII 13). */
++		CR,
++		/** A line feed (LF, ASCII 10). */
++		LF,
++		/** A carriage return followed by a line feed (CR/LF, ASCII 13/10). */
++		CR_LF
++	}
++
++	/** A set containing <em>all available</em> line terminators. */
++	public final static EnumSet<LineTerminator> ALL_TERMINATORS = EnumSet.allOf( LineTerminator.class );
++	
++	/** The underlying input stream. */
++	protected InputStream is;
++
++	/** The internal buffer. */
++	protected byte buffer[];
++
++	/** The current position in the buffer. */
++	protected int pos;
++
++	/** The number of bytes ever read (reset upon a call to {@link #position(long)}).
++	 * In particular, this will always represent the index (in the underlying input stream)
++	 * of the first available byte in the buffer. */
++	protected long readBytes;
++
++	/** The number of buffer bytes available starting from {@link #pos}. */
++	protected int avail;
++
++	/** The cached file channel underlying {@link #is}, if any. */
++	private FileChannel fileChannel;
++
++	/** {@link #is} cast to a positionable stream, if possible. */
++	private RepositionableStream repositionableStream;
++
++	/** {@link #is} cast to a measurable stream, if possible. */
++	private MeasurableStream measurableStream;
++
++	private static int ensureBufferSize( final int bufferSize ) {
++		if ( bufferSize <= 0 ) throw new IllegalArgumentException( "Illegal buffer size: " + bufferSize );
++		return bufferSize;
++	}
++		
++	/** Creates a new fast buffered input stream by wrapping a given input stream with a given buffer. 
++	 *
++	 * @param is an input stream to wrap.
++	 * @param buffer a buffer of positive length.
++	 */
++	public FastBufferedInputStream( final InputStream is, final byte[] buffer ) {
++		this.is = is;
++		ensureBufferSize( buffer.length );
++		this.buffer = buffer;
++
++		if ( is instanceof RepositionableStream ) repositionableStream = (RepositionableStream)is;
++		if ( is instanceof MeasurableStream ) measurableStream = (MeasurableStream)is;
++			
++		if ( repositionableStream == null ) {
++				
++			try {
++				fileChannel = (FileChannel)( is.getClass().getMethod( "getChannel", new Class[] {} ) ).invoke( is, new Object[] {} );
++			}
++			catch( IllegalAccessException e ) {}
++			catch( IllegalArgumentException e ) {}
++			catch( NoSuchMethodException e ) {}
++			catch( java.lang.reflect.InvocationTargetException e ) {}
++			catch( ClassCastException e ) {}
++		}
++	}
++
++	/** Creates a new fast buffered input stream by wrapping a given input stream with a given buffer size. 
++	 *
++	 * @param is an input stream to wrap.
++	 * @param bufferSize the size in bytes of the internal buffer (greater than zero).
++	 */
++	public FastBufferedInputStream( final InputStream is, final int bufferSize ) {
++		this( is, new byte[ ensureBufferSize( bufferSize ) ] );		
++	}
++	
++	/** Creates a new fast buffered input stream by wrapping a given input stream with a buffer of {@link #DEFAULT_BUFFER_SIZE} bytes. 
++	 *
++	 * @param is an input stream to wrap.
++	 */
++	public FastBufferedInputStream( final InputStream is ) {
++		this( is, DEFAULT_BUFFER_SIZE );
++	}
++
++	/** Checks whether no more bytes will be returned.
++	 * 
++	 * <p>This method will refill the internal buffer.
++	 * 
++	 * @return true if there are no characters in the internal buffer and
++	 * the underlying reader is exhausted.
++	 */
++	
++	protected boolean noMoreCharacters() throws IOException {
++		if ( avail == 0 ) {
++			avail = is.read( buffer );
++			if ( avail <= 0 ) {
++				avail = 0;
++				return true;
++			}
++			pos = 0;
++		}
++		return false;
++	}
++	
++
++	
++	public int read() throws IOException {
++		if ( noMoreCharacters() ) return -1;
++		avail--;
++		readBytes++;
++		return buffer[ pos++ ] & 0xFF;
++	}
++
++
++	public int read( final byte b[], final int offset, final int length ) throws IOException {
++		if ( length <= avail ) {
++			System.arraycopy( buffer, pos, b, offset, length );
++			pos += length;
++			avail -= length;
++			readBytes += length;
++			return length;
++		}
++	
++		final int head = avail;
++		
++		System.arraycopy( buffer, pos, b, offset, head );
++		pos = avail = 0;
++		readBytes += head;
++		
++		if ( length > buffer.length ) {
++			// We read directly into the destination
++			final int result = is.read( b, offset + head, length - head );
++			if ( result > 0 ) readBytes += result;
++			return result < 0 ? ( head == 0 ? -1 : head ) : result + head;
++		}
++		
++		if ( noMoreCharacters() ) return head == 0 ? -1 : head;
++		
++		final int toRead = Math.min( length - head, avail );
++		readBytes += toRead;
++		System.arraycopy( buffer, 0, b, offset + head, toRead );
++		pos = toRead;
++		avail -= toRead;
++		
++		// Note that head >= 0, and necessarily toRead > 0
++		return toRead + head;
++	}
++
++	/** Reads a line into the given byte array using {@linkplain #ALL_TERMINATORS all terminators}.
++	 *
++	 * @param array byte array where the next line will be stored.
++	 * @return the number of bytes actually placed in <code>array</code>, or -1 at end of file.
++	 * @see #readLine(byte[], int, int, EnumSet)
++	 */
++
++	public int readLine( final byte[] array ) throws IOException {
++		return readLine( array, 0, array.length, ALL_TERMINATORS );
++	}
++
++	/** Reads a line into the given byte array.
++	 *
++	 * @param array byte array where the next line will be stored.
++	 * @param terminators a set containing the line termination sequences that we want
++	 * to consider as valid.
++	 * @return the number of bytes actually placed in <code>array</code>, or -1 at end of file.
++	 * @see #readLine(byte[], int, int, EnumSet)
++	 */
++
++	public int readLine( final byte[] array, final EnumSet<LineTerminator> terminators ) throws IOException {
++		return readLine( array, 0, array.length, terminators );
++	}
++
++	/** Reads a line into the given byte-array fragment	using {@linkplain #ALL_TERMINATORS all terminators}.
++	 *
++	 * @param array byte array where the next line will be stored.
++	 * @param off the first byte to use in <code>array</code>.
++	 * @param len the maximum number of bytes to read.
++	 * @return the number of bytes actually placed in <code>array</code>, or -1 at end of file.
++	 * @see #readLine(byte[], int, int, EnumSet)
++	 */
++	public int readLine( final byte[] array, final int off, final int len ) throws IOException {
++		return readLine( array, off, len, ALL_TERMINATORS );
++	}
++
++	/** Reads a line into the given byte-array fragment.
++	 *
++	 * <P>Reading lines (i.e., characters) out of a byte stream is not always sensible
++	 * (methods available to that purpose in old versions of Java have been mercilessly deprecated).
++	 * Nonetheless, in several situations, such as when decoding network protocols or headers
++	 * known to be ASCII, it is very useful to be able to read a line from a byte stream.
++	 * 
++	 * <p>This method will attempt to read the next line into <code>array</code> starting at <code>off</code>,
++	 * reading at most <code>len</code> bytes. The read, however, will be stopped by the end of file or
++	 * when meeting a {@linkplain LineTerminator <em>line terminator</em>}. Of course, for this operation
++	 * to be sensible the encoding of the text contained in the stream, if any, must not generate spurious
++	 * carriage returns or line feeds. Note that the termination detection uses a maximisation
++	 * criterion, so if you specify both {@link LineTerminator#CR} and
++	 * {@link LineTerminator#CR_LF} meeting a pair CR/LF will consider the whole pair a terminator.
++	 * 
++	 * <p>Terminators are <em>not</em> copied into <em>array</em> or included in the returned count. The
++	 * returned integer can be used to check whether the line is complete: if it is smaller than
++	 * <code>len</code>, then more bytes might be available, but note that this method (contrarily
++	 * to {@link #read(byte[], int, int)}) can legitimately return zero when <code>len</code>
++	 * is nonzero just because a terminator was found as the first character. Thus, the intended
++	 * usage of this method is to call it on a given array, check whether <code>len</code> bytes
++	 * have been read, and if so try again (possibly extending the array) until a number of read bytes
++	 * strictly smaller than <code>len</code> (possibly, -1) is returned.
++	 * 
++	 * <p>If you need to guarantee that a full line is read, use the following idiom:
++	 * <pre>
++	 * int start = off, len;
++	 * while( ( len = fbis.readLine( array, start, array.length - start, terminators ) ) == array.length - start ) {
++	 *     start += len;
++	 *     array = ByteArrays.grow( array, array.length + 1 );
++	 * }
++	 * </pre>
++	 *
++	 * <p>At the end of the loop, the line will be placed in <code>array</code> starting at
++	 * <code>off</code> (inclusive) and ending at <code>start + Math.max( len, 0 )</code> (exclusive).
++	 *
++	 * @param array byte array where the next line will be stored.
++	 * @param off the first byte to use in <code>array</code>.
++	 * @param len the maximum number of bytes to read.
++	 * @param terminators a set containing the line termination sequences that we want
++	 * to consider as valid.
++	 * @return the number of bytes actually placed in <code>array</code>, or -1 at end of file.
++	 * Note that the returned number will be <code>len</code> if no line termination sequence 
++	 * specified in <code>terminators</code> has been met before scanning <code>len</code> byte,
++	 * and if also we did not meet the end of file. 
++	 */
++
++	public int readLine( final byte[] array, final int off, final int len, final EnumSet<LineTerminator> terminators ) throws IOException {
++		ByteArrays.ensureOffsetLength( array ,off, len );
++		if ( len == 0 ) return 0; // 0-length reads always return 0
++		if ( noMoreCharacters() ) return -1;
++		int i, k = 0, remaining = len, read = 0; // The number of bytes still to be read
++		for(;;) {
++			for( i = 0; i < avail && i < remaining && ( k = buffer[ pos + i ] ) != '\n' && k != '\r' ; i++ );
++			System.arraycopy( buffer, pos, array, off + read, i );
++			pos += i; 
++			avail -= i;
++			read += i;
++			remaining -= i;
++			if ( remaining == 0 ) {
++				readBytes += read;
++				return read; // We did not stop because of a terminator
++			}
++			
++			if ( avail > 0 ) { // We met a terminator
++				if ( k == '\n' ) { // LF first
++					pos++;
++					avail--;
++					if ( terminators.contains( LineTerminator.LF ) ) {
++						readBytes += read + 1;
++						return read;
++					}
++					else {
++						array[ off + read++ ] = '\n';
++						remaining--;
++					}
++				}
++				else if ( k == '\r' ) { // CR first
++					pos++;
++					avail--;
++					
++					if ( terminators.contains( LineTerminator.CR_LF ) ) {
++						if ( avail > 0 ) {
++							if ( buffer[ pos ] == '\n' ) { // CR/LF with LF already in the buffer.
++								pos ++;
++								avail--;
++								readBytes += read + 2;
++								return read;
++							}
++						}
++						else { // We must search for the LF.
++							if ( noMoreCharacters() ) {
++								// Not found a matching LF because of end of file, will return CR in buffer if not a terminator
++
++								if ( ! terminators.contains( LineTerminator.CR ) ) {
++									array[ off + read++ ] = '\r';
++									remaining--;
++									readBytes += read;
++								}
++								else readBytes += read + 1;
++								
++								return read;
++							}
++							if ( buffer[ 0 ] == '\n' ) {
++								// Found matching LF, won't return terminators in the buffer
++								pos++;
++								avail--;
++								readBytes += read + 2;
++								return read;
++							}
++						}
++					}
++					
++					if ( terminators.contains( LineTerminator.CR ) ) {
++						readBytes += read + 1;
++						return read;
++					}
++					
++					array[ off + read++ ] = '\r';
++					remaining--;
++				}
++			}
++			else if ( noMoreCharacters() ) {
++				readBytes += read;
++				return read;
++			}
++		}
++	}
++
++	
++
++	public void position( long newPosition ) throws IOException {
++
++		final long position = readBytes;
++
++		/** Note that this check will succeed also in the case of
++		 * an empty buffer and position == newPosition. This behaviour is
++		 * intentional, as it delays buffering to when it is actually
++		 * necessary and avoids useless class the underlying stream. */
++		
++		if ( newPosition <= position + avail && newPosition >= position - pos ) {
++			pos += newPosition - position;
++			avail -= newPosition - position;
++			readBytes = newPosition;
++			return;
++		}
++
++		if ( repositionableStream != null ) repositionableStream.position( newPosition  );
++		else if ( fileChannel != null ) fileChannel.position( newPosition );
++		else throw new UnsupportedOperationException( "position() can only be called if the underlying byte stream implements the RepositionableStream interface or if the getChannel() method of the underlying byte stream exists and returns a FileChannel" );
++		readBytes = newPosition;
++
++		avail = pos = 0;
++	}
++
++	public long position() throws IOException {
++		return readBytes;
++	}
++
++	/** Returns the length of the underlying input stream, if it is {@linkplain MeasurableStream measurable}.
++	 *
++	 * @return the length of the underlying input stream.
++	 * @throws UnsupportedOperationException if the underlying input stream is not {@linkplain MeasurableStream measurable} and
++	 * cannot provide a {@link FileChannel}.
++	 */
++
++	public long length() throws IOException {
++		if ( measurableStream != null ) return measurableStream.length();
++		if ( fileChannel != null ) return fileChannel.size();
++		throw new UnsupportedOperationException();
++	}
++
++
++	/** Skips the given amount of bytes by repeated reads.
++	 *
++	 * <strong>Warning</strong>: this method uses destructively the internal buffer.
++	 *
++	 * @param n the number of bytes to skip.
++	 * @return the number of bytes actually skipped.
++	 * @see InputStream#skip(long)
++	 */
++
++	private long skipByReading( final long n ) throws IOException {
++		long toSkip = n;
++		int len;
++		while( toSkip > 0 ) {
++			len = is.read( buffer, 0, (int)Math.min( buffer.length, toSkip ) );
++			if ( len > 0 ) toSkip -= len;
++			else break;
++		}
++
++		return n - toSkip;
++	}
++
++
++	/** Skips over and discards the given number of bytes of data from this fast buffered input stream. 
++	 *
++	 * <p>As explained in the {@linkplain FastBufferedInputStream class documentation}, the semantics
++	 * of {@link InputStream#skip(long)} is fatally flawed. This method provides additional semantics as follows:
++	 * it will skip the provided number of bytes, unless the end of file has been reached.
++	 *
++	 * <p>Additionally, if the underlying input stream is {@link System#in} this method will use
++	 * repeated reads instead of invoking {@link InputStream#skip(long)}.
++	 *
++	 * @param n the number of bytes to skip.
++	 * @return the number of bytes actually skipped; it can be smaller than <code>n</code>
++	 * only if the end of file has been reached.
++	 * @see InputStream#skip(long)
++	 */
++
++	public long skip( final long n ) throws IOException {
++		if ( n <= avail ) {
++			final int m = (int)n;
++			pos += m;
++			avail -= m;
++			readBytes += n;
++			return n;
++		}
++
++		long toSkip = n - avail, result = 0;
++		avail = 0;
++
++		while ( toSkip != 0 && ( result = is == System.in ? skipByReading( toSkip ) : is.skip( toSkip ) ) < toSkip ) {
++			if ( result == 0 ) {
++				if ( is.read() == -1 ) break;
++				toSkip--;
++			}
++			else toSkip -= result;
++		}
++
++		final long t = n - ( toSkip - result );
++		readBytes += t;
++		return t;
++	}
++
++
++	public int available() throws IOException {
++		return (int)Math.min( is.available() + (long)avail, Integer.MAX_VALUE );
++	}
++
++	public void close() throws IOException {
++		if ( is == null ) return;
++		if ( is != System.in ) is.close();
++		is = null;
++		buffer = null;
++	}
++
++	/** Resets the internal logic of this fast buffered input stream, clearing the buffer. 
++	 *
++	 * <p>All buffering information is discarded, and the number of bytes read so far
++	 * (and thus, also the {@linkplain #position() current position})
++	 * is adjusted to reflect this fact. 
++	 *  
++	 * <p>This method is mainly useful for re-reading 
++	 * files that have been overwritten externally. 
++	 */
++
++	public void flush() {
++		if ( is == null ) return;
++		readBytes += avail; 
++		avail = pos = 0;
++	}
++
++	/** Resets the internal logic of this fast buffered input stream.
++	 * 
++	 * @deprecated As of <code>fastutil</code> 5.0.4, replaced by {@link #flush()}. The old
++	 * semantics of this method does not contradict {@link InputStream}'s contract, as
++	 * the semantics of {@link #reset()} is undefined if {@link InputStream#markSupported()}
++	 * returns false. On the other hand, the name was really a poor choice.
++	 */
++	@Deprecated
++	public void reset() {
++		flush();
++	}
++}
+diff --git a/src/main/java/org/torch/util/io/FastBufferedOutputStream.java b/src/main/java/org/torch/util/io/FastBufferedOutputStream.java
+new file mode 100644
+index 0000000..bd99ddb
+--- /dev/null
++++ b/src/main/java/org/torch/util/io/FastBufferedOutputStream.java
+@@ -0,0 +1,217 @@
++package org.torch.util.io;
++
++/**
++ * From fastutil project.
++ * @Link: https://github.com/vigna/fastutil
++ */
++
++/*		 
++ * Copyright (C) 2005-2016 Sebastiano Vigna
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License. 
++ */
++
++import java.io.IOException;
++import java.io.OutputStream;
++import java.nio.channels.FileChannel;
++
++/** Lightweight, unsynchronized output stream buffering class with
++ *  {@linkplain MeasurableStream measurability} and
++ *  {@linkplain RepositionableStream repositionability}.
++ *
++ * <P>This class provides buffering for output streams, but it does so with 
++ * purposes and an internal logic that are radically different from the ones
++ * adopted in {@link java.io.BufferedOutputStream}. The main features follow.
++ * 
++ * <ul>
++ * <li><P>All methods are unsychronized.
++ * 
++ * <li><P>As an additional feature, this class implements the {@link
++ * RepositionableStream} and {@link MeasurableStream} interfaces.  
++ * An instance of this class will try to cast
++ * the underlying byte stream to a {@link RepositionableStream} and to fetch by
++ * reflection the {@link java.nio.channels.FileChannel} underlying the given
++ * output stream, in this order. If either reference can be successfully
++ * fetched, you can use {@link #position(long)} to reposition the stream.
++ * Much in the same way, an instance of this class will try to cast the
++ * the underlying byte stream to a {@link MeasurableStream}, and if this
++ * operation is successful, or if a {@link java.nio.channels.FileChannel} can
++ * be detected, then {@link #position()} and {@link #length()} will work as expected.
++ * </ul>
++ * @since 4.4
++ */
++
++public class FastBufferedOutputStream extends MeasurableOutputStream implements RepositionableStream {
++	private static final boolean ASSERTS = false;
++	
++	/** The default size of the internal buffer in bytes (8Ki). */
++	public final static int DEFAULT_BUFFER_SIZE = 8 * 1024;
++
++	/** The internal buffer. */
++	protected byte buffer[];
++
++	/** The current position in the buffer. */
++	protected int pos;
++
++	/** The number of buffer bytes available starting from {@link #pos} 
++	 * (it must be always equal to <code>buffer.length - pos</code>). */
++	protected int avail;
++
++	/** The underlying output stream. */
++	protected OutputStream os;
++
++	/** The cached file channel underlying {@link #os}, if any. */
++	private FileChannel fileChannel;
++
++	/** {@link #os} cast to a positionable stream, if possible. */
++	private RepositionableStream repositionableStream;
++
++	/** {@link #os} cast to a measurable stream, if possible. */
++	private MeasurableStream measurableStream;
++
++	private static int ensureBufferSize( final int bufferSize ) {
++		if ( bufferSize <= 0 ) throw new IllegalArgumentException( "Illegal buffer size: " + bufferSize );
++		return bufferSize;
++	}
++		
++	/** Creates a new fast buffered output stream by wrapping a given output stream with a given buffer. 
++	 *
++	 * @param os an output stream to wrap.
++	 * @param buffer a buffer of positive length.
++	 */
++	public FastBufferedOutputStream( final OutputStream os, final byte[] buffer ) {
++		this.os = os;
++		ensureBufferSize( buffer.length );
++		this.buffer = buffer;
++		avail = buffer.length;
++		
++		if ( os instanceof RepositionableStream ) repositionableStream = (RepositionableStream)os;
++		if ( os instanceof MeasurableStream ) measurableStream = (MeasurableStream)os;
++			
++		if ( repositionableStream == null ) {
++				
++			try {
++				fileChannel = (FileChannel)( os.getClass().getMethod( "getChannel", new Class[] {} ) ).invoke( os, new Object[] {} );
++			}
++			catch( IllegalAccessException e ) {}
++			catch( IllegalArgumentException e ) {}
++			catch( NoSuchMethodException e ) {}
++			catch( java.lang.reflect.InvocationTargetException e ) {}
++			catch( ClassCastException e ) {}
++		}
++
++	}
++
++	/** Creates a new fast buffered output stream by wrapping a given output stream with a given buffer size. 
++	 *
++	 * @param os an output stream to wrap.
++	 * @param bufferSize the size in bytes of the internal buffer.
++	 */
++	public FastBufferedOutputStream( final OutputStream os, final int bufferSize ) {
++		this( os, new byte[ ensureBufferSize( bufferSize ) ] );
++	}
++
++	/** Creates a new fast buffered ouptut stream by wrapping a given output stream with a buffer of {@link #DEFAULT_BUFFER_SIZE} bytes. 
++	 *
++	 * @param os an output stream to wrap.
++	 */
++	public FastBufferedOutputStream( final OutputStream os ) {
++		this( os, DEFAULT_BUFFER_SIZE );
++	}
++
++	private void dumpBuffer( final boolean ifFull ) throws IOException {
++		if ( ! ifFull || avail == 0 ) {
++			os.write( buffer, 0, pos );
++			pos = 0;
++			avail = buffer.length;
++		}
++	}
++
++	public void write( final int b ) throws IOException {
++		if ( ASSERTS ) assert avail > 0;
++		avail--;
++		buffer[ pos++ ] = (byte)b;
++		dumpBuffer( true );
++	}
++
++
++	public void write( final byte b[], final int offset, final int length ) throws IOException {
++		if ( length >= buffer.length ) {
++			dumpBuffer( false );
++			os.write( b, offset, length );
++			return;
++		}
++		
++		if ( length <= avail ) {
++			// Copy in buffer
++			System.arraycopy( b, offset, buffer, pos, length );
++			pos += length;
++			avail -= length;
++			dumpBuffer( true );
++			return;
++		}
++		
++		dumpBuffer( false );
++		System.arraycopy( b, offset, buffer, 0, length );
++		pos = length;
++		avail -= length;
++	}
++
++	public void flush() throws IOException {
++		dumpBuffer( false );
++		os.flush();
++	}
++	
++	public void close() throws IOException {
++		if ( os == null ) return;
++		flush();
++		if ( os != System.out ) os.close();
++		os = null;
++		buffer = null;
++	}
++	
++	public long position() throws IOException {
++		if ( repositionableStream != null ) return repositionableStream.position() + pos;
++		else if ( measurableStream != null ) return measurableStream.position() + pos;
++		else if ( fileChannel != null ) return fileChannel.position() + pos;
++		else throw new UnsupportedOperationException( "position() can only be called if the underlying byte stream implements the MeasurableStream or RepositionableStream interface or if the getChannel() method of the underlying byte stream exists and returns a FileChannel" );
++	}
++
++	/** Repositions the stream.
++	 * 
++	 * <p>Note that this method performs a {@link #flush()} before changing the underlying stream position.
++	 */
++	
++	public void position( final long newPosition ) throws IOException {
++		flush();
++		if ( repositionableStream != null ) repositionableStream.position( newPosition  );
++		else if ( fileChannel != null ) fileChannel.position( newPosition );
++		else throw new UnsupportedOperationException( "position() can only be called if the underlying byte stream implements the RepositionableStream interface or if the getChannel() method of the underlying byte stream exists and returns a FileChannel" );
++	}
++
++	/** Returns the length of the underlying output stream, if it is {@linkplain MeasurableStream measurable}.
++	 *
++	 * <p>Note that this method performs a {@link #flush()} before detecting the length.
++	 * 
++	 * @return the length of the underlying output stream.
++	 * @throws UnsupportedOperationException if the underlying output stream is not {@linkplain MeasurableStream measurable} and
++	 * cannot provide a {@link FileChannel}.
++	 */
++
++	public long length() throws IOException {
++		flush();
++		if ( measurableStream != null ) return measurableStream.length();
++		if ( fileChannel != null ) return fileChannel.size();
++		throw new UnsupportedOperationException();
++	}
++}
+diff --git a/src/main/java/org/torch/util/io/FastByteArrayInputStream.java b/src/main/java/org/torch/util/io/FastByteArrayInputStream.java
+new file mode 100644
+index 0000000..03ea9fd
+--- /dev/null
++++ b/src/main/java/org/torch/util/io/FastByteArrayInputStream.java
+@@ -0,0 +1,131 @@
++package org.torch.util.io;
++
++/**
++ * From fastutil project.
++ * @Link: https://github.com/vigna/fastutil
++ */
++
++/*		 
++ * Copyright (C) 2005-2016 Sebastiano Vigna
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License. 
++ */
++
++/** Simple, fast and repositionable byte-array input stream.
++ *
++ * <p><strong>Warning</strong>: this class implements the correct semantics
++ * of {@link #read(byte[], int, int)} as described in {@link java.io.InputStream}.
++ * The implementation given in {@link java.io.ByteArrayInputStream} is broken,
++ * but it will never be fixed because it's too late.
++ *
++ * @author Sebastiano Vigna
++ */
++
++public class FastByteArrayInputStream extends MeasurableInputStream implements RepositionableStream {
++
++	/** The array backing the input stream. */
++	public byte[] array;
++
++	/** The first valid entry. */
++	public int offset;
++
++	/** The number of valid bytes in {@link #array} starting from {@link #offset}. */
++	public int length;
++
++	/** The current position as a distance from {@link #offset}. */
++	private int position;
++
++	/** The current mark as a position, or -1 if no mark exists. */
++	private int mark;
++
++	/** Creates a new array input stream using a given array fragment.
++	 *
++	 * @param array the backing array.
++	 * @param offset the first valid entry of the array.
++	 * @param length the number of valid bytes.
++	 */
++	public FastByteArrayInputStream( final byte[] array, final int offset, final int length ) {
++		this.array = array;
++		this.offset = offset;
++		this.length = length;
++	}
++
++	/** Creates a new array input stream using a given array. 
++	 *
++	 * @param array the backing array.
++	 */
++	public FastByteArrayInputStream( final byte[] array ) {
++		this( array, 0, array.length );
++	}
++
++	public boolean markSupported() {
++		return true;
++	}
++
++	public void reset() {
++		position = mark;
++	}
++
++	/** Closing a fast byte array input stream has no effect. */
++	public void close() {}
++
++	public void mark( final int dummy ) {
++		mark = position;
++	}
++
++	public int available() {
++		return length - position;
++	}
++
++	public long skip( long n ) {
++		if ( n <= length - position ) {
++			position += (int)n;
++			return n;
++		}
++		n = length - position;
++		position = length;
++		return n;
++	}
++
++	public int read() {
++		if ( length == position ) return -1;
++		return array[ offset + position++ ] & 0xFF;
++	}
++
++	/** Reads bytes from this byte-array input stream as 
++	 * specified in {@link java.io.InputStream#read(byte[], int, int)}.
++	 * Note that the implementation given in {@link java.io.ByteArrayInputStream#read(byte[], int, int)}
++	 * will return -1 on a zero-length read at EOF, contrarily to the specification. We won't.
++	 */
++	
++	public int read( final byte b[], final int offset, final int length ) {
++		if ( this.length == this.position ) return length == 0 ? 0 : -1;
++		final int n = Math.min( length, this.length - this.position );
++		System.arraycopy( array, this.offset + this.position, b, offset, n );
++		this.position += n;
++		return n;
++	}
++
++	public long position() {
++		return position;
++	}
++
++	public void position( final long newPosition ) {
++		position = (int)Math.min( newPosition, length );
++	}
++
++	@Override
++	public long length() {
++		return length;
++	}
++}
+diff --git a/src/main/java/org/torch/util/io/FastByteArrayOutputStream.java b/src/main/java/org/torch/util/io/FastByteArrayOutputStream.java
+new file mode 100644
+index 0000000..9a00a9d
+--- /dev/null
++++ b/src/main/java/org/torch/util/io/FastByteArrayOutputStream.java
+@@ -0,0 +1,113 @@
++package org.torch.util.io;
++
++/**
++ * From fastutil project.
++ * @Link: https://github.com/vigna/fastutil
++ */
++
++/*		 
++ * Copyright (C) 2005-2016 Sebastiano Vigna
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License. 
++ */
++
++import org.torch.util.bytes.ByteArrays;
++
++import java.io.IOException;
++
++/** Simple, fast byte-array output stream that exposes the backing array.
++ *
++ * <P>{@link java.io.ByteArrayOutputStream} is nice, but to get its content you
++ * must generate each time a new object. This doesn't happen here.
++ *
++ * <P>This class will automatically enlarge the backing array, doubling its
++ * size whenever new space is needed. The {@link #reset()} method will
++ * mark the content as empty, but will not decrease the capacity: use 
++ * {@link #trim()} for that purpose.
++ *
++ * @author Sebastiano Vigna
++ */
++
++public class FastByteArrayOutputStream extends MeasurableOutputStream implements RepositionableStream {
++
++	/** The array backing the output stream. */
++	public final static int DEFAULT_INITIAL_CAPACITY = 16;
++
++	/** The array backing the output stream. */
++	public byte[] array;
++
++	/** The number of valid bytes in {@link #array}. */
++	public int length;
++
++	/** The current writing position. */
++	private int position;
++
++	/** Creates a new array output stream with an initial capacity of {@link #DEFAULT_INITIAL_CAPACITY} bytes. */
++	public FastByteArrayOutputStream() {
++		this( DEFAULT_INITIAL_CAPACITY );
++	}
++
++	/** Creates a new array output stream with a given initial capacity.
++	 *
++	 * @param initialCapacity the initial length of the backing array.
++	 */
++	public FastByteArrayOutputStream( final int initialCapacity ) {
++		array = new byte[ initialCapacity ];
++	}
++
++	/** Creates a new array output stream wrapping a given byte array.
++	 *
++	 * @param a the byte array to wrap.
++	 */
++	public FastByteArrayOutputStream( final byte[] a ) {
++		array = a;
++	}
++
++	/** Marks this array output stream as empty. */
++	public void reset() {
++		length = 0;
++		position = 0;
++	}
++
++	/** Ensures that the length of the backing array is equal to {@link #length}. */
++	public void trim() {
++		array = ByteArrays.trim( array, length );
++	}
++
++	public void write( final int b ) {
++		if ( position >= array.length ) array = ByteArrays.grow( array, position + 1, length );
++		array[ position++ ] = (byte)b;
++		if ( length < position ) length = position;
++	}
++
++	public void write( final byte[] b, final int off, final int len ) throws IOException {
++		ByteArrays.ensureOffsetLength( b, off, len );
++		if ( position + len > array.length ) array = ByteArrays.grow( array, position + len, position );
++		System.arraycopy( b, off, array, position, len );
++		if ( position + len > length ) length = position += len;
++	}
++
++	public void position( long newPosition ) {
++		if ( position > Integer.MAX_VALUE ) throw new IllegalArgumentException( "Position too large: " + newPosition );
++		position = (int)newPosition;
++	}
++
++	public long position() {
++		return position;
++	}
++
++	@Override
++	public long length() throws IOException {
++		return length;
++	}
++}
+diff --git a/src/main/java/org/torch/util/io/MeasurableInputStream.java b/src/main/java/org/torch/util/io/MeasurableInputStream.java
+new file mode 100644
+index 0000000..ef05e21
+--- /dev/null
++++ b/src/main/java/org/torch/util/io/MeasurableInputStream.java
+@@ -0,0 +1,33 @@
++package org.torch.util.io;
++
++/**
++ * From fastutil project.
++ * @Link: https://github.com/vigna/fastutil
++ */
++
++/*		 
++ * Copyright (C) 2005-2016 Sebastiano Vigna
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License. 
++ */
++
++
++import java.io.InputStream;
++
++/** An {@link InputStream} that implements also the {@link MeasurableStream} interface.
++ *
++ * @since 5.0.4
++ */
++
++public abstract class MeasurableInputStream extends InputStream implements MeasurableStream {
++}
+diff --git a/src/main/java/org/torch/util/io/MeasurableOutputStream.java b/src/main/java/org/torch/util/io/MeasurableOutputStream.java
+new file mode 100644
+index 0000000..9ec4de4
+--- /dev/null
++++ b/src/main/java/org/torch/util/io/MeasurableOutputStream.java
+@@ -0,0 +1,32 @@
++package org.torch.util.io;
++
++/**
++ * From fastutil project.
++ * @Link: https://github.com/vigna/fastutil
++ */
++
++/*		 
++ * Copyright (C) 2005-2016 Sebastiano Vigna
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License. 
++ */
++
++import java.io.OutputStream;
++
++/** An {@link OutputStream} that implements also the {@link MeasurableStream} interface.
++ *
++ * @since 6.0.0
++ */
++
++public abstract class MeasurableOutputStream extends OutputStream implements MeasurableStream {
++}
+diff --git a/src/main/java/org/torch/util/io/MeasurableStream.java b/src/main/java/org/torch/util/io/MeasurableStream.java
+new file mode 100644
+index 0000000..d448e8d
+--- /dev/null
++++ b/src/main/java/org/torch/util/io/MeasurableStream.java
+@@ -0,0 +1,56 @@
++package org.torch.util.io;
++
++/**
++ * From fastutil project.
++ * @Link: https://github.com/vigna/fastutil
++ */
++
++/*		 
++ * Copyright (C) 2005-2016 Sebastiano Vigna
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License. 
++ */
++
++
++import java.io.IOException;
++
++/** An stream that provides eager access to its length,
++ * and keeps track of the current position (e.g., the number of bytes read so far, or the current
++ * position of the file pointer). 
++ *
++ * <P>This class has two methods, both specified as optional. This apparently bizarre
++ * behaviour is necessary because of wrapper classes which use reflection 
++ * to support those methods (see, e.g., {@link MeasurableInputStream}, {@link FastBufferedInputStream} and {@link FastBufferedOutputStream}).
++ * 
++ * @since 6.0.0
++ */
++
++public interface MeasurableStream  {
++	
++	/** Returns the overall length of this stream (optional operation). In most cases, this will require the
++	 *  stream to perform some extra action, possibly changing the state of the input stream itself (typically, reading
++	 *  all the bytes up to the end, or flushing on output stream).
++	 *  Implementing classes should always document what state will the input stream be in
++	 *  after calling this method, and which kind of exception could be thrown.
++	 */ 
++	public long length() throws IOException;
++
++	/** Returns the current position in this stream (optional operation).
++	 * 
++	 * <p>Usually, the position is just the number of bytes read or written
++	 * since the stream was opened, but in the case of a
++	 * {@link it.unimi.dsi.fastutil.io.RepositionableStream} it
++	 * represent the current position.
++	 */ 
++	public long position() throws IOException;
++}
+diff --git a/src/main/java/org/torch/util/io/RepositionableStream.java b/src/main/java/org/torch/util/io/RepositionableStream.java
+new file mode 100644
+index 0000000..8d89fd4
+--- /dev/null
++++ b/src/main/java/org/torch/util/io/RepositionableStream.java
+@@ -0,0 +1,45 @@
++package org.torch.util.io;
++
++/**
++ * From fastutil project.
++ * @Link: https://github.com/vigna/fastutil
++ */
++
++/*		 
++ * Copyright (C) 2005-2016 Sebastiano Vigna
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License. 
++ */
++
++
++/** A basic interface specifying positioning methods for a byte stream.
++ *
++ * @author Sebastiano Vigna
++ * @since 4.4
++ */
++
++public interface RepositionableStream {
++
++	/** Sets the current stream position.
++	 *
++	 * @param newPosition the new stream position.
++	 */
++	void position( long newPosition ) throws java.io.IOException;
++
++	/** Returns the current stream position.
++	 *
++	 * @return the current stream position.
++	 */
++	long position() throws java.io.IOException;
++
++}
+-- 
+2.8.2.windows.1
+

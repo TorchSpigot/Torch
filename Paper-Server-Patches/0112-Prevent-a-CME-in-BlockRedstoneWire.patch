@@ -1,0 +1,33 @@
+From 49dc84c9babd6e460aae62b3ce04d7d18f8d79cf Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Tue, 12 Jul 2016 18:31:02 +0800
+Subject: [PATCH] Prevent-a-CME-in-BlockRedstoneWire
+
+
+diff --git a/src/main/java/net/minecraft/server/BlockRedstoneWire.java b/src/main/java/net/minecraft/server/BlockRedstoneWire.java
+index 3d4449f..bc132b3 100644
+--- a/src/main/java/net/minecraft/server/BlockRedstoneWire.java
++++ b/src/main/java/net/minecraft/server/BlockRedstoneWire.java
+@@ -108,10 +108,16 @@ public class BlockRedstoneWire extends Block {
+     }
+ 
+     private IBlockData e(World world, BlockPosition blockposition, IBlockData iblockdata) {
+-        iblockdata = this.a(world, blockposition, blockposition, iblockdata);
+-        ArrayList arraylist = Lists.newArrayList(this.B);
++        // Migot start
++        ArrayList arraylist;
++        synchronized(this.B) {
++            iblockdata = this.a(world, blockposition, blockposition, iblockdata);
++            arraylist = Lists.newArrayList(this.B);
++
++            this.B.clear();
++        }
++        // Migot end
+ 
+-        this.B.clear();
+         Iterator iterator = arraylist.iterator();
+ 
+         while (iterator.hasNext()) {
+-- 
+2.8.2.windows.1
+

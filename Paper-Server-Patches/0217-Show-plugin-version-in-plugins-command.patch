@@ -1,0 +1,66 @@
+From 2acc00f775496124cd75d2aff919e4d9e627f960 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 7 Aug 2016 02:27:13 +0800
+Subject: [PATCH] Show plugin version in plugins command.
+
+
+diff --git a/src/main/java/org/bukkit/command/defaults/PluginsCommand.java b/src/main/java/org/bukkit/command/defaults/PluginsCommand.java
+new file mode 100644
+index 0000000..db65f15
+--- /dev/null
++++ b/src/main/java/org/bukkit/command/defaults/PluginsCommand.java
+@@ -0,0 +1,51 @@
++package org.bukkit.command.defaults;
++
++import java.util.Arrays;
++
++import org.bukkit.Bukkit;
++import org.bukkit.ChatColor;
++import org.bukkit.command.CommandSender;
++import org.bukkit.plugin.Plugin;
++
++public class PluginsCommand extends BukkitCommand {
++    public PluginsCommand(String name) {
++        super(name);
++        this.description = "Gets a list of plugins running on the server";
++        this.usageMessage = "/plugins";
++        this.setPermission("bukkit.command.plugins");
++        this.setAliases(Arrays.asList("pl"));
++    }
++
++    @Override
++    public boolean execute(CommandSender sender, String currentAlias, String[] args) {
++        if (!testPermission(sender)) return true;
++
++        sender.sendMessage("Plugins " + getPluginList());
++        return true;
++    }
++
++    private String getPluginList() {
++        StringBuilder pluginList = new StringBuilder();
++        Plugin[] plugins = Bukkit.getPluginManager().getPlugins();
++
++        for (Plugin plugin : plugins) {
++            if (pluginList.length() > 0) {
++                pluginList.append(ChatColor.WHITE);
++                pluginList.append(", ");
++            }
++
++            pluginList.append(plugin.isEnabled() ? ChatColor.GREEN : ChatColor.RED);
++            pluginList.append(plugin.getDescription().getName() + "(" + plugin.getDescription().getVersion() + ")");
++        }
++
++        return "(" + plugins.length + "): " + pluginList.toString();
++    }
++
++    // Spigot Start
++    @Override
++    public java.util.List<String> tabComplete(CommandSender sender, String alias, String[] args) throws IllegalArgumentException
++    {
++        return java.util.Collections.emptyList();
++    }
++    // Spigot End
++}
+-- 
+2.8.2.windows.1
+

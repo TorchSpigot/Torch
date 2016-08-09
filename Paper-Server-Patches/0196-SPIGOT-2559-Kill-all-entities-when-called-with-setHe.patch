@@ -1,0 +1,24 @@
+From e46eee21207b6fa912d038b6aa23cbe73e96f92c Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 30 Jul 2016 15:45:17 +0800
+Subject: [PATCH] SPIGOT-2559: Kill all entities when called with setHealth(0)
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java
+index b1e63f0..b8fb477 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java
+@@ -104,8 +104,8 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
+         }
+         // Paper end
+ 
+-        if (entity instanceof EntityPlayer && health == 0) {
+-            ((EntityPlayer) entity).die(DamageSource.GENERIC);
++        if (health == 0) {
++            getHandle().die(DamageSource.GENERIC);
+         }
+ 
+         // Paper start - wrap, see above
+-- 
+2.8.2.windows.1
+

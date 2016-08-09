@@ -1,4 +1,4 @@
-From efaa62417a73eace2af011fd1b3a95192fef112f Mon Sep 17 00:00:00 2001
+From fbe6a195764f00795dc3aa3ddd826d81b9280199 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 09:33:19 +0800
 Subject: [PATCH] SPIGOT-2474: Use .die() to set entity remove status

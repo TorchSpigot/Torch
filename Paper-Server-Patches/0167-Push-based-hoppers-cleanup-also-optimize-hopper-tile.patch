@@ -1,0 +1,417 @@
+From 1f1e375f259aa7d78b451fc3f29222d5d87cf057 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 23 Jul 2016 14:11:19 +0800
+Subject: [PATCH] Push based hoppers cleanup, also optimize hopper tile.
+
+
+diff --git a/src/main/java/com/destroystokyo/paper/HopperPusher.java b/src/main/java/com/destroystokyo/paper/HopperPusher.java
+index 9b21fb1..826fd2d 100644
+--- a/src/main/java/com/destroystokyo/paper/HopperPusher.java
++++ b/src/main/java/com/destroystokyo/paper/HopperPusher.java
+@@ -29,7 +29,7 @@ public interface HopperPusher {
+                      * This operation doesn't work both ways!
+                      * Make sure you check if the entity's box intersects the hopper's box, not vice versa!
+                      */
+-                    if (this.getBoundingBox().b(hopperBoundingBox)) {
++                    if (this.getBoundingBox().intersects(hopperBoundingBox)) {
+                         return hopper;
+                     }
+                 }
+diff --git a/src/main/java/net/minecraft/server/AxisAlignedBB.java b/src/main/java/net/minecraft/server/AxisAlignedBB.java
+new file mode 100644
+index 0000000..4da37b6
+--- /dev/null
++++ b/src/main/java/net/minecraft/server/AxisAlignedBB.java
+@@ -0,0 +1,304 @@
++package net.minecraft.server;
++
++import com.google.common.annotations.VisibleForTesting;
++import javax.annotation.Nullable;
++
++public class AxisAlignedBB {
++
++    public final double a;
++    public final double b;
++    public final double c;
++    public final double d;
++    public final double e;
++    public final double f;
++
++    public AxisAlignedBB(double d0, double d1, double d2, double d3, double d4, double d5) {
++        this.a = Math.min(d0, d3);
++        this.b = Math.min(d1, d4);
++        this.c = Math.min(d2, d5);
++        this.d = Math.max(d0, d3);
++        this.e = Math.max(d1, d4);
++        this.f = Math.max(d2, d5);
++    }
++
++    public AxisAlignedBB(BlockPosition blockposition) {
++        this((double) blockposition.getX(), (double) blockposition.getY(), (double) blockposition.getZ(), (double) (blockposition.getX() + 1), (double) (blockposition.getY() + 1), (double) (blockposition.getZ() + 1));
++    }
++
++    public AxisAlignedBB(BlockPosition blockposition, BlockPosition blockposition1) {
++        this((double) blockposition.getX(), (double) blockposition.getY(), (double) blockposition.getZ(), (double) blockposition1.getX(), (double) blockposition1.getY(), (double) blockposition1.getZ());
++    }
++
++    public AxisAlignedBB e(double d0) {
++        return new AxisAlignedBB(this.a, this.b, this.c, this.d, d0, this.f);
++    }
++
++    public boolean equals(Object object) {
++        if (this == object) {
++            return true;
++        } else if (!(object instanceof AxisAlignedBB)) {
++            return false;
++        } else {
++            AxisAlignedBB axisalignedbb = (AxisAlignedBB) object;
++
++            return Double.compare(axisalignedbb.a, this.a) != 0 ? false : (Double.compare(axisalignedbb.b, this.b) != 0 ? false : (Double.compare(axisalignedbb.c, this.c) != 0 ? false : (Double.compare(axisalignedbb.d, this.d) != 0 ? false : (Double.compare(axisalignedbb.e, this.e) != 0 ? false : Double.compare(axisalignedbb.f, this.f) == 0))));
++        }
++    }
++
++    public int hashCode() {
++        long i = Double.doubleToLongBits(this.a);
++        int j = (int) (i ^ i >>> 32);
++
++        i = Double.doubleToLongBits(this.b);
++        j = 31 * j + (int) (i ^ i >>> 32);
++        i = Double.doubleToLongBits(this.c);
++        j = 31 * j + (int) (i ^ i >>> 32);
++        i = Double.doubleToLongBits(this.d);
++        j = 31 * j + (int) (i ^ i >>> 32);
++        i = Double.doubleToLongBits(this.e);
++        j = 31 * j + (int) (i ^ i >>> 32);
++        i = Double.doubleToLongBits(this.f);
++        j = 31 * j + (int) (i ^ i >>> 32);
++        return j;
++    }
++
++    public AxisAlignedBB a(double d0, double d1, double d2) {
++        double d3 = this.a;
++        double d4 = this.b;
++        double d5 = this.c;
++        double d6 = this.d;
++        double d7 = this.e;
++        double d8 = this.f;
++
++        if (d0 < 0.0D) {
++            d3 += d0;
++        } else if (d0 > 0.0D) {
++            d6 += d0;
++        }
++
++        if (d1 < 0.0D) {
++            d4 += d1;
++        } else if (d1 > 0.0D) {
++            d7 += d1;
++        }
++
++        if (d2 < 0.0D) {
++            d5 += d2;
++        } else if (d2 > 0.0D) {
++            d8 += d2;
++        }
++
++        return new AxisAlignedBB(d3, d4, d5, d6, d7, d8);
++    }
++
++    public AxisAlignedBB grow(double d0, double d1, double d2) {
++        double d3 = this.a - d0;
++        double d4 = this.b - d1;
++        double d5 = this.c - d2;
++        double d6 = this.d + d0;
++        double d7 = this.e + d1;
++        double d8 = this.f + d2;
++
++        return new AxisAlignedBB(d3, d4, d5, d6, d7, d8);
++    }
++
++    public AxisAlignedBB g(double d0) {
++        return this.grow(d0, d0, d0);
++    }
++
++    public AxisAlignedBB a(AxisAlignedBB axisalignedbb) {
++        double d0 = Math.min(this.a, axisalignedbb.a);
++        double d1 = Math.min(this.b, axisalignedbb.b);
++        double d2 = Math.min(this.c, axisalignedbb.c);
++        double d3 = Math.max(this.d, axisalignedbb.d);
++        double d4 = Math.max(this.e, axisalignedbb.e);
++        double d5 = Math.max(this.f, axisalignedbb.f);
++
++        return new AxisAlignedBB(d0, d1, d2, d3, d4, d5);
++    }
++
++    public AxisAlignedBB c(double d0, double d1, double d2) {
++        return new AxisAlignedBB(this.a + d0, this.b + d1, this.c + d2, this.d + d0, this.e + d1, this.f + d2);
++    }
++
++    public AxisAlignedBB a(BlockPosition blockposition) {
++        return new AxisAlignedBB(this.a + (double) blockposition.getX(), this.b + (double) blockposition.getY(), this.c + (double) blockposition.getZ(), this.d + (double) blockposition.getX(), this.e + (double) blockposition.getY(), this.f + (double) blockposition.getZ());
++    }
++
++    public double a(AxisAlignedBB axisalignedbb, double d0) {
++        if (axisalignedbb.e > this.b && axisalignedbb.b < this.e && axisalignedbb.f > this.c && axisalignedbb.c < this.f) {
++            double d1;
++
++            if (d0 > 0.0D && axisalignedbb.d <= this.a) {
++                d1 = this.a - axisalignedbb.d;
++                if (d1 < d0) {
++                    d0 = d1;
++                }
++            } else if (d0 < 0.0D && axisalignedbb.a >= this.d) {
++                d1 = this.d - axisalignedbb.a;
++                if (d1 > d0) {
++                    d0 = d1;
++                }
++            }
++
++            return d0;
++        } else {
++            return d0;
++        }
++    }
++
++    public double b(AxisAlignedBB axisalignedbb, double d0) {
++        if (axisalignedbb.d > this.a && axisalignedbb.a < this.d && axisalignedbb.f > this.c && axisalignedbb.c < this.f) {
++            double d1;
++
++            if (d0 > 0.0D && axisalignedbb.e <= this.b) {
++                d1 = this.b - axisalignedbb.e;
++                if (d1 < d0) {
++                    d0 = d1;
++                }
++            } else if (d0 < 0.0D && axisalignedbb.b >= this.e) {
++                d1 = this.e - axisalignedbb.b;
++                if (d1 > d0) {
++                    d0 = d1;
++                }
++            }
++
++            return d0;
++        } else {
++            return d0;
++        }
++    }
++
++    public double c(AxisAlignedBB axisalignedbb, double d0) {
++        if (axisalignedbb.d > this.a && axisalignedbb.a < this.d && axisalignedbb.e > this.b && axisalignedbb.b < this.e) {
++            double d1;
++
++            if (d0 > 0.0D && axisalignedbb.f <= this.c) {
++                d1 = this.c - axisalignedbb.f;
++                if (d1 < d0) {
++                    d0 = d1;
++                }
++            } else if (d0 < 0.0D && axisalignedbb.c >= this.f) {
++                d1 = this.f - axisalignedbb.c;
++                if (d1 > d0) {
++                    d0 = d1;
++                }
++            }
++
++            return d0;
++        } else {
++            return d0;
++        }
++    }
++
++	public final boolean intersects(AxisAlignedBB intersecting) { return this.b(intersecting); }
++    public boolean b(AxisAlignedBB axisalignedbb) {
++        return this.a(axisalignedbb.a, axisalignedbb.b, axisalignedbb.c, axisalignedbb.d, axisalignedbb.e, axisalignedbb.f);
++    }
++
++    public boolean a(double d0, double d1, double d2, double d3, double d4, double d5) {
++        return this.a < d3 && this.d > d0 && this.b < d4 && this.e > d1 && this.c < d5 && this.f > d2;
++    }
++
++    public boolean a(Vec3D vec3d) {
++        return vec3d.x > this.a && vec3d.x < this.d ? (vec3d.y > this.b && vec3d.y < this.e ? vec3d.z > this.c && vec3d.z < this.f : false) : false;
++    }
++
++    public double a() {
++        double d0 = this.d - this.a;
++        double d1 = this.e - this.b;
++        double d2 = this.f - this.c;
++
++        return (d0 + d1 + d2) / 3.0D;
++    }
++
++    public AxisAlignedBB shrink(double d0) {
++        return this.g(-d0);
++    }
++
++    @Nullable
++    public MovingObjectPosition a(Vec3D vec3d, Vec3D vec3d1) {
++        Vec3D vec3d2 = this.a(this.a, vec3d, vec3d1);
++        EnumDirection enumdirection = EnumDirection.WEST;
++        Vec3D vec3d3 = this.a(this.d, vec3d, vec3d1);
++
++        if (vec3d3 != null && this.a(vec3d, vec3d2, vec3d3)) {
++            vec3d2 = vec3d3;
++            enumdirection = EnumDirection.EAST;
++        }
++
++        vec3d3 = this.b(this.b, vec3d, vec3d1);
++        if (vec3d3 != null && this.a(vec3d, vec3d2, vec3d3)) {
++            vec3d2 = vec3d3;
++            enumdirection = EnumDirection.DOWN;
++        }
++
++        vec3d3 = this.b(this.e, vec3d, vec3d1);
++        if (vec3d3 != null && this.a(vec3d, vec3d2, vec3d3)) {
++            vec3d2 = vec3d3;
++            enumdirection = EnumDirection.UP;
++        }
++
++        vec3d3 = this.c(this.c, vec3d, vec3d1);
++        if (vec3d3 != null && this.a(vec3d, vec3d2, vec3d3)) {
++            vec3d2 = vec3d3;
++            enumdirection = EnumDirection.NORTH;
++        }
++
++        vec3d3 = this.c(this.f, vec3d, vec3d1);
++        if (vec3d3 != null && this.a(vec3d, vec3d2, vec3d3)) {
++            vec3d2 = vec3d3;
++            enumdirection = EnumDirection.SOUTH;
++        }
++
++        return vec3d2 == null ? null : new MovingObjectPosition(vec3d2, enumdirection);
++    }
++
++    @VisibleForTesting
++    boolean a(Vec3D vec3d, @Nullable Vec3D vec3d1, Vec3D vec3d2) {
++        return vec3d1 == null || vec3d.distanceSquared(vec3d2) < vec3d.distanceSquared(vec3d1);
++    }
++
++    @Nullable
++    @VisibleForTesting
++    Vec3D a(double d0, Vec3D vec3d, Vec3D vec3d1) {
++        Vec3D vec3d2 = vec3d.a(vec3d1, d0);
++
++        return vec3d2 != null && this.b(vec3d2) ? vec3d2 : null;
++    }
++
++    @Nullable
++    @VisibleForTesting
++    Vec3D b(double d0, Vec3D vec3d, Vec3D vec3d1) {
++        Vec3D vec3d2 = vec3d.b(vec3d1, d0);
++
++        return vec3d2 != null && this.c(vec3d2) ? vec3d2 : null;
++    }
++
++    @Nullable
++    @VisibleForTesting
++    Vec3D c(double d0, Vec3D vec3d, Vec3D vec3d1) {
++        Vec3D vec3d2 = vec3d.c(vec3d1, d0);
++
++        return vec3d2 != null && this.d(vec3d2) ? vec3d2 : null;
++    }
++
++    @VisibleForTesting
++    public boolean b(Vec3D vec3d) {
++        return vec3d.y >= this.b && vec3d.y <= this.e && vec3d.z >= this.c && vec3d.z <= this.f;
++    }
++
++    @VisibleForTesting
++    public boolean c(Vec3D vec3d) {
++        return vec3d.x >= this.a && vec3d.x <= this.d && vec3d.z >= this.c && vec3d.z <= this.f;
++    }
++
++    @VisibleForTesting
++    public boolean d(Vec3D vec3d) {
++        return vec3d.x >= this.a && vec3d.x <= this.d && vec3d.y >= this.b && vec3d.y <= this.e;
++    }
++
++    public String toString() {
++        return "box[" + this.a + ", " + this.b + ", " + this.c + " -> " + this.d + ", " + this.e + ", " + this.f + "]";
++    }
++}
+diff --git a/src/main/java/net/minecraft/server/TileEntityHopper.java b/src/main/java/net/minecraft/server/TileEntityHopper.java
+index a6e8ae7..f1a5755 100644
+--- a/src/main/java/net/minecraft/server/TileEntityHopper.java
++++ b/src/main/java/net/minecraft/server/TileEntityHopper.java
+@@ -117,11 +117,12 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+             NBTTagList nbttaglist = new NBTTagList();
+ 
+             for (int i = 0; i < this.items.length; ++i) {
+-                if (this.items[i] != null) {
++				ItemStack item = this.items[i];
++                if (item != null) {
+                     NBTTagCompound nbttagcompound1 = new NBTTagCompound();
+ 
+                     nbttagcompound1.setByte("Slot", (byte) i);
+-                    this.items[i].save(nbttagcompound1);
++                    item.save(nbttagcompound1);
+                     nbttaglist.add(nbttagcompound1);
+                 }
+             }
+@@ -244,7 +245,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+     }
+ 
+     // TacoSpigot start
+-    private boolean mayAcceptItems = true;
++    private boolean mayAcceptItems = false;
+ 
+     public boolean canAcceptItems() {
+         return mayAcceptItems;
+@@ -254,10 +255,8 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+ 	boolean isFull() { return q(); } // Torch - OBFHELPER
+     private boolean q() {
+         ItemStack[] aitemstack = this.items;
+-        int i = aitemstack.length;
+ 
+-        for (int j = 0; j < i; ++j) {
+-            ItemStack itemstack = aitemstack[j];
++        for (ItemStack itemstack : aitemstack) {
+ 
+             if (itemstack != null) {
+                 return false;
+@@ -269,10 +268,8 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+ 
+     private boolean r() {
+         ItemStack[] aitemstack = this.items;
+-        int i = aitemstack.length;
+ 
+-        for (int j = 0; j < i; ++j) {
+-            ItemStack itemstack = aitemstack[j];
++        for (ItemStack itemstack : aitemstack) {
+ 
+             if (itemstack == null || itemstack.count != itemstack.getMaxStackSize()) {
+                 return false;
+@@ -359,8 +356,8 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+             IWorldInventory iworldinventory = (IWorldInventory) iinventory;
+             int[] aint = iworldinventory.getSlotsForFace(enumdirection);
+ 
+-            for (int i = 0; i < aint.length; ++i) {
+-                ItemStack itemstack = iworldinventory.getItem(aint[i]);
++            for (int i : aint) {
++                ItemStack itemstack = iworldinventory.getItem(i);
+ 
+                 if (itemstack == null || itemstack.count != itemstack.getMaxStackSize()) {
+                     return false;
+@@ -386,8 +383,8 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+             IWorldInventory iworldinventory = (IWorldInventory) iinventory;
+             int[] aint = iworldinventory.getSlotsForFace(enumdirection);
+ 
+-            for (int i = 0; i < aint.length; ++i) {
+-                if (iworldinventory.getItem(aint[i]) != null) {
++            for (int i : aint) {
++                if (iworldinventory.getItem(i) != null) {
+                     return false;
+                 }
+             }
+@@ -425,8 +422,8 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+                 IWorldInventory iworldinventory = (IWorldInventory) iinventory;
+                 int[] aint = iworldinventory.getSlotsForFace(enumdirection);
+ 
+-                for (int i = 0; i < aint.length; ++i) {
+-                    if (a(ihopper, iinventory, aint[i], enumdirection)) {
++                for (int i : aint) {
++                    if (a(ihopper, iinventory, i, enumdirection)) {
+                         return true;
+                     }
+                 }
+-- 
+2.8.2.windows.1
+

@@ -1,0 +1,279 @@
+From eff90b13d30fe06d2aef871da8077d4dbc1a6168 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 7 Aug 2016 03:03:06 +0800
+Subject: [PATCH] Add new FishSpecies. Fixes BUKKIT-5097
+
+
+diff --git a/src/main/java/org/bukkit/FishSpecies.java b/src/main/java/org/bukkit/FishSpecies.java
+new file mode 100644
+index 0000000..6aa5d0f
+--- /dev/null
++++ b/src/main/java/org/bukkit/FishSpecies.java
+@@ -0,0 +1,65 @@
++package org.bukkit;
++
++import java.util.Map;
++
++import com.google.common.collect.Maps;
++
++/**
++ * Represents the different species of fish.
++ */
++public enum FishSpecies {
++    /**
++     * Represents the common fish species.
++     */
++    GENERIC(0x0),
++    /**
++     * Represents salmon.
++     */
++    SALMON(0x1),
++    /**
++     * Represents clownfish.
++     */
++    CLOWNFISH(0x2),
++    /**
++     * Represents pufferfish.
++     */
++    PUFFERFISH(0x3),
++    ;
++
++    private final byte data;
++    private final static Map<Byte, FishSpecies> BY_DATA = Maps.newHashMap();
++
++    private FishSpecies(final int data) {
++        this.data = (byte) data;
++    }
++
++    /**
++     * Gets the associated data value representing this species
++     *
++     * @return A byte containing the data value of this fish species
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public byte getData() {
++        return data;
++    }
++
++    /**
++     * Gets the FishSpecies with the given data value
++     *
++     * @param data Data value to fetch
++     * @return The {@link FishSpecies} representing the given value, or null if
++     *         it doesn't exist
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public static FishSpecies getByData(final byte data) {
++        return BY_DATA.get(data);
++    }
++
++    static {
++        for (FishSpecies species : values()) {
++            BY_DATA.put(species.data, species);
++        }
++    }
++}
+\ No newline at end of file
+diff --git a/src/main/java/org/bukkit/Material.java b/src/main/java/org/bukkit/Material.java
+index e834483..18f6e3d 100644
+--- a/src/main/java/org/bukkit/Material.java
++++ b/src/main/java/org/bukkit/Material.java
+@@ -15,6 +15,8 @@ import org.bukkit.material.Coal;
+ import org.bukkit.material.CocoaPlant;
+ import org.bukkit.material.Command;
+ import org.bukkit.material.Comparator;
++import org.bukkit.material.CookedFish;
++import org.bukkit.material.RawFish;
+ import org.bukkit.material.Crops;
+ import org.bukkit.material.DetectorRail;
+ import org.bukkit.material.SnowLayer;
+@@ -377,8 +379,8 @@ public enum Material {
+     FISHING_ROD(346, 1, 64),
+     WATCH(347),
+     GLOWSTONE_DUST(348),
+-    RAW_FISH(349),
+-    COOKED_FISH(350),
++    RAW_FISH(349, RawFish.class),
++    COOKED_FISH(350, CookedFish.class),
+     INK_SACK(351, Dye.class),
+     BONE(352),
+     SUGAR(353),
+diff --git a/src/main/java/org/bukkit/material/CookedFish.java b/src/main/java/org/bukkit/material/CookedFish.java
+new file mode 100644
+index 0000000..7a6690c
+--- /dev/null
++++ b/src/main/java/org/bukkit/material/CookedFish.java
+@@ -0,0 +1,80 @@
++package org.bukkit.material;
++
++import org.apache.commons.lang.Validate;
++import org.bukkit.FishSpecies;
++import org.bukkit.Material;
++
++/**
++ * Represents the different types of Cooked Fish.
++ */
++public class CookedFish extends MaterialData {
++    public CookedFish() {
++        super(Material.COOKED_FISH);
++    }
++
++    public CookedFish(FishSpecies species) {
++        this();
++        setSpecies(species);
++    }
++
++    /**
++     *
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public CookedFish(final int type) {
++        super(type);
++    }
++
++    public CookedFish(final Material type) {
++        super(type);
++    }
++
++    /**
++     *
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public CookedFish(final int type, final byte data) {
++        super(type, data);
++    }
++
++    /**
++     *
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public CookedFish(final Material type, final byte data) {
++        super(type, data);
++    }
++
++    /**
++     * Gets the current species of this fish
++     *
++     * @return FishSpecies of this fish
++     */
++    public FishSpecies getSpecies() {
++        return FishSpecies.getByData(getData());
++    }
++
++    /**
++     * Sets the species of this fish
++     *
++     * @param species New species of this fish
++     */
++    public void setSpecies(FishSpecies species) {
++        Validate.notNull(species, "FishSpecies cannot be null");
++
++        setData(species.getData());
++    }
++
++    @Override
++    public String toString() {
++        return getSpecies() + " " + super.toString();
++    }
++
++    @Override
++    public CookedFish clone() {
++        return (CookedFish) super.clone();
++    }
++}
+\ No newline at end of file
+diff --git a/src/main/java/org/bukkit/material/RawFish.java b/src/main/java/org/bukkit/material/RawFish.java
+new file mode 100644
+index 0000000..052cbe3
+--- /dev/null
++++ b/src/main/java/org/bukkit/material/RawFish.java
+@@ -0,0 +1,80 @@
++package org.bukkit.material;
++
++import org.apache.commons.lang.Validate;
++import org.bukkit.FishSpecies;
++import org.bukkit.Material;
++
++/**
++ * Represents the different types of Raw Fish.
++ */
++public class RawFish extends MaterialData {
++    public RawFish() {
++        super(Material.RAW_FISH);
++    }
++
++    public RawFish(FishSpecies species) {
++        this();
++        setSpecies(species);
++    }
++
++    /**
++     *
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public RawFish(final int type) {
++        super(type);
++    }
++
++    public RawFish(final Material type) {
++        super(type);
++    }
++
++    /**
++     *
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public RawFish(final int type, final byte data) {
++        super(type, data);
++    }
++
++    /**
++     *
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public RawFish(final Material type, final byte data) {
++        super(type, data);
++    }
++
++    /**
++     * Gets the current species of this fish
++     *
++     * @return FishSpecies of this fish
++     */
++    public FishSpecies getSpecies() {
++        return FishSpecies.getByData(getData());
++    }
++
++    /**
++     * Sets the species of this fish
++     *
++     * @param species New species of this fish
++     */
++    public void setSpecies(FishSpecies species) {
++        Validate.notNull(species, "FishSpecies cannot be null");
++
++        setData(species.getData());
++    }
++
++    @Override
++    public String toString() {
++        return getSpecies() + " " + super.toString();
++    }
++
++    @Override
++    public RawFish clone() {
++        return (RawFish) super.clone();
++    }
++}
+\ No newline at end of file
+-- 
+2.8.2.windows.1
+

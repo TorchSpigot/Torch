@@ -1,0 +1,1116 @@
+From e30d4ae16affcff1fc4dcc3a5f65b660ddbb5365 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Thu, 21 Jul 2016 18:44:18 +0800
+Subject: [PATCH] Lite optimize for, misc java internal optimize
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityHuman.java b/src/main/java/net/minecraft/server/EntityHuman.java
+index fcc906ac..cccd285 100644
+--- a/src/main/java/net/minecraft/server/EntityHuman.java
++++ b/src/main/java/net/minecraft/server/EntityHuman.java
+@@ -850,10 +850,9 @@ public abstract class EntityHuman extends EntityLiving {
+     public float cH() {
+         int i = 0;
+         ItemStack[] aitemstack = this.inventory.armor;
+-        int j = aitemstack.length;
++        // int j = aitemstack.length;
+ 
+-        for (int k = 0; k < j; ++k) {
+-            ItemStack itemstack = aitemstack[k];
++        for (ItemStack itemstack : aitemstack) {
+ 
+             if (itemstack != null) {
+                 ++i;
+@@ -1981,11 +1980,9 @@ public abstract class EntityHuman extends EntityLiving {
+ 
+         static {
+             EntityHuman.EnumChatVisibility[] aentityhuman_enumchatvisibility = values();
+-            int i = aentityhuman_enumchatvisibility.length;
+-
+-            for (int j = 0; j < i; ++j) {
+-                EntityHuman.EnumChatVisibility entityhuman_enumchatvisibility = aentityhuman_enumchatvisibility[j];
++            // int i = aentityhuman_enumchatvisibility.length;
+ 
++            for (EntityHuman.EnumChatVisibility entityhuman_enumchatvisibility : aentityhuman_enumchatvisibility) {
+                 EntityHuman.EnumChatVisibility.d[entityhuman_enumchatvisibility.e] = entityhuman_enumchatvisibility;
+             }
+ 
+diff --git a/src/main/java/net/minecraft/server/EntityInsentient.java b/src/main/java/net/minecraft/server/EntityInsentient.java
+index a1acdf3..e9af72c 100644
+--- a/src/main/java/net/minecraft/server/EntityInsentient.java
++++ b/src/main/java/net/minecraft/server/EntityInsentient.java
+@@ -304,11 +304,11 @@ public abstract class EntityInsentient extends EntityLiving {
+         nbttagcompound.setBoolean("PersistenceRequired", this.persistent);
+         NBTTagList nbttaglist = new NBTTagList();
+ 
+-        for (int i = 0; i < this.bx.length; ++i) {
++        for (ItemStack itemstack : this.bx) {
+             NBTTagCompound nbttagcompound1 = new NBTTagCompound();
+ 
+-            if (this.bx[i] != null) {
+-                this.bx[i].save(nbttagcompound1);
++            if (itemstack != null) {
++                itemstack.save(nbttagcompound1);
+             }
+ 
+             nbttaglist.add(nbttagcompound1);
+@@ -317,11 +317,11 @@ public abstract class EntityInsentient extends EntityLiving {
+         nbttagcompound.set("ArmorItems", nbttaglist);
+         NBTTagList nbttaglist1 = new NBTTagList();
+ 
+-        for (int j = 0; j < this.bw.length; ++j) {
++        for (ItemStack itemstack : this.bw) {
+             NBTTagCompound nbttagcompound2 = new NBTTagCompound();
+ 
+-            if (this.bw[j] != null) {
+-                this.bw[j].save(nbttagcompound2);
++            if (itemstack != null) {
++                itemstack.save(nbttagcompound2);
+             }
+ 
+             nbttaglist1.add(nbttagcompound2);
+@@ -330,15 +330,15 @@ public abstract class EntityInsentient extends EntityLiving {
+         nbttagcompound.set("HandItems", nbttaglist1);
+         NBTTagList nbttaglist2 = new NBTTagList();
+ 
+-        for (int k = 0; k < this.dropChanceArmor.length; ++k) {
+-            nbttaglist2.add(new NBTTagFloat(this.dropChanceArmor[k]));
++        for (float f : this.dropChanceArmor) {
++            nbttaglist2.add(new NBTTagFloat(f));
+         }
+ 
+         nbttagcompound.set("ArmorDropChances", nbttaglist2);
+         NBTTagList nbttaglist3 = new NBTTagList();
+ 
+-        for (int l = 0; l < this.dropChanceHand.length; ++l) {
+-            nbttaglist3.add(new NBTTagFloat(this.dropChanceHand[l]));
++        for (float f : this.dropChanceHand) {
++            nbttaglist3.add(new NBTTagFloat(f));
+         }
+ 
+         nbttagcompound.set("HandDropChances", nbttaglist3);
+@@ -398,21 +398,21 @@ public abstract class EntityInsentient extends EntityLiving {
+         }
+         // CraftBukkit end
+         NBTTagList nbttaglist;
+-        int i;
++		int i;
+ 
+         if (nbttagcompound.hasKeyOfType("ArmorItems", 9)) {
+             nbttaglist = nbttagcompound.getList("ArmorItems", 10);
+ 
+-            for (i = 0; i < this.bx.length; ++i) {
+-                this.bx[i] = ItemStack.createStack(nbttaglist.get(i));
++            for (ItemStack itemstack : this.bx) {
++                itemstack = ItemStack.createStack(itemstack.getTag());
+             }
+         }
+ 
+         if (nbttagcompound.hasKeyOfType("HandItems", 9)) {
+             nbttaglist = nbttagcompound.getList("HandItems", 10);
+ 
+-            for (i = 0; i < this.bw.length; ++i) {
+-                this.bw[i] = ItemStack.createStack(nbttaglist.get(i));
++            for (ItemStack itemstack : this.bw) {
++                itemstack = ItemStack.createStack(itemstack.getTag());
+             }
+         }
+ 
+@@ -809,10 +809,8 @@ public abstract class EntityInsentient extends EntityLiving {
+ 
+     protected void dropEquipment(boolean flag, int i) {
+         EnumItemSlot[] aenumitemslot = EnumItemSlot.values();
+-        int j = aenumitemslot.length;
+ 
+-        for (int k = 0; k < j; ++k) {
+-            EnumItemSlot enumitemslot = aenumitemslot[k];
++        for (EnumItemSlot enumitemslot : aenumitemslot) {
+             ItemStack itemstack = this.getEquipment(enumitemslot);
+             double d0;
+ 
+@@ -872,10 +870,9 @@ public abstract class EntityInsentient extends EntityLiving {
+ 
+             boolean flag = true;
+             EnumItemSlot[] aenumitemslot = EnumItemSlot.values();
+-            int j = aenumitemslot.length;
++            // int j = aenumitemslot.length;
+ 
+-            for (int k = 0; k < j; ++k) {
+-                EnumItemSlot enumitemslot = aenumitemslot[k];
++            for (EnumItemSlot enumitemslot : aenumitemslot) {
+ 
+                 if (enumitemslot.a() == EnumItemSlot.Function.ARMOR) {
+                     ItemStack itemstack = this.getEquipment(enumitemslot);
+@@ -969,10 +966,9 @@ public abstract class EntityInsentient extends EntityLiving {
+         }
+ 
+         EnumItemSlot[] aenumitemslot = EnumItemSlot.values();
+-        int i = aenumitemslot.length;
++        // int i = aenumitemslot.length;
+ 
+-        for (int j = 0; j < i; ++j) {
+-            EnumItemSlot enumitemslot = aenumitemslot[j];
++        for (EnumItemSlot enumitemslot : aenumitemslot) {
+ 
+             if (enumitemslot.a() == EnumItemSlot.Function.ARMOR) {
+                 ItemStack itemstack = this.getEquipment(enumitemslot);
+diff --git a/src/main/java/net/minecraft/server/EntityLiving.java b/src/main/java/net/minecraft/server/EntityLiving.java
+index 8284941..11e6996 100644
+--- a/src/main/java/net/minecraft/server/EntityLiving.java
++++ b/src/main/java/net/minecraft/server/EntityLiving.java
+@@ -431,14 +431,9 @@ public abstract class EntityLiving extends Entity {
+         nbttagcompound.setShort("DeathTime", (short) this.deathTicks);
+         nbttagcompound.setFloat("AbsorptionAmount", this.getAbsorptionHearts());
+         EnumItemSlot[] aenumitemslot = EnumItemSlot.values();
+-        int i = aenumitemslot.length;
+-
+-        int j;
+-        EnumItemSlot enumitemslot;
+         ItemStack itemstack;
+ 
+-        for (j = 0; j < i; ++j) {
+-            enumitemslot = aenumitemslot[j];
++        for (EnumItemSlot enumitemslot : aenumitemslot) {
+             itemstack = this.getEquipment(enumitemslot);
+             if (itemstack != null) {
+                 this.getAttributeMap().a(itemstack.a(enumitemslot));
+@@ -447,10 +442,8 @@ public abstract class EntityLiving extends Entity {
+ 
+         nbttagcompound.set("Attributes", GenericAttributes.a(this.getAttributeMap()));
+         aenumitemslot = EnumItemSlot.values();
+-        i = aenumitemslot.length;
+ 
+-        for (j = 0; j < i; ++j) {
+-            enumitemslot = aenumitemslot[j];
++        for (EnumItemSlot enumitemslot : aenumitemslot) {
+             itemstack = this.getEquipment(enumitemslot);
+             if (itemstack != null) {
+                 this.getAttributeMap().b(itemstack.a(enumitemslot));
+@@ -487,7 +480,7 @@ public abstract class EntityLiving extends Entity {
+         if (nbttagcompound.hasKeyOfType("ActiveEffects", 9)) {
+             NBTTagList nbttaglist = nbttagcompound.getList("ActiveEffects", 10);
+ 
+-            for (int i = 0; i < nbttaglist.size(); ++i) {
++			for (int i = 0; i < nbttaglist.size(); ++i) {
+                 NBTTagCompound nbttagcompound1 = nbttaglist.get(i);
+                 MobEffect mobeffect = MobEffect.b(nbttagcompound1);
+ 
+@@ -1457,10 +1450,9 @@ public abstract class EntityLiving extends Entity {
+             double d6 = this.getBoundingBox().f - this.getBoundingBox().c;
+             AxisAlignedBB axisalignedbb = new AxisAlignedBB(d3 - d5 / 2.0D, this.getBoundingBox().b, d4 - d6 / 2.0D, d3 + d5 / 2.0D, this.getBoundingBox().e, d4 + d6 / 2.0D);
+             int[][] aint1 = aint;
+-            int i = aint.length;
++            // int i = aint.length;
+ 
+-            for (int j = 0; j < i; ++j) {
+-                int[] aint2 = aint1[j];
++            for (int[] aint2 : aint) {
+                 double d7 = (double) (enumdirection.getAdjacentX() * aint2[0] + enumdirection1.getAdjacentX() * aint2[1]);
+                 double d8 = (double) (enumdirection.getAdjacentZ() * aint2[0] + enumdirection1.getAdjacentZ() * aint2[1]);
+                 double d9 = d3 + d7;
+@@ -1758,10 +1750,9 @@ public abstract class EntityLiving extends Entity {
+             }
+ 
+             EnumItemSlot[] aenumitemslot = EnumItemSlot.values();
+-            int j = aenumitemslot.length;
++            // int j = aenumitemslot.length;
+ 
+-            for (int k = 0; k < j; ++k) {
+-                EnumItemSlot enumitemslot = aenumitemslot[k];
++            for (EnumItemSlot enumitemslot : aenumitemslot) {
+                 ItemStack itemstack;
+ 
+                 switch (EntityLiving.SyntheticClass_1.a[enumitemslot.a().ordinal()]) {
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 63fc9b4..f884925 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -30,7 +30,6 @@ import java.util.LinkedList;
+ // Migot end
+ 
+ import java.util.Iterator;
+-import java.util.LinkedList;
+ import java.util.concurrent.RecursiveAction;
+ import org.hose.ChunkGen_Pool;
+ import org.spigotmc.SpigotWorldConfig;
+@@ -388,9 +387,8 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+         byte b0 = 0;
+ 
+         // CraftBukkit start - fire WorldLoadEvent and handle whether or not to keep the spawn in memory
+-        for (int m = 0; m < worlds.size(); m++) {
+-            WorldServer worldserver = this.worlds.get(m);
+-            MinecraftServer.LOGGER.info("Preparing start region for level " + m + " (Seed: " + worldserver.getSeed() + ")");
++        for (WorldServer worldserver : worlds) {
++            MinecraftServer.LOGGER.info("Preparing start region for world: " + worldserver.getWorldData().getName() + "(Seed: " + worldserver.getSeed() + ")");
+ 
+             if (!worldserver.getWorld().getKeepSpawnInMemory()) {
+                 continue;
+@@ -469,8 +467,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+         int i = aworldserver.length;
+ 
+         // CraftBukkit start
+-        for (int j = 0; j < worlds.size(); ++j) {
+-            WorldServer worldserver = worlds.get(j);
++        for (WorldServer worldserver : worlds) {
+             // CraftBukkit end
+ 
+             if (worldserver != null) {
+@@ -522,35 +519,25 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+         if (this.worldServer != null) {
+             MinecraftServer.LOGGER.info("Saving worlds");
+ 
+-            int i;
+-
+-            for (i = 0; i < this.worldServer.length; ++i) {
+-                if (this.worldServer[i] != null) {
+-                    this.worldServer[i].savingDisabled = false;
++            for (WorldServer worldserver : this.worldServer) {
++                if (worldserver != null) {
++                    worldserver.savingDisabled = false;
+                 }
+             }
+ 
+             this.saveChunks(false);
+ 			
+ 			// Paper - Start
+-            for (i = 0; i < this.worldServer.length; ++i) {
+-                if (this.worldServer[i] != null) {
++            for (WorldServer worldserver : this.worldServer) {
++                if (worldserver != null) {
+                     try {
+-                        this.worldServer[i].getDataManager().close();
++                        worldserver.getDataManager().close();
+                     } catch (IOException ex) {
+                         LOGGER.warn("Exception closing world",ex);
+                     }
+                 }
+             }
+             // Paper - End
+-
+-            /* CraftBukkit start - Handled in saveChunks
+-            for (i = 0; i < this.worldServer.length; ++i) {
+-                if (this.worldServer[i] != null) {
+-                    this.worldServer[i].saveLevel();
+-                }
+-            }
+-            // CraftBukkit end */
+         }
+ 
+         if (this.m.d()) {
+@@ -603,8 +590,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+     private void queueWorldsForAutoSave() {
+         if (!this.M) {
+             this.autoSaveWorlds.clear();
+-            for (int j = 0; j < this.worlds.size(); ++j) {
+-                WorldServer worldserver = this.worlds.get(j);
++            for (WorldServer worldserver : this.worlds) {
+                 if(worldserver != null) {
+                     this.autoSaveWorlds.add(new AutoSaveJob(JobDetail.WORLD_SAVE, worldserver));
+                     this.autoSaveWorlds.add(new AutoSaveJob(JobDetail.WORLD_SAVEEVENT, worldserver));
+@@ -928,8 +914,8 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+         MinecraftTimings.timeUpdateTimer.startTiming(); // Spigot
+         // Send time updates to everyone, it will get the right time from the world the player is in.
+         if (this.ticks % 20 == 0) {
+-            for (int i = 0; i < this.getPlayerList().players.size(); ++i) {
+-                EntityPlayer entityplayer = (EntityPlayer) this.getPlayerList().players.get(i);
++            for (EntityPlayer entityplayer : this.getPlayerList().players) {
++                // EntityPlayer entityplayer = (EntityPlayer) this.getPlayerList().players.get(i);
+                 entityplayer.playerConnection.sendPacket(new PacketPlayOutUpdateTime(entityplayer.world.getTime(), entityplayer.getPlayerTime(), entityplayer.world.getGameRules().getBoolean("doDaylightCycle"))); // Add support for per player time
+             }
+         }
+@@ -938,11 +924,10 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 		this.cancelHeavyCalculationsForAllWorlds(false); // Migot
+         int i;
+ 
+-        for (i = 0; i < this.worlds.size(); ++i) { // CraftBukkit
++        for (WorldServer worldserver : this.worlds) { // CraftBukkit
+             long j = System.nanoTime();
+ 
+             // if (i == 0 || this.getAllowNether()) {
+-                WorldServer worldserver = this.worlds.get(i);
+ 
+                 this.methodProfiler.a(worldserver.getWorldData().getName());
+                 /* Drop global time updates
+@@ -1038,52 +1023,6 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+         DispenserRegistry.c();
+ 
+         try {
+-            /* CraftBukkit start - Replace everything
+-            boolean flag = true;
+-            String s = null;
+-            String s1 = ".";
+-            String s2 = null;
+-            boolean flag1 = false;
+-            boolean flag2 = false;
+-            int i = -1;
+-
+-            for (int j = 0; j < astring.length; ++j) {
+-                String s3 = astring[j];
+-                String s4 = j == astring.length - 1 ? null : astring[j + 1];
+-                boolean flag3 = false;
+-
+-                if (!s3.equals("nogui") && !s3.equals("--nogui")) {
+-                    if (s3.equals("--port") && s4 != null) {
+-                        flag3 = true;
+-
+-                        try {
+-                            i = Integer.parseInt(s4);
+-                        } catch (NumberFormatException numberformatexception) {
+-                            ;
+-                        }
+-                    } else if (s3.equals("--singleplayer") && s4 != null) {
+-                        flag3 = true;
+-                        s = s4;
+-                    } else if (s3.equals("--universe") && s4 != null) {
+-                        flag3 = true;
+-                        s1 = s4;
+-                    } else if (s3.equals("--world") && s4 != null) {
+-                        flag3 = true;
+-                        s2 = s4;
+-                    } else if (s3.equals("--demo")) {
+-                        flag1 = true;
+-                    } else if (s3.equals("--bonusChest")) {
+-                        flag2 = true;
+-                    }
+-                } else {
+-                    flag = false;
+-                }
+-
+-                if (flag3) {
+-                    ++j;
+-                }
+-            }
+-            */ // CraftBukkit end
+ 
+             String s1 = "."; // PAIL?
+             YggdrasilAuthenticationService yggdrasilauthenticationservice = new YggdrasilAuthenticationService(Proxy.NO_PROXY, UUID.randomUUID().toString());
+@@ -1243,50 +1182,6 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+     }
+ 
+     public List<String> tabCompleteCommand(ICommandListener icommandlistener, String s, @Nullable BlockPosition blockposition, boolean flag) {
+-        /* CraftBukkit start - Allow tab-completion of Bukkit commands
+-        ArrayList arraylist = Lists.newArrayList();
+-        boolean flag1 = s.startsWith("/");
+-
+-        if (flag1) {
+-            s = s.substring(1);
+-        }
+-
+-        if (!flag1 && !flag) {
+-            String[] astring = s.split(" ", -1);
+-            String s1 = astring[astring.length - 1];
+-            String[] astring1 = this.v.f();
+-            int i = astring1.length;
+-
+-            for (int j = 0; j < i; ++j) {
+-                String s2 = astring1[j];
+-
+-                if (CommandAbstract.a(s1, s2)) {
+-                    arraylist.add(s2);
+-                }
+-            }
+-
+-            return arraylist;
+-        } else {
+-            boolean flag2 = !s.contains(" ");
+-            List list = this.b.a(icommandlistener, s, blockposition);
+-
+-            if (!list.isEmpty()) {
+-                Iterator iterator = list.iterator();
+-
+-                while (iterator.hasNext()) {
+-                    String s3 = (String) iterator.next();
+-
+-                    if (flag2) {
+-                        arraylist.add("/" + s3);
+-                    } else {
+-                        arraylist.add(s3);
+-                    }
+-                }
+-            }
+-
+-            return arraylist;
+-        }
+-        */
+         return server.tabComplete(icommandlistener, s, blockposition); // PAIL : todo args // Paper - add Location arg
+         // CraftBukkit end
+     }
+@@ -1350,8 +1245,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 
+     public void a(EnumDifficulty enumdifficulty) {
+         // CraftBukkit start
+-        for (int i = 0; i < this.worlds.size(); ++i) {
+-            WorldServer worldserver = this.worlds.get(i);
++        for (WorldServer worldserver : this.worlds) {
+             // CraftBukkit end
+ 
+             if (worldserver != null) {
+@@ -1420,8 +1314,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 
+         if (this.worldServer != null) {
+             // CraftBukkit start
+-            for (int j = 0; j < this.worlds.size(); ++j) {
+-                WorldServer worldserver = this.worlds.get(j);
++            for (WorldServer worldserver : this.worlds) {
+                 if (worldserver != null) {
+                     // CraftBukkit end
+                     WorldData worlddata = worldserver.getWorldData();
+@@ -1529,8 +1422,8 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 
+     public void setGamemode(WorldSettings.EnumGamemode worldsettings_enumgamemode) {
+         // CraftBukkit start
+-        for (int i = 0; i < this.worlds.size(); ++i) {
+-            worlds.get(i).getWorldData().setGameType(worldsettings_enumgamemode);
++        for (WorldServer world : this.worlds) {
++            world.getWorldData().setGameType(worldsettings_enumgamemode);
+         }
+ 
+     }
+@@ -1643,8 +1536,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+         int i = aworldserver.length;
+ 
+         // CraftBukkit start
+-        for (int j = 0; j < worlds.size(); ++j) {
+-            WorldServer worldserver = worlds.get(j);
++        for (WorldServer worldserver : worlds) {
+             // CraftBukkit end
+ 
+             if (worldserver != null) {
+diff --git a/src/main/java/net/minecraft/server/NavigationAbstract.java b/src/main/java/net/minecraft/server/NavigationAbstract.java
+index 557c88c..ea3cd66 100644
+--- a/src/main/java/net/minecraft/server/NavigationAbstract.java
++++ b/src/main/java/net/minecraft/server/NavigationAbstract.java
+@@ -5,8 +5,7 @@ import javax.annotation.Nullable;
+ public abstract class NavigationAbstract {
+ 
+     private static int f = 20;
+-    protected EntityInsentient a;
+-	public Entity getEntity() { return a; } // Paper
++    protected EntityInsentient a;public Entity getEntity() { return a; } // Paper
+     protected World b;
+     @Nullable
+     protected PathEntity c;
+@@ -83,8 +82,8 @@ public abstract class NavigationAbstract {
+             float f = this.h();
+ 
+             this.b.methodProfiler.a("pathfind");
+-            BlockPosition blockposition1 = (new BlockPosition(this.a)).up();
+-            int i = (int) (f + 16.0F);
++            BlockPosition blockposition1 = new BlockPosition(this.a);
++            int i = (int) (f + 8.0F);
+             ChunkCache chunkcache = new ChunkCache(this.b, blockposition1.a(-i, -i, -i), blockposition1.a(i, i, i), 0);
+             PathEntity pathentity = this.s.a(chunkcache, this.a, this.r, f);
+ 
+@@ -108,10 +107,10 @@ public abstract class NavigationAbstract {
+                 float f = this.h();
+ 
+                 this.b.methodProfiler.a("pathfind");
+-                BlockPosition blockposition1 = (new BlockPosition(this.a));
+-                int i = (int) (f + 8.0F);
++                BlockPosition blockposition1 = (new BlockPosition(this.a)).up();
++                int i = (int) (f + 16.0F);
+                 ChunkCache chunkcache = new ChunkCache(this.b, blockposition1.a(-i, -i, -i), blockposition1.a(i, i, i), 0);
+-				PathEntity pathentity = this.s.a(chunkcache, this.a, entity, f);
++                PathEntity pathentity = this.s.a(chunkcache, this.a, entity, f);
+ 
+                 this.b.methodProfiler.b();
+                 return pathentity;
+@@ -126,11 +125,6 @@ public abstract class NavigationAbstract {
+     }
+ 
+     public boolean a(Entity entity, double d0) {
+-		PathEntity pathentity = this.a(entity);
+-
+-        return pathentity != null ? this.a(pathentity, d0) : false;
+-    }
+-		/*
+         // Paper start - Pathfinding optimizations
+         if (this.pathfindFailures > 10 && this.c == null && MinecraftServer.currentTick < this.lastFailure + 40) {
+             return false;
+@@ -151,7 +145,6 @@ public abstract class NavigationAbstract {
+     private int lastFailure = 0;
+     private int pathfindFailures = 0;
+     // Paper end
+-	*/
+ 
+     public boolean a(@Nullable PathEntity pathentity, double d0) {
+         if (pathentity == null) {
+@@ -285,7 +278,7 @@ public abstract class NavigationAbstract {
+     }
+ 
+     public void o() {
+-        // this.pathfindFailures = 0; this.lastFailure = 0; // Paper - Pathfinding optimizations
++        this.pathfindFailures = 0; this.lastFailure = 0; // Paper - Pathfinding optimizations
+         this.c = null;
+     }
+ 
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index 19c4843..7b08a50 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -493,8 +493,7 @@ public abstract class World implements IBlockAccess {
+ 	
+ 	// Paper start - Anti-Xray - notify from 1.8
+     public void notify(BlockPosition blockposition) {
+-        for (int j = 0; j < this.u.size(); ++j) {
+-            IWorldAccess access = this.u.get(j);
++        for (IWorldAccess access : this.u) {
+             if (access instanceof WorldManager) {
+                 access.a(null, blockposition, null, null, 0);
+             }
+@@ -504,8 +503,9 @@ public abstract class World implements IBlockAccess {
+     // Paper end
+ 
+     public void notify(BlockPosition blockposition, IBlockData iblockdata, IBlockData iblockdata1, int i) {
+-        for (int j = 0; j < this.u.size(); ++j) {
+-            ((IWorldAccess) this.u.get(j)).a(this, blockposition, iblockdata, iblockdata1, i);
++        for (IWorldAccess access : this.u) {
++            /*((IWorldAccess) this.u.get(j))*/
++			access.a(this, blockposition, iblockdata, iblockdata1, i);
+         }
+ 
+     }
+@@ -545,8 +545,8 @@ public abstract class World implements IBlockAccess {
+     }
+ 
+     public void b(int i, int j, int k, int l, int i1, int j1) {
+-        for (int k1 = 0; k1 < this.u.size(); ++k1) {
+-            ((IWorldAccess) this.u.get(k1)).a(i, j, k, l, i1, j1);
++        for (IWorldAccess access : this.u) {
++            access.a(i, j, k, l, i1, j1);
+         }
+ 
+     }
+@@ -815,8 +815,9 @@ public abstract class World implements IBlockAccess {
+     }
+ 
+     public void m(BlockPosition blockposition) {
+-        for (int i = 0; i < this.u.size(); ++i) {
+-            ((IWorldAccess) this.u.get(i)).a(blockposition);
++        for (IWorldAccess access : this.u) {
++            /*((IWorldAccess) this.u.get(i))*/
++			access.a(blockposition);
+         }
+ 
+     }
+@@ -1041,8 +1042,9 @@ public abstract class World implements IBlockAccess {
+     }
+ 
+     public void a(@Nullable EntityHuman entityhuman, double d0, double d1, double d2, SoundEffect soundeffect, SoundCategory soundcategory, float f, float f1) {
+-        for (int i = 0; i < this.u.size(); ++i) {
+-            ((IWorldAccess) this.u.get(i)).a(entityhuman, soundeffect, soundcategory, d0, d1, d2, f, f1);
++        for (IWorldAccess access : this.u) {
++            /*((IWorldAccess) this.u.get(i))*/
++			access.a(entityhuman, soundeffect, soundcategory, d0, d1, d2, f, f1);
+         }
+ 
+     }
+@@ -1050,8 +1052,9 @@ public abstract class World implements IBlockAccess {
+     public void a(double d0, double d1, double d2, SoundEffect soundeffect, SoundCategory soundcategory, float f, float f1, boolean flag) {}
+ 
+     public void a(BlockPosition blockposition, @Nullable SoundEffect soundeffect) {
+-        for (int i = 0; i < this.u.size(); ++i) {
+-            ((IWorldAccess) this.u.get(i)).a(soundeffect, blockposition);
++        for (IWorldAccess access : this.u) {
++			/*((IWorldAccess) this.u.get(i))*/
++            access.a(soundeffect, blockposition);
+         }
+ 
+     }
+@@ -1064,8 +1067,9 @@ public abstract class World implements IBlockAccess {
+     }
+ 
+     private void a(int i, boolean flag, double d0, double d1, double d2, double d3, double d4, double d5, int... aint) {
+-        for (int j = 0; j < this.u.size(); ++j) {
+-            ((IWorldAccess) this.u.get(j)).a(i, flag, d0, d1, d2, d3, d4, d5, aint);
++        for (IWorldAccess access : this.u) {
++            /*((IWorldAccess) this.u.get(j))*/
++			access.a(i, flag, d0, d1, d2, d3, d4, d5, aint);
+         }
+ 
+     }
+@@ -1174,8 +1178,9 @@ public abstract class World implements IBlockAccess {
+     }
+ 
+     protected void b(Entity entity) {
+-        for (int i = 0; i < this.u.size(); ++i) {
+-            ((IWorldAccess) this.u.get(i)).a(entity);
++        for (IWorldAccess access : this.u) {
++            /*((IWorldAccess) this.u.get(i))*/
++			access.a(entity);
+         }
+ 
+         entity.valid = true; // CraftBukkit
+@@ -1183,8 +1188,9 @@ public abstract class World implements IBlockAccess {
+     }
+ 
+     protected void c(Entity entity) {
+-        for (int i = 0; i < this.u.size(); ++i) {
+-            ((IWorldAccess) this.u.get(i)).b(entity);
++        for (IWorldAccess access : this.u) {
++            /*((IWorldAccess) this.u.get(i))*/
++			access.b(entity);
+         }
+ 
+         new com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent(entity.getBukkitEntity()).callEvent(); // Paper - fire while valid
+@@ -1678,54 +1684,6 @@ public abstract class World implements IBlockAccess {
+             entity = (Entity) this.entityList.get(this.tickPosition);
+ 			tick_hose(entity);
+             // CraftBukkit end
+-			/*
+-            Entity entity1 = entity.bz();
+-
+-            if (entity1 != null) {
+-                if (!entity1.dead && entity1.w(entity)) {
+-                    continue;
+-                }
+-
+-                entity.stopRiding();
+-            }
+-
+-            this.methodProfiler.a("tick");
+-            if (!entity.dead && !(entity instanceof EntityPlayer)) {
+-                try {
+-                    entity.tickTimer.startTiming(); // Paper
+-                    this.g(entity);
+-                    entity.tickTimer.stopTiming(); // Paper
+-                } catch (Throwable throwable1) {
+-                    entity.tickTimer.stopTiming();
+-                    // Paper start - Prevent tile entity and entity crashes
+-                    String msg = "Entity threw exception at " + entity.world.getWorld().getName() + ":" + entity.locX + "," + entity.locY + "," + entity.locZ;
+-                    System.err.println(msg);
+-                    throwable1.printStackTrace();
+-                    getServer().getPluginManager().callEvent(new ServerExceptionEvent(new ServerInternalException(msg, throwable1)));
+-                    entity.dead = true;
+-                    continue;
+-                    // Paper end
+-                }
+-            }
+-
+-            this.methodProfiler.b();
+-            this.methodProfiler.a("remove");
+-            if (entity.dead) {
+-                j = entity.ab;
+-                int l = entity.ad;
+-
+-                if (entity.aa && this.isChunkLoaded(j, l, true)) {
+-                    this.getChunkAt(j, l).b(entity);
+-                }
+-
+-                guardEntityList = false; // Spigot
+-                this.entityList.remove(this.tickPosition--); // CraftBukkit - Use field for loop variable
+-                guardEntityList = true; // Spigot
+-                this.c(entity);
+-            }
+-
+-            this.methodProfiler.b();
+-			*/
+         }
+         guardEntityList = false; // Spigot
+ 
+@@ -2626,10 +2584,9 @@ public abstract class World implements IBlockAccess {
+             } else {
+                 BlockPosition.PooledBlockPosition blockposition_pooledblockposition = BlockPosition.PooledBlockPosition.s();
+                 EnumDirection[] aenumdirection = EnumDirection.values();
+-                int k = aenumdirection.length;
++                // int k = aenumdirection.length;
+ 
+-                for (int l = 0; l < k; ++l) {
+-                    EnumDirection enumdirection = aenumdirection[l];
++                for (EnumDirection enumdirection : aenumdirection) {
+ 
+                     blockposition_pooledblockposition.j(blockposition).d(enumdirection);
+                     int i1 = this.b(enumskyblock, (BlockPosition) blockposition_pooledblockposition) - j;
+@@ -3076,8 +3033,7 @@ public abstract class World implements IBlockAccess {
+         double d4 = -1.0D;
+         EntityHuman entityhuman = null;
+ 
+-        for (int i = 0; i < this.players.size(); ++i) {
+-            EntityHuman entityhuman1 = (EntityHuman) this.players.get(i);
++        for (EntityHuman entityhuman1 : this.players) {
+             // CraftBukkit start - Fixed an NPE
+             if (entityhuman1 == null || !entityhuman1.isAlive()) { // CraftBukkit allow for more complex logic by using the "is alive" method
+                 continue;
+@@ -3106,8 +3062,7 @@ public abstract class World implements IBlockAccess {
+ 
+     public boolean isPlayerNearby(double d0, double d1, double d2, double d3, Predicate<EntityHuman> filter) {
+         // Paper end
+-        for (int i = 0; i < this.players.size(); ++i) {
+-            EntityHuman entityhuman = (EntityHuman) this.players.get(i);
++        for (EntityHuman entityhuman : this.players) {
+ 
+             if (!filter.apply(entityhuman)) continue; // Paper - check filter
+ 
+@@ -3138,8 +3093,7 @@ public abstract class World implements IBlockAccess {
+         double d5 = -1.0D;
+         EntityHuman entityhuman = null;
+ 
+-        for (int i = 0; i < this.players.size(); ++i) {
+-            EntityHuman entityhuman1 = (EntityHuman) this.players.get(i);
++        for (EntityHuman entityhuman1 : this.players) {
+ 
+             if (!entityhuman1.abilities.isInvulnerable && entityhuman1.isAlive() && !entityhuman1.isSpectator() && (predicate == null || predicate.apply(entityhuman1))) {
+                 double d6 = entityhuman1.e(d0, entityhuman1.locY, d2);
+@@ -3175,8 +3129,7 @@ public abstract class World implements IBlockAccess {
+ 
+     @Nullable
+     public EntityHuman a(String s) {
+-        for (int i = 0; i < this.players.size(); ++i) {
+-            EntityHuman entityhuman = (EntityHuman) this.players.get(i);
++        for (EntityHuman entityhuman : this.players) {
+ 
+             if (s.equals(entityhuman.getName())) {
+                 return entityhuman;
+@@ -3188,8 +3141,7 @@ public abstract class World implements IBlockAccess {
+ 
+     @Nullable
+     public EntityHuman b(UUID uuid) {
+-        for (int i = 0; i < this.players.size(); ++i) {
+-            EntityHuman entityhuman = (EntityHuman) this.players.get(i);
++        for (EntityHuman entityhuman : this.players) {
+ 
+             if (uuid.equals(entityhuman.getUniqueID())) {
+                 return entityhuman;
+@@ -3326,8 +3278,9 @@ public abstract class World implements IBlockAccess {
+     }
+ 
+     public void a(int i, BlockPosition blockposition, int j) {
+-        for (int k = 0; k < this.u.size(); ++k) {
+-            ((IWorldAccess) this.u.get(k)).a(i, blockposition, j);
++        for (IWorldAccess access : this.u) {
++            /*((IWorldAccess) this.u.get(k))*/
++			access.a(i, blockposition, j);
+         }
+ 
+     }
+@@ -3338,8 +3291,9 @@ public abstract class World implements IBlockAccess {
+ 
+     public void a(@Nullable EntityHuman entityhuman, int i, BlockPosition blockposition, int j) {
+         try {
+-            for (int k = 0; k < this.u.size(); ++k) {
+-                ((IWorldAccess) this.u.get(k)).a(entityhuman, i, blockposition, j);
++            for (IWorldAccess access : this.u) {
++            /*((IWorldAccess) this.u.get(k))*/
++			access.a(entityhuman, i, blockposition, j);
+             }
+ 
+         } catch (Throwable throwable) {
+@@ -3402,8 +3356,9 @@ public abstract class World implements IBlockAccess {
+     }
+ 
+     public void c(int i, BlockPosition blockposition, int j) {
+-        for (int k = 0; k < this.u.size(); ++k) {
+-            IWorldAccess iworldaccess = (IWorldAccess) this.u.get(k);
++        for (IWorldAccess access : this.u) {
++            IWorldAccess iworldaccess = access;
++			/*(IWorldAccess) this.u.get(k);*/
+ 
+             iworldaccess.b(i, blockposition, j);
+         }
+diff --git a/src/main/java/net/minecraft/server/WorldServer.java b/src/main/java/net/minecraft/server/WorldServer.java
+index 9ed3f6e..8088316 100644
+--- a/src/main/java/net/minecraft/server/WorldServer.java
++++ b/src/main/java/net/minecraft/server/WorldServer.java
+@@ -518,8 +518,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
+                     ChunkSection[] achunksection = chunk.getSections();
+                     int i1 = achunksection.length;
+ 
+-                    for (int j1 = 0; j1 < i1; ++j1) {
+-                        ChunkSection chunksection = achunksection[j1];
++                    for (ChunkSection chunksection : achunksection) {
+ 
+                         if (chunksection != Chunk.a && chunksection.shouldTick()) {
+                             for (int k1 = 0; k1 < i; ++k1) {
+@@ -670,8 +669,8 @@ public class WorldServer extends World implements IAsyncTaskHandler {
+         super.l();
+         this.methodProfiler.c("players");
+ 
+-        for (int i = 0; i < this.players.size(); ++i) {
+-            Entity entity = (Entity) this.players.get(i);
++        for (EntityHuman player : this.players) {
++            Entity entity = (Entity) player;
+             Entity entity1 = entity.bz();
+ 
+             if (entity1 != null) {
+@@ -743,7 +742,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
+                 timings.scheduledBlocksCleanup.startTiming(); // Paper
+                 NextTickListEntry nextticklistentry;
+ 
+-                for (int j = 0; j < i; ++j) {
++                for (NextTickListEntry entry : this.nextTickList) {
+                     try {
+                         nextticklistentry = (NextTickListEntry) this.nextTickList.first();
+                     } catch (Exception ex) {
+@@ -1088,11 +1087,8 @@ public class WorldServer extends World implements IAsyncTaskHandler {
+     protected void a() throws ExceptionWorldConflict {
+         this.checkSession();
+         WorldServer[] aworldserver = this.server.worldServer;
+-        int i = aworldserver.length;
+-
+-        for (int j = 0; j < i; ++j) {
+-            WorldServer worldserver = aworldserver[j];
+ 
++        for (WorldServer worldserver : aworldserver) {
+             if (worldserver instanceof SecondaryWorldServer) {
+                 ((SecondaryWorldServer) worldserver).c();
+             }
+@@ -1172,9 +1168,9 @@ public class WorldServer extends World implements IAsyncTaskHandler {
+         Entity[] aentity = entity.aR();
+ 
+         if (aentity != null) {
+-            for (int i = 0; i < aentity.length; ++i) {
++            for (Entity e : aentity) {
+                 // this.entitiesById.a(aentity[i].getId(), aentity[i]);
+-				this.entitiesById.put(aentity[i].getId(), aentity[i]);
++				this.entitiesById.put(e.getId(), e);
+             }
+         }
+ 
+@@ -1188,9 +1184,9 @@ public class WorldServer extends World implements IAsyncTaskHandler {
+         Entity[] aentity = entity.aR();
+ 
+         if (aentity != null) {
+-            for (int i = 0; i < aentity.length; ++i) {
++            for (Entity e : aentity) {
+                 // this.entitiesById.d(aentity[i].getId());
+-				this.entitiesById.remove(aentity[i].getId());
++				this.entitiesById.remove(e.getId());
+             }
+         }
+ 
+@@ -1305,37 +1301,17 @@ public class WorldServer extends World implements IAsyncTaskHandler {
+         boolean flag = this.W();
+ 
+         super.t();
+-        /* CraftBukkit start
+-        if (this.n != this.o) {
+-            this.server.getPlayerList().a((Packet) (new PacketPlayOutGameStateChange(7, this.o)), this.worldProvider.getDimensionManager().getDimensionID());
+-        }
+-
+-        if (this.p != this.q) {
+-            this.server.getPlayerList().a((Packet) (new PacketPlayOutGameStateChange(8, this.q)), this.worldProvider.getDimensionManager().getDimensionID());
+-        }
+-
+-        if (flag != this.W()) {
+-            if (flag) {
+-                this.server.getPlayerList().sendAll(new PacketPlayOutGameStateChange(2, 0.0F));
+-            } else {
+-                this.server.getPlayerList().sendAll(new PacketPlayOutGameStateChange(1, 0.0F));
+-            }
+-
+-            this.server.getPlayerList().sendAll(new PacketPlayOutGameStateChange(7, this.o));
+-            this.server.getPlayerList().sendAll(new PacketPlayOutGameStateChange(8, this.q));
+-        }
+-        // */
+         if (flag != this.W()) {
+             // Only send weather packets to those affected
+-            for (int i = 0; i < this.players.size(); ++i) {
+-                if (((EntityPlayer) this.players.get(i)).world == this) {
+-                    ((EntityPlayer) this.players.get(i)).setPlayerWeather((!flag ? WeatherType.DOWNFALL : WeatherType.CLEAR), false);
++            for (EntityHuman player : this.players) {
++                if (((EntityPlayer) player).world == this) {
++                    ((EntityPlayer) player).setPlayerWeather((!flag ? WeatherType.DOWNFALL : WeatherType.CLEAR), false);
+                 }
+             }
+         }
+-        for (int i = 0; i < this.players.size(); ++i) {
+-            if (((EntityPlayer) this.players.get(i)).world == this) {
+-                ((EntityPlayer) this.players.get(i)).updateWeather(this.n, this.o, this.p, this.q);
++        for (EntityHuman player : this.players) {
++            if (((EntityPlayer) player).world == this) {
++                ((EntityPlayer) player).updateWeather(this.n, this.o, this.p, this.q);
+             }
+         }
+         // CraftBukkit end
+@@ -1376,8 +1352,8 @@ public class WorldServer extends World implements IAsyncTaskHandler {
+         // CraftBukkit end
+         PacketPlayOutWorldParticles packetplayoutworldparticles = new PacketPlayOutWorldParticles(enumparticle, flag, (float) d0, (float) d1, (float) d2, (float) d3, (float) d4, (float) d5, (float) d6, i, aint);
+ 
+-        for (int j = 0; j < this.players.size(); ++j) {
+-            EntityPlayer entityplayer = (EntityPlayer) this.players.get(j);
++        for (EntityHuman player : this.players) {
++            EntityPlayer entityplayer = (EntityPlayer) player;
+             if (sender != null && !entityplayer.getBukkitEntity().canSee(sender.getBukkitEntity())) continue; // CraftBukkit
+             BlockPosition blockposition = entityplayer.getChunkCoordinates();
+             double d7 = blockposition.distanceSquared(d0, d1, d2);
+diff --git a/src/main/java/net/techcable/tacospigot/ArrayMap.java b/src/main/java/net/techcable/tacospigot/ArrayMap.java
+index eab034b..5bd6f67 100644
+--- a/src/main/java/net/techcable/tacospigot/ArrayMap.java
++++ b/src/main/java/net/techcable/tacospigot/ArrayMap.java
+@@ -17,7 +17,7 @@ import javax.annotation.Nonnull;
+ import javax.annotation.concurrent.ThreadSafe;
+ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
+ import java.util.concurrent.atomic.AtomicReferenceArray;
+-import com.google.common.collect.AbstractIterator;
++import org.torch.util.AbstractIterator;
+ 
+ import static com.google.common.base.Preconditions.*;
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/TrigMath.java b/src/main/java/org/bukkit/craftbukkit/TrigMath.java
+index 6d613c5..2e33296 100644
+--- a/src/main/java/org/bukkit/craftbukkit/TrigMath.java
++++ b/src/main/java/org/bukkit/craftbukkit/TrigMath.java
+@@ -19,29 +19,37 @@ public class TrigMath {
+     static final double q1 = .207933497444540981287275926e4;
+     static final double q0 = .89678597403663861962481162e3;
+     static final double PIO2 = 1.5707963267948966135E0;
+-
+-    private static double mxatan(double arg) {
+-        double argsq = arg * arg, value;
+-
+-        value = ((((p4 * argsq + p3) * argsq + p2) * argsq + p1) * argsq + p0);
+-        value = value / (((((argsq + q4) * argsq + q3) * argsq + q2) * argsq + q1) * argsq + q0);
+-        return value * arg;
+-    }
+-
++	
++	private static double mxatan(double d) {
++		final double asq = d * d;
++		
++		double value = ((((p4 * asq + p3) * asq + p2) * asq + p1) * asq + p0);
++		value = value / (((((asq + q4) * asq + q3) * asq + q2) * asq + q1) * asq + q0);
++		return value * d;
++	}
++	
+     private static double msatan(double arg) {
+         return arg < sq2m1 ? mxatan(arg)
+              : arg > sq2p1 ? PIO2 - mxatan(1 / arg)
+              : PIO2 / 2 + mxatan((arg - 1) / (arg + 1));
+     }
++	
++	public static double atan(double a) {
++		return a > 0 ? msatan(a) : -msatan(-a);
++	}
+ 
+-    public static double atan(double arg) {
+-        return arg > 0 ? msatan(arg) : -msatan(-arg);
+-    }
++    /**
++	 * Fast arctangent2 calculation
++	 * 
++	 * @param y
++	 * @param x
++	 * @return rotation from 0,0 in radians
++	 */
++	public static double atan2(double y, double x) {
++		if (y + x == y)
++			return y >= 0 ? PIO2 : -PIO2;
++			y = atan(y / x);
++			return x < 0 ? y <= 0 ? y + Math.PI : y - Math.PI : y;
++	}
+ 
+-    public static double atan2(double arg1, double arg2) {
+-        if (arg1 + arg2 == arg1)
+-            return arg1 >= 0 ? PIO2 : -PIO2;
+-        arg1 = atan(arg1 / arg2);
+-        return arg2 < 0 ? arg1 <= 0 ? arg1 + Math.PI : arg1 - Math.PI : arg1;
+-    }
+ }
+\ No newline at end of file
+diff --git a/src/main/java/org/bukkit/craftbukkit/util/AsynchronousExecutor.java b/src/main/java/org/bukkit/craftbukkit/util/AsynchronousExecutor.java
+index 193c362..b8e3c96 100644
+--- a/src/main/java/org/bukkit/craftbukkit/util/AsynchronousExecutor.java
++++ b/src/main/java/org/bukkit/craftbukkit/util/AsynchronousExecutor.java
+@@ -124,7 +124,7 @@ public final class AsynchronousExecutor<P, T, C, E extends Throwable> {
+                 init();
+             } else if (set(this, STAGE_1_ASYNC, STAGE_1_SYNC)) {
+                 // Async thread is running, but this shouldn't be likely; we need to sync to wait on them because of it.
+-                synchronized (this) {
++                // synchronized (this) {
+                     if (set(this, STAGE_1_SYNC, PENDING)) { // They might NOT synchronized yet, atomic lock IS needed
+                         // We are the first into the lock
+                         while (state != STAGE_1_COMPLETE) {
+@@ -138,7 +138,7 @@ public final class AsynchronousExecutor<P, T, C, E extends Throwable> {
+                     } else {
+                         // They beat us to the synchronized block
+                     }
+-                }
++                // }
+             } else {
+                 // Async thread is not pending, the more likely situation for a task not pending
+             }
+diff --git a/src/main/java/org/torch/util/AbstractIterator.java b/src/main/java/org/torch/util/AbstractIterator.java
+new file mode 100644
+index 0000000..cf173b4
+--- /dev/null
++++ b/src/main/java/org/torch/util/AbstractIterator.java
+@@ -0,0 +1,76 @@
++package org.torch.util;
++
++// This file from HPPC project.
++// https://github.com/carrotsearch/hppc
++
++import java.util.Iterator;
++import java.util.NoSuchElementException;
++
++/**
++ * Simplifies the implementation of iterators a bit. Modeled loosely after
++ * Google Guava's API.
++ */
++public abstract class AbstractIterator<E> implements Iterator<E> {
++  private final static int NOT_CACHED = 0;
++  private final static int CACHED = 1;
++  private final static int AT_END = 2;
++
++  /** Current iterator state. */
++  private int state = NOT_CACHED;
++
++  /**
++   * The next element to be returned from {@link #next()} if fetched.
++   */
++  private E nextElement;
++
++  /**
++   * {@inheritDoc}
++   */
++  @Override
++  public boolean hasNext() {
++    if (state == NOT_CACHED) {
++      state = CACHED;
++      nextElement = fetch();
++    }
++    return state == CACHED;
++  }
++
++  /**
++   * {@inheritDoc}
++   */
++  @Override
++  public E next() {
++    if (!hasNext()) {
++      throw new NoSuchElementException();
++    }
++
++    state = NOT_CACHED;
++    return nextElement;
++  }
++
++  /**
++   * Default implementation throws {@link UnsupportedOperationException}.
++   */
++  @Override
++  public void remove() {
++    throw new UnsupportedOperationException();
++  }
++
++  /**
++   * Fetch next element. The implementation must return {@link #done()} when all
++   * elements have been fetched.
++   * 
++   * @return Returns the next value for the iterator or chain-calls {@link #done()}. 
++   */
++  protected abstract E fetch();
++
++  /**
++   * Call when done.
++   * 
++   * @return Returns a unique sentinel value to indicate end-of-iteration.
++   */
++  protected final E done() {
++    state = AT_END;
++    return null;
++  }
++}
+-- 
+2.8.2.windows.1
+

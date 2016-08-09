@@ -1,0 +1,321 @@
+From 42652dd622c47c7e74aae8ac689c23b5f1fbaa63 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Tue, 9 Aug 2016 19:34:40 +0800
+Subject: [PATCH] FML support
+
+
+diff --git a/src/main/java/de/minetick/MigotConfig.java b/src/main/java/de/minetick/MigotConfig.java
+index 7357d97..d7fb87d 100644
+--- a/src/main/java/de/minetick/MigotConfig.java
++++ b/src/main/java/de/minetick/MigotConfig.java
+@@ -46,6 +46,7 @@ public class MigotConfig {
+     private void loadConfigContent() {
+ 		enabledAutoSave = configuration.getBoolean("auto-save", false);
+ 		enabledForkPing = configuration.getBoolean("settings.fork-ping", false);
++		enabledFMLMonitor = configuration.getBoolean("settings.enable-fml-monitor", false);
+     }
+ 
+     private FileConfiguration loadConfig(File file) throws IOException, InvalidConfigurationException {
+@@ -69,5 +70,6 @@ public class MigotConfig {
+ 	// Settings - values
+ 	public static boolean enabledAutoSave = false;
+ 	public static boolean enabledForkPing = false;
++	public static boolean enabledFMLMonitor = false;
+ 	
+ }
+\ No newline at end of file
+diff --git a/src/main/java/net/minecraft/server/LoginListener.java b/src/main/java/net/minecraft/server/LoginListener.java
+index 045f65b..d5c6812 100644
+--- a/src/main/java/net/minecraft/server/LoginListener.java
++++ b/src/main/java/net/minecraft/server/LoginListener.java
+@@ -18,6 +18,7 @@ import javax.crypto.SecretKey;
+ import org.apache.commons.lang3.Validate;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
++import org.torch.fml.PlayerStatus;
+ 
+ // CraftBukkit start
+ // import org.bukkit.Bukkit;
+@@ -150,6 +151,8 @@ public class LoginListener implements PacketLoginInListener, ITickable {
+             EntityPlayer entityplayer = this.server.getPlayerList().a(this.i.getId());
+ 			
+ 			// Torch start
++			PlayerStatus.useFML = hostname.contains("\0FML\0");
++			
+ 			if(this.isPremiumAccount) {
+ 				PremiumAccountLoginEvent event = new PremiumAccountLoginEvent(this.getGameProfile().getName());
+ 				event.callEvent();
+diff --git a/src/main/java/net/minecraft/server/NBTTagList.java b/src/main/java/net/minecraft/server/NBTTagList.java
+index 3f13cc1..8c39f8c 100644
+--- a/src/main/java/net/minecraft/server/NBTTagList.java
++++ b/src/main/java/net/minecraft/server/NBTTagList.java
+@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
+ public class NBTTagList extends NBTBase {
+ 
+     private static final Logger b = LogManager.getLogger();
+-    public List<NBTBase> list = Collections.synchronizedList(Lists.newArrayList()); // Paper
++    public List<NBTBase> list = Lists.newArrayList(); // Paper
+     private byte type = 0;
+ 
+     public NBTTagList() {}
+@@ -52,7 +52,9 @@ public class NBTTagList extends NBTBase {
+                     NBTBase nbtbase = NBTBase.createTag(this.type);
+ 
+                     nbtbase.load(datainput, i + 1, nbtreadlimiter);
+-                    this.list.add(nbtbase);
++					synchronized(this) {
++						this.list.add(nbtbase);
++					}
+                 }
+ 
+             }
+@@ -88,7 +90,9 @@ public class NBTTagList extends NBTBase {
+                 return;
+             }
+ 
+-            this.list.add(nbtbase);
++			synchronized(this) {
++				this.list.add(nbtbase);
++			}
+         }
+     }
+ 
+@@ -109,7 +113,7 @@ public class NBTTagList extends NBTBase {
+         }
+     }
+ 
+-    public NBTBase remove(int i) {
++    public synchronized NBTBase remove(int i) {
+         return (NBTBase) this.list.remove(i);
+     }
+ 
+@@ -205,7 +209,9 @@ public class NBTTagList extends NBTBase {
+             NBTBase nbtbase = (NBTBase) iterator.next();
+             NBTBase nbtbase1 = nbtbase.clone();
+ 
+-            nbttaglist.list.add(nbtbase1);
++			synchronized(this) {
++				nbttaglist.list.add(nbtbase1);
++			}
+         }
+ 
+         return nbttaglist;
+diff --git a/src/main/java/net/minecraft/server/NetworkManager.java b/src/main/java/net/minecraft/server/NetworkManager.java
+index 5942a4c..1e4308c 100644
+--- a/src/main/java/net/minecraft/server/NetworkManager.java
++++ b/src/main/java/net/minecraft/server/NetworkManager.java
+@@ -341,8 +341,8 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
+         }
+     }
+ 
+-    protected void channelRead0(ChannelHandlerContext channelhandlercontext, Packet object) throws Exception { // CraftBukkit - fix decompile error
+-        this.a(channelhandlercontext, (Packet) object);
++    protected void channelRead0(ChannelHandlerContext channelhandlercontext, Packet packet) throws Exception { // CraftBukkit - fix decompile error
++		this.a(channelhandlercontext, packet);
+     }
+ 
+     static class QueuedPacket {
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index 048d7b8..40bd2f9 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -6,6 +6,7 @@ import com.google.common.primitives.Floats;
+ import io.netty.buffer.Unpooled;
+ import io.netty.util.concurrent.Future;
+ import io.netty.util.concurrent.GenericFutureListener;
++import io.netty.buffer.ByteBuf;
+ import java.io.IOException;
+ import java.util.ArrayList;
+ import java.util.Collections;
+@@ -22,7 +23,12 @@ import io.netty.util.AttributeKey; // Torch
+ 
+ import com.google.common.collect.Sets;
+ import java.util.HashSet;
++import java.util.HashMap;
+ import java.util.concurrent.RecursiveAction;
++import com.google.common.base.Charsets;
++import java.util.logging.Level;
++import org.torch.fml.PlayerStatus;
++import de.minetick.MigotConfig;
+ 
+ // CraftBukkit start
+ import java.util.concurrent.ExecutionException;
+@@ -108,6 +114,9 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+     private int G;
+     private boolean processedDisconnect; // CraftBukkit - Added
+ 	public static final AttributeKey<EntityPlayer> PLAYER_ATTR_KEY = AttributeKey.valueOf("player"); // TacoSpigot
++	private int handshackCount = 0; // Anti-twice
++	public HashMap<String, String> mods = new HashMap<String, String>();
++	protected PlayerStatus playerStatus;
+ 	
+ 	private int g(int i) {
+         i ^= i >>> 20 ^ i >>> 12;
+@@ -2241,6 +2250,48 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+         PlayerConnectionUtils.ensureMainThread(packetplayinsettings, this, this.player.x());
+         this.player.a(packetplayinsettings);
+     }
++	
++	// Torch start
++	private String formatMods(HashMap<String, String> mods) {
++        String result = "";
++        for(String name : mods.keySet()) {
++            result += name + ": " + mods.get(name) + "\n";
++        }
++		return result;
++    }
++	
++	private String toUTF8String(ByteBuf data) {
++        String str = data.toString(Charsets.UTF_8);
++        return str;
++    }
++	
++	public void handshakeFML(PacketPlayInCustomPayload packet) {
++		PlayerStatus playerStatus = PlayerStatus.addPlayer(this.player.getName());
++        PacketDataSerializer data = packet.b();
++		
++		int mod = data.readByte();
++		for (int i = 0; i < mod; i++) {
++			String string = this.toUTF8String(data);
++            this.mods.put(string, string);
++        }
++		
++		this.infoOutput(this.player.getName());
++		// System.out.println("Player " +  this.player.getName() + " logged with Mod(s): " + formatMods(this.mods) );
++		playerStatus.removePlayer(this.player.getName());
++    }
++	
++	public void logOutput(final String format, final Object... args) {
++        PlayerConnection.LOGGER.info(String.format(format, args));
++    }
++	
++	public void infoOutput(String player) {
++			this.logOutput("Player %s status:\n"
++                + "Mods:%s",
++            player,
++            this.formatMods(this.mods)
++        );
++    }
++	// Torch end
+ 
+     public void a(PacketPlayInCustomPayload packetplayincustompayload) {
+         PlayerConnectionUtils.ensureMainThread(packetplayincustompayload, this, this.player.x());
+@@ -2248,7 +2299,17 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+         PacketDataSerializer packetdataserializer;
+         ItemStack itemstack;
+         ItemStack itemstack1;
+-
++		
++		// Torch start
++		if (this.handshackCount == 0) {
++			this.handshackCount = 1;
++
++			if (playerStatus.useFML && MigotConfig.enabledFMLMonitor) {
++				this.handshakeFML(packetplayincustompayload);
++			}
++		}
++		// Torch end
++		
+         try { // Paper - Reimplement BookEditEvent
+         if ("MC|BEdit".equals(s)) {
+             packetdataserializer = new PacketDataSerializer(Unpooled.wrappedBuffer(packetplayincustompayload.b()));
+diff --git a/src/main/java/net/minecraft/server/PlayerList.java b/src/main/java/net/minecraft/server/PlayerList.java
+index 9843ad1..e941ece 100644
+--- a/src/main/java/net/minecraft/server/PlayerList.java
++++ b/src/main/java/net/minecraft/server/PlayerList.java
+@@ -559,7 +559,7 @@ public abstract class PlayerList {
+         }
+         return entity;
+     }
+-
++	
+     public EntityPlayer processLogin(GameProfile gameprofile, EntityPlayer player) {
+         return player;
+     }
+diff --git a/src/main/java/net/minecraft/server/RegionFile.java b/src/main/java/net/minecraft/server/RegionFile.java
+index 32cf73e..5b925cc 100644
+--- a/src/main/java/net/minecraft/server/RegionFile.java
++++ b/src/main/java/net/minecraft/server/RegionFile.java
+@@ -52,10 +52,6 @@ public class RegionFile {
+     private void addCoordinatesToCache(int i, int j) {
+         this.existingChunkCache[i + j * 32] = true;
+     }
+-	
+-	public static <E> List<E> newSyncArrayListWithCapacity(int initialArraySize) {
+-		return Collections.synchronizedList(new ArrayList<E>(initialArraySize));
+-	}
+     // Migot end
+ 
+     public RegionFile(File file) {
+@@ -84,12 +80,14 @@ public class RegionFile {
+             }
+ 
+             i = (int) this.c.length() / 4096;
+-            this.f = this.newSyncArrayListWithCapacity(i); // Torch
++            this.f = Lists.newArrayListWithCapacity(i); // Torch
+ 
+             int j;
+ 
+             for (j = 0; j < i; ++j) {
+-                this.f.add(Boolean.valueOf(true));
++				synchronized(this) {
++					this.f.add(Boolean.valueOf(true));
++				}
+             }
+ 
+             this.f.set(0, Boolean.valueOf(false));
+@@ -287,7 +285,9 @@ public class RegionFile {
+ 
+                     for (j2 = 0; j2 < k1; ++j2) {
+                         this.c.write(RegionFile.a);
+-                        this.f.add(Boolean.valueOf(false));
++						synchronized(this) {
++							this.f.add(Boolean.valueOf(false));
++						}
+                     }
+ 
+                     this.g += 4096 * k1;
+diff --git a/src/main/java/org/torch/fml/PlayerStatus.java b/src/main/java/org/torch/fml/PlayerStatus.java
+new file mode 100644
+index 0000000..1c65842
+--- /dev/null
++++ b/src/main/java/org/torch/fml/PlayerStatus.java
+@@ -0,0 +1,22 @@
++package org.torch.fml;
++
++import java.util.HashMap;
++
++public class PlayerStatus {
++    private final static HashMap<String, PlayerStatus> playerStatus = new HashMap<String, PlayerStatus>();
++    public static boolean useFML;
++    
++    public static PlayerStatus addPlayer(String playerName) {
++        PlayerStatus playerStatus = new PlayerStatus();
++        PlayerStatus.playerStatus.put(playerName, playerStatus);
++        return playerStatus;
++    }
++    
++    public static PlayerStatus removePlayer(String playerName) {
++        return playerStatus.remove(playerName);
++    }
++    
++    public static PlayerStatus getPlayer(String playerName) {
++        return playerStatus.get(playerName);
++    }
++}
+\ No newline at end of file
+diff --git a/src/main/resources/configurations/migot.yml b/src/main/resources/configurations/migot.yml
+index 2aa6d52..dbf4b4c 100644
+--- a/src/main/resources/configurations/migot.yml
++++ b/src/main/resources/configurations/migot.yml
+@@ -5,4 +5,5 @@
+ 
+ auto-save: false
+ settings:
+-  fork-ping: false
+\ No newline at end of file
++  fork-ping: false
++  enable-fml-monitor: false
+\ No newline at end of file
+-- 
+2.8.2.windows.1
+

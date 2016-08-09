@@ -1,0 +1,423 @@
+From 0cf447494114c282248563f23ba55286ebf984a1 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Wed, 20 Jul 2016 18:40:46 +0800
+Subject: [PATCH] API changes misc nbt storage fix and IO exception
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityInsentient.java b/src/main/java/net/minecraft/server/EntityInsentient.java
+index b35d349..3b49490 100644
+--- a/src/main/java/net/minecraft/server/EntityInsentient.java
++++ b/src/main/java/net/minecraft/server/EntityInsentient.java
+@@ -636,9 +636,9 @@ public abstract class EntityInsentient extends EntityLiving {
+         }
+     }
+ 
+-	navigation nav_task;
+-    targetSelector tar_task;
+-    protected final void doTick() { // Torch - Entityliving do Tick
++	// navigation nav_task;
++    // targetSelector tar_task;
++    protected final void doTick() {
+         ++this.ticksFarFromPlayer;
+ 		this.navigation.cleanUpExpiredSearches(); // Migot
+         this.world.methodProfiler.a("checkDespawn");
+@@ -660,22 +660,24 @@ public abstract class EntityInsentient extends EntityLiving {
+         this.bv.a();
+         this.world.methodProfiler.b();
+         this.world.methodProfiler.a("targetSelector");
+-        // this.targetSelector.a();
+-		tar_task = new targetSelector();
+-        tar_task.fork();
++        this.targetSelector.a();
++		// tar_task = new targetSelector();
++        // tar_task.fork();
+         this.world.methodProfiler.b();
+         this.world.methodProfiler.a("goalSelector");
+-        // this.goalSelector.a();
++        this.goalSelector.a();
++		/* // Torch - ForkJoin shouldn't in do tick.
+ 		try {
+             this.goalSelector.a();
+         } catch (Exception ex) {
+             world.getServer().getLogger().log(java.util.logging.Level.WARNING, "Entityliving doTick - Goal cannot find.");
+         }
++		*/
+         this.world.methodProfiler.b();
+         this.world.methodProfiler.a("navigation");
+-        // this.navigation.l();
+-		nav_task = new navigation();
+-        nav_task.fork();
++        this.navigation.l();
++		// nav_task = new navigation();
++        // nav_task.fork();
+         this.world.methodProfiler.b();
+         this.world.methodProfiler.a("mob tick");
+         this.M();
+diff --git a/src/main/java/net/minecraft/server/EntityLiving.java b/src/main/java/net/minecraft/server/EntityLiving.java
+index 440171d..8284941 100644
+--- a/src/main/java/net/minecraft/server/EntityLiving.java
++++ b/src/main/java/net/minecraft/server/EntityLiving.java
+@@ -2020,7 +2020,7 @@ public abstract class EntityLiving extends Entity {
+ 
+     protected void doTick() {}
+ 
+-	GE_Pool ge_task; // Hose
++	// GE_Pool ge_task; // Hose
+     protected void co() {
+         List list = this.world.getEntities(this, this.getBoundingBox(), IEntitySelector.a(this));
+ 
+diff --git a/src/main/java/net/minecraft/server/GameProfileBanList.java b/src/main/java/net/minecraft/server/GameProfileBanList.java
+deleted file mode 100644
+index ff6af1a..0000000
+--- a/src/main/java/net/minecraft/server/GameProfileBanList.java
++++ /dev/null
+@@ -1,60 +0,0 @@
+-package net.minecraft.server;
+-
+-import com.google.gson.JsonObject;
+-import com.mojang.authlib.GameProfile;
+-import java.io.File;
+-import java.util.Iterator;
+-
+-public class GameProfileBanList extends JsonList<GameProfile, GameProfileBanEntry> {
+-
+-    public GameProfileBanList(File file) {
+-        super(file);
+-    }
+-
+-    protected JsonListEntry<GameProfile> a(JsonObject jsonobject) {
+-        return new GameProfileBanEntry(jsonobject);
+-    }
+-
+-    public boolean isBanned(GameProfile gameprofile) {
+-        return this.d(gameprofile);
+-    }
+-
+-    public String[] getEntries() {
+-        String[] astring = new String[this.e().size()];
+-        int i = 0;
+-
+-        GameProfileBanEntry gameprofilebanentry;
+-
+-        for (Iterator iterator = this.e().values().iterator(); iterator.hasNext(); astring[i++] = ((GameProfile) gameprofilebanentry.getKey()).getName()) {
+-            gameprofilebanentry = (GameProfileBanEntry) iterator.next();
+-        }
+-
+-        return astring;
+-    }
+-
+-    protected String b(GameProfile gameprofile) {
+-        return gameprofile.getId().toString();
+-    }
+-
+-    public GameProfile a(String s) {
+-        Iterator iterator = this.e().values().iterator();
+-
+-        GameProfileBanEntry gameprofilebanentry;
+-
+-        do {
+-            if (!iterator.hasNext()) {
+-                return null;
+-            }
+-
+-            gameprofilebanentry = (GameProfileBanEntry) iterator.next();
+-        } while (!s.equalsIgnoreCase(((GameProfile) gameprofilebanentry.getKey()).getName()));
+-
+-        return (GameProfile) gameprofilebanentry.getKey();
+-    }
+-
+-    /* SportBukkit - fix decomp error
+-     protected String a(Object object) {
+-         return this.b((GameProfile) object);
+-     }
+-    SportBukkit */
+-}
+diff --git a/src/main/java/net/minecraft/server/NetworkManager.java b/src/main/java/net/minecraft/server/NetworkManager.java
+index c69f62c..7372a1b 100644
+--- a/src/main/java/net/minecraft/server/NetworkManager.java
++++ b/src/main/java/net/minecraft/server/NetworkManager.java
+@@ -112,12 +112,13 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
+ 
+         if (throwable instanceof TimeoutException) {
+             chatmessage = new ChatMessage("disconnect.timeout", new Object[0]);
+-			NetworkManager.g.debug("Uncaught Exception", throwable);
++			// NetworkManager.g.debug("Uncaught Exception", throwable);
+         } else {
+             chatmessage = new ChatMessage("disconnect.genericReason", new Object[] { "Internal Exception: " + throwable});
+-			NetworkManager.g.fatal("Uncaught Exception", throwable);
++			// NetworkManager.g.fatal("Uncaught Exception", throwable);
+         }
+ 
++		NetworkManager.g.debug(throwable);
+         this.close(chatmessage);
+         if (MinecraftServer.getServer().isDebugging()) throwable.printStackTrace(); // Spigot
+     }
+diff --git a/src/main/java/net/minecraft/server/OpList.java b/src/main/java/net/minecraft/server/OpList.java
+deleted file mode 100644
+index e5f457b..0000000
+--- a/src/main/java/net/minecraft/server/OpList.java
++++ /dev/null
+@@ -1,66 +0,0 @@
+-package net.minecraft.server;
+-
+-import com.google.gson.JsonObject;
+-import com.mojang.authlib.GameProfile;
+-import java.io.File;
+-import java.util.Iterator;
+-
+-public class OpList extends JsonList<GameProfile, OpListEntry> {
+-
+-    public OpList(File file) {
+-        super(file);
+-    }
+-
+-    protected JsonListEntry<GameProfile> a(JsonObject jsonobject) {
+-        return new OpListEntry(jsonobject);
+-    }
+-
+-    public String[] getEntries() {
+-        String[] astring = new String[this.e().size()];
+-        int i = 0;
+-
+-        OpListEntry oplistentry;
+-
+-        for (Iterator iterator = this.e().values().iterator(); iterator.hasNext(); astring[i++] = ((GameProfile) oplistentry.getKey()).getName()) {
+-            oplistentry = (OpListEntry) iterator.next();
+-        }
+-
+-        return astring;
+-    }
+-
+-    public int a(GameProfile gameprofile) {
+-        OpListEntry oplistentry = (OpListEntry) this.get(gameprofile);
+-
+-        return oplistentry != null ? oplistentry.a() : 0;
+-    }
+-
+-    public boolean b(GameProfile gameprofile) {
+-        OpListEntry oplistentry = (OpListEntry) this.get(gameprofile);
+-
+-        return oplistentry != null ? oplistentry.b() : false;
+-    }
+-
+-    protected String c(GameProfile gameprofile) {
+-        return gameprofile.getId().toString();
+-    }
+-
+-    public GameProfile a(String s) {
+-        Iterator iterator = this.e().values().iterator();
+-
+-        OpListEntry oplistentry;
+-
+-        do {
+-            if (!iterator.hasNext()) {
+-                return null;
+-            }
+-
+-            oplistentry = (OpListEntry) iterator.next();
+-        } while (!s.equalsIgnoreCase(((GameProfile) oplistentry.getKey()).getName()));
+-
+-        return (GameProfile) oplistentry.getKey();
+-    }
+-
+-    protected String a(Object object) {
+-        return this.c((GameProfile) object);
+-    }
+-}
+diff --git a/src/main/java/net/minecraft/server/PlayerList.java b/src/main/java/net/minecraft/server/PlayerList.java
+index 3517762..2d0c633 100644
+--- a/src/main/java/net/minecraft/server/PlayerList.java
++++ b/src/main/java/net/minecraft/server/PlayerList.java
+@@ -780,7 +780,7 @@ public abstract class PlayerList {
+ 
+     public void f(EntityPlayer entityplayer) {
+         GameProfile gameprofile = entityplayer.getProfile();
+-        int i = this.isOp(gameprofile) ? this.operators.getLevel(gameprofile) : 0; // SportBukkit - rename method to avoid decomp error
++        int i = this.isOp(gameprofile) ? this.operators.a(gameprofile) : 0;
+ 
+         i = this.server.R() && this.server.worldServer[0].getWorldData().u() ? 4 : i;
+         i = this.t ? 4 : i;
+diff --git a/src/main/java/net/minecraft/server/WhiteList.java b/src/main/java/net/minecraft/server/WhiteList.java
+deleted file mode 100644
+index fa20183..0000000
+--- a/src/main/java/net/minecraft/server/WhiteList.java
++++ /dev/null
+@@ -1,60 +0,0 @@
+-package net.minecraft.server;
+-
+-import com.google.gson.JsonObject;
+-import com.mojang.authlib.GameProfile;
+-import java.io.File;
+-import java.util.Iterator;
+-
+-public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
+-
+-    public WhiteList(File file) {
+-        super(file);
+-    }
+-
+-    protected JsonListEntry<GameProfile> a(JsonObject jsonobject) {
+-        return new WhiteListEntry(jsonobject);
+-    }
+-
+-    public boolean isWhitelisted(GameProfile gameprofile) {
+-        return this.d(gameprofile);
+-    }
+-
+-    public String[] getEntries() {
+-        String[] astring = new String[this.e().size()];
+-        int i = 0;
+-
+-        WhiteListEntry whitelistentry;
+-
+-        for (Iterator iterator = this.e().values().iterator(); iterator.hasNext(); astring[i++] = ((GameProfile) whitelistentry.getKey()).getName()) {
+-            whitelistentry = (WhiteListEntry) iterator.next();
+-        }
+-
+-        return astring;
+-    }
+-
+-    protected String b(GameProfile gameprofile) {
+-        return gameprofile.getId().toString();
+-    }
+-
+-    public GameProfile a(String s) {
+-        Iterator iterator = this.e().values().iterator();
+-
+-        WhiteListEntry whitelistentry;
+-
+-        do {
+-            if (!iterator.hasNext()) {
+-                return null;
+-            }
+-
+-            whitelistentry = (WhiteListEntry) iterator.next();
+-        } while (!s.equalsIgnoreCase(((GameProfile) whitelistentry.getKey()).getName()));
+-
+-        return (GameProfile) whitelistentry.getKey();
+-    }
+-
+-    /* SportBukkit - fix decomp error
+-     protected String a(Object object) {
+-         return this.b((GameProfile) object);
+-     }
+-    SportBukkit */
+-}
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index 11d24d0..e609972 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -2423,7 +2423,7 @@ public abstract class World implements IBlockAccess {
+         this.allowAnimals = flag1;
+     }
+ 
+-	WT_Pool wt_task; // Hose
++	// WT_Pool wt_task; // Hose
+     public void doTick() {
+ 		// Paper - Start PersistenceCounters
+         if (PaperConfig.paperIOStats && System.nanoTime() > nextPersistenceCountersTick) {
+@@ -2434,9 +2434,9 @@ public abstract class World implements IBlockAccess {
+             }
+         }
+         // Paper - End
+-        // this.t();
+-		wt_task = new WT_Pool();
+-        wt_task.fork();
++        this.t();
++		// wt_task = new WT_Pool();
++        // wt_task.fork();
+     }
+ 
+     protected void I() {
+diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
+index d4418d3..da07a5c 100644
+--- a/src/main/java/org/bukkit/OfflinePlayer.java
++++ b/src/main/java/org/bukkit/OfflinePlayer.java
+@@ -8,6 +8,7 @@ import org.bukkit.entity.AnimalTamer;
+ import org.bukkit.entity.Player;
+ import org.bukkit.permissions.ServerOperator;
+ 
++
+ public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable {
+ 
+     /**
+@@ -155,4 +156,5 @@ public interface OfflinePlayer extends ServerOperator, AnimalTamer, Configuratio
+     int hashCode();
+     // Paper end
+ 
++
+ }
+diff --git a/src/main/java/org/bukkit/Server.java b/src/main/java/org/bukkit/Server.java
+index da5d7bd..edd9768 100644
+--- a/src/main/java/org/bukkit/Server.java
++++ b/src/main/java/org/bukkit/Server.java
+@@ -23,6 +23,7 @@ import java.io.Serializable;
+ import java.util.*;
+ import java.util.logging.Logger;
+ 
++
+ import org.bukkit.Warning.WarningState;
+ import org.bukkit.boss.BarColor;
+ import org.bukkit.boss.BarFlag;
+@@ -1066,4 +1067,5 @@ public interface Server extends PluginMessageRecipient {
+     Entity getEntity(UUID uuid); // Paper
+ 	
+ 	boolean isDebugLoggingEnabled(); // Paper
++
+ }
+diff --git a/src/main/java/org/bukkit/craftbukkit/chunkio2/impl/CraftNBTStorage.java b/src/main/java/org/bukkit/craftbukkit/chunkio2/impl/CraftNBTStorage.java
+index c163030..e59d82e 100644
+--- a/src/main/java/org/bukkit/craftbukkit/chunkio2/impl/CraftNBTStorage.java
++++ b/src/main/java/org/bukkit/craftbukkit/chunkio2/impl/CraftNBTStorage.java
+@@ -119,12 +119,18 @@ public class CraftNBTStorage implements IDataManager, IPlayerFileData {
+     public NBTTagCompound load(EntityHuman entityhuman) {
+         NBTDataInputConsumer result = new NBTDataInputConsumer();
+         persistence.getPlayerPersistence().loadPlayer(entityhuman.getName(), entityhuman.getUniqueID(), result);
+-		boolean flag = entityhuman instanceof EntityPlayer;
+ 		
+-        if (result.hasException()) { // First check the player if has played before to fix spam issue, and use null check to bypass cause we are sonner than CB anyway.
+-			if (flag) { return null; } // Return to refresh
+-			else { log.warn("Cannot load player data for " + entityhuman.getName()); return null; } // TO NOTICE
++		// Torch start - First check the player if has played before to fix spam issue, and use null check to bypass.
++		boolean flag = entityhuman instanceof EntityPlayer; boolean status = false; // custom status tags
++		if (flag) { // void duplicate checking
++			status = ((CraftPlayer) entityhuman.getBukkitEntity()).hasPlayedBefore();			flag = true;
++		}
++		
++        if (result.hasException()) {
++			if (!status) { return null; } // return to refresh the nbt data
++			else { log.warn("Cannot load player data for " + entityhuman.getName()); return null; } // TODO
+         }
++		// Torch end
+ 
+         NBTTagCompound nbttagcompound = result.getResult();
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+index fd92501..c395b42 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+@@ -1092,9 +1092,11 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+         return hasPlayedBefore;
+     }
+ 	
++	// Torch start - add set played
+ 	public void setPlayedBefore(boolean flag) {
+         hasPlayedBefore = flag;
+     }
++	// Torch end
+ 
+     public void setFirstPlayed(long firstPlayed) {
+         this.firstPlayed = firstPlayed;
+diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
+index 0ead18d..f61d0a8 100644
+--- a/src/main/java/org/bukkit/entity/Player.java
++++ b/src/main/java/org/bukkit/entity/Player.java
+@@ -1656,4 +1656,5 @@ public interface Player extends HumanEntity, Conversable, CommandSender, Offline
+ 
+     Spigot spigot();
+     // Spigot end
++	
+ }
+-- 
+2.8.2.windows.1
+

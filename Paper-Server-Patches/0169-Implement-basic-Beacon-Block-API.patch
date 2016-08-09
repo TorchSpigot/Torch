@@ -1,0 +1,276 @@
+From f5fe70fc500a68855eaabf333fbdbf3fb5727d47 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 23 Jul 2016 22:45:14 +0800
+Subject: [PATCH] Implement basic Beacon Block API
+
+
+diff --git a/src/main/java/net/minecraft/server/TileEntityBeacon.java b/src/main/java/net/minecraft/server/TileEntityBeacon.java
+index b53940a..71e2fe2 100644
+--- a/src/main/java/net/minecraft/server/TileEntityBeacon.java
++++ b/src/main/java/net/minecraft/server/TileEntityBeacon.java
+@@ -12,6 +12,8 @@ import javax.annotation.Nullable;
+ // CraftBukkit start
+ import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+ import org.bukkit.entity.HumanEntity;
++import org.bukkit.craftbukkit.potion.CraftPotionUtil;
++import org.bukkit.potion.PotionEffect;
+ // CraftBukkit end
+ 
+ // Paper start
+@@ -35,7 +37,7 @@ public class TileEntityBeacon extends TileEntityContainer implements ITickable,
+     private static final Set<MobEffectList> f = Sets.newConcurrentHashSet();
+     private final List<TileEntityBeacon.BeaconColorTracker> g = new java.util.concurrent.CopyOnWriteArrayList<TileEntityBeacon.BeaconColorTracker>();
+     private boolean j;
+-    private int k = -1;
++    public int k = -1; // PAIL: private -> public
+ 	private int levels = 0;
+ 	private MobEffectList primary;
+ 	private MobEffectList secondary;
+@@ -68,6 +70,17 @@ public class TileEntityBeacon extends TileEntityContainer implements ITickable,
+     public void setMaxStackSize(int size) {
+         maxStack = size;
+     }
++	
++	public PotionEffect getPrimaryEffect() {
++        return CraftPotionUtil.toBukkit(new MobEffect(this.l, getLevel(), getAmplification(), true, true));
++    }
++
++    public PotionEffect getSecondaryEffect() {
++        if (hasSecondaryEffect()) {
++            return CraftPotionUtil.toBukkit(new MobEffect(this.m, getLevel(), getAmplification(), true, true));
++        }
++        return null;
++    }
+     // CraftBukkit end
+ 
+     public TileEntityBeacon() {}
+@@ -148,58 +161,79 @@ public class TileEntityBeacon extends TileEntityContainer implements ITickable,
+ 		return false;
+ 	}
+ 
+-    private void E() {
+-        if (this.j && this.k > 0 && !this.world.isClientSide && this.l != null) {
+-            double d0 = (double) (this.k * 10 + 10);
+-            byte b0 = 0;
+-
+-            if (this.k >= 4 && this.l == this.m) {
+-                b0 = 1;
+-            }
+-
+-            int i = (9 + this.k * 2) * 20;
+-            int j = this.position.getX();
+-            int k = this.position.getY();
+-            int l = this.position.getZ();
+-            AxisAlignedBB axisalignedbb = (new AxisAlignedBB((double) j, (double) k, (double) l, (double) (j + 1), (double) (k + 1), (double) (l + 1))).g(d0).a(0.0D, (double) this.world.getHeight(), 0.0D);
+-            List list = this.world.a(EntityHuman.class, axisalignedbb);
+-            Iterator iterator = list.iterator();
+-
+-            EntityHuman entityhuman;
+-
+-            // Paper start
+-            org.bukkit.block.Block block = world.getWorld().getBlockAt(position.getX(), position.getY(), position.getZ());
+-            PotionEffect primaryEffect = CraftPotionUtil.toBukkit(new MobEffect(this.l, i, b0, true, true));
+-            // Paper end
+-
+-            while (iterator.hasNext()) {
+-                entityhuman = (EntityHuman) iterator.next();
+-                // Paper start - BeaconEffectEvent
+-                BeaconEffectEvent event = new BeaconEffectEvent(block, primaryEffect, (Player) entityhuman.getBukkitEntity(), true);
+-                if (CraftEventFactory.callEvent(event).isCancelled()) continue;
+-                PotionEffect effect = event.getEffect();
+-                entityhuman.getBukkitEntity().addPotionEffect(effect, true);
+-                // Paper end
+-            }
+-
+-            if (this.k >= 4 && this.l != this.m && this.m != null) {
+-                iterator = list.iterator();
+-                PotionEffect secondaryEffect = org.bukkit.craftbukkit.potion.CraftPotionUtil.toBukkit(new MobEffect(this.m, i, 0, true, true)); // Paper
+-
+-                while (iterator.hasNext()) {
+-                    entityhuman = (EntityHuman) iterator.next();
+-                    // Paper start - BeaconEffectEvent
+-                    BeaconEffectEvent event = new BeaconEffectEvent(block, secondaryEffect, (Player) entityhuman.getBukkitEntity(), false);
+-                    if (CraftEventFactory.callEvent(event).isCancelled()) continue;
+-                    PotionEffect effect = event.getEffect();
+-                    entityhuman.getBukkitEntity().addPotionEffect(effect, true);
+-                    // Paper end
+-                }
+-            }
++    // CraftBukkit start - split into components
++    private byte getAmplification() {
++        byte b0 = 0;
++		
++        if (this.k >= 4 && this.l == this.m) {
++            b0 = 1;
++        }
++		
++		return b0;
++    }
++	
++	private int getLevel() {
++        int i = (9 + this.k * 2) * 20;
++		return i;
++    }
++	
++	public List getHumansInRange() {
++		double d0 = (double) (this.k * 10 + 10);
++		
++        int j = this.position.getX();
++        int k = this.position.getY();
++        int l = this.position.getZ();
++        AxisAlignedBB axisalignedbb = (new AxisAlignedBB((double) j, (double) k, (double) l, (double) (j + 1), (double) (k + 1), (double) (l + 1))).g(d0).a(0.0D, (double) this.world.getHeight(), 0.0D);
++        List list = this.world.a(EntityHuman.class, axisalignedbb);
++		
++		return list;
++    }
++	
++	private void applyEffect(List list, MobEffectList effects, int i, int b0) {
++        Iterator iterator = list.iterator();
++        EntityHuman entityhuman;
++
++        // Paper start
++        org.bukkit.block.Block block = world.getWorld().getBlockAt(position.getX(), position.getY(), position.getZ());
++        PotionEffect primaryEffect = CraftPotionUtil.toBukkit(new MobEffect(this.l, i, b0, true, true));
++        // Paper end
++
++        while (iterator.hasNext()) {
++            entityhuman = (EntityHuman) iterator.next();
++            // Paper start - BeaconEffectEvent
++            BeaconEffectEvent event = new BeaconEffectEvent(block, primaryEffect, (Player) entityhuman.getBukkitEntity(), true);
++			if (CraftEventFactory.callEvent(event).isCancelled()) continue;
++			PotionEffect effect = event.getEffect();
++			entityhuman.getBukkitEntity().addPotionEffect(effect, true);
++			// Paper end
++		}
++		
++	}
++	
++	private boolean hasSecondaryEffect() {
++		if (this.k >= 4 && this.l != this.m && this.m != null) {
++			return true;
+         }
+ 
++        return false;
+     }
+ 
++    private void E() {
++        if (this.j && this.k > 0 && !this.world.isClientSide && this.l != null) {
++            byte b0 = getAmplification();
++            int i = getLevel();
++            List list = getHumansInRange();
++			
++            applyEffect(list, this.l, i, b0);
++			
++			if (hasSecondaryEffect()) {
++                applyEffect(list, this.m, i, 0);
++			}
++		}
++	}
++	
++	// CraftBukkit end
++
+     private void F() {
+         int i = this.k;
+         int j = this.position.getX();
+diff --git a/src/main/java/org/bukkit/block/Beacon.java b/src/main/java/org/bukkit/block/Beacon.java
+new file mode 100644
+index 0000000..f5311a5
+--- /dev/null
++++ b/src/main/java/org/bukkit/block/Beacon.java
+@@ -0,0 +1,41 @@
++package org.bukkit.block;
++
++import java.util.Collection;
++import org.bukkit.entity.LivingEntity;
++import org.bukkit.inventory.InventoryHolder;
++import org.bukkit.potion.PotionEffect;
++
++/**
++ * Represents a beacon.
++ */
++public interface Beacon extends BlockState, InventoryHolder {
++    /**
++     * Returns the list of players within the beacon's range of effect.
++     *
++     * @return the players in range
++     */
++    Collection<LivingEntity> getEntitiesInRange();
++
++    /**
++     * Returns the tier of the beacon pyramid (0-4). The tier refers to the
++     * beacon's power level, based on how many layers of blocks are in the
++     * pyramid. Tier 1 refers to a beacon with one layer of 9 blocks under it.
++     *
++     * @return the beacon tier
++     */
++    int getTier();
++
++    /**
++     * Returns the primary effect set on the beacon
++     *
++     * @return the primary effect
++     */
++    PotionEffect getPrimaryEffect();
++
++    /**
++     * Returns the secondary effect set on the beacon.
++     *
++     * @return the secondary effect or null if no secondary effect
++     */
++    PotionEffect getSecondaryEffect();
++}
+diff --git a/src/main/java/org/bukkit/craftbukkit/block/CraftBeacon.java b/src/main/java/org/bukkit/craftbukkit/block/CraftBeacon.java
+index 632b22d..7a2a408 100644
+--- a/src/main/java/org/bukkit/craftbukkit/block/CraftBeacon.java
++++ b/src/main/java/org/bukkit/craftbukkit/block/CraftBeacon.java
+@@ -2,7 +2,11 @@ package org.bukkit.craftbukkit.block;
+ 
+ import net.minecraft.server.TileEntityBeacon;
+ import org.bukkit.Material;
+-
++import java.util.ArrayList;
++import java.util.Collection;
++import net.minecraft.server.EntityHuman;
++import org.bukkit.entity.LivingEntity;
++import org.bukkit.potion.PotionEffect;
+ import org.bukkit.block.Block;
+ import org.bukkit.block.Beacon;
+ import org.bukkit.craftbukkit.CraftWorld;
+@@ -45,5 +49,32 @@ public class CraftBeacon extends CraftBlockState implements Beacon {
+     public TileEntityBeacon getTileEntity() {
+         return beacon;
+     }
+-}
++	
++	@Override
++    public Collection<LivingEntity> getEntitiesInRange() {
++        Collection<EntityHuman> nms = beacon.getHumansInRange();
++        Collection<LivingEntity> bukkit = new ArrayList<LivingEntity>(nms.size());
++
++        for (EntityHuman human : nms) {
++            bukkit.add(human.getBukkitEntity());
++        }
+ 
++        return bukkit;
++    }
++
++    @Override
++    public int getTier() {
++        return beacon.k;
++    }
++
++    @Override
++    public PotionEffect getPrimaryEffect() {
++        return beacon.getPrimaryEffect();
++    }
++
++    @Override
++    public PotionEffect getSecondaryEffect() {
++        return beacon.getSecondaryEffect();
++    }
++	
++}
+\ No newline at end of file
+-- 
+2.8.2.windows.1
+
