@@ -1,4 +1,4 @@
-From ef6564c28cb709258537bafced787100ffba8f6e Mon Sep 17 00:00:00 2001
+From d7a8565c877b0442ccaf5d780cbe91d77f9482a0 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Thu, 28 Jul 2016 21:35:00 +0800
 Subject: [PATCH] Fork/Join for registry, miscs

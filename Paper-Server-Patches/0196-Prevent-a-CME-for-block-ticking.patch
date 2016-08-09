@@ -1,4 +1,4 @@
-From 1f06d5ef19f8eb39754e593283cbcc43b74b0554 Mon Sep 17 00:00:00 2001
+From dd0545d083670507bfb6265ac76261b9548b140d Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Thu, 28 Jul 2016 17:30:57 +0800
 Subject: [PATCH] Prevent a CME for block ticking
