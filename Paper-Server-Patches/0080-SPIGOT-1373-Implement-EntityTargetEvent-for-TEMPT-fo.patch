@@ -1,4 +1,4 @@
-From fb591f6ebf6e4caf75aff6739489c0e1e134d2ff Mon Sep 17 00:00:00 2001
+From 347855c5cd0b4d4dc0eb295501c752b27f998979 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 18:01:17 +0800
 Subject: [PATCH] SPIGOT-1373: Implement EntityTargetEvent for TEMPT for Bukkit

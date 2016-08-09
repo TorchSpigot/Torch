@@ -1,4 +1,4 @@
-From 0251e23e41c1bd0260d2701499e22779eefbc6eb Mon Sep 17 00:00:00 2001
+From cb0f2326d4fd5568514f8bda5a7367ff3100b888 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 8 Aug 2016 17:07:32 +0800
 Subject: [PATCH] Synchronized network queue progress

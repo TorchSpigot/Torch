@@ -1,4 +1,4 @@
-From 4c3df6c32ac44711402e189af80d17e7bde1fb52 Mon Sep 17 00:00:00 2001
+From 8c7a4d505b3b0b78313864237a4a6fdbb509c91f Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 7 Aug 2016 02:52:54 +0800
 Subject: [PATCH] Add API for snow layer blocks. Addresses BUKKIT-5421
