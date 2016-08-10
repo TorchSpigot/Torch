@@ -1,4 +1,4 @@
-From e3d4639dd9d7c2b0e1a4808d882a16db049c530f Mon Sep 17 00:00:00 2001
+From a5fcc8fc855572e3e3582940295386867379f6f3 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 22:58:02 +0800
 Subject: [PATCH] Dont be so noisy with debug messages
