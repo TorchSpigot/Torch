@@ -1,4 +1,4 @@
-From def82af9139b9734fda3811daae76fb367f34f97 Mon Sep 17 00:00:00 2001
+From 8852bfe3b539baa52357d412dfc1aad6834d92bb Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:39:21 +0800
 Subject: [PATCH] SPIGOT-2481: Implement EnchantmentTarget.BREAKABLE for Bukkit

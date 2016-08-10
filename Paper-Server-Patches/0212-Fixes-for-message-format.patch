@@ -1,4 +1,4 @@
-From 0c56a94aa13f24915d36a47f793de3da2ef9b58a Mon Sep 17 00:00:00 2001
+From 22b88948c5967529176fa4124b13071004cc90d7 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 5 Aug 2016 13:23:19 +0800
 Subject: [PATCH] Fixes for message format

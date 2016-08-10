@@ -1,0 +1,96 @@
+From c1c05ab01b285a81dda3c1d740610ac2a24463f3 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Thu, 11 Aug 2016 00:17:03 +0800
+Subject: [PATCH] Fix FOR_OTHER_TEAMS and FOR_OWN_TEAM being inverted for
+ visibility
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/scoreboard/CraftTeam.java b/src/main/java/org/bukkit/craftbukkit/scoreboard/CraftTeam.java
+index e768834..ec76866 100644
+--- a/src/main/java/org/bukkit/craftbukkit/scoreboard/CraftTeam.java
++++ b/src/main/java/org/bukkit/craftbukkit/scoreboard/CraftTeam.java
+@@ -188,11 +188,11 @@ final class CraftTeam extends CraftScoreboardComponent implements Team {
+ 
+         switch (option) {
+             case NAME_TAG_VISIBILITY:
+-                return OptionStatus.values()[team.getNameTagVisibility().ordinal()];
++                return bukkitVisibility(team.getNameTagVisibility());
+             case DEATH_MESSAGE_VISIBILITY:
+-                return OptionStatus.values()[team.getDeathMessageVisibility().ordinal()];
++                return bukkitVisibility(team.getDeathMessageVisibility());
+             case COLLISION_RULE:
+-                return OptionStatus.values()[team.getCollisionRule().ordinal()];
++                return bukkitCollision(team.getCollisionRule());
+             default:
+                 throw new IllegalArgumentException("Unrecognised option " + option);
+         }
+@@ -204,18 +204,63 @@ final class CraftTeam extends CraftScoreboardComponent implements Team {
+ 
+         switch (option) {
+             case NAME_TAG_VISIBILITY:
+-                team.setNameTagVisibility(EnumNameTagVisibility.values()[status.ordinal()]);
++                team.setNameTagVisibility(mojangVisibility(status));
+                 break;
+             case DEATH_MESSAGE_VISIBILITY:
+-                team.setDeathMessageVisibility(EnumNameTagVisibility.values()[status.ordinal()]);
++                team.setDeathMessageVisibility(mojangVisibility(status));
+                 break;
+             case COLLISION_RULE:
+-                team.setCollisionRule(ScoreboardTeamBase.EnumTeamPush.values()[status.ordinal()]);
++                team.setCollisionRule(mojangCollision(status));
+                 break;
+             default:
+                 throw new IllegalArgumentException("Unrecognised option " + option);
+         }
+     }
++	
++    public static EnumNameTagVisibility mojangVisibility(OptionStatus bukkit) {
++        switch(bukkit) {
++            case ALWAYS: return EnumNameTagVisibility.ALWAYS;
++            case NEVER: return EnumNameTagVisibility.NEVER;
++
++            // Order of these are flipped since the Mojang versions have negated meaning
++            case FOR_OWN_TEAM: return EnumNameTagVisibility.HIDE_FOR_OTHER_TEAMS;
++            case FOR_OTHER_TEAMS: return EnumNameTagVisibility.HIDE_FOR_OWN_TEAM;
++        }
++        throw new Error();
++    }
++
++    public static ScoreboardTeamBase.EnumTeamPush mojangCollision(OptionStatus bukkit) {
++        switch(bukkit) {
++            case ALWAYS: return ScoreboardTeamBase.EnumTeamPush.ALWAYS;
++            case NEVER: return ScoreboardTeamBase.EnumTeamPush.NEVER;
++
++            // These are NOT flipped since Mojang didn't use the negative here
++            // i.e. HIDE_FOR_OWN_TEAM is actually "pushOwnTeam".
++            case FOR_OWN_TEAM: return ScoreboardTeamBase.EnumTeamPush.HIDE_FOR_OWN_TEAM;
++            case FOR_OTHER_TEAMS: return ScoreboardTeamBase.EnumTeamPush.HIDE_FOR_OTHER_TEAMS;
++        }
++        throw new Error();
++    }
++
++    public static OptionStatus bukkitVisibility(EnumNameTagVisibility mojang) {
++        switch(mojang) {
++            case ALWAYS: return OptionStatus.ALWAYS;
++            case NEVER: return OptionStatus.NEVER;
++            case HIDE_FOR_OTHER_TEAMS: return OptionStatus.FOR_OWN_TEAM;
++            case HIDE_FOR_OWN_TEAM: return OptionStatus.FOR_OTHER_TEAMS;
++        }
++        throw new Error();
++    }
++
++    public static OptionStatus bukkitCollision(ScoreboardTeamBase.EnumTeamPush mojang) {
++        switch(mojang) {
++            case ALWAYS: return OptionStatus.ALWAYS;
++            case NEVER: return OptionStatus.NEVER;
++            case HIDE_FOR_OWN_TEAM: return OptionStatus.FOR_OWN_TEAM;
++            case HIDE_FOR_OTHER_TEAMS: return OptionStatus.FOR_OTHER_TEAMS;
++        }
++        throw new Error();
++    }
+ 
+     public static EnumNameTagVisibility bukkitToNotch(NameTagVisibility visibility) {
+         switch (visibility) {
+-- 
+2.8.2.windows.1
+
