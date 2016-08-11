@@ -1,4 +1,4 @@
-From bef36a1ec60ae6397f18757c985678e1e3d9fff3 Mon Sep 17 00:00:00 2001
+From 0c1a3c24f5ca67f59ef0d44137f03dba5febda2e Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Wed, 3 Aug 2016 00:02:11 +0800
 Subject: [PATCH] Synchronized chunk load event also prevent NPE on UUID lookup

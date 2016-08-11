@@ -1,4 +1,4 @@
-From a99929f65f8c34d8b01c3c186562021f5cba2370 Mon Sep 17 00:00:00 2001
+From a0327c49270c0726176e30439488f639d76bdf11 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 31 Jul 2016 23:46:59 +0800
 Subject: [PATCH] Optimize chunk generate on starting

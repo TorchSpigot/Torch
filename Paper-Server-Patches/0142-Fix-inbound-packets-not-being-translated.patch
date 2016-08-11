@@ -1,4 +1,4 @@
-From 0804f4f55779a793e476c0224f079da885ebcec6 Mon Sep 17 00:00:00 2001
+From 75c0e99b8ef701b6768183b492db376e4629251f Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 06:52:01 +0800
 Subject: [PATCH] Fix inbound packets not being translated
