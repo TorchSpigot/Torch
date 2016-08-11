@@ -1,0 +1,105 @@
+From a99929f65f8c34d8b01c3c186562021f5cba2370 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 31 Jul 2016 23:46:59 +0800
+Subject: [PATCH] Optimize chunk generate on starting
+
+
+diff --git a/src/main/java/co/aikar/timings/TimingHandler.java b/src/main/java/co/aikar/timings/TimingHandler.java
+index 80be32e..4b8f66a 100644
+--- a/src/main/java/co/aikar/timings/TimingHandler.java
++++ b/src/main/java/co/aikar/timings/TimingHandler.java
+@@ -111,6 +111,9 @@ class TimingHandler implements Timing {
+             if (!Bukkit.isPrimaryThread()) {
+                 // Bukkit.getLogger().log(Level.SEVERE, "Timing issue occour in " + name + ", please report it to Torch!");
+                 // new Throwable().printStackTrace();
++				synchronized(this) {
++					addDiff(System.nanoTime() - start);
++				}
+                 start = 0;
+                 return;
+             }
+diff --git a/src/main/java/net/minecraft/server/DedicatedServer.java b/src/main/java/net/minecraft/server/DedicatedServer.java
+index e947ad7..41ba0a6 100644
+--- a/src/main/java/net/minecraft/server/DedicatedServer.java
++++ b/src/main/java/net/minecraft/server/DedicatedServer.java
+@@ -128,24 +128,6 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
+         DedicatedServer.LOGGER.info("Loading properties");
+         this.propertyManager = new PropertyManager(this.options); // CraftBukkit - CLI argument support
+ 		
+-		/*
+-        this.q = new EULA(new File("eula.txt"));
+-        // Spigot Start
+-        boolean eulaAgreed = Boolean.getBoolean( "com.mojang.eula.agree" );
+-        if ( eulaAgreed )
+-        {
+-            System.err.println( "You have used the Spigot command line EULA agreement flag." );
+-            System.err.println( "By using this setting you are indicating your agreement to Mojang's EULA (https://account.mojang.com/documents/minecraft_eula)." );
+-            System.err.println( "If you do not agree to the above EULA please stop your server and remove this flag immediately." );
+-        }
+-        // Spigot End
+-		
+-        if (!this.q.a() && !eulaAgreed) { // Spigot
+-            DedicatedServer.LOGGER.info("You need to agree to the EULA in order to run the server. Go to eula.txt for more info.");
+-            this.q.b();
+-            return false;
+-        } else {
+-		*/
+             if (this.R()) {
+                 this.c("127.0.0.1");
+             } else {
+@@ -222,20 +204,6 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
+             server.enablePlugins(org.bukkit.plugin.PluginLoadOrder.STARTUP);
+             // Spigot End
+ 
+-            if (!this.getOnlineMode()) {
+-                DedicatedServer.LOGGER.warn("**** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!");
+-                DedicatedServer.LOGGER.warn("The server will make no attempt to authenticate usernames. Beware.");
+-                // Spigot start
+-                if (org.spigotmc.SpigotConfig.bungee) {
+-                    DedicatedServer.LOGGER.warn("Whilst this makes it possible to use BungeeCord, unless access to your server is properly restricted, it also opens up the ability for hackers to connect with any username they choose.");
+-                    DedicatedServer.LOGGER.warn("Please see http://www.spigotmc.org/wiki/firewall-guide/ for further information.");
+-                } else {
+-                    DedicatedServer.LOGGER.warn("While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.");
+-                }
+-                // Spigot end
+-                DedicatedServer.LOGGER.warn("To change this, set \"online-mode\" to \"true\" in the server.properties file.");
+-            }
+-
+             if (this.aO()) {
+                 this.getUserCache().c();
+             }
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 675da1c..f8341a2 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -237,6 +237,9 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+         this.b("menu.loadingLevel");
+         this.worldServer = new WorldServer[3];
+         int worldCount = 3;
++		
++		ChunkGenTask chunk_task = new ChunkGenTask();
++		chunk_task.fork();
+ 
+         for (int j = 0; j < worldCount; ++j) {
+             WorldServer world;
+@@ -349,8 +352,16 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+         // CraftBukkit end
+         this.v.setPlayerFileData(this.worldServer);
+         this.a(this.getDifficulty());
+-        this.l();
++		
++        // this.l(); // Removed to the head
++		// ChunkGenTask chunk_task = new ChunkGenTask();
++		// chunk_task.fork();
+     }
++	
++	class ChunkGenTask extends RecursiveAction {
++        public ChunkGenTask() {}
++        @Override protected void compute() { l(); }
++	}
+ 
+     protected void l() {
+         boolean flag = true;
+-- 
+2.8.2.windows.1
+

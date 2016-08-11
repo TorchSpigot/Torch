@@ -1,0 +1,594 @@
+From d37d84701a92aeff555d6bf0b78d0715bb6cbdaf Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 16 Jul 2016 14:15:10 +0800
+Subject: [PATCH] Re-bounds check slot numbers in packets by a safe way
+
+
+diff --git a/src/main/java/net/minecraft/server/Container.java b/src/main/java/net/minecraft/server/Container.java
+index 4852c4f..d714bd3 100644
+--- a/src/main/java/net/minecraft/server/Container.java
++++ b/src/main/java/net/minecraft/server/Container.java
+@@ -22,7 +22,14 @@ import org.bukkit.inventory.InventoryView;
+ public abstract class Container {
+ 
+     public List<ItemStack> b = Lists.newArrayList();
+-	public List<Slot> c = Lists.newArrayList(); // Torch - Don't bounds check slot numbers in packets
++	// SportBukkit start - A lot of code expects get() to return null rather than throwing ArrayIndexOutOfBoundsException
++    public List<Slot> c = new ArrayList<Slot>() {
++        @Override
++        public Slot get(int index) {
++            return index < size() ? super.get(index) : null;
++        }
++    };
++    // SportBukkit end
+     public int windowId;
+     private int dragType = -1;
+     private int g;
+diff --git a/src/main/java/net/minecraft/server/NetworkManager.java b/src/main/java/net/minecraft/server/NetworkManager.java
+index d378614..c69f62c 100644
+--- a/src/main/java/net/minecraft/server/NetworkManager.java
++++ b/src/main/java/net/minecraft/server/NetworkManager.java
+@@ -112,13 +112,12 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
+ 
+         if (throwable instanceof TimeoutException) {
+             chatmessage = new ChatMessage("disconnect.timeout", new Object[0]);
+-			// NetworkManager.g.debug("Uncaught Exception", throwable); // Torch - Permit protocol hack
++			NetworkManager.g.debug("Uncaught Exception", throwable);
+         } else {
+             chatmessage = new ChatMessage("disconnect.genericReason", new Object[] { "Internal Exception: " + throwable});
+-			// NetworkManager.g.fatal("Uncaught Exception", throwable); // Torch - Permit protocol hack
++			NetworkManager.g.fatal("Uncaught Exception", throwable);
+         }
+ 
+-		NetworkManager.g.debug(throwable);
+         this.close(chatmessage);
+         if (MinecraftServer.getServer().isDebugging()) throwable.printStackTrace(); // Spigot
+     }
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index 9ff207f..978e882 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -111,26 +111,11 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+         return i ^ i >>> 7 ^ i >>> 4;
+     }
+ 	
+-	// SportBukkit start - queue packets sent before play state
+-    private final java.util.Deque<Packet<?>> initialPackets = new java.util.ArrayDeque<Packet<?>>();
+-    public void activate() {
+-        if(networkManager.getPacketListener() == this) return;
+-        networkManager.setPacketListener(this);
+-        while(!initialPackets.isEmpty()) {
+-            final Packet<?> packet = initialPackets.remove();
+-            try {
+-                sendPacket(packet);
+-            } catch(RuntimeException e) {
+-                LOGGER.error("Exception sending initial " + packet.getClass().getName(), e);
+-            }
+-        }
+-    }
+-    // SportBukkit end
+ 
+     public PlayerConnection(MinecraftServer minecraftserver, NetworkManager networkmanager, EntityPlayer entityplayer) {
+         this.minecraftServer = minecraftserver;
+         this.networkManager = networkmanager;
+-        // networkmanager.setPacketListener(this);
++        networkmanager.setPacketListener(this);
+         this.player = entityplayer;
+         entityplayer.playerConnection = this;
+ 		this.networkManager.channel.attr(PLAYER_ATTR_KEY).set(this.player); // TacoSpigot - set the player
+@@ -1129,13 +1114,6 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+     }
+ 
+     public void sendPacket(final Packet<?> packet) {
+-		// SportBukkit - queue packets sent before play state
+-        if(packet == null) return;
+-        if(!equals(networkManager.getPacketListener())) {
+-            initialPackets.add(packet);
+-            return;
+-        }
+-        // SportBukkit end
+         if (packet instanceof PacketPlayOutChat) {
+             PacketPlayOutChat packetplayoutchat = (PacketPlayOutChat) packet;
+             EntityHuman.EnumChatVisibility entityhuman_enumchatvisibility = this.player.getChatFlags();
+@@ -1739,6 +1717,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+     public void a(PacketPlayInWindowClick packetplayinwindowclick) {
+         PlayerConnectionUtils.ensureMainThread(packetplayinwindowclick, this, this.player.x());
+         if (this.player.dead) return; // CraftBukkit
++		 if(packetplayinwindowclick.b() >= 0 && this.player.activeContainer.getSlot(packetplayinwindowclick.b()) == null) return; // SportBukkit - ignore packets with invalid slot
+         this.player.resetIdleTimer();
+         if (this.player.activeContainer.windowId == packetplayinwindowclick.a() && this.player.activeContainer.c(this.player)) {
+             boolean cancelled = this.player.isSpectator(); // CraftBukkit - see below if
+diff --git a/src/main/java/net/minecraft/server/PlayerList.java b/src/main/java/net/minecraft/server/PlayerList.java
+index eef75ab..3517762 100644
+--- a/src/main/java/net/minecraft/server/PlayerList.java
++++ b/src/main/java/net/minecraft/server/PlayerList.java
+@@ -145,11 +145,7 @@ public abstract class PlayerList {
+         BlockPosition blockposition = worldserver.getSpawn();
+ 
+         this.a(entityplayer, (EntityPlayer) null, worldserver);
+-         // SportBukkit start - activate previously created PlayerConnection
+-        // PlayerConnection playerconnection = new PlayerConnection(this.server, networkmanager, entityplayer);
+-        PlayerConnection playerconnection = entityplayer.playerConnection;
+-        playerconnection.activate();
+-        // SportBukkit end
++        PlayerConnection playerconnection = new PlayerConnection(this.server, networkmanager, entityplayer);
+ 
+         playerconnection.sendPacket(new PacketPlayOutLogin(entityplayer.getId(), entityplayer.playerInteractManager.getGameMode(), worlddata.isHardcore(), worldserver.worldProvider.getDimensionManager().getDimensionID(), worldserver.getDifficulty(), this.getMaxPlayers(), worlddata.getType(), worldserver.getGameRules().getBoolean("reducedDebugInfo")));
+         entityplayer.getBukkitEntity().sendSupportedChannels(); // CraftBukkit
+@@ -492,7 +488,6 @@ public abstract class PlayerList {
+         SocketAddress socketaddress = loginlistener.networkManager.getSocketAddress();
+ 
+         EntityPlayer entity = new EntityPlayer(server, server.getWorldServer(0), gameprofile, new PlayerInteractManager(server.getWorldServer(0)));
+-		entity.playerConnection = new PlayerConnection(server, loginlistener.networkManager, entity); // SportBukkit - create this right away so it's never null
+ 		entity.protocolVersion = loginlistener.networkManager.protocolVersion; // Can't reach NetworkManager through CraftPlayer at this point, so copy the value
+         Player player = entity.getBukkitEntity();
+         PlayerLoginEvent event = new PlayerLoginEvent(player, hostname, ((java.net.InetSocketAddress) socketaddress).getAddress(), ((java.net.InetSocketAddress) loginlistener.networkManager.getRawAddress()).getAddress());
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryView.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryView.java
+index b6c2f73..f8c303c 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryView.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryView.java
+@@ -62,7 +62,8 @@ public class CraftInventoryView extends InventoryView {
+         if (slot == -999) {
+             return null;
+         }
+-        return CraftItemStack.asCraftMirror(container.getSlot(slot).getItem());
++        net.minecraft.server.Slot nmsSlot = container.getSlot(slot);
++        return nmsSlot == null ? null : CraftItemStack.asCraftMirror(nmsSlot.getItem());
+     }
+ 
+     public boolean isInTop(int rawSlot) {
+diff --git a/src/main/java/org/bukkit/entity/Entity.java b/src/main/java/org/bukkit/entity/Entity.java
+index 59bcfbd..a7b9c3b 100644
+--- a/src/main/java/org/bukkit/entity/Entity.java
++++ b/src/main/java/org/bukkit/entity/Entity.java
+@@ -374,7 +374,6 @@ public interface Entity extends Metadatable, CommandSender, Physical {
+      * @return whether the entity is
+      */
+     public boolean isInvulnerable();
+-	
+ 	// Paper start - Add equals and hashCode specifications
+     /**
+      * Checks if this {@code Entity} is equal to the other {@code Object}.
+diff --git a/src/main/java/org/bukkit/entity/LivingEntity.java b/src/main/java/org/bukkit/entity/LivingEntity.java
+new file mode 100644
+index 0000000..570da41
+--- /dev/null
++++ b/src/main/java/org/bukkit/entity/LivingEntity.java
+@@ -0,0 +1,434 @@
++package org.bukkit.entity;
++
++import java.util.Collection;
++import java.util.HashSet;
++import java.util.List;
++import java.util.Set;
++
++import org.bukkit.Location;
++import org.bukkit.Material;
++import org.bukkit.attribute.Attributable;
++import org.bukkit.block.Block;
++import org.bukkit.inventory.EntityEquipment;
++import org.bukkit.potion.PotionEffect;
++import org.bukkit.potion.PotionEffectType;
++import org.bukkit.projectiles.ProjectileSource;
++
++/**
++ * Represents a living entity, such as a monster or player
++ */
++public interface LivingEntity extends Attributable, Entity, Damageable, ProjectileSource {
++
++    /**
++     * Gets the height of the living entity's eyes above its Location.
++     *
++     * @return height of the living entity's eyes above its location
++     */
++    public double getEyeHeight();
++
++    /**
++     * Gets the height of the living entity's eyes above its Location.
++     *
++     * @param ignoreSneaking if set to true, the effects of sneaking will be
++     *     ignored
++     * @return height of the living entity's eyes above its location
++     */
++    public double getEyeHeight(boolean ignoreSneaking);
++
++    /**
++     * Get a Location detailing the current eye position of the living entity.
++     *
++     * @return a location at the eyes of the living entity
++     */
++    public Location getEyeLocation();
++
++    /**
++     * Gets all blocks along the living entity's line of sight.
++     * <p>
++     * This list contains all blocks from the living entity's eye position to
++     * target inclusive.
++     *
++     * @param transparent HashSet containing all transparent block IDs (set to
++     *     null for only air)
++     * @param maxDistance this is the maximum distance to scan (may be limited
++     *     by server by at least 100 blocks, no less)
++     * @return list containing all blocks along the living entity's line of
++     *     sight
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public List<Block> getLineOfSight(HashSet<Byte> transparent, int maxDistance);
++
++    /**
++     * Gets all blocks along the living entity's line of sight.
++     * <p>
++     * This list contains all blocks from the living entity's eye position to
++     * target inclusive.
++     *
++     * @param transparent HashSet containing all transparent block Materials (set to
++     *     null for only air)
++     * @param maxDistance this is the maximum distance to scan (may be limited
++     *     by server by at least 100 blocks, no less)
++     * @return list containing all blocks along the living entity's line of
++     *     sight
++     */
++    public List<Block> getLineOfSight(Set<Material> transparent, int maxDistance);
++
++    /**
++     * Gets the block that the living entity has targeted.
++     *
++     * @param transparent HashSet containing all transparent block IDs (set to
++     *     null for only air)
++     * @param maxDistance this is the maximum distance to scan (may be limited
++     *     by server by at least 100 blocks, no less)
++     * @return block that the living entity has targeted
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public Block getTargetBlock(HashSet<Byte> transparent, int maxDistance);
++
++    /**
++     * Gets the block that the living entity has targeted.
++     *
++     * @param transparent HashSet containing all transparent block Materials (set to
++     *     null for only air)
++     * @param maxDistance this is the maximum distance to scan (may be limited
++     *     by server by at least 100 blocks, no less)
++     * @return block that the living entity has targeted
++     */
++    public Block getTargetBlock(Set<Material> transparent, int maxDistance);
++
++    /**
++     * Gets the last two blocks along the living entity's line of sight.
++     * <p>
++     * The target block will be the last block in the list.
++     *
++     * @param transparent HashSet containing all transparent block IDs (set to
++     *     null for only air)
++     * @param maxDistance this is the maximum distance to scan. This may be
++     *     further limited by the server, but never to less than 100 blocks
++     * @return list containing the last 2 blocks along the living entity's
++     *     line of sight
++     * @deprecated Magic value
++     */
++    @Deprecated
++    public List<Block> getLastTwoTargetBlocks(HashSet<Byte> transparent, int maxDistance);
++
++    /**
++     * Gets the last two blocks along the living entity's line of sight.
++     * <p>
++     * The target block will be the last block in the list.
++     *
++     * @param transparent HashSet containing all transparent block Materials (set to
++     *     null for only air)
++     * @param maxDistance this is the maximum distance to scan. This may be
++     *     further limited by the server, but never to less than 100 blocks
++     * @return list containing the last 2 blocks along the living entity's
++     *     line of sight
++     */
++    public List<Block> getLastTwoTargetBlocks(Set<Material> transparent, int maxDistance);
++
++    /**
++     * Returns the amount of air that the living entity has remaining, in
++     * ticks.
++     *
++     * @return amount of air remaining
++     */
++    public int getRemainingAir();
++
++    /**
++     * Sets the amount of air that the living entity has remaining, in ticks.
++     *
++     * @param ticks amount of air remaining
++     */
++    public void setRemainingAir(int ticks);
++
++    /**
++     * Returns the maximum amount of air the living entity can have, in ticks.
++     *
++     * @return maximum amount of air
++     */
++    public int getMaximumAir();
++
++    /**
++     * Sets the maximum amount of air the living entity can have, in ticks.
++     *
++     * @param ticks maximum amount of air
++     */
++    public void setMaximumAir(int ticks);
++
++    /**
++     * Returns the living entity's current maximum no damage ticks.
++     * <p>
++     * This is the maximum duration in which the living entity will not take
++     * damage.
++     *
++     * @return maximum no damage ticks
++     */
++    public int getMaximumNoDamageTicks();
++
++    /**
++     * Sets the living entity's current maximum no damage ticks.
++     *
++     * @param ticks maximum amount of no damage ticks
++     */
++    public void setMaximumNoDamageTicks(int ticks);
++
++    /**
++     * Returns the living entity's last damage taken in the current no damage
++     * ticks time.
++     * <p>
++     * Only damage higher than this amount will further damage the living
++     * entity.
++     *
++     * @return damage taken since the last no damage ticks time period
++     */
++    public double getLastDamage();
++
++    /**
++     * This method exists for legacy reasons to provide backwards
++     * compatibility. It will not exist at runtime and should not be used
++     * under any circumstances.
++     * 
++     * @return damage taken since the last no damage ticks time period
++     */
++    @Deprecated
++    public int _INVALID_getLastDamage();
++
++    /**
++     * Sets the damage dealt within the current no damage ticks time period.
++     *
++     * @param damage amount of damage
++     */
++    public void setLastDamage(double damage);
++
++    /**
++     * This method exists for legacy reasons to provide backwards
++     * compatibility. It will not exist at runtime and should not be used
++     * under any circumstances.
++     * 
++     * @param damage amount of damage
++     */
++    @Deprecated
++    public void _INVALID_setLastDamage(int damage);
++
++    /**
++     * Returns the living entity's current no damage ticks.
++     *
++     * @return amount of no damage ticks
++     */
++    public int getNoDamageTicks();
++
++    /**
++     * Sets the living entity's current no damage ticks.
++     *
++     * @param ticks amount of no damage ticks
++     */
++    public void setNoDamageTicks(int ticks);
++
++    /**
++     * Gets the player identified as the killer of the living entity.
++     * <p>
++     * May be null.
++     *
++     * @return killer player, or null if none found
++     */
++    public Player getKiller();
++
++    /**
++     * Adds the given {@link PotionEffect} to the living entity.
++     * <p>
++     * Only one potion effect can be present for a given {@link
++     * PotionEffectType}.
++     *
++     * @param effect PotionEffect to be added
++     * @return whether the effect could be added
++     */
++    public boolean addPotionEffect(PotionEffect effect);
++
++    /**
++     * Adds the given {@link PotionEffect} to the living entity.
++     * <p>
++     * Only one potion effect can be present for a given {@link
++     * PotionEffectType}.
++     *
++     * @param effect PotionEffect to be added
++     * @param force whether conflicting effects should be removed
++     * @return whether the effect could be added
++     */
++    public boolean addPotionEffect(PotionEffect effect, boolean force);
++
++    /**
++     * Attempts to add all of the given {@link PotionEffect} to the living
++     * entity.
++     *
++     * @param effects the effects to add
++     * @return whether all of the effects could be added
++     */
++    public boolean addPotionEffects(Collection<PotionEffect> effects);
++
++    /**
++     * Returns whether the living entity already has an existing effect of
++     * the given {@link PotionEffectType} applied to it.
++     *
++     * @param type the potion type to check
++     * @return whether the living entity has this potion effect active on them
++     */
++    public boolean hasPotionEffect(PotionEffectType type);
++
++    /**
++     * Removes any effects present of the given {@link PotionEffectType}.
++     *
++     * @param type the potion type to remove
++     */
++    public void removePotionEffect(PotionEffectType type);
++
++    /**
++     * Returns all currently active {@link PotionEffect}s on the living
++     * entity.
++     *
++     * @return a collection of {@link PotionEffect}s
++     */
++    public Collection<PotionEffect> getActivePotionEffects();
++
++    /**
++     * Checks whether the living entity has block line of sight to another.
++     * <p>
++     * This uses the same algorithm that hostile mobs use to find the closest
++     * player.
++     *
++     * @param other the entity to determine line of sight to
++     * @return true if there is a line of sight, false if not
++     */
++    public boolean hasLineOfSight(Entity other);
++
++    /**
++     * Returns if the living entity despawns when away from players or not.
++     * <p>
++     * By default, animals are not removed while other mobs are.
++     *
++     * @return true if the living entity is removed when away from players
++     */
++    public boolean getRemoveWhenFarAway();
++
++    /**
++     * Sets whether or not the living entity despawns when away from players
++     * or not.
++     *
++     * @param remove the removal status
++     */
++    public void setRemoveWhenFarAway(boolean remove);
++
++    /**
++     * Gets the inventory with the equipment worn by the living entity.
++     *
++     * @return the living entity's inventory
++     */
++    public EntityEquipment getEquipment();
++
++    /**
++     * Sets whether or not the living entity can pick up items.
++     *
++     * @param pickup whether or not the living entity can pick up items
++     */
++    public void setCanPickupItems(boolean pickup);
++
++    /**
++     * Gets if the living entity can pick up items.
++     *
++     * @return whether or not the living entity can pick up items
++     */
++    public boolean getCanPickupItems();
++
++    /**
++     * Returns whether the entity is currently leashed.
++     *
++     * @return whether the entity is leashed
++     */
++    public boolean isLeashed();
++
++    /**
++     * Gets the entity that is currently leading this entity.
++     *
++     * @return the entity holding the leash
++     * @throws IllegalStateException if not currently leashed
++     */
++    public Entity getLeashHolder() throws IllegalStateException;
++
++    /**
++     * Sets the leash on this entity to be held by the supplied entity.
++     * <p>
++     * This method has no effect on EnderDragons, Withers, Players, or Bats.
++     * Non-living entities excluding leashes will not persist as leash
++     * holders.
++     *
++     * @param holder the entity to leash this entity to
++     * @return whether the operation was successful
++     */
++    public boolean setLeashHolder(Entity holder);
++
++    /**
++     * Checks to see if an entity is gliding, such as using an Elytra.
++     * @return True if this entity is gliding.
++     */
++    public boolean isGliding();
++
++    /**
++     * Makes entity start or stop gliding. This will work even if an Elytra
++     * is not equipped, but will be reverted by the server immediately after
++     * unless an event-cancelling mechanism is put in place.
++     * @param gliding True if the entity is gliding.
++     */
++    public void setGliding(boolean gliding);
++
++    /**
++     * Sets whether an entity will have AI.
++     *
++     * @param ai whether the mob will have AI or not.
++     */
++    void setAI(boolean ai);
++
++    /**
++     * Checks whether an entity has AI.
++     *
++     * @return true if the entity has AI, otherwise false.
++     */
++    boolean hasAI();
++
++    /**
++     * Set if this entity will be subject to collisions other entities.
++     * <p>
++     * Note that collisions are bidirectional, so this method would need to be
++     * set to false on both the collidee and the collidant to ensure no
++     * collisions take place.
++     *
++     * @param collidable collision status
++     */
++    void setCollidable(boolean collidable);
++
++    /**
++     * Gets if this entity is subject to collisions with other entities.
++     * <p>
++     * Please note that this method returns only the custom collidable state,
++     * not whether the entity is non-collidable for other reasons such as being
++     * dead.
++     *
++     * @return collision status
++     */
++    boolean isCollidable();
++
++    // Paper start
++    /**
++     * Get the number of arrows stuck in this entity
++     * @return Number of arrows stuck
++     */
++    int getArrowsStuck();
++
++    /**
++     * Set the number of arrows stuck in this entity
++     *
++     * @param arrows Number of arrows to stick in this entity
++     */
++    void setArrowsStuck(int arrows);
++    // Paper end
++}
+-- 
+2.8.2.windows.1
+

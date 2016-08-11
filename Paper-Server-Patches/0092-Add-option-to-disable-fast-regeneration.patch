@@ -1,0 +1,36 @@
+From a54b51aa6cea2f4cee1556a141f19ff51981553c Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 11 Jul 2016 23:07:05 +0800
+Subject: [PATCH] Add option to disable fast regeneration
+
+
+diff --git a/src/main/java/com/destroystokyo/paper/PaperConfig.java b/src/main/java/com/destroystokyo/paper/PaperConfig.java
+index fdc4ec5..3bc91a2 100644
+--- a/src/main/java/com/destroystokyo/paper/PaperConfig.java
++++ b/src/main/java/com/destroystokyo/paper/PaperConfig.java
+@@ -265,4 +265,9 @@ public class PaperConfig {
+     private static void disableCacheSaving() {
+         disableUserCacheSaving = getBoolean("settings.disable-usercache-saving", false);
+     }
++	
++	public static boolean disableFastRegeneration = false;
++    private static void disableFastRegeneration() {
++        disableFastRegeneration = getBoolean("settings.disable-fast-regeneration", false);
++    }
+ }
+diff --git a/src/main/java/net/minecraft/server/FoodMetaData.java b/src/main/java/net/minecraft/server/FoodMetaData.java
+index 3fa56a5..2e9ab01 100644
+--- a/src/main/java/net/minecraft/server/FoodMetaData.java
++++ b/src/main/java/net/minecraft/server/FoodMetaData.java
+@@ -60,7 +60,7 @@ public class FoodMetaData {
+ 
+         boolean flag = entityhuman.world.getGameRules().getBoolean("naturalRegeneration");
+ 
+-        if (flag && this.saturationLevel > 0.0F && entityhuman.cU() && this.foodLevel >= 20) {
++        if (!com.destroystokyo.paper.PaperConfig.disableFastRegeneration && flag && this.saturationLevel > 0.0F && entityhuman.cU() && this.foodLevel >= 20) { // Paper - option to disable fast regeneration
+             ++this.foodTickTimer;
+             if (this.foodTickTimer >= 10) {
+                 float f = Math.min(this.saturationLevel, 4.0F);
+-- 
+2.8.2.windows.1
+

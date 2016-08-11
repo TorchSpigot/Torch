@@ -1,0 +1,31 @@
+From d8bf757a93880de507eca9808df9e088fa41dd2e Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Tue, 2 Aug 2016 11:54:14 +0800
+Subject: [PATCH] Fix maxNoDamageTicks being cut in half
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityLiving.java b/src/main/java/net/minecraft/server/EntityLiving.java
+index 11e6996..c244a90 100644
+--- a/src/main/java/net/minecraft/server/EntityLiving.java
++++ b/src/main/java/net/minecraft/server/EntityLiving.java
+@@ -62,7 +62,7 @@ public abstract class EntityLiving extends Entity {
+     public float aF;
+     public float aG;
+     public float aH;
+-    public int maxNoDamageTicks = 20;
++    public int maxNoDamageTicks = 10; // CraftBukkit - change from 20 to 10
+     public float aJ;
+     public float aK;
+     public float aL;
+@@ -827,7 +827,7 @@ public abstract class EntityLiving extends Entity {
+                 this.aG = 1.5F;
+                 boolean flag1 = true;
+ 
+-                if ((float) this.noDamageTicks > (float) this.maxNoDamageTicks / 2.0F) {
++                if (this.noDamageTicks > 0) { // CraftBukkit - compare with 0 instead of maxNoDamageTicks/2
+                     if (f <= this.lastDamage) {
+                         this.forceExplosionKnockback = true; // CraftBukkit - SPIGOT-949 - for vanilla consistency, cooldown does not prevent explosion knockback
+                         return false;
+-- 
+2.8.2.windows.1
+

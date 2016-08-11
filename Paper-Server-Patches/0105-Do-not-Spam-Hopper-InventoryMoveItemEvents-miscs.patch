@@ -1,0 +1,916 @@
+From ee53b70c2dbd3e1c0128151c54bbc5edfaf38697 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Tue, 12 Jul 2016 05:34:27 +0800
+Subject: [PATCH] Do not Spam Hopper InventoryMoveItemEvents, miscs
+
+
+diff --git a/src/main/java/net/minecraft/server/Chunk.java b/src/main/java/net/minecraft/server/Chunk.java
+index ceaf88c..b5e2555 100644
+--- a/src/main/java/net/minecraft/server/Chunk.java
++++ b/src/main/java/net/minecraft/server/Chunk.java
+@@ -59,18 +59,6 @@ public class Chunk {
+     private ConcurrentLinkedQueue<BlockPosition> y;
+     public boolean d;public void setShouldUnload(boolean unload) { this.d = unload; } public boolean isUnloading() { return d; } // Paper // OBFHELPER
+     protected gnu.trove.map.hash.TObjectIntHashMap<Class> entityCount = new gnu.trove.map.hash.TObjectIntHashMap<Class>(); // Spigot
+-	
+-	// Migot start
+-    private boolean unloaded = false;
+-
+-    public boolean wasUnloaded() {
+-        return this.unloaded;
+-    }
+-
+-    public void markAsUnloaded() {
+-        this.unloaded = true;
+-    }
+-    // Migot end
+ 
+     // Paper start
+     // Track the number of minecarts and items
+diff --git a/src/main/java/net/minecraft/server/ChunkProviderServer.java b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+index fc124d6..24497d5 100644
+--- a/src/main/java/net/minecraft/server/ChunkProviderServer.java
++++ b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+@@ -358,7 +358,6 @@ public class ChunkProviderServer implements IChunkProvider {
+             }
+         }
+         // Moved from unloadChunks above
+-		if (chunk != null) { chunk.markAsUnloaded(); } // Migot
+         chunk.removeEntities();
+         if (save) {
+             this.saveChunk(chunk);
+diff --git a/src/main/java/net/minecraft/server/CraftingManager.java b/src/main/java/net/minecraft/server/CraftingManager.java
+index 6c3775e..6c7ef3c 100644
+--- a/src/main/java/net/minecraft/server/CraftingManager.java
++++ b/src/main/java/net/minecraft/server/CraftingManager.java
+@@ -8,6 +8,7 @@ import java.util.Comparator;
+ import java.util.HashMap;
+ import java.util.Iterator;
+ import java.util.List;
++import java.util.concurrent.ConcurrentHashMap;
+ import javax.annotation.Nullable;
+ 
+ import org.bukkit.craftbukkit.event.CraftEventFactory; // CraftBukkit
+@@ -225,9 +226,11 @@ public class CraftingManager {
+             }
+         }
+ 
+-        HashMap hashmap;
++        // HashMap hashmap;
++		ConcurrentHashMap hashmap;
+ 
+-        for (hashmap = Maps.newHashMap(); i < aobject.length; i += 2) {
++        // for (hashmap = Maps.newHashMap(); i < aobject.length; i += 2) {
++		for (hashmap = new ConcurrentHashMap(); i < aobject.length; i += 2) {
+             Character character = (Character) aobject[i];
+             ItemStack itemstack1 = null;
+ 
+diff --git a/src/main/java/net/minecraft/server/Entity.java b/src/main/java/net/minecraft/server/Entity.java
+index d27d102..b9200b9 100644
+--- a/src/main/java/net/minecraft/server/Entity.java
++++ b/src/main/java/net/minecraft/server/Entity.java
+@@ -110,6 +110,7 @@ public abstract class Entity implements ICommandListener {
+     public boolean positionChanged;
+     public boolean B;
+     public boolean C;
++	public boolean is_collidefence = false; // Hose
+     public boolean velocityChanged;
+     protected boolean E;
+     private boolean av;
+@@ -453,10 +454,18 @@ public abstract class Entity implements ICommandListener {
+     // Paper end
+ 
+     protected void H() {
++		// Hose start
++		/*
+         if (this.portalCooldown > 0) {
+             --this.portalCooldown;
+         }
+-
++		*/
++		if (this.portalCooldown > 0) {
++            --this.portalCooldown;
++        } else {
++            this.teleport_count = 0;
++        }
++		// Hose end
+     }
+ 
+     public int V() {
+@@ -1228,6 +1237,14 @@ public abstract class Entity implements ICommandListener {
+                     for (int k = blockposition_pooledblockposition.getZ(); k <= blockposition_pooledblockposition1.getZ(); ++k) {
+                         blockposition_pooledblockposition2.f(i, j, k);
+                         IBlockData iblockdata = this.world.getType(blockposition_pooledblockposition2);
++						
++						// Hose start - Check fence
++                        if (iblockdata.getBlock() instanceof BlockFence) {
++                            this.is_collidefence = true;
++                        } else {
++                            this.is_collidefence = false;
++                        }
++						// Hose end
+ 
+                         try {
+                             iblockdata.getBlock().a(this.world, (BlockPosition) blockposition_pooledblockposition2, iblockdata, this);
+@@ -1585,11 +1602,19 @@ public abstract class Entity implements ICommandListener {
+                     d0 *= (double) (1.0F - this.R);
+                     d1 *= (double) (1.0F - this.R);
+                     if (!this.isVehicle()) {
+-                        this.g(-d0, 0.0D, -d1);
++                        if (this.is_collidefence) {
++                            this.g(-d0*3D, 0.0D, -d1*3D);
++                        } else {
++                            this.g(-d0, 0.0D, -d1);
++                        }
+                     }
+ 
+                     if (!entity.isVehicle()) {
+-                        entity.g(d0, 0.0D, d1);
++                        if (this.is_collidefence) {
++                            entity.g(d0*3D, 0.0D, d1*3D);
++                        } else {
++                            entity.g(d0, 0.0D, d1);
++                        }
+                     }
+                 }
+ 
+@@ -2507,7 +2532,7 @@ public abstract class Entity implements ICommandListener {
+ 
+     @Nullable
+     public Entity c(int i) {
+-        if (!this.world.isClientSide && !this.dead) {
++        if (!this.world.isClientSide && !this.dead && this.teleport_count == 0) {
+             this.world.methodProfiler.a("changeDimension");
+             MinecraftServer minecraftserver = this.h();
+             // CraftBukkit start - Move logic into new function "teleportTo(Location,boolean)"
+@@ -2552,8 +2577,10 @@ public abstract class Entity implements ICommandListener {
+         return null;
+     }
+ 
++	int teleport_count = 0; // Hose
+     public Entity teleportTo(Location exit, boolean portal) {
+-        if (!this.dead) { // Paper
++		if (!this.dead && teleport_count == 0) { // Paper // Hose
++            teleport_count = 1;
+             WorldServer worldserver = ((CraftWorld) getBukkitEntity().getLocation().getWorld()).getHandle();
+             WorldServer worldserver1 = ((CraftWorld) exit.getWorld()).getHandle();
+             int i = worldserver1.dimension;
+diff --git a/src/main/java/net/minecraft/server/EntityFallingBlock.java b/src/main/java/net/minecraft/server/EntityFallingBlock.java
+index 10592bf..7cf22fb 100644
+--- a/src/main/java/net/minecraft/server/EntityFallingBlock.java
++++ b/src/main/java/net/minecraft/server/EntityFallingBlock.java
+@@ -19,6 +19,7 @@ public class EntityFallingBlock extends Entity {
+     private int fallHurtMax = 40;
+     private float fallHurtAmount = 2.0F;
+     public NBTTagCompound tileEntityData;
++	protected boolean is_droped;
+     protected static final DataWatcherObject<BlockPosition> d = DataWatcher.a(EntityFallingBlock.class, DataWatcherRegistry.j);
+ 
+     public EntityFallingBlock(World world) {
+@@ -142,7 +143,11 @@ public class EntityFallingBlock extends Entity {
+                                     }
+                                 }
+                             } else if (this.dropItem && this.world.getGameRules().getBoolean("doEntityDrops")) {
+-                                this.a(new ItemStack(block, 1, block.getDropData(this.block)), 0.0F);
++                                if (is_droped) {
++                                } else {
++                                    is_droped = true;
++                                    this.a(new ItemStack(block, 1, block.getDropData(this.block)), 0.0F);
++                                }
+                             }
+                         }
+                     }
+@@ -189,7 +194,7 @@ public class EntityFallingBlock extends Entity {
+             int i = MathHelper.f(f - 1.0F);
+ 
+             if (i > 0) {
+-                ArrayList arraylist = Lists.newArrayList(this.world.getEntities(this, this.getBoundingBox()));
++                List arraylist = Lists.newCopyOnWriteArrayList(this.world.getEntities(this, this.getBoundingBox()));
+                 boolean flag = block == Blocks.ANVIL;
+                 DamageSource damagesource = flag ? DamageSource.ANVIL : DamageSource.FALLING_BLOCK;
+                 Iterator iterator = arraylist.iterator();
+diff --git a/src/main/java/net/minecraft/server/EntityMinecartAbstract.java b/src/main/java/net/minecraft/server/EntityMinecartAbstract.java
+index af1f789..76ee5bf 100644
+--- a/src/main/java/net/minecraft/server/EntityMinecartAbstract.java
++++ b/src/main/java/net/minecraft/server/EntityMinecartAbstract.java
+@@ -254,9 +254,13 @@ public abstract class EntityMinecartAbstract extends Entity implements INamableT
+                 }
+             }
+ 
+-            if (this.portalCooldown > 0) {
++			// Hose start
++			if (this.portalCooldown > 0) {
+                 --this.portalCooldown;
++            } else {
++                this.teleport_count = 0;
+             }
++			// Hose end
+ 
+             this.world.methodProfiler.b();
+         }
+diff --git a/src/main/java/net/minecraft/server/Explosion.java b/src/main/java/net/minecraft/server/Explosion.java
+index d18bcb7..604cdfe 100644
+--- a/src/main/java/net/minecraft/server/Explosion.java
++++ b/src/main/java/net/minecraft/server/Explosion.java
+@@ -8,7 +8,6 @@ import java.util.Iterator;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Random;
+-
+ import java.util.Queue;
+ 
+ // CraftBukkit start
+@@ -18,6 +17,9 @@ import org.bukkit.Location;
+ import org.bukkit.event.block.BlockExplodeEvent;
+ // CraftBukkit end
+ 
++import java.util.concurrent.ConcurrentHashMap;
++import java.util.concurrent.ConcurrentMap;
++
+ public class Explosion {
+ 
+     private final boolean a;
+@@ -30,7 +32,7 @@ public class Explosion {
+     public final Entity source;
+     private final float size;
+     private final List<BlockPosition> blocks = Lists.newArrayList();
+-    private final Map<EntityHuman, Vec3D> k = Maps.newHashMap();
++    private final ConcurrentHashMap<EntityHuman, Vec3D> k = new ConcurrentHashMap<EntityHuman, Vec3D>(); // Hose
+     public boolean wasCanceled = false; // CraftBukkit - add field
+ 
+     public Explosion(World world, Entity entity, double d0, double d1, double d2, float f, boolean flag, boolean flag1) {
+@@ -283,7 +285,7 @@ public class Explosion {
+ 
+     }
+ 
+-    public Map<EntityHuman, Vec3D> b() {
++    public ConcurrentMap<EntityHuman, Vec3D> b() { // Hose
+         return this.k;
+     }
+ 
+diff --git a/src/main/java/net/minecraft/server/ItemStack.java b/src/main/java/net/minecraft/server/ItemStack.java
+index ec49f27..04a16ff 100644
+--- a/src/main/java/net/minecraft/server/ItemStack.java
++++ b/src/main/java/net/minecraft/server/ItemStack.java
+@@ -9,6 +9,9 @@ import javax.annotation.Nullable;
+ // CraftBukkit start
+ import java.util.List;
+ import java.util.Map;
++import java.util.Queue;
++import java.util.concurrent.ConcurrentLinkedQueue;
++import java.util.concurrent.CopyOnWriteArrayList;
+ 
+ import org.bukkit.Location;
+ import org.bukkit.TreeType;
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index bd89917..80dcf9f 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -20,6 +20,7 @@ import org.apache.commons.lang3.Validate;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ import org.bukkit.craftbukkit.Main;
++import org.bukkit.craftbukkit.chunkio2.impl.CraftNBTStorage;
+ 
+ // Migot start
+ import de.minetick.AutoSaveJob;
+@@ -63,7 +64,6 @@ import org.bukkit.Bukkit;
+ import org.bukkit.craftbukkit.CraftServer;
+ // CraftBukkit end
+ import co.aikar.timings.MinecraftTimings; // Paper
+-import org.bukkit.craftbukkit.chunkio2.impl.CraftNBTStorage; // Paper
+ 
+ public abstract class MinecraftServer implements Runnable, ICommandListener, IAsyncTaskHandler, IMojangStatistics {
+ 
+diff --git a/src/main/java/net/minecraft/server/PersistentCollection.java b/src/main/java/net/minecraft/server/PersistentCollection.java
+index 57a892c..e5ab3a6 100644
+--- a/src/main/java/net/minecraft/server/PersistentCollection.java
++++ b/src/main/java/net/minecraft/server/PersistentCollection.java
+@@ -14,14 +14,16 @@ import java.io.OutputStream;
+ import java.util.Iterator;
+ import java.util.List;
+ import java.util.Map;
++import java.util.concurrent.ConcurrentHashMap;
++import java.util.concurrent.ConcurrentMap;
+ import javax.annotation.Nullable;
+ 
+ public class PersistentCollection {
+ 
+     private IDataManager b;
+-    protected Map<String, PersistentBase> a = Maps.newHashMap();
++    protected ConcurrentMap<String, PersistentBase> a = new ConcurrentHashMap<String, PersistentBase>(); // Hose
+     public List<PersistentBase> c = Lists.newArrayList(); // Spigot
+-    private Map<String, Short> d = Maps.newHashMap();
++    private ConcurrentMap<String, Short> d = new ConcurrentHashMap<String, Short>(); // Hose
+ 
+     public PersistentCollection(IDataManager idatamanager) {
+         this.b = idatamanager;
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index 5d26825..389b2da 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -10,6 +10,7 @@ import java.io.IOException;
+ import java.util.ArrayList;
+ import java.util.Collections;
+ import java.util.Iterator;
++import java.util.concurrent.ConcurrentHashMap;
+ import java.util.List;
+ import java.util.Set;
+ import org.apache.commons.lang3.StringUtils;
+@@ -77,7 +78,8 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+     private static final AtomicIntegerFieldUpdater chatSpamField = AtomicIntegerFieldUpdater.newUpdater(PlayerConnection.class, "chatThrottle");
+     // CraftBukkit end
+     private int j;
+-    private final IntHashMap<Short> k = new IntHashMap();
++    // private final IntHashMap<Short> k = new IntHashMap();
++	private ConcurrentHashMap<Integer, Short> k = new ConcurrentHashMap(); // Hose
+     private double l;
+     private double m;
+     private double n;
+@@ -102,6 +104,11 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+     private int G;
+     private boolean processedDisconnect; // CraftBukkit - Added
+ 	public static final AttributeKey<EntityPlayer> PLAYER_ATTR_KEY = AttributeKey.valueOf("player"); // TacoSpigot
++	
++	private int g(int i) {
++        i ^= i >>> 20 ^ i >>> 12;
++        return i ^ i >>> 7 ^ i >>> 4;
++    }
+ 
+     public PlayerConnection(MinecraftServer minecraftserver, NetworkManager networkmanager, EntityPlayer entityplayer) {
+         this.minecraftServer = minecraftserver;
+@@ -1982,7 +1989,8 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+                     this.player.broadcastCarriedItem();
+                     this.player.f = false;
+                 } else {
+-                    this.k.a(this.player.activeContainer.windowId, Short.valueOf(packetplayinwindowclick.d()));
++                    // this.k.a(this.player.activeContainer.windowId, Short.valueOf(packetplayinwindowclick.d()));
++					this.k.put(this.g(this.player.activeContainer.windowId), Short.valueOf(packetplayinwindowclick.d())); // Hose
+                     this.player.playerConnection.sendPacket(new PacketPlayOutTransaction(packetplayinwindowclick.a(), packetplayinwindowclick.d(), false));
+                     this.player.activeContainer.a(this.player, false);
+                     ArrayList arraylist1 = Lists.newArrayList();
+@@ -2112,7 +2120,8 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+     public void a(PacketPlayInTransaction packetplayintransaction) {
+         PlayerConnectionUtils.ensureMainThread(packetplayintransaction, this, this.player.x());
+         if (this.player.dead) return; // CraftBukkit
+-        Short oshort = (Short) this.k.get(this.player.activeContainer.windowId);
++        // Short oshort = (Short) this.k.get(this.player.activeContainer.windowId);
++		Short oshort = this.k.get(this.g(this.player.activeContainer.windowId)); // Hose
+ 
+         if (oshort != null && packetplayintransaction.b() == oshort.shortValue() && this.player.activeContainer.windowId == packetplayintransaction.a() && !this.player.activeContainer.c(this.player) && !this.player.isSpectator()) {
+             this.player.activeContainer.a(this.player, true);
+diff --git a/src/main/java/net/minecraft/server/TileEntityFurnace.java b/src/main/java/net/minecraft/server/TileEntityFurnace.java
+index 8dbfcc0..e12a8ed 100644
+--- a/src/main/java/net/minecraft/server/TileEntityFurnace.java
++++ b/src/main/java/net/minecraft/server/TileEntityFurnace.java
+@@ -252,7 +252,7 @@ public class TileEntityFurnace extends TileEntityContainer implements ITickable,
+             return false;
+         } else {
+             ItemStack itemstack = RecipesFurnace.getInstance().getResult(this.items[0]);
+-			if(!this.world.isLoaded(this.position) || ((WorldServer) this.world).chunkProviderServer.unloadQueue.contains(this.position.getX() >> 4, this.position.getZ() >> 4)) { return false; } // Migot
++			if(!this.world.isLoaded(this.position)) { return false; } // Migot
+ 
+             // CraftBukkit - consider resultant count instead of current count
+             return itemstack == null ? false : (this.items[2] == null ? true : (!this.items[2].doMaterialsMatch(itemstack) ? false : (this.items[2].count + itemstack.count <= this.getMaxStackSize() && this.items[2].count < this.items[2].getMaxStackSize() ? true : this.items[2].count + itemstack.count <= itemstack.getMaxStackSize())));
+diff --git a/src/main/java/net/minecraft/server/TileEntityHopper.java b/src/main/java/net/minecraft/server/TileEntityHopper.java
+index 45c134b..a6e8ae7 100644
+--- a/src/main/java/net/minecraft/server/TileEntityHopper.java
++++ b/src/main/java/net/minecraft/server/TileEntityHopper.java
+@@ -3,6 +3,9 @@ package net.minecraft.server;
+ import java.util.Iterator;
+ import java.util.List;
+ import javax.annotation.Nullable;
++import java.util.Arrays;
++import java.util.concurrent.CopyOnWriteArrayList;
++import org.apache.commons.lang.ArrayUtils;
+ 
+ // CraftBukkit start
+ import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+@@ -47,6 +50,41 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+         maxStack = size;
+     }
+     // CraftBukkit end
++	
++	// Migot start
++    private static int doesInventoryHaveEnoughSpaceForItem(IInventory iinventory, ItemStack itemstack, EnumDirection enumdirection) {
++        if (iinventory instanceof IWorldInventory && enumdirection != null) {
++            IWorldInventory iworldinventory = (IWorldInventory) iinventory;
++            int[] possibleSlots = iworldinventory.getSlotsForFace(enumdirection);
++            for(int i = 0; i < possibleSlots.length; i++) {
++                int slotId = possibleSlots[i];
++                if(a(iinventory, itemstack, slotId, enumdirection)) {
++                    ItemStack slot = iinventory.getItem(slotId);
++                    if(slot == null || a(slot, itemstack)) {
++                        return slotId;
++                    }
++                }
++            }
++        } else {
++            int size = iinventory.getSize();
++            for(int i = 0; i < size; i++) {
++                if(a(iinventory, itemstack, i, enumdirection)) {
++                    ItemStack slot = iinventory.getItem(i);
++                    if(slot == null || a(slot, itemstack)) {
++                        return i;
++                    }
++                }
++            }
++        }
++        return -1;
++    }
++
++    private static int checkForPossibleInventorySlot(IInventory iinventory, ItemStack itemstack, EnumDirection enumdirection) {
++        ItemStack copyOfItemBeingProcessed = itemstack.cloneItemStack();
++        copyOfItemBeingProcessed.count = 1;
++        return doesInventoryHaveEnoughSpaceForItem(iinventory, copyOfItemBeingProcessed, enumdirection);
++    }
++    // Migot end
+ 
+     public TileEntityHopper() {}
+ 
+@@ -259,6 +297,13 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+                     if (this.getItem(i) != null) {
+                         ItemStack itemstack = this.getItem(i).cloneItemStack();
+                         // ItemStack itemstack1 = addItem(iinventory, this.splitStack(i, 1), enumdirection);
++						
++						// Migot start
++                        int possibleInventorySlot = checkForPossibleInventorySlot(iinventory, itemstack, enumdirection);
++                        if(possibleInventorySlot < 0) {
++                            continue;
++                        }
++                        // Migot end
+ 
+                         // CraftBukkit start - Call event when pushing items into other inventories
+                         CraftItemStack oitemstack = CraftItemStack.asCraftMirror(this.splitStack(i, world.spigotConfig.hopperAmount)); // Spigot
+@@ -287,7 +332,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+                             stack = oitemstack;
+                         }
+                         int origCount = stack.getAmount(); // Spigot
+-                        ItemStack itemstack1 = addItem(iinventory, CraftItemStack.asNMSCopy(stack), enumdirection);
++                        ItemStack itemstack1 = addItem(iinventory, possibleInventorySlot, CraftItemStack.asNMSCopy(stack), enumdirection); // Migot
+                         // TacoSpigot end
+ 
+                         if (itemstack1 == null || itemstack1.count == 0) {
+@@ -416,6 +461,14 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+             ItemStack itemstack1 = itemstack.cloneItemStack();
+             // ItemStack itemstack2 = addItem(ihopper, iinventory.splitStack(i, 1), (EnumDirection) null);
+             // CraftBukkit start - Call event on collection of items from inventories into the hopper
++			
++			// Migot start
++            int possibleInventorySlot = checkForPossibleInventorySlot(ihopper, iinventory.getItem(i), null);
++            if(possibleInventorySlot < 0) {
++                return false;
++            }
++            // Migot end
++			
+             CraftItemStack oitemstack = CraftItemStack.asCraftMirror(iinventory.splitStack(i, ihopper.getWorld().spigotConfig.hopperAmount)); // Spigot
+             // TacoSpigot start - option to disable event
+             final org.bukkit.inventory.ItemStack stack;
+@@ -449,7 +502,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+                 stack = oitemstack;
+             }
+             int origCount = stack.getAmount(); // Spigot
+-            ItemStack itemstack2 = addItem(ihopper, CraftItemStack.asNMSCopy(stack), null);
++			ItemStack itemstack2 = addItem(ihopper, possibleInventorySlot, CraftItemStack.asNMSCopy(stack), null); // Migot
+             // TacoSpigot end
+ 
+             if (itemstack2 == null || itemstack2.count == 0) {
+@@ -475,15 +528,26 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+         if (entityitem == null) {
+             return false;
+         } else {
++			// Migot start
++            int possibleInventorySlot = checkForPossibleInventorySlot(iinventory, entityitem.getItemStack(), null);
++            if(possibleInventorySlot < 0) {
++                return false;
++            }
++            // Migot end
+             // CraftBukkit start
+-            InventoryPickupItemEvent event = new InventoryPickupItemEvent(iinventory.getOwner().getInventory(), (org.bukkit.entity.Item) entityitem.getBukkitEntity());
++            // InventoryPickupItemEvent event = new InventoryPickupItemEvent(iinventory.getOwner().getInventory(), (org.bukkit.entity.Item) entityitem.getBukkitEntity());
++			// Hose start - Check which is null
++            Inventory inventory = iinventory.getOwner().getInventory();
++            org.bukkit.entity.Item item = (org.bukkit.entity.Item) entityitem.getBukkitEntity();
++            InventoryPickupItemEvent event = new InventoryPickupItemEvent(inventory, item);
++			// Hose end
+             entityitem.world.getServer().getPluginManager().callEvent(event);
+             if (event.isCancelled()) {
+                 return false;
+             }
+             // CraftBukkit end
+             ItemStack itemstack = entityitem.getItemStack().cloneItemStack();
+-            ItemStack itemstack1 = addItem(iinventory, itemstack, (EnumDirection) null);
++            ItemStack itemstack1 = addItem(iinventory, possibleInventorySlot, itemstack, null); // Migot
+ 
+             if (itemstack1 != null && itemstack1.count != 0) {
+                 entityitem.setItemStack(itemstack1);
+@@ -497,9 +561,21 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+     }
+ 
+     public static ItemStack addItem(IInventory iinventory, ItemStack itemstack, @Nullable EnumDirection enumdirection) {
++		// Migot start
++        return addItem(iinventory, -1, itemstack, enumdirection);
++    }
++
++    public static ItemStack addItem(IInventory iinventory, int possibleInventorySlot, ItemStack itemstack, @Nullable EnumDirection enumdirection) {
++    // Migot end
+         if (iinventory instanceof IWorldInventory && enumdirection != null) {
+             IWorldInventory iworldinventory = (IWorldInventory) iinventory;
+             int[] aint = iworldinventory.getSlotsForFace(enumdirection);
++			
++			// Migot start
++            if(possibleInventorySlot >= 0 && possibleInventorySlot < aint.length) {
++                itemstack = c(iinventory, itemstack, possibleInventorySlot, enumdirection);
++            }
++            // Migot end
+ 
+             for (int i = 0; i < aint.length && itemstack != null && itemstack.count > 0; ++i) {
+                 itemstack = c(iinventory, itemstack, aint[i], enumdirection);
+@@ -507,7 +583,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+         } else {
+             int j = iinventory.getSize();
+ 
+-            for (int k = 0; k < j && itemstack != null && itemstack.count > 0; ++k) {
++			for (int k = Math.max(possibleInventorySlot, 0); k < j && itemstack != null && itemstack.count > 0; ++k) { // Migot - set start index
+                 itemstack = c(iinventory, itemstack, k, enumdirection);
+             }
+         }
+@@ -638,7 +714,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+     }
+ 
+     private static boolean a(ItemStack itemstack, ItemStack itemstack1) {
+-        return itemstack.getItem() != itemstack1.getItem() ? false : (itemstack.getData() != itemstack1.getData() ? false : (itemstack.count > itemstack.getMaxStackSize() ? false : ItemStack.equals(itemstack, itemstack1)));
++        return itemstack.getItem() != itemstack1.getItem() ? false : (itemstack.getData() != itemstack1.getData() ? false : (itemstack.count >= itemstack.getMaxStackSize() ? false : ItemStack.equals(itemstack, itemstack1))); // Migot - can not merge when the itemcount is already >= getMaxStackSize
+     }
+ 
+     public double E() {
+@@ -686,11 +762,14 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+     }
+ 
+     public void l() {
++		Arrays.fill(this.items, null); // Hose
+         this.d((EntityHuman) null);
+ 
++		/*
+         for (int i = 0; i < this.items.length; ++i) {
+             this.items[i] = null;
+         }
++		*/
+ 
+     }
+ }
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index fc5a1b4..a46e33b 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -160,13 +160,6 @@ public abstract class World implements IBlockAccess {
+ 	// Paper - Start Peristence counters.
+     private long nextPersistenceCountersTick = System.nanoTime();
+     // Paper - End
+-	
+-	// Migot start
+-    private Chunk dummyChunk = new EmptyChunk(this, Integer.MIN_VALUE, Integer.MIN_VALUE);
+-    private Chunk lastChunkAccessed = dummyChunk;
+-    final Object chunkLock = new Object();
+-    public ChunkProviderServer chunkProviderServer; // moved here from WorldServer
+-    // Migot end
+ 
+     public CraftWorld getWorld() {
+         return this.world;
+@@ -373,31 +366,9 @@ public abstract class World implements IBlockAccess {
+     public Chunk getChunkAtWorldCoords(BlockPosition blockposition) {
+         return this.getChunkAt(blockposition.getX() >> 4, blockposition.getZ() >> 4);
+     }
+-	
+-	// Migot start
+-    private void cacheLastChunkAccess(Chunk foundChunk) {
+-        this.lastChunkAccessed = ((foundChunk == null || foundChunk.isEmpty() || foundChunk.wasUnloaded()) ? this.dummyChunk : foundChunk);
+-    }
+-    // Migot end
+ 
+     public Chunk getChunkAt(int i, int j) {
+-        // Migot start
+-        Chunk last = this.lastChunkAccessed;
+-        if(last.a(i,j) && !last.wasUnloaded()) {
+-            return last;
+-        } else {
+-            Chunk result = null;
+-            if(this.chunkProviderServer.isChunkLoaded(i, j)) {
+-                result = this.chunkProviderServer.getChunkAt(i, j);
+-            } else {
+-                synchronized (this.chunkLock) {
+-                    result = this.chunkProvider.getOrCreateChunk(i, j);
+-                }
+-            }
+-            this.cacheLastChunkAccess(result);
+-            return result;
+-        }
+-        // Migot end
++       return this.chunkProvider.getChunkAt(i, j);
+     }
+ 
+     public boolean setTypeAndData(BlockPosition blockposition, IBlockData iblockdata, int i) {
+diff --git a/src/main/java/net/minecraft/server/WorldNBTStorage.java b/src/main/java/net/minecraft/server/WorldNBTStorage.java
+index cebe38d..fc912e8 100644
+--- a/src/main/java/net/minecraft/server/WorldNBTStorage.java
++++ b/src/main/java/net/minecraft/server/WorldNBTStorage.java
+@@ -306,7 +306,6 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
+     // CraftBukkit end
+ 	
+ 	// Paper start
+-    @Override
+     public List<UUID> getSeenPlayerUUIDs() {
+         return Arrays.asList(playerDir.list((dir, s) -> s.endsWith(".dat")))
+                 .stream()
+@@ -321,7 +320,6 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
+                 .collect(Collectors.toList());
+     }
+ 
+-    @Override
+     public long getLastModified(UUID id) {
+         File file = new File(playerDir, id + ".dat");
+         if (file.exists()) {
+diff --git a/src/main/java/net/minecraft/server/WorldServer.java b/src/main/java/net/minecraft/server/WorldServer.java
+index c172590..298406e 100644
+--- a/src/main/java/net/minecraft/server/WorldServer.java
++++ b/src/main/java/net/minecraft/server/WorldServer.java
+@@ -1211,7 +1211,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
+     }
+ 
+     public ChunkProviderServer getChunkProviderServer() {
+-        return net.minecraft.server.World.chunkProviderServer;
++        return (ChunkProviderServer) super.getChunkProvider();
+     }
+ 
+     public Explosion createExplosion(@Nullable Entity entity, double d0, double d1, double d2, float f, boolean flag, boolean flag1) {
+diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
+index f4090cb..d4418d3 100644
+--- a/src/main/java/org/bukkit/OfflinePlayer.java
++++ b/src/main/java/org/bukkit/OfflinePlayer.java
+@@ -8,8 +8,6 @@ import org.bukkit.entity.AnimalTamer;
+ import org.bukkit.entity.Player;
+ import org.bukkit.permissions.ServerOperator;
+ 
+-import com.destroystokyo.paper.profile.AccountProfile; // Paper
+-
+ public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable {
+ 
+     /**
+@@ -156,14 +154,5 @@ public interface OfflinePlayer extends ServerOperator, AnimalTamer, Configuratio
+     @Override
+     int hashCode();
+     // Paper end
+-	
+-	// Paper start
+-    /**
+-     * Return this player's profile
+-     *
+-     * @return this player's profile
+-     */
+-    public AccountProfile getAccount();
+-    // Paper end
+ 
+ }
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
+index 5ecadc2..1feaa49 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
+@@ -13,14 +13,17 @@ import com.destroystokyo.paper.profile.AccountProfile;
+ import org.bukkit.BanList;
+ import org.bukkit.Bukkit;
+ import org.bukkit.Location;
++import net.minecraft.server.IPlayerFileData; // Paper
+ import org.bukkit.OfflinePlayer;
+ import org.bukkit.Server;
++import net.minecraft.server.WorldNBTStorage;
++import java.io.File;
++import net.minecraft.server.EntityPlayer;
+ import org.bukkit.configuration.serialization.ConfigurationSerializable;
+ import org.bukkit.configuration.serialization.SerializableAs;
+ import org.bukkit.entity.Player;
+ import org.bukkit.metadata.MetadataValue;
+ import org.bukkit.plugin.Plugin;
+-import net.minecraft.server.IPlayerFileData; // Paper
+ 
+ @SerializableAs("Player")
+ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializable {
+@@ -33,20 +36,7 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+         this.profile = profile;
+         this.storage = server.console.worlds.get(0).getDataManager().getPlayerFileData(); // Paper
+ 		// Paper start - store our profile
+-        this.paperProfile = ProfileUtils.toPaper(profile);
+     }
+-    private final AccountProfile paperProfile;
+-
+-    protected CraftOfflinePlayer(CraftServer server, AccountProfile profile) {
+-        this.server = server;
+-        this.profile = ProfileUtils.toMojang(profile);
+-        this.storage = server.console.worlds.get(0).getDataManager().getPlayerFileData(); // Paper
+-        this.paperProfile = profile;
+-    }
+-
+-    public AccountProfile getAccount() {
+-        return paperProfile;
+-     }
+ 
+     public GameProfile getProfile() {
+         return profile;
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index 263f4c0..860b410 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -23,8 +23,8 @@ import java.util.regex.Pattern;
+ import com.destroystokyo.paper.PaperConfig;
+ import java.util.stream.Collectors; // Paper
+ import org.bukkit.craftbukkit.chunkio2.WorldPersistence;
+-import org.bukkit.craftbukkit.chunkio2.anvil.AnvilWorldPersistenceFactory;
+ import org.bukkit.craftbukkit.chunkio2.impl.CraftNBTStorage;
++import org.bukkit.craftbukkit.chunkio2.anvil.AnvilWorldPersistenceFactory;
+ 
+ import javax.imageio.ImageIO;
+ import com.destroystokyo.paper.profile.EventProfileLookup;
+@@ -928,7 +928,7 @@ public final class CraftServer implements Server {
+         IDataManager sdm = persistence == null ? 
+                 new ServerNBTManager(getWorldContainer(), name, true, getHandle().getServer().getDataConverterManager()) :
+                 new CraftNBTStorage(false, getHandle().getServer().getDataConverterManager(), persistence);
+-        // Paper Endver().getDataConverterManager());
++        // Paper End
+         WorldData worlddata = sdm.getWorldData();
+         WorldSettings worldSettings = null;
+         if (worlddata == null) {
+@@ -1383,11 +1383,11 @@ public final class CraftServer implements Server {
+         OfflinePlayer result = getPlayerExact(name);
+         if (result == null) {
+             // Spigot Start
+-            AccountProfile profile = null;
++            GameProfile profile = null;
+             // Only fetch an online UUID in online mode
+             if ( MinecraftServer.getServer().getOnlineMode() || org.spigotmc.SpigotConfig.bungee )
+             {
+-                profile = getProfileLookup().lookup(name);
++                profile = console.getUserCache().getProfile( name );
+             }
+             // Spigot end
+             if (profile == null) {
+@@ -1395,8 +1395,7 @@ public final class CraftServer implements Server {
+                 result = getOfflinePlayer(new GameProfile(UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes(Charsets.UTF_8)), name));
+             } else {
+                 // Use the GameProfile even when we get a UUID so we ensure we still have a name
+-                result = new CraftOfflinePlayer(this, profile);
+-                offlinePlayers.put(result.getUniqueId(), result);
++                result = getOfflinePlayer(profile);
+             }
+         } else {
+             offlinePlayers.remove(result.getUniqueId());
+@@ -1413,7 +1412,7 @@ public final class CraftServer implements Server {
+         if (result == null) {
+             result = offlinePlayers.get(id);
+             if (result == null) {
+-                result = new CraftOfflinePlayer(this, getProfileLookup().lookup(id)); // Paper - do lookup
++                result = new CraftOfflinePlayer(this, new GameProfile(id, null));
+                 offlinePlayers.put(id, result);
+             }
+         } else {
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+index 4b6c530..c329f2c 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+@@ -217,7 +217,6 @@ public class CraftWorld implements World {
+         if (chunk == null) {
+ 			return true;
+ 		}
+-		chunk.markAsUnloaded(); // Migot
+ 		// If chunk had previously been queued to save, must do save to avoid loss of that data
+         return world.getChunkProviderServer().unloadChunk(chunk, chunk.mustSave || save);
+     }
+diff --git a/src/main/java/org/bukkit/craftbukkit/chunkio2/impl/CraftNBTStorage.java b/src/main/java/org/bukkit/craftbukkit/chunkio2/impl/CraftNBTStorage.java
+index 9b4572c..4cf7fa8 100644
+--- a/src/main/java/org/bukkit/craftbukkit/chunkio2/impl/CraftNBTStorage.java
++++ b/src/main/java/org/bukkit/craftbukkit/chunkio2/impl/CraftNBTStorage.java
+@@ -145,7 +145,6 @@ public class CraftNBTStorage implements IDataManager, IPlayerFileData {
+         return nbttagcompound;
+     }
+ 
+-    @Override
+     public NBTTagCompound getPlayerData(UUID s) {
+         NBTDataInputConsumer result = new NBTDataInputConsumer();
+         persistence.getPlayerPersistence().loadPlayer(null, s, result);
+@@ -186,12 +185,10 @@ public class CraftNBTStorage implements IDataManager, IPlayerFileData {
+         return persistence.getUUID();
+     }
+ 
+-    @Override
+     public List<UUID> getSeenPlayerUUIDs() {
+         return persistence.getPlayerPersistence().getPlayerUUIDs();
+     }
+ 
+-    @Override
+     public long getLastModified(UUID id) {
+         return persistence.getPlayerPersistence().getLastModified(id);
+     }
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+index 90adf99..59e77a1 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+@@ -22,8 +22,6 @@ import java.util.logging.Level;
+ import java.util.logging.Logger;
+ import net.md_5.bungee.api.chat.BaseComponent;
+ 
+-import com.destroystokyo.paper.profile.AccountProfile; // Paper
+-
+ import net.minecraft.server.*;
+ import net.minecraft.server.PacketPlayOutTitle.EnumTitleAction;
+ 
+@@ -84,13 +82,6 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+ 
+         firstPlayed = System.currentTimeMillis();
+     }
+-	
+-	// Paper start
+-    @Override
+-    public AccountProfile getAccount() {
+-        return getHandle().getBukkitProfile();
+-    }
+-    // Paper end
+ 
+     public GameProfile getProfile() {
+         return getHandle().getProfile();
+diff --git a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
+index ae99018..b8eeec3 100644
+--- a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
++++ b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
+@@ -5,6 +5,8 @@ import java.util.ArrayList;
+ import java.util.EnumMap;
+ import java.util.List;
+ import java.util.Map;
++import java.util.Iterator;
++import java.util.Queue;
+ 
+ import com.google.common.base.Function;
+ import com.google.common.base.Functions;
+diff --git a/src/main/java/org/bukkit/craftbukkit/potion/CraftPotionBrewer.java b/src/main/java/org/bukkit/craftbukkit/potion/CraftPotionBrewer.java
+index 14b79c1..b7643bd 100644
+--- a/src/main/java/org/bukkit/craftbukkit/potion/CraftPotionBrewer.java
++++ b/src/main/java/org/bukkit/craftbukkit/potion/CraftPotionBrewer.java
+@@ -12,13 +12,16 @@ import org.bukkit.potion.PotionEffectType;
+ import org.bukkit.potion.PotionType;
+ import org.bukkit.potion.PotionBrewer;
+ import org.bukkit.potion.PotionData;
++import java.util.concurrent.ConcurrentHashMap;
++import java.util.concurrent.ConcurrentMap;
+ import org.bukkit.potion.PotionEffect;
+ 
+ import com.google.common.collect.ImmutableList;
+ import com.google.common.collect.Maps;
+ 
+ public class CraftPotionBrewer implements PotionBrewer {
+-    private static final Map<PotionType, Collection<PotionEffect>> cache = Maps.newHashMap();
++    // private static final Map<PotionType, Collection<PotionEffect>> cache = Maps.newHashMap();
++    private static final ConcurrentMap<PotionType, Collection<PotionEffect>> cache = new ConcurrentHashMap<PotionType, Collection<PotionEffect>>(); // Hose
+ 
+     public Collection<PotionEffect> getEffects(PotionType damage, boolean upgraded, boolean extended) {
+         if (cache.containsKey(damage))
+diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
+index 76392a0..0ead18d 100644
+--- a/src/main/java/org/bukkit/entity/Player.java
++++ b/src/main/java/org/bukkit/entity/Player.java
+@@ -22,8 +22,6 @@ import org.bukkit.map.MapView;
+ import org.bukkit.plugin.messaging.PluginMessageRecipient;
+ import org.bukkit.scoreboard.Scoreboard;
+ 
+-import com.destroystokyo.paper.profile.AccountProfile; // Paper
+-
+ /**
+  * Represents a player, connected or not
+  */
+@@ -1658,14 +1656,4 @@ public interface Player extends HumanEntity, Conversable, CommandSender, Offline
+ 
+     Spigot spigot();
+     // Spigot end
+-	
+-	// Paper start
+-    /**
+-     * Return this player's profile
+-     *
+-     * @return this player's profile
+-     */
+-    @Override
+-    public AccountProfile getAccount();
+-    // Paper end
+ }
+diff --git a/src/main/java/org/spigotmc/AsyncCatcher.java b/src/main/java/org/spigotmc/AsyncCatcher.java
+index 7844871..ab88e35 100644
+--- a/src/main/java/org/spigotmc/AsyncCatcher.java
++++ b/src/main/java/org/spigotmc/AsyncCatcher.java
+@@ -12,7 +12,7 @@ import com.google.common.collect.ForwardingSet;
+ public class AsyncCatcher
+ {
+ 
+-    public static boolean enabled = true; // Torch - Permit FastAsyncWorldEdit to use magic
++    public static boolean enabled = false; // Torch - Permit FastAsyncWorldEdit to use magic // Hose
+ 
+     public static void catchOp(String reason)
+     {
+-- 
+2.8.2.windows.1
+

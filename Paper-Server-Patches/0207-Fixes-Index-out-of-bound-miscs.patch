@@ -1,0 +1,117 @@
+From b78147bb3c9c16a54b0a07a88b75fa1954b78d55 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Tue, 2 Aug 2016 18:43:41 +0800
+Subject: [PATCH] Fixes Index out of bound, miscs
+
+
+diff --git a/src/main/java/de/minetick/Migot.java b/src/main/java/de/minetick/Migot.java
+index 8fedfd5..94cd9e7 100644
+--- a/src/main/java/de/minetick/Migot.java
++++ b/src/main/java/de/minetick/Migot.java
+@@ -66,7 +66,7 @@ public class Migot {
+         if(!this.initDone) {
+             this.initDone = true;
+             if(this.failedToLoadConfig) {
+-                throw new IllegalStateException("Migot's config file migot.yml could not be loaded. Check it for syntax errors.");
++                throw new IllegalStateException("Torch's config file migot.yml could not be loaded. Check it for syntax errors.");
+             }
+             CraftServer craftserver = MinecraftServer.getServer().server;
+             craftserver.getCommandMap().register("migot-reload", "Migot", new ReloadSettingsCommand("migot-reload"));
+diff --git a/src/main/java/de/minetick/MigotConfig.java b/src/main/java/de/minetick/MigotConfig.java
+index 936a302..697e381 100644
+--- a/src/main/java/de/minetick/MigotConfig.java
++++ b/src/main/java/de/minetick/MigotConfig.java
+@@ -45,7 +45,6 @@ public class MigotConfig {
+     private void loadConfigContent() {
+ 		AutoSaveEnabled = configuration.getBoolean("auto-save", false);
+ 		ForkPingEnabled = configuration.getBoolean("settings.fork-ping", false);
+-		DisableTabComplete = configuration.getBoolean("settings.disable-tab-complete", false);
+     }
+ 
+     private FileConfiguration loadConfig(File file) throws IOException, InvalidConfigurationException {
+@@ -75,9 +74,4 @@ public class MigotConfig {
+ 	public boolean getForkPingEnabled() {
+         return ForkPingEnabled;
+     }
+-	
+-	boolean DisableTabComplete = false;
+-	public boolean getDisableTabComplete() {
+-        return DisableTabComplete;
+-    }
+ }
+\ No newline at end of file
+diff --git a/src/main/java/net/minecraft/server/ChunkRegionLoader.java b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+index 22cc805..20c84e0 100644
+--- a/src/main/java/net/minecraft/server/ChunkRegionLoader.java
++++ b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+@@ -185,7 +185,9 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+                 if (nbttagcompound != null) {
+                     int attempts = 0; Exception laste = null; while (attempts++ < 5) { // Paper
+                     try {
+-                        this.b(chunkcoordintpair, nbttagcompound);
++						synchronized(this) {
++							this.b(chunkcoordintpair, nbttagcompound);
++						}
+                         laste = null; break; // Paper
+                     } catch (Exception exception) {
+                         //ChunkRegionLoader.a.error("Failed to save chunk", exception); // Paper
+diff --git a/src/main/java/net/minecraft/server/NetworkManager.java b/src/main/java/net/minecraft/server/NetworkManager.java
+index 7372a1b..3d4be7f 100644
+--- a/src/main/java/net/minecraft/server/NetworkManager.java
++++ b/src/main/java/net/minecraft/server/NetworkManager.java
+@@ -238,7 +238,9 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
+     }
+ 
+     public void a() {
+-        this.m();
++		synchronized(this) {
++			this.m();
++		}
+         if (this.m instanceof ITickable) {
+             ((ITickable) this.m).c();
+         }
+diff --git a/src/main/java/org/bukkit/command/SimpleCommandMap.java b/src/main/java/org/bukkit/command/SimpleCommandMap.java
+index 6e7b80d..5211cfb 100644
+--- a/src/main/java/org/bukkit/command/SimpleCommandMap.java
++++ b/src/main/java/org/bukkit/command/SimpleCommandMap.java
+@@ -24,12 +24,12 @@ import org.bukkit.entity.Player;
+ import org.bukkit.util.StringUtil;
+ 
+ import de.minetick.MigotConfig;
++import java.io.File;
+ 
+ public class SimpleCommandMap implements CommandMap {
+     private static final Pattern PATTERN_ON_SPACE = Pattern.compile(" ", Pattern.LITERAL);
+     protected final Map<String, Command> knownCommands = new HashMap<String, Command>();
+     private final Server server;
+-	private MigotConfig config;
+ 
+     public SimpleCommandMap(final Server server) {
+         this.server = server;
+@@ -233,10 +233,6 @@ public class SimpleCommandMap implements CommandMap {
+      * This code was copied, except for the noted change, from tabComplete(CommandSender sender, String cmdLine)
+      */
+     public List<String> tabComplete(CommandSender sender, String cmdLine, Location location) {
+-		if (config.getDisableTabComplete()) {
+-			return null;
+-		}
+-		
+         Validate.notNull(sender, "Sender cannot be null");
+         Validate.notNull(cmdLine, "Command line cannot null");
+ 
+diff --git a/src/main/resources/configurations/migot.yml b/src/main/resources/configurations/migot.yml
+index 1afbb3c..2aa6d52 100644
+--- a/src/main/resources/configurations/migot.yml
++++ b/src/main/resources/configurations/migot.yml
+@@ -5,5 +5,4 @@
+ 
+ auto-save: false
+ settings:
+-  fork-ping: false
+-  disable-tab-complete: false
+\ No newline at end of file
++  fork-ping: false
+\ No newline at end of file
+-- 
+2.8.2.windows.1
+

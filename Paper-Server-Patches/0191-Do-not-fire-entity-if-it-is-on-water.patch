@@ -1,0 +1,140 @@
+From 0d463dcab3a24f0db6c9e8ec3dd4687b334382f9 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Fri, 29 Jul 2016 07:51:23 +0800
+Subject: [PATCH] Do not fire entity if it is on water.
+
+
+diff --git a/src/main/java/net/minecraft/server/Entity.java b/src/main/java/net/minecraft/server/Entity.java
+index 71e4154..ac329ce 100644
+--- a/src/main/java/net/minecraft/server/Entity.java
++++ b/src/main/java/net/minecraft/server/Entity.java
+@@ -850,12 +850,12 @@ public abstract class Entity implements ICommandListener, org.spigotmc.Optimized
+                 if (!flag2) {
+                     ++this.fireTicks;
+                     // CraftBukkit start - Not on fire yet
+-                    if (this.fireTicks <= 0) { // Only throw events on the first combust, otherwise it spams
++                    if (this.fireTicks <= 0 && !this.isInWater()) { // Only throw events on the first combust, otherwise it spams // Torch - do not fire entity if it is in water
+                         EntityCombustEvent event = new org.bukkit.event.entity.EntityCombustByBlockEvent(null, getBukkitEntity(), 8);
+                         world.getServer().getPluginManager().callEvent(event);
+ 
+-                        if (!event.isCancelled()) {
+-                            setOnFire(event.getDuration());
++						if (!event.isCancelled()) {
++                            this.setOnFire(event.getDuration());
+                         }
+                     } else {
+                         // CraftBukkit end
+@@ -1185,12 +1185,12 @@ public abstract class Entity implements ICommandListener, org.spigotmc.Optimized
+                 if (!flag2) {
+                     ++this.fireTicks;
+                     // CraftBukkit start - Not on fire yet
+-                    if (this.fireTicks <= 0) { // Only throw events on the first combust, otherwise it spams
++                    if (this.fireTicks <= 0 && !this.isInWater()) { // Only throw events on the first combust, otherwise it spams // Torch - do not fire entity if it is in water
+                         EntityCombustEvent event = new org.bukkit.event.entity.EntityCombustByBlockEvent(null, getBukkitEntity(), 8); // Torch - SPIGOT-2405
+                         world.getServer().getPluginManager().callEvent(event);
+ 
+                         if (!event.isCancelled()) {
+-                            setOnFire(event.getDuration());
++                            this.setOnFire(event.getDuration());
+                         }
+                     } else {
+                         // CraftBukkit end
+@@ -2396,11 +2396,11 @@ public abstract class Entity implements ICommandListener, org.spigotmc.Optimized
+         }
+         // CraftBukkit end
+         ++this.fireTicks;
+-        if (this.fireTicks == 0) {
++        if (this.fireTicks == 0 && !this.isInWater()) { // Torch - do not fire entity if it is in water
+             // CraftBukkit start - Call a combust event when lightning strikes
+             EntityCombustByEntityEvent entityCombustEvent = new EntityCombustByEntityEvent(stormBukkitEntity, thisBukkitEntity, 8);
+             pluginManager.callEvent(entityCombustEvent);
+-            if (!entityCombustEvent.isCancelled()) {
++			if (!entityCombustEvent.isCancelled()) {
+                 this.setOnFire(entityCombustEvent.getDuration());
+             }
+             // CraftBukkit end
+diff --git a/src/main/java/net/minecraft/server/EntityHuman.java b/src/main/java/net/minecraft/server/EntityHuman.java
+index 860b1bd..9fd4fb7 100644
+--- a/src/main/java/net/minecraft/server/EntityHuman.java
++++ b/src/main/java/net/minecraft/server/EntityHuman.java
+@@ -1009,12 +1009,12 @@ public abstract class EntityHuman extends EntityLiving {
+ 
+                     if (entity instanceof EntityLiving) {
+                         f3 = ((EntityLiving) entity).getHealth();
+-                        if (j > 0 && !entity.isBurning()) {
++                        if (j > 0 && !entity.isBurning() && !entity.isInWater()) { // Torch - do not fire entity if it is in water
+                             // CraftBukkit start - Call a combust event when somebody hits with a fire enchanted item
+                             EntityCombustByEntityEvent combustEvent = new EntityCombustByEntityEvent(this.getBukkitEntity(), entity.getBukkitEntity(), 1);
+                             org.bukkit.Bukkit.getPluginManager().callEvent(combustEvent);
+ 
+-                            if (!combustEvent.isCancelled()) {
++							if (!combustEvent.isCancelled()) {
+                                 flag4 = true;
+                                 entity.setOnFire(combustEvent.getDuration());
+                             }
+@@ -1154,12 +1154,12 @@ public abstract class EntityHuman extends EntityLiving {
+                             float f5 = f3 - ((EntityLiving) entity).getHealth();
+ 
+                             this.a(StatisticList.y, Math.round(f5 * 10.0F));
+-                            if (j > 0) {
++                            if (j > 0 && !entity.isInWater()) { // Torch - do not fire entity if it is in water
+                                 // CraftBukkit start - Call a combust event when somebody hits with a fire enchanted item
+                                 EntityCombustByEntityEvent combustEvent = new EntityCombustByEntityEvent(this.getBukkitEntity(), entity.getBukkitEntity(), j * 4);
+                                 org.bukkit.Bukkit.getPluginManager().callEvent(combustEvent);
+ 
+-                                if (!combustEvent.isCancelled()) {
++								if (!combustEvent.isCancelled()) {
+                                     entity.setOnFire(combustEvent.getDuration());
+                                 }
+                                 // CraftBukkit end
+diff --git a/src/main/java/net/minecraft/server/EntityMonster.java b/src/main/java/net/minecraft/server/EntityMonster.java
+index ec00edf..2a3ae05 100644
+--- a/src/main/java/net/minecraft/server/EntityMonster.java
++++ b/src/main/java/net/minecraft/server/EntityMonster.java
+@@ -76,7 +76,7 @@ public abstract class EntityMonster extends EntityCreature implements IMonster {
+ 
+             int j = EnchantmentManager.getFireAspectEnchantmentLevel(this);
+ 
+-            if (j > 0) {
++            if (j > 0 && !entity.isInWater()) { // Torch - do not fire entity if it is in water
+                 // CraftBukkit start - Call a combust event when somebody hits with a fire enchanted item
+                 EntityCombustByEntityEvent combustEvent = new EntityCombustByEntityEvent(this.getBukkitEntity(), entity.getBukkitEntity(), j * 4);
+                 org.bukkit.Bukkit.getPluginManager().callEvent(combustEvent);
+diff --git a/src/main/java/net/minecraft/server/EntitySkeleton.java b/src/main/java/net/minecraft/server/EntitySkeleton.java
+index 8012877..7598a43 100644
+--- a/src/main/java/net/minecraft/server/EntitySkeleton.java
++++ b/src/main/java/net/minecraft/server/EntitySkeleton.java
+@@ -103,7 +103,7 @@ public class EntitySkeleton extends EntityMonster implements IRangedEntity {
+                     flag = false;
+                 }
+ 
+-                if (flag) {
++                if (flag && !this.isInWater()) { // Torch - do not fire entity if it is in water
+                     // CraftBukkit start
+                     EntityCombustEvent event = new EntityCombustEvent(this.getBukkitEntity(), 8);
+                     this.world.getServer().getPluginManager().callEvent(event);
+diff --git a/src/main/java/net/minecraft/server/EntityZombie.java b/src/main/java/net/minecraft/server/EntityZombie.java
+index 09b1902..ca56a02 100644
+--- a/src/main/java/net/minecraft/server/EntityZombie.java
++++ b/src/main/java/net/minecraft/server/EntityZombie.java
+@@ -163,7 +163,7 @@ public class EntityZombie extends EntityMonster {
+                     flag = false;
+                 }
+ 
+-                if (flag) {
++                if (flag && !this.isInWater()) { // Torch - do not fire entity if it is in water
+                     // CraftBukkit start
+                     EntityCombustEvent event = new EntityCombustEvent(this.getBukkitEntity(), 8);
+                     this.world.getServer().getPluginManager().callEvent(event);
+@@ -242,7 +242,7 @@ public class EntityZombie extends EntityMonster {
+         if (flag) {
+             int i = this.world.getDifficulty().a();
+ 
+-            if (this.getItemInMainHand() == null && this.isBurning() && this.random.nextFloat() < (float) i * 0.3F) {
++            if (this.getItemInMainHand() == null && this.isBurning() && this.random.nextFloat() < (float) i * 0.3F && !entity.isInWater()) { // Torch - do not fire entity if it is in water
+                 // CraftBukkit start
+                 EntityCombustByEntityEvent event = new EntityCombustByEntityEvent(this.getBukkitEntity(), entity.getBukkitEntity(), 2 * i);
+                 this.world.getServer().getPluginManager().callEvent(event);
+-- 
+2.8.2.windows.1
+

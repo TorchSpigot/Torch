@@ -1,0 +1,65 @@
+From 080f3dd743643eafe1c830dfae9169816a7f72a2 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 13:57:22 +0800
+Subject: [PATCH] SPIGOT-1181: Ensure Minecart command updates visually
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityMinecartCommandBlock.java b/src/main/java/net/minecraft/server/EntityMinecartCommandBlock.java
+index 4e1680c..2e79f0e 100644
+--- a/src/main/java/net/minecraft/server/EntityMinecartCommandBlock.java
++++ b/src/main/java/net/minecraft/server/EntityMinecartCommandBlock.java
+@@ -4,7 +4,7 @@ import javax.annotation.Nullable;
+ 
+ public class EntityMinecartCommandBlock extends EntityMinecartAbstract {
+ 
+-    private static final DataWatcherObject<String> a = DataWatcher.a(EntityMinecartCommandBlock.class, DataWatcherRegistry.d);
++    public static final DataWatcherObject<String> a = DataWatcher.a(EntityMinecartCommandBlock.class, DataWatcherRegistry.d); // PAIL: private -> public
+     private static final DataWatcherObject<IChatBaseComponent> b = DataWatcher.a(EntityMinecartCommandBlock.class, DataWatcherRegistry.e);
+     private final CommandBlockListenerAbstract c = new CommandBlockListenerAbstract() {
+         {
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftMinecartCommand.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftMinecartCommand.java
+index 813b080..108e39f 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftMinecartCommand.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftMinecartCommand.java
+@@ -21,20 +21,26 @@ public class CraftMinecartCommand extends CraftMinecart implements CommandMineca
+     public CraftMinecartCommand(CraftServer server, EntityMinecartCommandBlock entity) {
+         super(server, entity);
+     }
++	
++	@Override
++    public EntityMinecartCommandBlock getHandle() {
++        return (EntityMinecartCommandBlock) entity;
++    }
+ 
+     @Override
+     public String getCommand() {
+-        return ((EntityMinecartCommandBlock) getHandle()).getCommandBlock().getCommand();
++        return getHandle().getCommandBlock().getCommand();
+     }
+ 
+     @Override
+     public void setCommand(String command) {
+-        ((EntityMinecartCommandBlock) getHandle()).getCommandBlock().setCommand(command != null ? command : "");
++        getHandle().getCommandBlock().setCommand(command != null ? command : "");
++        getHandle().getDataWatcher().set(EntityMinecartCommandBlock.a, getHandle().getCommandBlock().getCommand()); // PAIL: rename
+     }
+ 
+     @Override
+     public void setName(String name) {
+-        ((EntityMinecartCommandBlock) getHandle()).getCommandBlock().setName(name != null ? name : "@");
++        getHandle().getCommandBlock().setName(name != null ? name : "@");
+     }
+ 
+     @Override
+@@ -52,7 +58,7 @@ public class CraftMinecartCommand extends CraftMinecart implements CommandMineca
+ 
+     @Override
+     public String getName() {
+-        return ((EntityMinecartCommandBlock) getHandle()).getCommandBlock().getName();
++        return getHandle().getCommandBlock().getName();
+     }
+ 
+     @Override
+-- 
+2.8.2.windows.1
+

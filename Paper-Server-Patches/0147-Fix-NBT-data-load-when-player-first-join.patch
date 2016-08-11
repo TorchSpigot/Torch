@@ -1,0 +1,94 @@
+From 10e5ca7430512a0c497ea22a85b4463b6cddb698 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 16 Jul 2016 16:13:26 +0800
+Subject: [PATCH] Fix NBT data load when player first join
+
+
+diff --git a/src/main/java/net/minecraft/server/Container.java b/src/main/java/net/minecraft/server/Container.java
+index d714bd3..abe26d7 100644
+--- a/src/main/java/net/minecraft/server/Container.java
++++ b/src/main/java/net/minecraft/server/Container.java
+@@ -7,6 +7,8 @@ import java.util.Iterator;
+ import java.util.List;
+ import java.util.Set;
+ import javax.annotation.Nullable;
++import java.util.Queue;
++import java.util.concurrent.ConcurrentLinkedQueue;
+ 
+ // CraftBukkit start
+ import java.util.HashMap;
+@@ -33,9 +35,9 @@ public abstract class Container {
+     public int windowId;
+     private int dragType = -1;
+     private int g;
+-    private final Set<Slot> h = Sets.newHashSet();
++    private final Set<Slot> h = Sets.newConcurrentHashSet();
+     protected List<ICrafting> listeners = Lists.newArrayList();
+-    private Set<EntityHuman> i = Sets.newHashSet();
++    private Set<EntityHuman> i = Sets.newConcurrentHashSet();
+     private int tickCount; // Spigot
+ 
+     // CraftBukkit start
+diff --git a/src/main/java/org/bukkit/craftbukkit/chunkio2/impl/CraftNBTStorage.java b/src/main/java/org/bukkit/craftbukkit/chunkio2/impl/CraftNBTStorage.java
+index 4cf7fa8..c163030 100644
+--- a/src/main/java/org/bukkit/craftbukkit/chunkio2/impl/CraftNBTStorage.java
++++ b/src/main/java/org/bukkit/craftbukkit/chunkio2/impl/CraftNBTStorage.java
+@@ -119,9 +119,11 @@ public class CraftNBTStorage implements IDataManager, IPlayerFileData {
+     public NBTTagCompound load(EntityHuman entityhuman) {
+         NBTDataInputConsumer result = new NBTDataInputConsumer();
+         persistence.getPlayerPersistence().loadPlayer(entityhuman.getName(), entityhuman.getUniqueID(), result);
+-        if (result.hasException()) {
+-            log.warn("Failed to load player data for " + entityhuman.getName());
+-            return null;
++		boolean flag = entityhuman instanceof EntityPlayer;
++		
++        if (result.hasException()) { // First check the player if has played before to fix spam issue, and use null check to bypass cause we are sonner than CB anyway.
++			if (flag) { return null; } // Return to refresh
++			else { log.warn("Cannot load player data for " + entityhuman.getName()); return null; } // TO NOTICE
+         }
+ 
+         NBTTagCompound nbttagcompound = result.getResult();
+@@ -132,8 +134,8 @@ public class CraftNBTStorage implements IDataManager, IPlayerFileData {
+         // This must be done before restoring the player data, so that
+         // if there is a firstPlayed date in the save file it overwrites
+         // this value.
+-        if (entityhuman instanceof EntityPlayer) {
+-            CraftPlayer player = (CraftPlayer) entityhuman.getBukkitEntity();
++        if (flag) {
++			CraftPlayer player = (CraftPlayer) entityhuman.getBukkitEntity();
+             // Only update first played if it is older than the one we have
+             long modified = persistence.getPlayerPersistence().getLastModified(entityhuman.getUniqueID());
+             if (modified < player.getFirstPlayed()) {
+@@ -144,12 +146,12 @@ public class CraftNBTStorage implements IDataManager, IPlayerFileData {
+ 
+         return nbttagcompound;
+     }
+-
++	
+     public NBTTagCompound getPlayerData(UUID s) {
+         NBTDataInputConsumer result = new NBTDataInputConsumer();
+         persistence.getPlayerPersistence().loadPlayer(null, s, result);
+         if (result.hasException()) {
+-            log.warn("Failed to load player data for " + s);
++            log.warn("Failed to load player data for " + s + " when get data.");
+         }
+         return result.getResult();
+     }
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+index 4865b4b..fd92501 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+@@ -1091,6 +1091,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+     public boolean hasPlayedBefore() {
+         return hasPlayedBefore;
+     }
++	
++	public void setPlayedBefore(boolean flag) {
++        hasPlayedBefore = flag;
++    }
+ 
+     public void setFirstPlayed(long firstPlayed) {
+         this.firstPlayed = firstPlayed;
+-- 
+2.8.2.windows.1
+

@@ -1,0 +1,108 @@
+From 79590157131d34e6e92f67b09f1442ca1b6477cc Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 17:03:53 +0800
+Subject: [PATCH] Pass Async to thread
+
+
+diff --git a/src/main/java/net/minecraft/server/Block.java b/src/main/java/net/minecraft/server/Block.java
+index 998622a..3d6f803 100644
+--- a/src/main/java/net/minecraft/server/Block.java
++++ b/src/main/java/net/minecraft/server/Block.java
+@@ -308,18 +308,11 @@ public class Block {
+     }
+ 
+     public void onPlace(World world, BlockPosition blockposition, IBlockData iblockdata) {
+-        // org.spigotmc.AsyncCatcher.catchOp( "block onPlace"); // Spigot
+-		if (org.spigotmc.AsyncCatcher.catchOp_flag()) { // Hose
+-            System.out.println("AsyncCatcher: block onPlace " + this.getName());
+-        }
++        org.spigotmc.AsyncCatcher.catchOp( "block onPlace"); // Spigot
+     }
+ 
+     public void remove(World world, BlockPosition blockposition, IBlockData iblockdata) {
+-        // org.spigotmc.AsyncCatcher.catchOp( "block remove"); // Spigot
+-		if (org.spigotmc.AsyncCatcher.catchOp_flag()) { // Hose
+-            System.out.println("AsyncCatcher: block remove " + this.getName());
+-            // world.addEntity(new EntityExperienceOrb(world, (double) blockposition.getX() + 0.5D, (double) blockposition.getY() + 0.5D, (double) blockposition.getZ() + 0.5D, 1));
+-        }
++        org.spigotmc.AsyncCatcher.catchOp( "block remove"); // Spigot
+     }
+ 
+     public int a(Random random) {
+diff --git a/src/main/java/net/minecraft/server/EntityLiving.java b/src/main/java/net/minecraft/server/EntityLiving.java
+index d50c4b3..816de2d 100644
+--- a/src/main/java/net/minecraft/server/EntityLiving.java
++++ b/src/main/java/net/minecraft/server/EntityLiving.java
+@@ -649,10 +649,6 @@ public abstract class EntityLiving extends Entity {
+ 
+     public void addEffect(MobEffect mobeffect) {
+         // org.spigotmc.AsyncCatcher.catchOp( "effect add"); // Spigot
+-		if (org.spigotmc.AsyncCatcher.catchOp_flag()) { // HOSE
+-            System.out.println("AsyncCatcher: effect add.");
+-            return;
+-        }
+         // CraftBukkit start
+         if (isTickingEffects) {
+             effectsToProcess.add(mobeffect);
+diff --git a/src/main/java/net/minecraft/server/EntityTracker.java b/src/main/java/net/minecraft/server/EntityTracker.java
+index 9002973..95a57c0 100644
+--- a/src/main/java/net/minecraft/server/EntityTracker.java
++++ b/src/main/java/net/minecraft/server/EntityTracker.java
+@@ -102,10 +102,6 @@ public class EntityTracker {
+ 
+     public void addEntity(Entity entity, int i, final int j, boolean flag) {
+         // org.spigotmc.AsyncCatcher.catchOp( "entity track"); // Spigot
+-		if (org.spigotmc.AsyncCatcher.catchOp_flag()) { // HOSE
+-            System.out.println("AsyncCatcher: entity track.");
+-            return;
+-        }
+         i = org.spigotmc.TrackingRange.getEntityTrackingRange(entity, i); // Spigot
+         try {
+             if (this.trackedEntities.b(entity.getId())) {
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index b11d273..8d43d95 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -1050,9 +1050,6 @@ public abstract class World implements IBlockAccess {
+ 
+     public synchronized boolean addEntity(Entity entity, SpawnReason spawnReason) { // Changed signature, added SpawnReason
+         // org.spigotmc.AsyncCatcher.catchOp( "entity add"); // Spigot
+-		if (org.spigotmc.AsyncCatcher.catchOp_flag()) { // HOSE
+-            entity = null;
+-        }
+         if (entity == null) return false;
+ 		if (entity.valid) { MinecraftServer.LOGGER.error("Attempted Double World add on " + entity, new Throwable()); return true; } // Paper
+         // CraftBukkit end
+diff --git a/src/main/java/org/spigotmc/AsyncCatcher.java b/src/main/java/org/spigotmc/AsyncCatcher.java
+index 2c68cd1..7844871 100644
+--- a/src/main/java/org/spigotmc/AsyncCatcher.java
++++ b/src/main/java/org/spigotmc/AsyncCatcher.java
+@@ -20,7 +20,7 @@ public class AsyncCatcher
+         {
+ 			MinecraftServer.getServer().postToMainThread(Thread.currentThread());
+             // MinecraftServer.LOGGER.warn(reason + " called async on " + Thread.currentThread().getName()); // TacoSpigot - log // Torch
+-            throw new IllegalStateException( "Asynchronous " + reason + " on thread " + Thread.currentThread().getName() + "!" ); // TacoSpigot - give thread
++            // throw new IllegalStateException( "Asynchronous " + reason + " on thread " + Thread.currentThread().getName() + "!" ); // TacoSpigot - give thread // Torch
+         }
+     }
+ 
+@@ -45,16 +45,4 @@ public class AsyncCatcher
+         };
+     }
+     // TacoSpigot end
+-	
+-	// Hose
+-    public static boolean catchOp_flag()
+-    {
+-        if ( enabled && Thread.currentThread() != MinecraftServer.getServer().primaryThread )
+-        {
+-            //return true;
+-            MinecraftServer.getServer().postToMainThread(Thread.currentThread());
+-            System.out.println("post to main thread");
+-        }
+-        return false;
+-    }
+ }
+-- 
+2.8.2.windows.1
+

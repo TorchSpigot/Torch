@@ -1,0 +1,47 @@
+From 00e75c4f28e0311d2c69eed14ca1bbb553edc13b Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 11 Jul 2016 18:04:06 +0800
+Subject: [PATCH] SPIGOT-1373: Implement EntityTargetEvent for TEMPT actually
+ miscs
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityEnderPearl.java b/src/main/java/net/minecraft/server/EntityEnderPearl.java
+index 012bb53..4db52ec 100644
+--- a/src/main/java/net/minecraft/server/EntityEnderPearl.java
++++ b/src/main/java/net/minecraft/server/EntityEnderPearl.java
+@@ -73,7 +73,7 @@ public class EntityEnderPearl extends EntityProjectile {
+ 
+                             entityendermite.a(true);
+                             entityendermite.setPositionRotation(entityliving.locX, entityliving.locY, entityliving.locZ, entityliving.yaw, entityliving.pitch);
+-                            this.world.addEntity(entityendermite);
++                            this.world.addEntity(entityendermite, CreatureSpawnEvent.SpawnReason.ENDER_PEARL);
+                         }
+ 
+                         if (entityliving.isPassenger()) {
+diff --git a/src/main/java/net/minecraft/server/PathfinderGoalTempt.java b/src/main/java/net/minecraft/server/PathfinderGoalTempt.java
+index 6e042bf..e9b5a1b 100644
+--- a/src/main/java/net/minecraft/server/PathfinderGoalTempt.java
++++ b/src/main/java/net/minecraft/server/PathfinderGoalTempt.java
+@@ -45,7 +45,18 @@ public class PathfinderGoalTempt extends PathfinderGoal {
+             return false;
+         } else {
+             this.h = this.a.world.findNearbyPlayer(this.a, 10.0D);
+-            return this.h == null ? false : this.a(this.h.getItemInMainHand()) || this.a(this.h.getItemInOffHand());
++            // CraftBukkit start
++            // PAIL: rename
++            boolean tempt = this.h == null ? false : this.a(this.h.getItemInMainHand()) || this.a(this.h.getItemInOffHand());
++            if (tempt) {
++                EntityTargetLivingEntityEvent event = CraftEventFactory.callEntityTargetLivingEvent(this.a, this.h, EntityTargetEvent.TargetReason.TEMPT);
++                if (event.isCancelled()) {
++                    return false;
++                }
++                this.h = ((CraftLivingEntity) event.getTarget()).getHandle();
++            }
++            return tempt;
++            // CraftBukkit end
+         }
+     }
+ 
+-- 
+2.8.2.windows.1
+

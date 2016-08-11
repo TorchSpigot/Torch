@@ -1,0 +1,34 @@
+From 03b98a2072bb6860ddecdb91c2db66ca80c874a2 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Thu, 21 Jul 2016 15:59:31 +0800
+Subject: [PATCH] SPIGOT-2414: Do not disconnect if progressing
+
+
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index 978e882..81fcee5 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -231,6 +231,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+     }
+ 
+     public void disconnect(String s) {
++		if (this.processedDisconnect) return; // SPIGOT-2414
+         // CraftBukkit start - fire PlayerKickEvent
+         String leaveMessage = EnumChatFormat.YELLOW + this.player.getName() + " left the game.";
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java
+index 0d05c3e..5c738e9 100644
+--- a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java
++++ b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java
+@@ -15,7 +15,7 @@ public class ChunkIOExecutor {
+     private static final AsynchronousExecutor<QueuedChunk, Chunk, Runnable, RuntimeException> instance = new AsynchronousExecutor<QueuedChunk, Chunk, Runnable, RuntimeException>(new ChunkIOProvider(), BASE_THREADS);
+ 
+     public static Chunk syncChunkLoad(World world, IChunkLoader loader, ChunkProviderServer provider, int x, int z) {
+-            return instance.getSkipQueue(new QueuedChunk(x, z, loader, world, provider));
++			return MCUtil.ensureMain("Async Chunk Load", () -> instance.getSkipQueue(new QueuedChunk(x, z, loader, world, provider))); // Paper
+     }
+ 
+     public static void queueChunkLoad(World world, IChunkLoader loader, ChunkProviderServer provider, int x, int z, Runnable runnable) {
+-- 
+2.8.2.windows.1
+

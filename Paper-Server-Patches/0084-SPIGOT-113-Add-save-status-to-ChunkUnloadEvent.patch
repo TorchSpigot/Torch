@@ -1,0 +1,87 @@
+From 897ae9ef9da565477e166bf2105835614be76137 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 11 Jul 2016 19:05:58 +0800
+Subject: [PATCH] SPIGOT-113: Add save status to ChunkUnloadEvent
+
+
+diff --git a/src/main/java/org/bukkit/Particle.java b/src/main/java/org/bukkit/Particle.java
+index e3fea7c..af491f3 100644
+--- a/src/main/java/org/bukkit/Particle.java
++++ b/src/main/java/org/bukkit/Particle.java
+@@ -49,8 +49,7 @@ public enum Particle {
+     DRAGON_BREATH,
+     END_ROD,
+     DAMAGE_INDICATOR,
+-    SWEEP_ATTACK,
+-	FALLING_DUST(MaterialData.class);
++    SWEEP_ATTACK;
+ 
+     private final Class<?> dataType;
+ 
+diff --git a/src/main/java/org/bukkit/event/world/ChunkUnloadEvent.java b/src/main/java/org/bukkit/event/world/ChunkUnloadEvent.java
+new file mode 100644
+index 0000000..25b31b1
+--- /dev/null
++++ b/src/main/java/org/bukkit/event/world/ChunkUnloadEvent.java
+@@ -0,0 +1,58 @@
++package org.bukkit.event.world;
++
++import org.bukkit.Chunk;
++import org.bukkit.event.Cancellable;
++import org.bukkit.event.HandlerList;
++
++/**
++ * Called when a chunk is unloaded
++ */
++public class ChunkUnloadEvent extends ChunkEvent implements Cancellable {
++    private static final HandlerList handlers = new HandlerList();
++    private boolean cancel = false;
++	private boolean saveChunk;
++
++    public ChunkUnloadEvent(final Chunk chunk) {
++		 this(chunk, true);
++    }
++
++    public ChunkUnloadEvent(Chunk chunk, boolean save) {
++        super(chunk);
++		this.saveChunk = save;
++    }
++
++    /**
++     * Return whether this chunk will be saved to disk.
++     *
++     * @return chunk save status
++     */
++    public boolean isSaveChunk() {
++        return saveChunk;
++    }
++
++    /**
++     * Set whether this chunk will be saved to disk.
++     *
++     * @param saveChunk chunk save status
++     */
++    public void setSaveChunk(boolean saveChunk) {
++        this.saveChunk = saveChunk;
++    }
++
++    public boolean isCancelled() {
++        return cancel;
++    }
++
++    public void setCancelled(boolean cancel) {
++        this.cancel = cancel;
++    }
++
++    @Override
++    public HandlerList getHandlers() {
++        return handlers;
++    }
++
++    public static HandlerList getHandlerList() {
++        return handlers;
++    }
++}
+-- 
+2.8.2.windows.1
+

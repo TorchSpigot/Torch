@@ -1,0 +1,22 @@
+From 45c86b8fcca0815923d0c2b530587ff32f10804b Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 16 Jul 2016 03:48:08 +0800
+Subject: [PATCH] Fix TNT damage being cancelled by friendly-fire rules
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityPlayer.java b/src/main/java/net/minecraft/server/EntityPlayer.java
+index 1466033..4ab51e8 100644
+--- a/src/main/java/net/minecraft/server/EntityPlayer.java
++++ b/src/main/java/net/minecraft/server/EntityPlayer.java
+@@ -491,7 +491,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
+             if (!flag && this.invulnerableTicks > 0 && damagesource != DamageSource.OUT_OF_WORLD) {
+                 return false;
+             } else {
+-                if (damagesource instanceof EntityDamageSource) {
++                if (damagesource instanceof EntityDamageSource && !damagesource.isExplosion()) { // SportBukkit - explosion damage is not subject to FF rules
+                     Entity entity = damagesource.getEntity();
+ 
+                     if (entity instanceof EntityHuman && !this.a((EntityHuman) entity)) {
+-- 
+2.8.2.windows.1
+

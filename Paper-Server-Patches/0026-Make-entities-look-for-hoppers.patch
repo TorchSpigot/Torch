@@ -1,0 +1,394 @@
+From f320043b36176f8050936a1639e150882c54c7c4 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Fri, 1 Jul 2016 18:02:06 +0800
+Subject: [PATCH] Make entities look for hoppers
+
+
+diff --git a/src/main/java/com/destroystokyo/paper/HopperPusher.java b/src/main/java/com/destroystokyo/paper/HopperPusher.java
+new file mode 100644
+index 0000000..9b21fb1
+--- /dev/null
++++ b/src/main/java/com/destroystokyo/paper/HopperPusher.java
+@@ -0,0 +1,59 @@
++package com.destroystokyo.paper;
++
++import net.minecraft.server.AxisAlignedBB;
++import net.minecraft.server.BlockPosition;
++import net.minecraft.server.MCUtil;
++import net.minecraft.server.TileEntityHopper;
++import net.minecraft.server.World;
++
++public interface HopperPusher {
++
++    default TileEntityHopper findHopper() {
++        BlockPosition pos = new BlockPosition(getX(), getY(), getZ());
++        int startX = pos.getX() - 1;
++        int endX = pos.getX() + 1;
++        int startY = Math.max(0, pos.getY() - 1);
++        int endY = Math.min(255, pos.getY() + 1);
++        int startZ = pos.getZ() - 1;
++        int endZ = pos.getZ() + 1;
++        BlockPosition.PooledBlockPosition adjacentPos = BlockPosition.PooledBlockPosition.aquire();
++        for (int x = startX; x <= endX; x++) {
++            for (int y = startY; y <= endY; y++) {
++                for (int z = startZ; z <= endZ; z++) {
++                    adjacentPos.setValues(x, y, z);
++                    TileEntityHopper hopper = MCUtil.getHopper(getWorld(), adjacentPos);
++                    if (hopper == null) continue; // Avoid playing with the bounding boxes, if at all possible
++                    AxisAlignedBB hopperBoundingBox = hopper.getHopperLookupBoundingBox();
++                    /*
++                     * Check if the entity's bounding box intersects with the hopper's lookup box.
++                     * This operation doesn't work both ways!
++                     * Make sure you check if the entity's box intersects the hopper's box, not vice versa!
++                     */
++                    if (this.getBoundingBox().b(hopperBoundingBox)) {
++                        return hopper;
++                    }
++                }
++            }
++        }
++        adjacentPos.free();
++        return null;
++    }
++
++    boolean acceptItem(TileEntityHopper hopper);
++
++    default boolean tryPutInHopper() {
++        if (!getWorld().paperConfig.isHopperPushBased) return false;
++        TileEntityHopper hopper = findHopper();
++        return hopper != null && hopper.canAcceptItems() && acceptItem(hopper);
++    }
++
++    AxisAlignedBB getBoundingBox();
++
++    World getWorld();
++
++    double getX();
++
++    double getY();
++
++    double getZ();
++}
+\ No newline at end of file
+diff --git a/src/main/java/com/destroystokyo/paper/PaperWorldConfig.java b/src/main/java/com/destroystokyo/paper/PaperWorldConfig.java
+index 82c757f..97a2769 100644
+--- a/src/main/java/com/destroystokyo/paper/PaperWorldConfig.java
++++ b/src/main/java/com/destroystokyo/paper/PaperWorldConfig.java
+@@ -377,4 +377,9 @@ public class PaperWorldConfig {
+     private void elytraHitWallDamage() {
+         elytraHitWallDamage = getBoolean("elytra-hit-wall-damage", true);
+     }
++	
++	public boolean isHopperPushBased;
++    private void isHopperPushBased() {
++        isHopperPushBased = getBoolean("hopper.push-based", true);
++    }
+ }
+diff --git a/src/main/java/net/minecraft/server/BlockPosition.java b/src/main/java/net/minecraft/server/BlockPosition.java
+index 960d524..343c7b1 100644
+--- a/src/main/java/net/minecraft/server/BlockPosition.java
++++ b/src/main/java/net/minecraft/server/BlockPosition.java
+@@ -267,6 +267,7 @@ public class BlockPosition extends BaseBlockPosition {
+             super(i, j, k);
+         }
+ 
++		public static BlockPosition.PooledBlockPosition aquire() { return s(); } // Paper - OBFHELPER
+         public static BlockPosition.PooledBlockPosition s() {
+             return e(0, 0, 0);
+         }
+@@ -293,6 +294,7 @@ public class BlockPosition extends BaseBlockPosition {
+             return new BlockPosition.PooledBlockPosition(i, j, k);
+         }
+ 
++		public void free() { t(); } // Paper - OBFHELPER
+         public void t() {
+             List list = BlockPosition.PooledBlockPosition.g;
+ 
+diff --git a/src/main/java/net/minecraft/server/Chunk.java b/src/main/java/net/minecraft/server/Chunk.java
+index d1ab198..b6a07d1 100644
+--- a/src/main/java/net/minecraft/server/Chunk.java
++++ b/src/main/java/net/minecraft/server/Chunk.java
+@@ -746,6 +746,7 @@ public class Chunk {
+         return !block.isTileEntity() ? null : ((ITileEntity) block).a(this.world, iblockdata.getBlock().toLegacyData(iblockdata));
+     }
+ 
++	@Nullable public final TileEntity getTileEntityImmediately(BlockPosition pos) { return this.a(pos, EnumTileEntityState.IMMEDIATE); } // Paper - OBFHELPER
+     @Nullable
+     public TileEntity a(BlockPosition blockposition, Chunk.EnumTileEntityState chunk_enumtileentitystate) {
+         // CraftBukkit start
+diff --git a/src/main/java/net/minecraft/server/DataWatcher.java b/src/main/java/net/minecraft/server/DataWatcher.java
+index 700d3ed..f94e9d6 100644
+--- a/src/main/java/net/minecraft/server/DataWatcher.java
++++ b/src/main/java/net/minecraft/server/DataWatcher.java
+@@ -81,8 +81,7 @@ public class DataWatcher {
+         DataWatcher.Item datawatcher_item = new DataWatcher.Item(datawatcherobject, t0);
+ 
+         this.d.writeLock().lock();
+-		this.c.put(Integer.valueOf(datawatcherobject.a()), datawatcher_item);
+-        // this.c.put(datawatcherobject.a(), datawatcher_item); // TacoSpigot - primitives
++        this.c.put(datawatcherobject.a(), datawatcher_item); // TacoSpigot - primitives
+         this.e = false;
+         this.d.writeLock().unlock();
+     }
+@@ -93,8 +92,7 @@ public class DataWatcher {
+         DataWatcher.Item datawatcher_item;
+ 
+         try {
+-			datawatcher_item = (DataWatcher.Item) this.c.get(Integer.valueOf(datawatcherobject.a()));
+-            // datawatcher_item = (DataWatcher.Item) this.c.get(datawatcherobject.a()); // TacoSpigot - use primitives
++            datawatcher_item = (DataWatcher.Item) this.c.get(datawatcherobject.a()); // TacoSpigot - use primitives
+         } catch (Throwable throwable) {
+             CrashReport crashreport = CrashReport.a(throwable, "Getting synched entity data");
+             CrashReportSystemDetails crashreportsystemdetails = crashreport.a("Synched entity data");
+diff --git a/src/main/java/net/minecraft/server/Entity.java b/src/main/java/net/minecraft/server/Entity.java
+index dd58a5f..3375cfa 100644
+--- a/src/main/java/net/minecraft/server/Entity.java
++++ b/src/main/java/net/minecraft/server/Entity.java
+@@ -85,6 +85,19 @@ public abstract class Entity implements ICommandListener {
+     public double locX;
+     public double locY;
+     public double locZ;
++	// Paper start - getters to implement HopperPusher
++    public double getX() {
++        return locX;
++    }
++
++    public double getY() {
++        return locY;
++    }
++
++    public double getZ() {
++        return locZ;
++    }
++    // Paper end
+     public double motX;
+     public double motY;
+     public double motZ;
+diff --git a/src/main/java/net/minecraft/server/EntityItem.java b/src/main/java/net/minecraft/server/EntityItem.java
+index 26f7f6c..be0776b 100644
+--- a/src/main/java/net/minecraft/server/EntityItem.java
++++ b/src/main/java/net/minecraft/server/EntityItem.java
+@@ -6,15 +6,16 @@ import javax.annotation.Nullable;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ import org.bukkit.event.player.PlayerPickupItemEvent; // CraftBukkit
+-import net.techcable.tacospigot.HopperPusher; // TacoSpigot
+ 
+-// TacoSpigot start - implement HopperPusher
++import com.destroystokyo.paper.HopperPusher; // Paper
++
++// Paper start - implement HopperPusher
+ public class EntityItem extends Entity implements HopperPusher {
+     @Override
+     public boolean acceptItem(TileEntityHopper hopper) {
+         return TileEntityHopper.a(hopper, this);
+     }
+-// TacoSpigot end
++// Paper end
+ 
+     private static final Logger b = LogManager.getLogger();
+     private static final DataWatcherObject<Optional<ItemStack>> c = DataWatcher.a(EntityItem.class, DataWatcherRegistry.f);
+diff --git a/src/main/java/net/minecraft/server/EntityMinecartContainer.java b/src/main/java/net/minecraft/server/EntityMinecartContainer.java
+index c5bac00..d7b798f 100644
+--- a/src/main/java/net/minecraft/server/EntityMinecartContainer.java
++++ b/src/main/java/net/minecraft/server/EntityMinecartContainer.java
+@@ -13,9 +13,9 @@ import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+ import org.bukkit.entity.HumanEntity;
+ import org.bukkit.inventory.InventoryHolder;
+ // CraftBukkit end
+-import net.techcable.tacospigot.HopperPusher; // TacoSpigot
++import com.destroystokyo.paper.HopperPusher; // Paper
+ 
+-// TacoSpigot start - push into hoppers
++// Paper start - push into hoppers
+ public abstract class EntityMinecartContainer extends EntityMinecartAbstract implements ITileInventory, ILootable, CraftLootableInventory, HopperPusher { // Paper - CraftLootableInventory
+     @Override
+     public boolean acceptItem(TileEntityHopper hopper) {
+@@ -33,7 +33,7 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
+         super.inactiveTick();
+         tryPutInHopper();
+     }
+-    // TacoSpigot end
++    // Paper end
+ 
+     private ItemStack[] items = new ItemStack[27]; // CraftBukkit - 36 -> 27
+     private boolean b = true;
+diff --git a/src/main/java/net/minecraft/server/IHopper.java b/src/main/java/net/minecraft/server/IHopper.java
+new file mode 100644
+index 0000000..e830d83
+--- /dev/null
++++ b/src/main/java/net/minecraft/server/IHopper.java
+@@ -0,0 +1,12 @@
++package net.minecraft.server;
++
++public interface IHopper extends IInventory {
++
++    World getWorld();
++
++    double E(); default double getX() { return E(); } // Paper - OBFHELPER
++
++    double F(); default double getY() { return F(); } // Paper - OBFHELPER
++
++    double G(); default double getZ() { return G(); } // Paper - OBFHELPER
++}
+diff --git a/src/main/java/net/minecraft/server/MCUtil.java b/src/main/java/net/minecraft/server/MCUtil.java
+index f059bc2..f1799ca 100644
+--- a/src/main/java/net/minecraft/server/MCUtil.java
++++ b/src/main/java/net/minecraft/server/MCUtil.java
+@@ -160,7 +160,8 @@ public final class MCUtil {
+      * @param z
+      * @return
+      */
+-    @Nullable public static Chunk getLoadedChunkWithoutMarkingActive(World world, int x, int z) {
++	@Nullable
++	public static Chunk getLoadedChunkWithoutMarkingActive(World world, int x, int z) {
+         return ((ChunkProviderServer) world.chunkProvider).chunks.get(ChunkCoordIntPair.a(x, z));
+     }
+ 
+@@ -171,7 +172,8 @@ public final class MCUtil {
+      * @param z
+      * @return
+      */
+-    @Nullable public static Chunk getLoadedChunkWithoutMarkingActive(IChunkProvider provider, int x, int z) {
++    @Nullable
++    public static Chunk getLoadedChunkWithoutMarkingActive(IChunkProvider provider, int x, int z) {
+         return ((ChunkProviderServer)provider).chunks.get(ChunkCoordIntPair.a(x, z));
+     }
+ 
+@@ -182,4 +184,16 @@ public final class MCUtil {
+     public static void scheduleAsyncTask(Runnable run) {
+         asyncExecutor.execute(run);
+     }
++	
++	@Nullable
++    public static TileEntityHopper getHopper(World world, BlockPosition pos) {
++        Chunk chunk = world.getChunkIfLoaded(pos.getX() >> 4, pos.getZ() >> 4);
++        if (chunk != null && chunk.getBlockData(pos).getBlock() == Blocks.HOPPER) {
++            TileEntity tileEntity = chunk.getTileEntityImmediately(pos);
++            if (tileEntity instanceof TileEntityHopper) {
++                return (TileEntityHopper) tileEntity;
++            }
++        }
++        return null;
++    }
+ }
+diff --git a/src/main/java/net/minecraft/server/TileEntityHopper.java b/src/main/java/net/minecraft/server/TileEntityHopper.java
+index f1800f3..331e54f 100644
+--- a/src/main/java/net/minecraft/server/TileEntityHopper.java
++++ b/src/main/java/net/minecraft/server/TileEntityHopper.java
+@@ -171,6 +171,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+     }
+ 
+     public boolean m() {
++		mayAcceptItems = false; // Paper - at the beginning of a tick, assume we can't accept items
+         if (this.world != null && !this.world.isClientSide) {
+             if (!this.o() && BlockHopper.f(this.u())) {
+                 boolean flag = false;
+@@ -180,7 +181,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+                 }
+ 
+                 if (!this.r()) {
+-                    mayAcceptItems = true; // TacoSpigot - flag this hopper to be able to accept items
++					mayAcceptItems = true; // Paper - flag this hopper to be able to accept items
+                     flag = a((IHopper) this) || flag;
+                 }
+ 
+@@ -358,18 +359,13 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+ 
+     // TacoSpigot start - split methods, and only do entity lookup if in pull mode
+     public static boolean a(IHopper ihopper) {
+-        IInventory iinventory;
+-        if (ihopper.getWorld().tacoSpigotConfig.isHopperPushBased && ihopper instanceof TileEntityHopper) {
+-            BlockPosition pos = ((TileEntityHopper) ihopper).getPosition().up(); // Only pull from above, as everything else is pushed into the hopper
+-            iinventory = HopperHelper.getInventory(ihopper.getWorld(), pos);
+-        } else {
+-            iinventory = b(ihopper);
+-        }
++        IInventory iinventory = getInventory(ihopper, !(ihopper instanceof TileEntityHopper) || !ihopper.getWorld().paperConfig.isHopperPushBased);
++
+         return acceptItem(ihopper, iinventory);
+     }
+ 
+     public static boolean acceptItem(IHopper ihopper, IInventory iinventory) {
+-        // TacoSpigot end
++        // Paper end
+ 
+         if (iinventory != null) {
+             EnumDirection enumdirection = EnumDirection.DOWN;
+@@ -396,8 +392,8 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+                     }
+                 }
+             }
+-        } else if (!ihopper.getWorld().tacoSpigotConfig.isHopperPushBased || !(ihopper instanceof TileEntityHopper)) { // TacoSpigot - only search for entities in 'pull mode'
+-            Iterator iterator = a(ihopper.getWorld(), ihopper.E(), ihopper.F(), ihopper.G()).iterator();
++        } else if (!ihopper.getWorld().paperConfig.isHopperPushBased || !(ihopper instanceof TileEntityHopper)) { // Paper - only search for entities in 'pull mode'
++            Iterator iterator = a(ihopper.getWorld(), ihopper.E(), ihopper.F(), ihopper.G()).iterator(); // Change getHopperLookupBoundingBox() if this ever changes
+ 
+             while (iterator.hasNext()) {
+                 EntityItem entityitem = (EntityItem) iterator.next();
+@@ -571,30 +567,44 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+     private IInventory I() {
+         EnumDirection enumdirection = BlockHopper.e(this.u());
+ 
+-        return b(this.getWorld(), this.E() + (double) enumdirection.getAdjacentX(), this.F() + (double) enumdirection.getAdjacentY(), this.G() + (double) enumdirection.getAdjacentZ());
++        // Paper start - don't search for entities in push mode
++        World world = getWorld();
++        return getInventory(world, this.E() + (double) enumdirection.getAdjacentX(), this.F() + (double) enumdirection.getAdjacentY(), this.G() + (double) enumdirection.getAdjacentZ(), !world.paperConfig.isHopperPushBased);
++        // Paper endtcon
++    }
++
++    // Paper start - add option to search for entities
++    public static IInventory b(IHopper hopper) {
++        return getInventory(hopper, true);
+     }
+ 
+-    public static IInventory b(IHopper ihopper) {
+-        return b(ihopper.getWorld(), ihopper.E(), ihopper.F() + 1.0D, ihopper.G());
++    public static IInventory getInventory(IHopper ihopper, boolean searchForEntities) {
++        return getInventory(ihopper.getWorld(), ihopper.E(), ihopper.F() + 1.0D, ihopper.G(), searchForEntities);
++        // Paper end
+     }
+ 
+     public static List<EntityItem> a(World world, double d0, double d1, double d2) {
+-        return world.a(EntityItem.class, new AxisAlignedBB(d0 - 0.5D, d1, d2 - 0.5D, d0 + 0.5D, d1 + 1.5D, d2 + 0.5D), IEntitySelector.a);
++        return world.a(EntityItem.class, new AxisAlignedBB(d0 - 0.5D, d1, d2 - 0.5D, d0 + 0.5D, d1 + 1.5D, d2 + 0.5D), IEntitySelector.a); // Change getHopperLookupBoundingBox(double, double, double) if the bounding box calculation is ever changed
+     }
+ 
+-    // TacoSpigot start
++    // Paper start
+     public AxisAlignedBB getHopperLookupBoundingBox() {
+-        // Change this if b(IHopper) ever changes
+-        return getHopperLookupBoundingBox(this.E(), this.F(), this.G());
+-    }
++        return getHopperLookupBoundingBox(this.getX(), this.getY(), this.getZ());
++     }
+ 
+     private static AxisAlignedBB getHopperLookupBoundingBox(double d0, double d1, double d2) {
+         // Change this if a(World, double, double, double) above ever changes
+         return new AxisAlignedBB(d0 - 0.5D, d1, d2 - 0.5D, d0 + 0.5D, d1 + 1.5D, d2 + 0.5D);
+     }
+-    // TacoSpigot end
++    // Paper end
+ 
++    // Paper start - add option to searchForEntities
+     public static IInventory b(World world, double d0, double d1, double d2) {
++		return getInventory(world, d0, d1, d2, true);
++    }
++
++    public static IInventory getInventory(World world, double d0, double d1, double d2, boolean searchForEntities) {
++        // Paper end
+         Object object = null;
+         int i = MathHelper.floor(d0);
+         int j = MathHelper.floor(d1);
+@@ -614,7 +624,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
+             }
+         }
+ 
+-        if (object == null) {
++        if (object == null && searchForEntities) { // Paper - only if searchForEntities
+             List list = world.getEntities((Entity) null, new AxisAlignedBB(d0 - 0.5D, d1 - 0.5D, d2 - 0.5D, d0 + 0.5D, d1 + 0.5D, d2 + 0.5D), IEntitySelector.c);
+ 
+             if (!list.isEmpty()) {
+-- 
+2.8.2.windows.1
+

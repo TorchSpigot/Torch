@@ -1,0 +1,276 @@
+From 261938b42454ad68e874296a8264d9c3a4a52432 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 30 Jul 2016 21:18:43 +0800
+Subject: [PATCH] Synchronized timings
+
+
+diff --git a/src/main/java/co/aikar/timings/TimingHandler.java b/src/main/java/co/aikar/timings/TimingHandler.java
+index 850f3b7..4bf16ac 100644
+--- a/src/main/java/co/aikar/timings/TimingHandler.java
++++ b/src/main/java/co/aikar/timings/TimingHandler.java
+@@ -113,12 +113,10 @@ class TimingHandler implements Timing {
+                 new Throwable().printStackTrace();
+                 start = 0;
+                 return;
+-            } */
+-			if (!Bukkit.isPrimaryThread()) {
+-				start = 0;
+-                return;
+-			} // Torch end
+-            addDiff(System.nanoTime() - start);
++            } */ // Torch end
++			synchronized(this) {
++				addDiff(System.nanoTime() - start);
++			}
+             start = 0;
+         }
+     }
+diff --git a/src/main/java/net/minecraft/server/Chunk.java b/src/main/java/net/minecraft/server/Chunk.java
+index c118df5..dbbbcd2 100644
+--- a/src/main/java/net/minecraft/server/Chunk.java
++++ b/src/main/java/net/minecraft/server/Chunk.java
+@@ -1060,7 +1060,7 @@ public class Chunk {
+             }
+         }
+         // CraftBukkit end
+-        // world.timings.syncChunkLoadPopulateNeighbors.startTiming(); // Paper
++        world.timings.syncChunkLoadPopulateNeighbors.startTiming(); // Paper
+         Chunk chunk = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.locX, this.locZ - 1); // Paper
+         Chunk chunk1 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.locX + 1, this.locZ); // Paper
+         Chunk chunk2 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.locX, this.locZ + 1); // Paper
+@@ -1085,7 +1085,7 @@ public class Chunk {
+                 chunk4.a(chunkgenerator);
+             }
+         }
+-        // world.timings.syncChunkLoadPopulateNeighbors.stopTiming(); // Paper
++        world.timings.syncChunkLoadPopulateNeighbors.stopTiming(); // Paper
+ 
+     }
+ 
+@@ -1302,7 +1302,7 @@ public class Chunk {
+     }
+ 
+     public void o() {
+-		// world.timings.lightChunk.startTiming(); // Paper
++		world.timings.lightChunk.startTiming(); // Paper
+         this.done = true;
+         this.lit = true;
+         BlockPosition blockposition = new BlockPosition(this.locX << 4, 0, this.locZ << 4);
+@@ -1336,7 +1336,7 @@ public class Chunk {
+             }
+         }
+ 
+-		// world.timings.lightChunk.stopTiming(); // Paper
++		world.timings.lightChunk.stopTiming(); // Paper
+     }
+ 
+     private void z() {
+diff --git a/src/main/java/net/minecraft/server/ChunkProviderServer.java b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+index b5c727e..a9569c7 100644
+--- a/src/main/java/net/minecraft/server/ChunkProviderServer.java
++++ b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+@@ -204,7 +204,7 @@ public class ChunkProviderServer implements IChunkProvider {
+         // CraftBukkit end
+ 
+         if (chunk == null) {
+-            // world.timings.syncChunkLoadTimer.startTiming(); // Spigot
++            world.timings.syncChunkLoadTimer.startTiming(); // Spigot
+             long k = ChunkCoordIntPair.a(i, j);
+ 
+             try {
+@@ -223,7 +223,7 @@ public class ChunkProviderServer implements IChunkProvider {
+             chunk.addEntities();
+ 
+             chunk.loadNearby(this, this.chunkGenerator, true); // CraftBukkit
+-            // world.timings.syncChunkLoadTimer.stopTiming(); // Spigot
++            world.timings.syncChunkLoadTimer.stopTiming(); // Spigot
+         }
+ 
+         return chunk;
+diff --git a/src/main/java/net/minecraft/server/ChunkRegionLoader.java b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+index 7c504c2..22cc805 100644
+--- a/src/main/java/net/minecraft/server/ChunkRegionLoader.java
++++ b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+@@ -61,9 +61,9 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+     // CraftBukkit start - Add async variant, provide compatibility
+     @Nullable
+     public Chunk a(World world, int i, int j) throws IOException {
+-        // world.timings.syncChunkLoadDataTimer.startTiming(); // Spigot
++        world.timings.syncChunkLoadDataTimer.startTiming(); // Spigot
+         Object[] data = loadChunk(world, i, j);
+-        // world.timings.syncChunkLoadDataTimer.stopTiming(); // Spigot
++        world.timings.syncChunkLoadDataTimer.stopTiming(); // Spigot
+         if (data != null) {
+             Chunk chunk = (Chunk) data[0];
+             NBTTagCompound nbttagcompound = (NBTTagCompound) data[1];
+@@ -378,7 +378,7 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+ 
+     public static void loadEntities(Chunk chunk, NBTTagCompound nbttagcompound, World world) { // Hose // Paper - make static
+         // CraftBukkit end
+-        // world.timings.syncChunkLoadNBTTimer.startTiming(); // Spigot
++        world.timings.syncChunkLoadNBTTimer.startTiming(); // Spigot
+         NBTTagList nbttaglist1 = nbttagcompound.getList("Entities", 10);
+ 
+         if (nbttaglist1 != null) {
+@@ -422,7 +422,7 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+                 }
+             }
+         }
+-        // world.timings.syncChunkLoadNBTTimer.stopTiming(); // Spigot
++        world.timings.syncChunkLoadNBTTimer.stopTiming(); // Spigot
+ 
+         // return chunk; // CraftBukkit
+     }
+diff --git a/src/main/java/net/minecraft/server/Entity.java b/src/main/java/net/minecraft/server/Entity.java
+index 65fdce1..44dc8e1 100644
+--- a/src/main/java/net/minecraft/server/Entity.java
++++ b/src/main/java/net/minecraft/server/Entity.java
+@@ -873,12 +873,9 @@ public abstract class Entity implements ICommandListener, org.spigotmc.Optimized
+ 
+             this.world.methodProfiler.b();
+         }
+-        // org.bukkit.craftbukkit.SpigotTimings.entityMoveTimer.stopTiming(); // Spigot
+     }
+     
+     public void move(double d0, double d1, double d2) {
+-
+-        // org.bukkit.craftbukkit.SpigotTimings.entityMoveTimer.startTiming(); // Spigot
+         if (this.noclip) {
+             this.a(this.getBoundingBox().c(d0, d1, d2));
+             this.recalcPosition();
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 3f3feb5..a29e0fa 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -816,12 +816,12 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+         }
+ 
+         if (autosavePeriod > 0 && this.ticks % autosavePeriod == 0 && Migot.getConfig().getAutoSaveEnabled()) { // CraftBukkit // Torch
+-            // MinecraftTimings.worldSaveTimer.startTiming(); // Spigot
++            MinecraftTimings.worldSaveTimer.startTiming(); // Spigot
+             this.methodProfiler.a("save");
+             this.v.savePlayers();
+             this.queueWorldsForAutoSave(); // Migot
+             this.methodProfiler.b();
+-            // MinecraftTimings.worldSaveTimer.stopTiming(); // Spigot
++            MinecraftTimings.worldSaveTimer.stopTiming(); // Spigot
+         }
+ 		
+ 		// Migot start
+diff --git a/src/main/java/net/minecraft/server/NBTCompressedStreamTools.java b/src/main/java/net/minecraft/server/NBTCompressedStreamTools.java
+index b2d5254..e26c6f3 100644
+--- a/src/main/java/net/minecraft/server/NBTCompressedStreamTools.java
++++ b/src/main/java/net/minecraft/server/NBTCompressedStreamTools.java
+@@ -1,7 +1,7 @@
+ package net.minecraft.server;
+ 
+-import java.io.BufferedInputStream;
+-import java.io.BufferedOutputStream;
++import org.torch.util.io.FastBufferedInputStream;
++import org.torch.util.io.FastBufferedOutputStream;
+ import java.io.DataInput;
+ import java.io.DataInputStream;
+ import java.io.DataOutput;
+@@ -15,7 +15,7 @@ import java.util.zip.GZIPOutputStream;
+ public class NBTCompressedStreamTools {
+ 
+     public static NBTTagCompound a(InputStream inputstream) throws IOException {
+-        DataInputStream datainputstream = new DataInputStream(new BufferedInputStream(new GZIPInputStream(inputstream)));
++        DataInputStream datainputstream = new DataInputStream(new FastBufferedInputStream(new GZIPInputStream(inputstream)));
+ 
+         NBTTagCompound nbttagcompound;
+ 
+@@ -29,7 +29,7 @@ public class NBTCompressedStreamTools {
+     }
+ 
+     public static void a(NBTTagCompound nbttagcompound, OutputStream outputstream) throws IOException {
+-        DataOutputStream dataoutputstream = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(outputstream)));
++        DataOutputStream dataoutputstream = new DataOutputStream(new FastBufferedOutputStream(new GZIPOutputStream(outputstream)));
+ 
+         try {
+             a(nbttagcompound, (DataOutput) dataoutputstream);
+diff --git a/src/main/java/net/minecraft/server/NBTTagCompound.java b/src/main/java/net/minecraft/server/NBTTagCompound.java
+index 7fa49dd..11de8e8 100644
+--- a/src/main/java/net/minecraft/server/NBTTagCompound.java
++++ b/src/main/java/net/minecraft/server/NBTTagCompound.java
+@@ -10,10 +10,11 @@ import java.util.Set;
+ import java.util.UUID;
+ import java.util.Map.Entry;
+ import javax.annotation.Nullable;
++import java.util.concurrent.ConcurrentHashMap;
+ 
+ public class NBTTagCompound extends NBTBase {
+ 
+-    public Map<String, NBTBase> map = Maps.newHashMap(); // Paper
++    public Map<String, NBTBase> map = new ConcurrentHashMap(); // Paper
+ 
+     public NBTTagCompound() {}
+ 
+@@ -40,7 +41,7 @@ public class NBTTagCompound extends NBTBase {
+             byte b0;
+ 
+             while ((b0 = a(datainput, nbtreadlimiter)) != 0) {
+-                String s = b(datainput, nbtreadlimiter);
++                String s = getStoredString(b(datainput, nbtreadlimiter), true); // Migot
+ 
+                 nbtreadlimiter.a((long) (224 + 16 * s.length()));
+                 NBTBase nbtbase = a(b0, s, datainput, i + 1, nbtreadlimiter);
+diff --git a/src/main/java/net/minecraft/server/StructureGenerator.java b/src/main/java/net/minecraft/server/StructureGenerator.java
+index f48a692..85b34ce 100644
+--- a/src/main/java/net/minecraft/server/StructureGenerator.java
++++ b/src/main/java/net/minecraft/server/StructureGenerator.java
+@@ -5,14 +5,14 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+ import java.util.Iterator;
+ import java.util.List;
+ import java.util.Random;
+-// import co.aikar.timings.MinecraftTimings;
+-// import co.aikar.timings.Timing;
++import co.aikar.timings.MinecraftTimings;
++import co.aikar.timings.Timing;
+ 
+ import java.util.concurrent.RecursiveAction;
+ 
+ public abstract class StructureGenerator extends WorldGenBase {
+ 
+-	// private final Timing timing = MinecraftTimings.getStructureTiming(this); // Paper
++	private final Timing timing = MinecraftTimings.getStructureTiming(this); // Paper
+     private PersistentStructure a;
+     protected Long2ObjectMap<StructureStart> c = new Long2ObjectOpenHashMap(1024);
+ 
+@@ -74,7 +74,7 @@ public abstract class StructureGenerator extends WorldGenBase {
+     }
+ 
+     public synchronized boolean a(World world, Random random, ChunkCoordIntPair chunkcoordintpair) {
+-		// timing.startTiming(); // Paper
++		timing.startTiming(); // Paper
+         this.a(world);
+         int i = (chunkcoordintpair.x << 4) + 8;
+         int j = (chunkcoordintpair.z << 4) + 8;
+@@ -94,7 +94,7 @@ public abstract class StructureGenerator extends WorldGenBase {
+             }
+         }
+ 
+-		// timing.stopTiming(); // Paper
++		timing.stopTiming(); // Paper
+         return flag;
+     }
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/chunkio2/impl/CraftChunkRegionLoader.java b/src/main/java/org/bukkit/craftbukkit/chunkio2/impl/CraftChunkRegionLoader.java
+index 760ec34..e5ca6f1 100644
+--- a/src/main/java/org/bukkit/craftbukkit/chunkio2/impl/CraftChunkRegionLoader.java
++++ b/src/main/java/org/bukkit/craftbukkit/chunkio2/impl/CraftChunkRegionLoader.java
+@@ -42,9 +42,9 @@ public class CraftChunkRegionLoader implements IChunkLoader {
+     @Override
+     @CheckForNull
+     public Chunk a(@Nonnull World world, int x, int z) throws IOException {
+-        // world.timings.syncChunkLoadDataTimer.startTiming(); // Spigot
++        world.timings.syncChunkLoadDataTimer.startTiming(); // Spigot
+         Object[] data = loadChunk(world, x, z);
+-        // world.timings.syncChunkLoadDataTimer.stopTiming(); // Spigot
++        world.timings.syncChunkLoadDataTimer.stopTiming(); // Spigot
+         if (data != null) {
+             Chunk chunk = (Chunk) data[0];
+             NBTTagCompound nbttagcompound = (NBTTagCompound) data[1];
+-- 
+2.8.2.windows.1
+

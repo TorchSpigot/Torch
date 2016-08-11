@@ -1,0 +1,23 @@
+From 499ea43bdeab422fa79f80dfba7c8eb49f22cbfc Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 16 Jul 2016 03:58:37 +0800
+Subject: [PATCH] Stop server on failed port binding
+
+
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 59abf12..bcc830f 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -720,7 +720,8 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+                 }
+                 // Spigot end
+             } else {
+-                this.a((CrashReport) null);
++                // CraftBukkit - if init fails, stop the server
++                // this.a((CrashReport) null);
+             }
+         } catch (Throwable throwable) {
+             MinecraftServer.LOGGER.error("Encountered an unexpected exception", throwable);
+-- 
+2.8.2.windows.1
+

@@ -1,0 +1,86 @@
+From 3d7ac0b9ea9ce652dde4054fedcf017aaca2304e Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 08:27:24 +0800
+Subject: [PATCH] SPIGOT-1264, misc SPIGOT-1405: Call EntityChangeBlockEvent
+ for Rabbits eating Carrots
+
+
+diff --git a/src/main/java/net/minecraft/server/BlockFire.java b/src/main/java/net/minecraft/server/BlockFire.java
+index 951f0cf..1a3cd4b 100644
+--- a/src/main/java/net/minecraft/server/BlockFire.java
++++ b/src/main/java/net/minecraft/server/BlockFire.java
+@@ -256,7 +256,7 @@ public class BlockFire extends Block {
+                     l = 15;
+                 }
+ 
+-                world.setTypeAndData(blockposition, this.getBlockData().set(BlockFire.AGE, Integer.valueOf(l)), 3);
++                world.setAir(blockposition); // Torch
+             } else {
+                 fireExtinguished(world, blockposition); // CraftBukkit
+             }
+diff --git a/src/main/java/net/minecraft/server/Chunk.java b/src/main/java/net/minecraft/server/Chunk.java
+index 3b724db..03dad67 100644
+--- a/src/main/java/net/minecraft/server/Chunk.java
++++ b/src/main/java/net/minecraft/server/Chunk.java
+@@ -34,7 +34,7 @@ public class Chunk {
+     private boolean j;
+     public final World world;
+     public final int[] heightMap;
+-    public final long chunkKey; // Paper
++    public long chunkKey; // Paper // Torch - unlocked
+     public final int locX;
+     public final int locZ;
+     private boolean m;
+@@ -630,7 +630,7 @@ public class Chunk {
+             // Chunk.e.warn("Wrong location! (" + i + ", " + j + ") should be (" + this.locX + ", " + this.locZ + "), " + entity, new Object[] { entity});
+             Bukkit.getLogger().warning("Entity is at " + entity.locX + "," + entity.locZ + " (chunk " + i + "," + j + ") but was stored in chunk " + this.locX + "," + this.locZ);
+             // CraftBukkit end
+-			new Exception("Stack trace").printStackTrace();
++			// new Exception("Stack trace").printStackTrace();
+             entity.die();
+         }
+ 
+diff --git a/src/main/java/net/minecraft/server/EntityRabbit.java b/src/main/java/net/minecraft/server/EntityRabbit.java
+index 81f8b86..856d8f6 100644
+--- a/src/main/java/net/minecraft/server/EntityRabbit.java
++++ b/src/main/java/net/minecraft/server/EntityRabbit.java
+@@ -414,9 +414,23 @@ public class EntityRabbit extends EntityAnimal {
+                     Integer integer = (Integer) iblockdata.get(BlockCarrots.AGE);
+ 
+                     if (integer.intValue() == 0) {
++						// CraftBukkit start
++                        if (org.bukkit.craftbukkit.event.CraftEventFactory.callEntityChangeBlockEvent(this.c, blockposition.getX(), blockposition.getY(), blockposition.getZ(), Blocks.AIR, 0).isCancelled()) {
++                            return;
++                        }
++                        // CraftBukkit end
+                         world.setTypeAndData(blockposition, Blocks.AIR.getBlockData(), 2);
+                         world.setAir(blockposition, true);
+                     } else {
++						// CraftBukkit start
++                        if (org.bukkit.craftbukkit.event.CraftEventFactory.callEntityChangeBlockEvent(
++                                this.c,
++                                blockposition.getX(), blockposition.getY(), blockposition.getZ(),
++                                block, block.toLegacyData(iblockdata.set(BlockCarrots.AGE, Integer.valueOf(integer.intValue() - 1)))
++                        ).isCancelled()) {
++                            return;
++                        }
++                        // CraftBukkit end
+                         world.setTypeAndData(blockposition, iblockdata.set(BlockCarrots.AGE, Integer.valueOf(integer.intValue() - 1)), 2);
+                         world.triggerEffect(2001, blockposition, Block.getCombinedId(iblockdata));
+                     }
+diff --git a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java
+index 9aaca21..3a3b0b0 100644
+--- a/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java
++++ b/src/main/java/org/bukkit/craftbukkit/chunkio/ChunkIOExecutor.java
+@@ -15,7 +15,7 @@ public class ChunkIOExecutor {
+     private static final AsynchronousExecutor<QueuedChunk, Chunk, Runnable, RuntimeException> instance = new AsynchronousExecutor<QueuedChunk, Chunk, Runnable, RuntimeException>(new ChunkIOProvider(), BASE_THREADS);
+ 
+     public static Chunk syncChunkLoad(World world, ChunkRegionLoader loader, ChunkProviderServer provider, int x, int z) {
+-        return MCUtil.ensureMain("Async Chunk Load", () -> instance.getSkipQueue(new QueuedChunk(x, z, loader, world, provider))); // Paper
++        return instance.getSkipQueue(new QueuedChunk(x, z, loader, world, provider)); // Torch - permit async
+     }
+ 
+     public static void queueChunkLoad(World world, ChunkRegionLoader loader, ChunkProviderServer provider, int x, int z, Runnable runnable) {
+-- 
+2.8.2.windows.1
+

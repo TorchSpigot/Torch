@@ -1,0 +1,93 @@
+From 29f0ec9bf3f654d68138659a56c24b6fdd898b4a Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 16 Jul 2016 03:55:31 +0800
+Subject: [PATCH] Enqueue play packets during login
+
+
+diff --git a/src/main/java/net/minecraft/server/NetworkManager.java b/src/main/java/net/minecraft/server/NetworkManager.java
+index bee8e95..90ca081 100644
+--- a/src/main/java/net/minecraft/server/NetworkManager.java
++++ b/src/main/java/net/minecraft/server/NetworkManager.java
+@@ -278,6 +278,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
+         return this.channel == null;
+     }
+ 
++	public PacketListener getPacketListener() { return i(); } // SportBukkit - method alias
+     public PacketListener i() {
+         return this.m;
+     }
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index 389b2da..e688d18 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -109,11 +109,27 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+         i ^= i >>> 20 ^ i >>> 12;
+         return i ^ i >>> 7 ^ i >>> 4;
+     }
++	
++	// SportBukkit start - queue packets sent before play state
++    private final java.util.Deque<Packet<?>> initialPackets = new java.util.ArrayDeque<Packet<?>>();
++    public void activate() {
++        if(networkManager.getPacketListener() == this) return;
++        networkManager.setPacketListener(this);
++        while(!initialPackets.isEmpty()) {
++            final Packet<?> packet = initialPackets.remove();
++            try {
++                sendPacket(packet);
++            } catch(RuntimeException e) {
++                LOGGER.error("Exception sending initial " + packet.getClass().getName(), e);
++            }
++        }
++    }
++    // SportBukkit end
+ 
+     public PlayerConnection(MinecraftServer minecraftserver, NetworkManager networkmanager, EntityPlayer entityplayer) {
+         this.minecraftServer = minecraftserver;
+         this.networkManager = networkmanager;
+-        networkmanager.setPacketListener(this);
++        // networkmanager.setPacketListener(this);
+         this.player = entityplayer;
+         entityplayer.playerConnection = this;
+ 		this.networkManager.channel.attr(PLAYER_ATTR_KEY).set(this.player); // TacoSpigot - set the player
+@@ -1094,6 +1110,13 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+     }
+ 
+     public void sendPacket(final Packet<?> packet) {
++		// SportBukkit - queue packets sent before play state
++        if(packet == null) return;
++        if(!equals(networkManager.getPacketListener())) {
++            initialPackets.add(packet);
++            return;
++        }
++        // SportBukkit end
+         if (packet instanceof PacketPlayOutChat) {
+             PacketPlayOutChat packetplayoutchat = (PacketPlayOutChat) packet;
+             EntityHuman.EnumChatVisibility entityhuman_enumchatvisibility = this.player.getChatFlags();
+diff --git a/src/main/java/net/minecraft/server/PlayerList.java b/src/main/java/net/minecraft/server/PlayerList.java
+index 17c6391..7fa2886 100644
+--- a/src/main/java/net/minecraft/server/PlayerList.java
++++ b/src/main/java/net/minecraft/server/PlayerList.java
+@@ -145,7 +145,11 @@ public abstract class PlayerList {
+         BlockPosition blockposition = worldserver.getSpawn();
+ 
+         this.a(entityplayer, (EntityPlayer) null, worldserver);
+-        PlayerConnection playerconnection = new PlayerConnection(this.server, networkmanager, entityplayer);
++         // SportBukkit start - activate previously created PlayerConnection
++        // PlayerConnection playerconnection = new PlayerConnection(this.server, networkmanager, entityplayer);
++        PlayerConnection playerconnection = entityplayer.playerConnection;
++        playerconnection.activate();
++        // SportBukkit end
+ 
+         playerconnection.sendPacket(new PacketPlayOutLogin(entityplayer.getId(), entityplayer.playerInteractManager.getGameMode(), worlddata.isHardcore(), worldserver.worldProvider.getDimensionManager().getDimensionID(), worldserver.getDifficulty(), this.getMaxPlayers(), worlddata.getType(), worldserver.getGameRules().getBoolean("reducedDebugInfo")));
+         entityplayer.getBukkitEntity().sendSupportedChannels(); // CraftBukkit
+@@ -488,6 +492,7 @@ public abstract class PlayerList {
+         SocketAddress socketaddress = loginlistener.networkManager.getSocketAddress();
+ 
+         EntityPlayer entity = new EntityPlayer(server, server.getWorldServer(0), gameprofile, new PlayerInteractManager(server.getWorldServer(0)));
++		entity.playerConnection = new PlayerConnection(server, loginlistener.networkManager, entity); // SportBukkit - create this right away so it's never null
+         Player player = entity.getBukkitEntity();
+         PlayerLoginEvent event = new PlayerLoginEvent(player, hostname, ((java.net.InetSocketAddress) socketaddress).getAddress(), ((java.net.InetSocketAddress) loginlistener.networkManager.getRawAddress()).getAddress());
+         String s;
+-- 
+2.8.2.windows.1
+

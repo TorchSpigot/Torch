@@ -1,0 +1,713 @@
+From 5171e3812b8b4effa75319392f7918da3f92c450 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Fri, 1 Jul 2016 17:05:41 +0800
+Subject: [PATCH] Multi threaded Entity
+
+
+diff --git a/src/main/java/net/minecraft/server/BlockRedstoneWire.java b/src/main/java/net/minecraft/server/BlockRedstoneWire.java
+index 661c4f9..3d4449f 100644
+--- a/src/main/java/net/minecraft/server/BlockRedstoneWire.java
++++ b/src/main/java/net/minecraft/server/BlockRedstoneWire.java
+@@ -20,7 +20,7 @@ public class BlockRedstoneWire extends Block {
+     public static final BlockStateInteger POWER = BlockStateInteger.of("power", 0, 15);
+     protected static final AxisAlignedBB[] f = new AxisAlignedBB[] { new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 0.8125D, 0.0625D, 0.8125D), new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 0.8125D, 0.0625D, 1.0D), new AxisAlignedBB(0.0D, 0.0D, 0.1875D, 0.8125D, 0.0625D, 0.8125D), new AxisAlignedBB(0.0D, 0.0D, 0.1875D, 0.8125D, 0.0625D, 1.0D), new AxisAlignedBB(0.1875D, 0.0D, 0.0D, 0.8125D, 0.0625D, 0.8125D), new AxisAlignedBB(0.1875D, 0.0D, 0.0D, 0.8125D, 0.0625D, 1.0D), new AxisAlignedBB(0.0D, 0.0D, 0.0D, 0.8125D, 0.0625D, 0.8125D), new AxisAlignedBB(0.0D, 0.0D, 0.0D, 0.8125D, 0.0625D, 1.0D), new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 1.0D, 0.0625D, 0.8125D), new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 1.0D, 0.0625D, 1.0D), new AxisAlignedBB(0.0D, 0.0D, 0.1875D, 1.0D, 0.0625D, 0.8125D), new AxisAlignedBB(0.0D, 0.0D, 0.1875D, 1.0D, 0.0625D, 1.0D), new AxisAlignedBB(0.1875D, 0.0D, 0.0D, 1.0D, 0.0625D, 0.8125D), new AxisAlignedBB(0.1875D, 0.0D, 0.0D, 1.0D, 0.0625D, 1.0D), new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.0625D, 0.8125D), new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.0625D, 1.0D)};
+     private boolean g = true;
+-    private final Set<BlockPosition> B = Sets.newHashSet(); private final Set<BlockPosition> blocksToUpdate = B; // Paper - OBFHELPER
++    private final Set<BlockPosition> B = Sets.newConcurrentHashSet(); private final Set<BlockPosition> blocksToUpdate = B; // Paper - OBFHELPER
+ 
+     public BlockRedstoneWire() {
+         super(Material.ORIENTABLE);
+diff --git a/src/main/java/net/minecraft/server/Entity.java b/src/main/java/net/minecraft/server/Entity.java
+index ebec9b8..57b0add 100644
+--- a/src/main/java/net/minecraft/server/Entity.java
++++ b/src/main/java/net/minecraft/server/Entity.java
+@@ -15,6 +15,14 @@ import javax.annotation.Nullable;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
++import java.util.concurrent.RecursiveAction;
++import java.util.Map;
++import java.util.LinkedList;
++import com.google.common.collect.Maps;
++import org.hose.TE_Pool;
++import org.hose.Tick_Pool;
++import org.spigotmc.SpigotWorldConfig;
++
+ // CraftBukkit start
+ import org.bukkit.Bukkit;
+ import org.bukkit.Location;
+@@ -487,7 +495,7 @@ public abstract class Entity implements ICommandListener {
+         return this.world.getCubes(this, axisalignedbb).isEmpty() && !this.world.containsLiquid(axisalignedbb);
+     }
+ 
+-    public void move(double d0, double d1, double d2) {
++    public void move_hose(double d0, double d1, double d2) { // Hose
+         if (this.noclip) {
+             this.a(this.getBoundingBox().c(d0, d1, d2));
+             this.recalcPosition();
+@@ -783,9 +791,59 @@ public abstract class Entity implements ICommandListener {
+                     block1.stepOn(this.world, blockposition, this); // CraftBukkit moved from above
+                 }
+             }
++			
++			// Hose start
++			boolean flag2 = this.aH(); // Torch - fix method name
++
++            if (this.world.f(this.getBoundingBox().shrink(0.001D))) {
++                this.burn(1);
++                if (!flag2) {
++                    ++this.fireTicks;
++                    // CraftBukkit start - Not on fire yet
++                    if (this.fireTicks <= 0) { // Only throw events on the first combust, otherwise it spams
++                        EntityCombustEvent event = new org.bukkit.event.entity.EntityCombustByBlockEvent(null, getBukkitEntity(), 8);
++                        world.getServer().getPluginManager().callEvent(event);
++
++                        if (!event.isCancelled()) {
++                            setOnFire(event.getDuration());
++                        }
++                    } else {
++                        // CraftBukkit end
++                        this.setOnFire(8);
++                    }
++                }
++            } else if (this.fireTicks <= 0) {
++                this.fireTicks = -this.maxFireTicks;
++            }
++
++            if (flag2 && this.fireTicks > 0) {
++                this.a(SoundEffects.bG, 0.7F, 1.6F + (this.random.nextFloat() - this.random.nextFloat()) * 0.4F);
++                this.fireTicks = -this.maxFireTicks;
++            }
+ 
+-            // CraftBukkit start - Move to the top of the method
+-            /*
++            this.world.methodProfiler.b();
++        }
++        org.bukkit.craftbukkit.SpigotTimings.entityMoveTimer.stopTiming(); // Spigot
++    }
++    
++    TE_Pool te_task;
++    public void move(double d0, double d1, double d2) {
++        /*double[] pos = {d0, d1, d2};
++        SpigotWorldConfig.entity_move.put(this, pos);*/
++        /*
++        m_task = new move(d0, d1, d2);
++        SpigotWorldConfig.move_forks.add(m_task);*/
++        //m_task.fork();
++        
++        
++        org.bukkit.craftbukkit.SpigotTimings.entityMoveTimer.startTiming(); // Spigot
++        if (this.noclip) {
++            this.a(this.getBoundingBox().c(d0, d1, d2));
++            this.recalcPosition();
++        } else {
++            // CraftBukkit start - Don't do anything if we aren't moving
++            // We need to do this regardless of whether or not we are moving thanks to portals
++			// Hose end
+             try {
+                 this.checkBlockCollisions();
+             } catch (Throwable throwable) {
+@@ -795,10 +853,295 @@ public abstract class Entity implements ICommandListener {
+                 this.appendEntityCrashDetails(crashreportsystemdetails);
+                 throw new ReportedException(crashreport);
+             }
+-            */
++            
++			// Hose start
++			// Check if we're moving
++            if (d0 == 0 && d1 == 0 && d2 == 0 && this.isVehicle() && this.isPassenger()) {
++                return;
++            }
+             // CraftBukkit end
++			this.world.methodProfiler.a("move");
++            double d3 = this.locX;
++            double d4 = this.locY;
++            double d5 = this.locZ;
+ 
+-            boolean flag2 = this.ah();
++            if (this.E) {
++                this.E = false;
++                d0 *= 0.25D;
++                d1 *= 0.05000000074505806D;
++                d2 *= 0.25D;
++                this.motX = 0.0D;
++                this.motY = 0.0D;
++                this.motZ = 0.0D;
++            }
++
++            double d6 = d0;
++            double d7 = d1;
++            double d8 = d2;
++            boolean flag = this.onGround && this.isSneaking() && this instanceof EntityHuman;
++
++            if (flag) {
++                for (double d9 = 0.05D; d0 != 0.0D && this.world.getCubes(this, this.getBoundingBox().c(d0, -1.0D, 0.0D)).isEmpty(); d6 = d0) {
++                    if (d0 < 0.05D && d0 >= -0.05D) {
++                        d0 = 0.0D;
++                    } else if (d0 > 0.0D) {
++                        d0 -= 0.05D;
++                    } else {
++                        d0 += 0.05D;
++                    }
++                }
++
++                for (; d2 != 0.0D && this.world.getCubes(this, this.getBoundingBox().c(0.0D, -1.0D, d2)).isEmpty(); d8 = d2) {
++                    if (d2 < 0.05D && d2 >= -0.05D) {
++                        d2 = 0.0D;
++                    } else if (d2 > 0.0D) {
++                        d2 -= 0.05D;
++                    } else {
++                        d2 += 0.05D;
++                    }
++                }
++
++                for (; d0 != 0.0D && d2 != 0.0D && this.world.getCubes(this, this.getBoundingBox().c(d0, -1.0D, d2)).isEmpty(); d8 = d2) {
++                    if (d0 < 0.05D && d0 >= -0.05D) {
++                        d0 = 0.0D;
++                    } else if (d0 > 0.0D) {
++                        d0 -= 0.05D;
++                    } else {
++                        d0 += 0.05D;
++                    }
++
++                    d6 = d0;
++                    if (d2 < 0.05D && d2 >= -0.05D) {
++                        d2 = 0.0D;
++                    } else if (d2 > 0.0D) {
++                        d2 -= 0.05D;
++                    } else {
++                        d2 += 0.05D;
++                    }
++                }
++            }
++
++            List list = this.world.getCubes(this, this.getBoundingBox().a(d0, d1, d2));
++            /*te_task = new TE_Pool(this, d0, d1, d2);
++            te_task.fork();
++            List list = te_task.join(); */
++            
++            AxisAlignedBB axisalignedbb = this.getBoundingBox();
++            int i = 0;
++
++            int j;
++
++            for (j = list.size(); i < j; ++i) {
++                d1 = ((AxisAlignedBB) list.get(i)).b(this.getBoundingBox(), d1);
++            }
++
++            this.a(this.getBoundingBox().c(0.0D, d1, 0.0D));
++            boolean flag1 = this.onGround || d7 != d1 && d7 < 0.0D;
++
++            j = 0;
++
++            int k;
++
++            for (k = list.size(); j < k; ++j) {
++                d0 = ((AxisAlignedBB) list.get(j)).a(this.getBoundingBox(), d0);
++            }
++
++            this.a(this.getBoundingBox().c(d0, 0.0D, 0.0D));
++            j = 0;
++
++            for (k = list.size(); j < k; ++j) {
++                d2 = ((AxisAlignedBB) list.get(j)).c(this.getBoundingBox(), d2);
++            }
++
++            this.a(this.getBoundingBox().c(0.0D, 0.0D, d2));
++            double d10;
++
++            if (this.P > 0.0F && flag1 && (d6 != d0 || d8 != d2)) {
++                double d11 = d0;
++                double d12 = d1;
++                double d13 = d2;
++                AxisAlignedBB axisalignedbb1 = this.getBoundingBox();
++
++                this.a(axisalignedbb);
++                d1 = (double) this.P;
++                List list1 = this.world.getCubes(this, this.getBoundingBox().a(d6, d1, d8));
++                /*te_task = new TE_Pool(this, d6, d1, d8);
++                te_task.fork();
++                List list1 = te_task.join();*/ 
++                AxisAlignedBB axisalignedbb2 = this.getBoundingBox();
++                AxisAlignedBB axisalignedbb3 = axisalignedbb2.a(d6, 0.0D, d8);
++
++                d10 = d1;
++                int l = 0;
++
++                for (int i1 = list1.size(); l < i1; ++l) {
++                    d10 = ((AxisAlignedBB) list1.get(l)).b(axisalignedbb3, d10);
++                }
++
++                axisalignedbb2 = axisalignedbb2.c(0.0D, d10, 0.0D);
++                double d14 = d6;
++                int j1 = 0;
++
++                for (int k1 = list1.size(); j1 < k1; ++j1) {
++                    d14 = ((AxisAlignedBB) list1.get(j1)).a(axisalignedbb2, d14);
++                }
++
++                axisalignedbb2 = axisalignedbb2.c(d14, 0.0D, 0.0D);
++                double d15 = d8;
++                int l1 = 0;
++
++                for (int i2 = list1.size(); l1 < i2; ++l1) {
++                    d15 = ((AxisAlignedBB) list1.get(l1)).c(axisalignedbb2, d15);
++                }
++
++                axisalignedbb2 = axisalignedbb2.c(0.0D, 0.0D, d15);
++                AxisAlignedBB axisalignedbb4 = this.getBoundingBox();
++                double d16 = d1;
++                int j2 = 0;
++
++                for (int k2 = list1.size(); j2 < k2; ++j2) {
++                    d16 = ((AxisAlignedBB) list1.get(j2)).b(axisalignedbb4, d16);
++                }
++
++                axisalignedbb4 = axisalignedbb4.c(0.0D, d16, 0.0D);
++                double d17 = d6;
++                int l2 = 0;
++
++                for (int i3 = list1.size(); l2 < i3; ++l2) {
++                    d17 = ((AxisAlignedBB) list1.get(l2)).a(axisalignedbb4, d17);
++                }
++
++                axisalignedbb4 = axisalignedbb4.c(d17, 0.0D, 0.0D);
++                double d18 = d8;
++                int j3 = 0;
++
++                for (int k3 = list1.size(); j3 < k3; ++j3) {
++                    d18 = ((AxisAlignedBB) list1.get(j3)).c(axisalignedbb4, d18);
++                }
++
++                axisalignedbb4 = axisalignedbb4.c(0.0D, 0.0D, d18);
++                double d19 = d14 * d14 + d15 * d15;
++                double d20 = d17 * d17 + d18 * d18;
++
++                if (d19 > d20) {
++                    d0 = d14;
++                    d2 = d15;
++                    d1 = -d10;
++                    this.a(axisalignedbb2);
++                } else {
++                    d0 = d17;
++                    d2 = d18;
++                    d1 = -d16;
++                    this.a(axisalignedbb4);
++                }
++
++                int l3 = 0;
++
++                for (int i4 = list1.size(); l3 < i4; ++l3) {
++                    d1 = ((AxisAlignedBB) list1.get(l3)).b(this.getBoundingBox(), d1);
++                }
++
++                this.a(this.getBoundingBox().c(0.0D, d1, 0.0D));
++                if (d11 * d11 + d13 * d13 >= d0 * d0 + d2 * d2) {
++                    d0 = d11;
++                    d1 = d12;
++                    d2 = d13;
++                    this.a(axisalignedbb1);
++                }
++            }
++
++            this.world.methodProfiler.b();
++            this.world.methodProfiler.a("rest");
++            this.recalcPosition();
++            this.positionChanged = d6 != d0 || d8 != d2;
++            this.B = d7 != d1;
++            this.onGround = this.B && d7 < 0.0D;
++            this.C = this.positionChanged || this.B;
++            j = MathHelper.floor(this.locX);
++            k = MathHelper.floor(this.locY - 0.20000000298023224D);
++            int j4 = MathHelper.floor(this.locZ);
++            BlockPosition blockposition = new BlockPosition(j, k, j4);
++            IBlockData iblockdata = this.world.getType(blockposition);
++
++            if (iblockdata.getMaterial() == Material.AIR) {
++                BlockPosition blockposition1 = blockposition.down();
++                IBlockData iblockdata1 = this.world.getType(blockposition1);
++                Block block = iblockdata1.getBlock();
++
++                if (block instanceof BlockFence || block instanceof BlockCobbleWall || block instanceof BlockFenceGate) {
++                    iblockdata = iblockdata1;
++                    blockposition = blockposition1;
++                }
++            }
++
++            this.a(d1, this.onGround, iblockdata, blockposition);
++            if (d6 != d0) {
++                this.motX = 0.0D;
++            }
++
++            if (d8 != d2) {
++                this.motZ = 0.0D;
++            }
++
++            Block block1 = iblockdata.getBlock();
++
++            if (d7 != d1) {
++                block1.a(this.world, this);
++            }
++
++            // CraftBukkit start
++            if (positionChanged && getBukkitEntity() instanceof Vehicle) {
++                Vehicle vehicle = (Vehicle) this.getBukkitEntity();
++                org.bukkit.block.Block bl = this.world.getWorld().getBlockAt(MathHelper.floor(this.locX), MathHelper.floor(this.locY), MathHelper.floor(this.locZ));
++
++                if (d6 > d0) {
++                    bl = bl.getRelative(BlockFace.EAST);
++                } else if (d6 < d0) {
++                    bl = bl.getRelative(BlockFace.WEST);
++                } else if (d8 > d2) {
++                    bl = bl.getRelative(BlockFace.SOUTH);
++                } else if (d8 < d2) {
++                    bl = bl.getRelative(BlockFace.NORTH);
++                }
++
++                VehicleBlockCollisionEvent event = new VehicleBlockCollisionEvent(vehicle, bl);
++                world.getServer().getPluginManager().callEvent(event);
++            }
++            // CraftBukkit end
++
++            if (this.playStepSound() && !flag && !this.isPassenger()) {
++                double d21 = this.locX - d3;
++                double d22 = this.locY - d4;
++
++                d10 = this.locZ - d5;
++                if (block1 != Blocks.LADDER) {
++                    d22 = 0.0D;
++                }
++
++                if (block1 != null && this.onGround) {
++                    block1.stepOn(this.world, blockposition, this);
++                }
++
++                this.J = (float) ((double) this.J + (double) MathHelper.sqrt(d21 * d21 + d10 * d10) * 0.6D);
++                this.K = (float) ((double) this.K + (double) MathHelper.sqrt(d21 * d21 + d22 * d22 + d10 * d10) * 0.6D);
++                if (this.K > (float) this.ax && iblockdata.getMaterial() != Material.AIR) {
++                    this.ax = (int) this.K + 1;
++                    if (this.isInWater()) {
++                        float f = MathHelper.sqrt(this.motX * this.motX * 0.20000000298023224D + this.motY * this.motY + this.motZ * this.motZ * 0.20000000298023224D) * 0.35F;
++
++                        if (f > 1.0F) {
++                            f = 1.0F;
++                        }
++
++                        this.a(this.aa(), f, 1.0F + (this.random.nextFloat() - this.random.nextFloat()) * 0.4F);
++                    }
++
++                    this.a(blockposition, block1);
++                }
++            }
++			// Hose end
++
++            boolean flag2 = this.aH(); // Torch - fix method name
+ 
+             if (this.world.f(this.getBoundingBox().shrink(0.001D))) {
+                 this.burn(1);
+@@ -2712,4 +3055,20 @@ public abstract class Entity implements ICommandListener {
+ 
+         }
+     }
++	
++	class move extends RecursiveAction {
++        double d0, d1, d2;
++        
++        move(double d0, double d1, double d2) {
++            this.d0 = d0;
++            this.d1 = d1;
++            this.d2 = d2;
++        }
++        
++        @Override
++        protected void compute() {
++            move_hose(d0, d1, d2);
++        }
++                 
++    }
+ }
+diff --git a/src/main/java/org/hose/ChunkFlush_Pool.java b/src/main/java/org/hose/ChunkFlush_Pool.java
+new file mode 100644
+index 0000000..2928dab
+--- /dev/null
++++ b/src/main/java/org/hose/ChunkFlush_Pool.java
+@@ -0,0 +1,53 @@
++/*
++ * To change this license header, choose License Headers in Project Properties.
++ * To change this template file, choose Tools | Templates
++ * and open the template in the editor.
++ */
++package org.hose;
++
++import java.util.LinkedList;
++import java.util.List;
++import java.util.concurrent.RecursiveAction;
++import net.minecraft.server.PlayerChunk;
++
++/**
++ *
++ * @author softpak
++ */
++public class ChunkFlush_Pool extends RecursiveAction {//need to use callable
++    List<PlayerChunk> chunkflush_list;
++    
++    public ChunkFlush_Pool(List<PlayerChunk> chunkflush_list){
++        this.chunkflush_list = chunkflush_list;
++    }
++    
++    @Override
++    protected void compute() {
++        List<RecursiveAction> forks = new LinkedList();
++        for (PlayerChunk pc : chunkflush_list) {
++            chunkflush task = new chunkflush(pc);
++            forks.add(task);
++            task.fork();
++            //task.join();
++        }
++        /*
++        for (RecursiveAction task : forks) {
++            task.join();
++        }*/
++    }
++    
++    
++    class chunkflush extends RecursiveAction {
++        PlayerChunk pc;
++        
++        chunkflush(PlayerChunk pc) {
++            this.pc = pc;
++        }
++        
++        @Override
++        protected void compute() {
++            pc.d();
++        }
++                 
++    }
++}
+\ No newline at end of file
+diff --git a/src/main/java/org/hose/ChunkGen_Pool.java b/src/main/java/org/hose/ChunkGen_Pool.java
+new file mode 100644
+index 0000000..53a6695
+--- /dev/null
++++ b/src/main/java/org/hose/ChunkGen_Pool.java
+@@ -0,0 +1,54 @@
++/*
++ * To change this license header, choose License Headers in Project Properties.
++ * To change this template file, choose Tools | Templates
++ * and open the template in the editor.
++ */
++package org.hose;
++
++import java.util.LinkedList;
++import java.util.List;
++import java.util.concurrent.RecursiveAction;
++import net.minecraft.server.WorldServer;
++
++/**
++ *
++ * @author softpak
++ */
++public class ChunkGen_Pool extends RecursiveAction {
++    WorldServer worldserver;
++    List<int[]> position;
++    
++    public ChunkGen_Pool(WorldServer worldserver, List<int[]> position){
++        this.worldserver = worldserver;
++        this.position = position;
++        
++    }
++    
++    @Override
++    protected void compute() {
++        List<RecursiveAction> forks = new LinkedList();
++        for (int[] pt : position) {
++            chunkgen task = new chunkgen(worldserver, pt);
++            forks.add(task);
++            task.fork();
++        }
++        
++    }
++    
++    
++    class chunkgen extends RecursiveAction {
++        WorldServer worldserver;
++        int[] pt;
++        
++        chunkgen(WorldServer worldserver, int[] pt) {
++            this.worldserver = worldserver;
++            this.pt = pt;
++        }
++        
++        @Override
++        protected void compute() {
++            worldserver.getChunkProviderServer().getChunkAt(pt[0], pt[1]);
++        }
++                 
++    }
++}
+\ No newline at end of file
+diff --git a/src/main/java/org/hose/ChunkPopulate_Pool.java b/src/main/java/org/hose/ChunkPopulate_Pool.java
+new file mode 100644
+index 0000000..dc2fa9a
+--- /dev/null
++++ b/src/main/java/org/hose/ChunkPopulate_Pool.java
+@@ -0,0 +1,35 @@
++/*
++ * To change this license header, choose License Headers in Project Properties.
++ * To change this template file, choose Tools | Templates
++ * and open the template in the editor.
++ */
++package org.hose;
++
++import java.util.Random;
++import java.util.concurrent.RecursiveAction;
++import org.bukkit.Chunk;
++import org.bukkit.World;
++
++/**
++ *
++ * @author softpak
++ */
++public class ChunkPopulate_Pool extends RecursiveAction {//need to use callable
++    World world;
++    Random random;
++    Chunk chunk;
++    org.bukkit.generator.BlockPopulator populator;
++    
++    public ChunkPopulate_Pool(World world, Random random, Chunk chunk, org.bukkit.generator.BlockPopulator populator){
++        this.world = world;
++        this.random = random;
++        this.chunk = chunk;
++        this.populator = populator;
++    }
++    
++    @Override
++    protected void compute() {
++        populator.populate(world, random, chunk);
++    }
++
++}
+\ No newline at end of file
+diff --git a/src/main/java/org/hose/GE_Pool.java b/src/main/java/org/hose/GE_Pool.java
+new file mode 100644
+index 0000000..d651deb
+--- /dev/null
++++ b/src/main/java/org/hose/GE_Pool.java
+@@ -0,0 +1,32 @@
++/*
++ * To change this license header, choose License Headers in Project Properties.
++ * To change this template file, choose Tools | Templates
++ * and open the template in the editor.
++ */
++package org.hose;
++
++import java.util.List;
++import java.util.concurrent.RecursiveAction;
++import java.util.concurrent.RecursiveTask;
++import net.minecraft.server.Entity;
++import net.minecraft.server.EntityLiving;
++import net.minecraft.server.IEntitySelector;
++import net.minecraft.server.World;
++
++
++/**
++ *
++ * @author softpak
++ */
++public class GE_Pool extends RecursiveTask<List> {
++    EntityLiving el;
++    
++    public GE_Pool(EntityLiving el){
++        this.el = el;
++    }
++    
++    @Override
++    protected List compute() {
++        return el.world.getEntities(el, el.getBoundingBox(), IEntitySelector.a(el));
++    }
++}
+\ No newline at end of file
+diff --git a/src/main/java/org/hose/TE_Pool.java b/src/main/java/org/hose/TE_Pool.java
+new file mode 100644
+index 0000000..32c5f25
+--- /dev/null
++++ b/src/main/java/org/hose/TE_Pool.java
+@@ -0,0 +1,34 @@
++/*
++ * To change this license header, choose License Headers in Project Properties.
++ * To change this template file, choose Tools | Templates
++ * and open the template in the editor.
++ */
++package org.hose;
++
++import java.util.List;
++import java.util.concurrent.RecursiveAction;
++import java.util.concurrent.RecursiveTask;
++import net.minecraft.server.Entity;
++import net.minecraft.server.World;
++
++
++/**
++ *
++ * @author softpak
++ */
++public class TE_Pool extends RecursiveTask<List> {
++    Entity entity;
++    double d0, d1, d2;
++    
++    public TE_Pool(Entity entity, double d0, double d1, double d2){
++        this.entity = entity;
++        this.d0 = d0;
++        this.d1 = d1;
++        this.d2 = d2;
++    }
++    
++    @Override
++    protected List compute() {
++        return entity.world.getCubes(entity, entity.getBoundingBox().a(d0, d1, d2));
++    }
++}
+\ No newline at end of file
+diff --git a/src/main/java/org/hose/Tick_Pool.java b/src/main/java/org/hose/Tick_Pool.java
+new file mode 100644
+index 0000000..8f87093
+--- /dev/null
++++ b/src/main/java/org/hose/Tick_Pool.java
+@@ -0,0 +1,32 @@
++/*
++ * To change this license header, choose License Headers in Project Properties.
++ * To change this template file, choose Tools | Templates
++ * and open the template in the editor.
++ */
++package org.hose;
++
++import java.util.concurrent.RecursiveAction;
++import net.minecraft.server.Entity;
++import net.minecraft.server.World;
++
++
++/**
++ *
++ * @author softpak
++ */
++public class Tick_Pool extends RecursiveAction {
++    Entity entity;
++    World world;
++    
++    public Tick_Pool(Entity entity){
++        this.entity = entity;
++        //this.world = world;
++        
++    }
++    
++    @Override
++    protected void compute() {
++        entity.U();
++    }
++    
++}
+\ No newline at end of file
+-- 
+2.8.2.windows.1
+

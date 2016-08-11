@@ -1,0 +1,34 @@
+From b3c3caedbc30ba80726660711b3931394aae3e41 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 16 Jul 2016 03:47:21 +0800
+Subject: [PATCH] Fix self-damage being cancelled by FF/PvP rules
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityHuman.java b/src/main/java/net/minecraft/server/EntityHuman.java
+index 5751e96..be9d53f 100644
+--- a/src/main/java/net/minecraft/server/EntityHuman.java
++++ b/src/main/java/net/minecraft/server/EntityHuman.java
+@@ -800,6 +800,8 @@ public abstract class EntityHuman extends EntityLiving {
+     public boolean a(EntityHuman entityhuman) {
+         // CraftBukkit start - Change to check OTHER player's scoreboard team according to API
+         // To summarize this method's logic, it's "Can parameter hurt this"
++		if(this == entityhuman) return true; // SportBukkit - self-damage is always allowed
++		
+         org.bukkit.scoreboard.Team team;
+         if (entityhuman instanceof EntityPlayer) {
+             EntityPlayer thatPlayer = (EntityPlayer) entityhuman;
+diff --git a/src/main/java/net/minecraft/server/EntityPlayer.java b/src/main/java/net/minecraft/server/EntityPlayer.java
+index 8f529b6..1466033 100644
+--- a/src/main/java/net/minecraft/server/EntityPlayer.java
++++ b/src/main/java/net/minecraft/server/EntityPlayer.java
+@@ -513,6 +513,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
+     }
+ 
+     public boolean a(EntityHuman entityhuman) {
++		if(this == entityhuman) return true; // SportBukkit - self-damage is always allowed
+         return !this.canPvP() ? false : super.a(entityhuman);
+     }
+ 
+-- 
+2.8.2.windows.1
+
