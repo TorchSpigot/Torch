@@ -1,4 +1,4 @@
-From 35d506e2f43453aaf0d2a44e509b44936d58d3e2 Mon Sep 17 00:00:00 2001
+From ecddb4d9935380f1567bd708e5e1e4f83241aed3 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 9 Aug 2016 18:05:40 +0800
 Subject: [PATCH] SPIGOT-1388: Branchless NibbleArray

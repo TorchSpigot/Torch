@@ -1,4 +1,4 @@
-From a0dfb7291091fbdf6cafad798b3a186afabe4a8e Mon Sep 17 00:00:00 2001
+From 17df106b93966d854d2a25ddc58e8fdfc9a0b943 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Wed, 20 Jul 2016 18:17:53 +0800
 Subject: [PATCH] Fix-Banner Patch: Display correct time in F3

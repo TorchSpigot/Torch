@@ -1,4 +1,4 @@
-From 4c35922c6122b46634f4646a9b4a3043e6122fd7 Mon Sep 17 00:00:00 2001
+From c97d5dd1f281388809a09ca0157b2142241ee3b9 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 24 Jul 2016 18:05:13 +0800
 Subject: [PATCH] Close inventory on player quit.
