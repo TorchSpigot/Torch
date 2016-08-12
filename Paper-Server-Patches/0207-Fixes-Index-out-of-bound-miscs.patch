@@ -1,4 +1,4 @@
-From 39d46f5a76d5900b16af95774da0db6f10254c5f Mon Sep 17 00:00:00 2001
+From c214eacd2867280fbc20fdbf298d811484910d66 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 2 Aug 2016 18:43:41 +0800
 Subject: [PATCH] Fixes Index out of bound, miscs
