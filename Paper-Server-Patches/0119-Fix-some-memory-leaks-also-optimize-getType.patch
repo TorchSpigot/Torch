@@ -1,4 +1,4 @@
-From 4592f42b6eeadb8e47a574b66c4c5131afdf588c Mon Sep 17 00:00:00 2001
+From a89edeb097218c79efcb24ecdfcc832f8422e014 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 01:43:54 +0800
 Subject: [PATCH] Fix some memory leaks also optimize getType

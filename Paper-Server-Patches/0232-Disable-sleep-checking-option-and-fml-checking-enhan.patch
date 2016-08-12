@@ -1,11 +1,11 @@
-From ef97a7d0f3771f5ac4f8bd7d3c849b25ec5a8071 Mon Sep 17 00:00:00 2001
+From dc4cddc3baec75f5733d86aa604f1ecc58f741de Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 12 Aug 2016 23:32:28 +0800
 Subject: [PATCH] Disable sleep checking option and fml checking enhanced
 
 
 diff --git a/src/main/java/de/minetick/MigotConfig.java b/src/main/java/de/minetick/MigotConfig.java
-index b5d87b0..9ea3d6c 100644
+index b5d87b0..7690504 100644
 --- a/src/main/java/de/minetick/MigotConfig.java
 +++ b/src/main/java/de/minetick/MigotConfig.java
 @@ -1,5 +1,7 @@
@@ -16,7 +16,7 @@ index b5d87b0..9ea3d6c 100644
  import java.io.File;
  import java.io.FileNotFoundException;
  import java.io.IOException;
-@@ -43,10 +45,17 @@ public class MigotConfig {
+@@ -43,10 +45,16 @@ public class MigotConfig {
  
  	// Settings - load
  	private void loadConfigContent() {
@@ -29,14 +29,13 @@ index b5d87b0..9ea3d6c 100644
 +		disableSleepChecking = configuration.getBoolean("world-settings.disable-sleep-checking", false);
 +		
 +		enabledFMLMonitor = configuration.getBoolean("fml.enable-fml-monitor", false);
-+		strictMode = configuration.getBoolean("fml.strict-mode", false);
 +		disableMods = configuration.getStringList("fml.disabled-mods");
 +		requisiteMods = configuration.getStringList("fml.requisite-mods");
 +		kickInfo = configuration.getString("fml.kick-info", "Mod {MOD} is not allwoed in the server!");
  	}
  
  	private FileConfiguration loadConfig(File file) throws IOException, InvalidConfigurationException {
-@@ -69,9 +78,19 @@ public class MigotConfig {
+@@ -69,9 +77,18 @@ public class MigotConfig {
  	}
  
  	// Settings - values
@@ -49,7 +48,6 @@ index b5d87b0..9ea3d6c 100644
  	public static boolean bungeeForwardingCompatible;
 +	// FML monitor
 +	public static boolean enabledFMLMonitor;
-+	public static boolean strictMode;
 +	public static List<String> disableMods;
 +	public static List<String> requisiteMods;
 +	public static String kickInfo;
@@ -58,8 +56,23 @@ index b5d87b0..9ea3d6c 100644
  
  }
 \ No newline at end of file
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index f56463d..614847a 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -910,7 +910,9 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 		FutureTask<?> entry;
+ 		int count = this.j.size();
+ 		while (count-- > 0 && (entry = this.j.poll()) != null) {
+-			SystemUtils.a(entry, MinecraftServer.LOGGER);
++			synchronized(this) {
++				SystemUtils.a(entry, MinecraftServer.LOGGER);
++			}
+ 		}
+ 		// Spigot end
+ 		MinecraftTimings.minecraftSchedulerTimer.stopTiming(); // Paper
 diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
-index ff80e16..871a721 100644
+index ff80e16..fa18fde 100644
 --- a/src/main/java/net/minecraft/server/PlayerConnection.java
 +++ b/src/main/java/net/minecraft/server/PlayerConnection.java
 @@ -2498,8 +2498,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
@@ -89,7 +102,7 @@ index ff80e16..871a721 100644
  		PlayerStatus.addPlayer(this.player.getName());
  		PacketDataSerializer data = packet.b();
  
-@@ -2629,12 +2629,34 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+@@ -2629,12 +2629,32 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
  		PlayerStatus.removePlayer(this.player.getName());
  	}
  
@@ -105,22 +118,20 @@ index ff80e16..871a721 100644
 +	}
 +	
 +	private boolean progressMods(String currentMod) {
-+		if (MigotConfig.strictMode) {
-+			for (String disableMod : MigotConfig.disableMods) {
-+				// Strict mode
-+				if (currentMod.contains((String) disableMod)) {
-+					PlayerConnection.LOGGER.warn(this.player.getName() + " was kicked for using disable mod: " + currentMod);
-+					this.disconnect(MigotConfig.kickInfo.replace("{MOD}", currentMod));
-+					return false;
-+				}
++		for (String disableMod : MigotConfig.disableMods) {
++			// Strict mode
++			if (currentMod.contains(disableMod)) {
++				PlayerConnection.LOGGER.warn(this.player.getName() + " was kicked for using disable mod.");
++				this.disconnect(MigotConfig.kickInfo.replace("{MOD}", currentMod));
++				return false;
 +			}
-+		} else {
-+			for (String disableMod : MigotConfig.disableMods) {
-+				if (currentMod == ((String) disableMod)) {
-+					PlayerConnection.LOGGER.warn(this.player.getName() + " was kicked for using disable mod: " + currentMod);
-+					this.disconnect(MigotConfig.kickInfo.replace("{MOD}", currentMod));
-+					return false;
-+				}
++		}
++		for (String requisiteMod : MigotConfig.requisiteMods) {
++			// Strict mode
++			if (!currentMod.contains(requisiteMod)) {
++				PlayerConnection.LOGGER.warn(this.player.getName() + " was kicked for not using requisite mod.");
++				this.disconnect(MigotConfig.kickInfo.replace("{MOD}", currentMod));
++				return false;
 +			}
 +		}
 +		return true;
@@ -150,10 +161,10 @@ index 828b9f0..77888d8 100644
  		if (!this.players.isEmpty()) {
  			int i = 0;
 diff --git a/src/main/resources/configurations/migot.yml b/src/main/resources/configurations/migot.yml
-index 7476173..c8fb951 100644
+index 7476173..c7428e6 100644
 --- a/src/main/resources/configurations/migot.yml
 +++ b/src/main/resources/configurations/migot.yml
-@@ -3,8 +3,19 @@
+@@ -3,8 +3,14 @@
  # 
  # ( GH: https://github.com/Poweruser/Migot )
  
@@ -168,14 +179,9 @@ index 7476173..c8fb951 100644
    enable-fml-monitor: false
 -  bungee-redirect-compatible: false
 \ No newline at end of file
-+  strict-mode: false
-+  disabled-mods:
-+  - example_disabled_mod1
-+  - example_disabled_mod2
-+  requisite-mods:
-+  - example_requisite_mod1
-+  - example_requisite_mod2
-+  kick-info: "Mod {MOD} is not allwoed in the server!"
++  disabled-mods: {}
++  requisite-mods: {}
++  kick-info: "Your mod(s) is not allowed on this server!"
 \ No newline at end of file
 -- 
 2.8.2.windows.1
