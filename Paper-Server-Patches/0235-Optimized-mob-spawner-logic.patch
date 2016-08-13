@@ -1,0 +1,183 @@
+From 720e65f9cf99caf97f76d81e49c0c72d0c4ff80f Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 13 Aug 2016 13:12:49 +0800
+Subject: [PATCH] Optimized mob spawner logic
+
+
+diff --git a/src/main/java/net/minecraft/server/MobSpawnerAbstract.java b/src/main/java/net/minecraft/server/MobSpawnerAbstract.java
+index ec0fa49..44c4fc2 100644
+--- a/src/main/java/net/minecraft/server/MobSpawnerAbstract.java
++++ b/src/main/java/net/minecraft/server/MobSpawnerAbstract.java
+@@ -45,6 +45,7 @@ public abstract class MobSpawnerAbstract {
+ 																												// filter
+ 	}
+ 
++	// Torch start
+ 	public void c() {
+ 		// Paper start - Configurable mob spawner tick rate
+ 		if (spawnDelay > 0 && --tickDelay > 0) {
+@@ -52,113 +53,60 @@ public abstract class MobSpawnerAbstract {
+ 		}
+ 		tickDelay = this.a().paperConfig.mobSpawnerTickRate;
+ 		// Paper end
+-		if (!this.h()) {
++		
++		if (this.spawnDelay < -tickDelay) { // Paper
++            this.i();
++        }
++		if (this.spawnDelay > 0) {
++            this.spawnDelay -= tickDelay; // Paper
++            return;
++        }
++        if (!this.h()) {
+ 			this.e = this.d;
+-		} else {
+-			BlockPosition blockposition = this.b();
+-
+-			if (this.a().isClientSide) {
+-				double d0 = blockposition.getX() + this.a().random.nextFloat();
+-				double d1 = blockposition.getY() + this.a().random.nextFloat();
+-				double d2 = blockposition.getZ() + this.a().random.nextFloat();
+-
+-				this.a().addParticle(EnumParticle.SMOKE_NORMAL, d0, d1, d2, 0.0D, 0.0D, 0.0D, new int[0]);
+-				this.a().addParticle(EnumParticle.FLAME, d0, d1, d2, 0.0D, 0.0D, 0.0D, new int[0]);
+-				if (this.spawnDelay > 0) {
+-					this.spawnDelay -= tickDelay; // Paper
+-				}
+-
+-				this.e = this.d;
+-				this.d = (this.d + 1000.0F / (this.spawnDelay + 200.0F)) % 360.0D;
+-			} else {
+-				if (this.spawnDelay < -tickDelay) { // Paper
+-					this.i();
+-				}
+-
+-				if (this.spawnDelay > 0) {
+-					this.spawnDelay -= tickDelay; // Paper
+-					return;
+-				}
++            this.i();
++            return;
++        }
++		
++		World world = this.a();
++		BlockPosition blockposition = this.b();
++		
++        for (int i = 0; i < this.spawnCount; ++i) {
++            Entity entity = EntityTypes.createEntityByName(this.getMobName(), this.a());
++			 
++			if (entity == null) {
++                return;
++            }
++			
++			int k = world.a(entity.getClass(), (new AxisAlignedBB(blockposition.getX(), blockposition.getY(), blockposition.getZ(), blockposition.getX() + 1, blockposition.getY() + 1, blockposition.getZ() + 1)).g(this.spawnRange)).size();
++			
++			if (k >= this.maxNearbyEntities) {
++				this.i();
++				return;
++			}
+ 
+-				boolean flag = false;
+-
+-				for (int i = 0; i < this.spawnCount; ++i) {
+-					NBTTagCompound nbttagcompound = this.spawnData.b();
+-					NBTTagList nbttaglist = nbttagcompound.getList("Pos", 6);
+-					World world = this.a();
+-					int j = nbttaglist.size();
+-					double d3 = j >= 1 ? nbttaglist.e(0)
+-							: blockposition.getX()
+-									+ (world.random.nextDouble() - world.random.nextDouble()) * this.spawnRange + 0.5D;
+-					double d4 = j >= 2 ? nbttaglist.e(1)
+-							: (double) (blockposition.getY() + world.random.nextInt(3) - 1);
+-					double d5 = j >= 3 ? nbttaglist.e(2)
+-							: blockposition.getZ()
+-									+ (world.random.nextDouble() - world.random.nextDouble()) * this.spawnRange + 0.5D;
+-					Entity entity = ChunkRegionLoader.a(nbttagcompound, world, d3, d4, d5, false);
+-
+-					if (entity == null) {
+-						return;
+-					}
+-
+-					int k = world.a(entity.getClass(),
+-							(new AxisAlignedBB(blockposition.getX(), blockposition.getY(), blockposition.getZ(),
+-									blockposition.getX() + 1, blockposition.getY() + 1, blockposition.getZ() + 1))
+-											.g(this.spawnRange))
+-							.size();
+-
+-					if (k >= this.maxNearbyEntities) {
+-						this.i();
+-						return;
+-					}
+-
+-					EntityInsentient entityinsentient = entity instanceof EntityInsentient ? (EntityInsentient) entity
+-							: null;
+-
+-					entity.setPositionRotation(entity.locX, entity.locY, entity.locZ, world.random.nextFloat() * 360.0F,
+-							0.0F);
+-					if (entityinsentient == null || entityinsentient.cG() && entityinsentient.canSpawn()) {
+-						if (this.spawnData.b().d() == 1 && this.spawnData.b().hasKeyOfType("id", 8)
+-								&& entity instanceof EntityInsentient) {
+-							((EntityInsentient) entity).prepare(world.D(new BlockPosition(entity)),
+-									(GroupDataEntity) null);
+-						}
+-						// Spigot Start
+-						if (entity.world.spigotConfig.nerfSpawnerMobs) {
+-							entity.fromMobSpawner = true;
+-						}
+-						if (org.bukkit.craftbukkit.event.CraftEventFactory.callSpawnerSpawnEvent(entity, blockposition)
+-								.isCancelled()) {
+-							continue;
+-						}
+-						// Spigot End
+-						ChunkRegionLoader.a(entity, world,
+-								org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.SPAWNER); // CraftBukkit
+-						world.triggerEffect(2004, blockposition, 0);
+-						if (entityinsentient != null) {
+-							entityinsentient.doSpawnEffect();
+-						}
+-
+-						flag = true;
+-					}
++            EntityInsentient entityinsentient = entity instanceof EntityInsentient ? (EntityInsentient) entity : null;
++			entity.setPositionRotation(entity.locX, entity.locY, entity.locZ, world.random.nextFloat() * 360.0F, 0.0F);
++			
++            if (entityinsentient == null || entityinsentient.cG() && entityinsentient.canSpawn()) {
++                // Spigot Start
++				if (entity.world.spigotConfig.nerfSpawnerMobs) {
++					entity.fromMobSpawner = true;
+ 				}
+-
+-				if (flag) {
+-					this.i();
++				if (org.bukkit.craftbukkit.event.CraftEventFactory.callSpawnerSpawnEvent(entity, blockposition).isCancelled()) {
++					continue;
+ 				}
+-				// Migot start
+-				else {
+-					this.spawnDelay += this.spawningPenalty;
+-					if (this.spawningPenalty < 40) {
+-						this.spawningPenalty++;
+-					}
++				// Spigot End
++				ChunkRegionLoader.a(entity, world, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.SPAWNER); // CraftBukkit
++                world.triggerEffect(2004, blockposition, 0);
++                if (entityinsentient != null) {
++                    entityinsentient.doSpawnEffect();
+ 				}
+-				// Migot end
+-
+-			}
+-
+-		}
++            }
++        }
++		
++        this.i();
+ 	}
++	// Torch end
+ 
+ 	private void i() {
+ 		if (this.maxSpawnDelay <= this.minSpawnDelay) {
+-- 
+2.8.2.windows.1
+
