@@ -1,4 +1,4 @@
-From 6c4902a3d8a7df5fb104638630b1949c9ab29147 Mon Sep 17 00:00:00 2001
+From bdcd69ba042abbb905670b3ab7603b22d3177d8b Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 04:00:07 +0800
 Subject: [PATCH] Disable resource leak detector

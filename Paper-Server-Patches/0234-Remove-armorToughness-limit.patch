@@ -1,4 +1,4 @@
-From e36d0876798b44067ee14f1c735370208b0a5767 Mon Sep 17 00:00:00 2001
+From bb5e8ef5f8742cc491b4de2cdb80ea1e914b43ec Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 13 Aug 2016 12:33:31 +0800
 Subject: [PATCH] Remove armorToughness limit

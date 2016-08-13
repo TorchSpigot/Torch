@@ -1,4 +1,4 @@
-From a3e4420798e2eb020a6e8ca30bc597ce4579f316 Mon Sep 17 00:00:00 2001
+From 61373ff0cb430d54bffb11a0e7b57e664e7ee284 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 25 Jul 2016 19:19:23 +0800
 Subject: [PATCH] Make Snooper Toggable, also add the config of PaperDargon
