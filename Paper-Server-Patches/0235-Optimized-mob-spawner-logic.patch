@@ -1,4 +1,4 @@
-From d2695e0194a4e5448f6d538a9e70b6a3557d0a6e Mon Sep 17 00:00:00 2001
+From 5d5b4251ebaa92ed75bd194a8db20b012706fc53 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 13 Aug 2016 13:12:49 +0800
 Subject: [PATCH] Optimized mob spawner logic
@@ -40,6 +40,27 @@ index 10d9065..85ece22 100644
  				// new Throwable().printStackTrace();
  				synchronized (this) {
  					addDiff(System.nanoTime() - start);
+diff --git a/src/main/java/com/destroystokyo/paper/loottable/CraftLootableInventoryData.java b/src/main/java/com/destroystokyo/paper/loottable/CraftLootableInventoryData.java
+index a505236..61376c0 100644
+--- a/src/main/java/com/destroystokyo/paper/loottable/CraftLootableInventoryData.java
++++ b/src/main/java/com/destroystokyo/paper/loottable/CraftLootableInventoryData.java
+@@ -10,6 +10,7 @@ import javax.annotation.Nullable;
+ import org.bukkit.entity.Player;
+ 
+ import com.destroystokyo.paper.PaperWorldConfig;
++import com.mrpowergamerbr.utils.LightRandom;
+ 
+ import net.minecraft.server.EntityHuman;
+ import net.minecraft.server.NBTTagCompound;
+@@ -17,7 +18,7 @@ import net.minecraft.server.NBTTagList;
+ 
+ public class CraftLootableInventoryData {
+ 
+-	private static final Random RANDOM = new Random();
++	private static final LightRandom RANDOM = new LightRandom();
+ 
+ 	private long lastFill = -1;
+ 	private long nextRefill = -1;
 diff --git a/src/main/java/de/minetick/MigotConfig.java b/src/main/java/de/minetick/MigotConfig.java
 index 7690504..91866d3 100644
 --- a/src/main/java/de/minetick/MigotConfig.java
@@ -61,11 +82,40 @@ index 7690504..91866d3 100644
  
  }
 \ No newline at end of file
+diff --git a/src/main/java/net/minecraft/server/BlockDispenser.java b/src/main/java/net/minecraft/server/BlockDispenser.java
+index e7bd3df..84c0eb1 100644
+--- a/src/main/java/net/minecraft/server/BlockDispenser.java
++++ b/src/main/java/net/minecraft/server/BlockDispenser.java
+@@ -4,13 +4,15 @@ import java.util.Random;
+ 
+ import javax.annotation.Nullable;
+ 
++import com.mrpowergamerbr.utils.LightRandom;
++
+ public class BlockDispenser extends BlockTileEntity {
+ 
+ 	public static final BlockStateDirection FACING = BlockDirectional.FACING;
+ 	public static final BlockStateBoolean TRIGGERED = BlockStateBoolean.of("triggered");
+ 	public static final RegistryDefault<Item, IDispenseBehavior> REGISTRY = new RegistryDefault(
+ 			new DispenseBehaviorItem());
+-	protected Random d = new Random();
++	protected LightRandom d = new LightRandom();
+ 	public static boolean eventFired = false; // CraftBukkit
+ 
+ 	protected BlockDispenser() {
 diff --git a/src/main/java/net/minecraft/server/Chunk.java b/src/main/java/net/minecraft/server/Chunk.java
-index 50ec2bc..d30d15b 100644
+index 50ec2bc..255e831 100644
 --- a/src/main/java/net/minecraft/server/Chunk.java
 +++ b/src/main/java/net/minecraft/server/Chunk.java
-@@ -1212,9 +1212,7 @@ public class Chunk {
+@@ -21,6 +21,7 @@ import com.destroystokyo.paper.exception.ServerInternalException;
+ import com.google.common.base.Predicate;
+ import com.google.common.collect.Lists; // CraftBukkit
+ import com.google.common.collect.Queues;
++import com.mrpowergamerbr.utils.LightRandom;
+ 
+ import net.techcable.pineapple.collect.CopyOnWriteMap;
+ 
+@@ -1212,9 +1213,7 @@ public class Chunk {
  			 * the World constructor. We can't reliably alter that, so we have
  			 * no way of creating a CraftWorld/CraftServer at that point.
  			 */
@@ -76,6 +126,94 @@ index 50ec2bc..d30d15b 100644
  		}
  
  		// Update neighbor counts
+@@ -1275,7 +1274,7 @@ public class Chunk {
+ 
+ 			// CraftBukkit start
+ 			// BlockSand.instaFall = true;
+-			Random random = new Random();
++			LightRandom random = new LightRandom();
+ 			random.setSeed(world.getSeed());
+ 			long xRand = random.nextLong() / 2L * 2L + 1L;
+ 			long zRand = random.nextLong() / 2L * 2L + 1L;
+diff --git a/src/main/java/net/minecraft/server/CommandSpreadPlayers.java b/src/main/java/net/minecraft/server/CommandSpreadPlayers.java
+index 018d646..3fbb65c 100644
+--- a/src/main/java/net/minecraft/server/CommandSpreadPlayers.java
++++ b/src/main/java/net/minecraft/server/CommandSpreadPlayers.java
+@@ -13,6 +13,7 @@ import javax.annotation.Nullable;
+ import com.google.common.collect.Lists;
+ import com.google.common.collect.Maps;
+ import com.google.common.collect.Sets;
++import com.mrpowergamerbr.utils.LightRandom;
+ 
+ public class CommandSpreadPlayers extends CommandAbstract {
+ 
+@@ -90,7 +91,7 @@ public class CommandSpreadPlayers extends CommandAbstract {
+ 	private void a(ICommandListener icommandlistener, List<Entity> list,
+ 			CommandSpreadPlayers.Location2D commandspreadplayers_location2d, double d0, double d1, World world,
+ 			boolean flag) throws CommandException {
+-		Random random = new Random();
++		LightRandom random = new LightRandom();
+ 		double d2 = commandspreadplayers_location2d.a - d1;
+ 		double d3 = commandspreadplayers_location2d.b - d1;
+ 		double d4 = commandspreadplayers_location2d.a + d1;
+diff --git a/src/main/java/net/minecraft/server/ContainerEnchantTable.java b/src/main/java/net/minecraft/server/ContainerEnchantTable.java
+index f2195f5..d3a95da 100644
+--- a/src/main/java/net/minecraft/server/ContainerEnchantTable.java
++++ b/src/main/java/net/minecraft/server/ContainerEnchantTable.java
+@@ -16,6 +16,8 @@ import org.bukkit.entity.Player;
+ import org.bukkit.event.enchantment.EnchantItemEvent;
+ import org.bukkit.event.enchantment.PrepareItemEnchantEvent;
+ 
++import com.mrpowergamerbr.utils.LightRandom;
++
+ public class ContainerEnchantTable extends Container {
+ 
+ 	// CraftBukkit - make type specific (changed from IInventory)
+@@ -38,7 +40,7 @@ public class ContainerEnchantTable extends Container {
+ 	};
+ 	private World world;
+ 	private BlockPosition position;
+-	private Random l = new Random();
++	private LightRandom l = new LightRandom();
+ 	public int f;
+ 	public int[] costs = new int[3];
+ 	public int[] h = new int[] { -1, -1, -1 };
+diff --git a/src/main/java/net/minecraft/server/EnchantmentManager.java b/src/main/java/net/minecraft/server/EnchantmentManager.java
+index 98e7714..8814546 100644
+--- a/src/main/java/net/minecraft/server/EnchantmentManager.java
++++ b/src/main/java/net/minecraft/server/EnchantmentManager.java
+@@ -13,9 +13,11 @@ import javax.annotation.Nullable;
+ import com.google.common.collect.Lists;
+ import com.google.common.collect.Maps;
+ 
++import com.mrpowergamerbr.utils.LightRandom;
++
+ public class EnchantmentManager {
+ 
+-	private static final Random a = new Random();
++	private static final LightRandom a = new LightRandom();
+ 	private static final EnchantmentManager.EnchantmentModifierProtection b = new EnchantmentManager.EnchantmentModifierProtection(
+ 			(EnchantmentManager.SyntheticClass_1) null);
+ 	private static final EnchantmentManager.EnchantmentModifierDamage c = new EnchantmentManager.EnchantmentModifierDamage(
+diff --git a/src/main/java/net/minecraft/server/Explosion.java b/src/main/java/net/minecraft/server/Explosion.java
+index 8ba759f..7880911 100644
+--- a/src/main/java/net/minecraft/server/Explosion.java
++++ b/src/main/java/net/minecraft/server/Explosion.java
+@@ -16,12 +16,13 @@ import org.bukkit.event.entity.EntityExplodeEvent;
+ 
+ import com.google.common.collect.Lists;
+ import com.google.common.collect.Sets;
++import com.mrpowergamerbr.utils.LightRandom;
+ 
+ public class Explosion {
+ 
+ 	private final boolean a;
+ 	private final boolean b;
+-	private final Random c = new Random();
++	private final LightRandom c = new LightRandom();
+ 	private final World world;
+ 	private final double posX;
+ 	private final double posY;
 diff --git a/src/main/java/net/minecraft/server/LoginListener.java b/src/main/java/net/minecraft/server/LoginListener.java
 index e7df757..50da499 100644
 --- a/src/main/java/net/minecraft/server/LoginListener.java
@@ -144,11 +282,41 @@ index e7df757..50da499 100644
  		}
  	}
  	// Spigot end
+diff --git a/src/main/java/net/minecraft/server/MathHelper.java b/src/main/java/net/minecraft/server/MathHelper.java
+index 33dede4..74262e0 100644
+--- a/src/main/java/net/minecraft/server/MathHelper.java
++++ b/src/main/java/net/minecraft/server/MathHelper.java
+@@ -3,7 +3,7 @@ package net.minecraft.server;
+ import java.util.Random;
+ import java.util.UUID;
+ 
+-import com.mrpowergamerbr.utils.LightRandom; // Torch
++import com.mrpowergamerbr.utils.LightRandom;
+ 
+ public class MathHelper {
+ 
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 614847a..5d244f4 100644
+index 614847a..7dc0f35 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
-@@ -386,7 +386,6 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+@@ -44,6 +44,7 @@ import com.mojang.authlib.GameProfile;
+ import com.mojang.authlib.GameProfileRepository;
+ import com.mojang.authlib.minecraft.MinecraftSessionService;
+ import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
++import com.mrpowergamerbr.utils.LightRandom;
+ 
+ // CraftBukkit end
+ import co.aikar.timings.MinecraftTimings; // Paper
+@@ -72,7 +73,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 	public final MethodProfiler methodProfiler = new MethodProfiler();
+ 	private ServerConnection p; // Spigot
+ 	private final ServerPing q = new ServerPing();
+-	private final Random r = new Random();
++	private final LightRandom r = new LightRandom();
+ 	private final DataConverterManager dataConverterManager;
+ 	private String serverIp;
+ 	private int u = -1;
+@@ -386,7 +387,6 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
  		// CraftBukkit end
  		this.v.setPlayerFileData(this.worldServer);
  		this.a(this.getDifficulty());
@@ -156,7 +324,7 @@ index 614847a..5d244f4 100644
  		this.l();
  	}
  
-@@ -934,9 +933,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+@@ -934,9 +934,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
  		MinecraftTimings.processQueueTimer.stopTiming(); // Spigot
  
  		MinecraftTimings.chunkIOTickTimer.startTiming(); // Spigot
@@ -168,33 +336,49 @@ index 614847a..5d244f4 100644
  
  		MinecraftTimings.timeUpdateTimer.startTiming(); // Spigot
 diff --git a/src/main/java/net/minecraft/server/MobSpawnerAbstract.java b/src/main/java/net/minecraft/server/MobSpawnerAbstract.java
-index ec0fa49..44c4fc2 100644
+index ec0fa49..4c3dc10 100644
 --- a/src/main/java/net/minecraft/server/MobSpawnerAbstract.java
 +++ b/src/main/java/net/minecraft/server/MobSpawnerAbstract.java
-@@ -45,6 +45,7 @@ public abstract class MobSpawnerAbstract {
- 																												// filter
+@@ -40,11 +40,9 @@ public abstract class MobSpawnerAbstract {
+ 
+ 		return this.a().isPlayerNearby(blockposition.getX() + 0.5D, blockposition.getY() + 0.5D,
+ 				blockposition.getZ() + 0.5D, this.requiredPlayerRange, EntityHuman.affectsSpawningFilter()); // Paper
+-																												// -
+-																												// affectsSpawning
+-																												// filter
  	}
  
 +	// Torch start
  	public void c() {
  		// Paper start - Configurable mob spawner tick rate
  		if (spawnDelay > 0 && --tickDelay > 0) {
-@@ -52,113 +53,60 @@ public abstract class MobSpawnerAbstract {
+@@ -52,113 +50,87 @@ public abstract class MobSpawnerAbstract {
  		}
  		tickDelay = this.a().paperConfig.mobSpawnerTickRate;
  		// Paper end
--		if (!this.h()) {
 +		
-+		if (this.spawnDelay < -tickDelay) { // Paper
-+            this.i();
-+        }
-+		if (this.spawnDelay > 0) {
-+            this.spawnDelay -= tickDelay; // Paper
+ 		if (!this.h()) {
+ 			this.e = this.d;
 +            return;
 +        }
-+        if (!this.h()) {
- 			this.e = this.d;
--		} else {
++		
++		World world = this.a();
++		BlockPosition blockposition = this.b();
++		
++		if (world.isClientSide) {
++            double d0 = (double) ((float) blockposition.getX() + world.random.nextFloat());
++            double d1 = (double) ((float) blockposition.getY() + world.random.nextFloat());
++            double d2 = (double) ((float) blockposition.getZ() + world.random.nextFloat());
++
++            world.addParticle(EnumParticle.SMOKE_NORMAL, d0, d1, d2, 0.0D, 0.0D, 0.0D, new int[0]);
++            world.addParticle(EnumParticle.FLAME, d0, d1, d2, 0.0D, 0.0D, 0.0D, new int[0]);
++            if (this.spawnDelay > 0) {
++				this.spawnDelay -= tickDelay; // Paper
++            }
++
++            this.e = this.d;
++            this.d = (this.d + (double) (1000.0F / ((float) this.spawnDelay + 200.0F))) % 360.0D;
+ 		} else {
 -			BlockPosition blockposition = this.b();
 -
 -			if (this.a().isClientSide) {
@@ -206,39 +390,42 @@ index ec0fa49..44c4fc2 100644
 -				this.a().addParticle(EnumParticle.FLAME, d0, d1, d2, 0.0D, 0.0D, 0.0D, new int[0]);
 -				if (this.spawnDelay > 0) {
 -					this.spawnDelay -= tickDelay; // Paper
--				}
++			if (this.spawnDelay < -tickDelay) { // Paper
++				this.i();
++			}
++			if (this.spawnDelay > 0) {
++				this.spawnDelay -= tickDelay; // Paper
++				return;
++			}
++			
++			for (int i = 0; i < this.spawnCount; ++i) {
++				NBTTagCompound nbttagcompound = this.spawnData.b();
++                NBTTagList nbttaglist = nbttagcompound.getList("Pos", 6);
++                int j = nbttaglist.size();
++                double d3 = j >= 1 ? nbttaglist.e(0) : (double) blockposition.getX() + (world.random.nextDouble() - world.random.nextDouble()) * (double) this.spawnRange + 0.5D;
++                double d4 = j >= 2 ? nbttaglist.e(1) : (double) (blockposition.getY() + world.random.nextInt(3) - 1);
++                double d5 = j >= 3 ? nbttaglist.e(2) : (double) blockposition.getZ() + (world.random.nextDouble() - world.random.nextDouble()) * (double) this.spawnRange + 0.5D;
++				Entity entity = ChunkRegionLoader.a(nbttagcompound, world, d3, d4, d5, false);
++
++				if (entity == null) {
++					return;
+ 				}
 -
 -				this.e = this.d;
 -				this.d = (this.d + 1000.0F / (this.spawnDelay + 200.0F)) % 360.0D;
 -			} else {
 -				if (this.spawnDelay < -tickDelay) { // Paper
--					this.i();
++			
++				int k = world.a(entity.getClass(), (new AxisAlignedBB(blockposition.getX(), blockposition.getY(), blockposition.getZ(), blockposition.getX() + 1, blockposition.getY() + 1, blockposition.getZ() + 1)).g(this.spawnRange)).size();
++			
++				if (k >= this.maxNearbyEntities) {
+ 					this.i();
 -				}
 -
 -				if (this.spawnDelay > 0) {
 -					this.spawnDelay -= tickDelay; // Paper
--					return;
--				}
-+            this.i();
-+            return;
-+        }
-+		
-+		World world = this.a();
-+		BlockPosition blockposition = this.b();
-+		
-+        for (int i = 0; i < this.spawnCount; ++i) {
-+            Entity entity = EntityTypes.createEntityByName(this.getMobName(), this.a());
-+			 
-+			if (entity == null) {
-+                return;
-+            }
-+			
-+			int k = world.a(entity.getClass(), (new AxisAlignedBB(blockposition.getX(), blockposition.getY(), blockposition.getZ(), blockposition.getX() + 1, blockposition.getY() + 1, blockposition.getZ() + 1)).g(this.spawnRange)).size();
-+			
-+			if (k >= this.maxNearbyEntities) {
-+				this.i();
-+				return;
-+			}
+ 					return;
+ 				}
  
 -				boolean flag = false;
 -
@@ -270,7 +457,19 @@ index ec0fa49..44c4fc2 100644
 -					if (k >= this.maxNearbyEntities) {
 -						this.i();
 -						return;
--					}
++				EntityInsentient entityinsentient = entity instanceof EntityInsentient ? (EntityInsentient) entity : null;
++				entity.setPositionRotation(entity.locX, entity.locY, entity.locZ, world.random.nextFloat() * 360.0F, 0.0F);
++				
++				if (entityinsentient == null || entityinsentient.cG() && entityinsentient.canSpawn()) {
++					
++					if (nbttagcompound.d() == 1 && nbttagcompound.hasKeyOfType("id", 8) && entity instanceof EntityInsentient) {
++                        entity.prepare(world.D(new BlockPosition(entity)), (GroupDataEntity) null);
++                    }
++					
++					// Spigot Start
++					if (entity.world.spigotConfig.nerfSpawnerMobs) {
++						entity.fromMobSpawner = true;
+ 					}
 -
 -					EntityInsentient entityinsentient = entity instanceof EntityInsentient ? (EntityInsentient) entity
 -							: null;
@@ -300,32 +499,26 @@ index ec0fa49..44c4fc2 100644
 -						}
 -
 -						flag = true;
--					}
-+            EntityInsentient entityinsentient = entity instanceof EntityInsentient ? (EntityInsentient) entity : null;
-+			entity.setPositionRotation(entity.locX, entity.locY, entity.locZ, world.random.nextFloat() * 360.0F, 0.0F);
-+			
-+            if (entityinsentient == null || entityinsentient.cG() && entityinsentient.canSpawn()) {
-+                // Spigot Start
-+				if (entity.world.spigotConfig.nerfSpawnerMobs) {
-+					entity.fromMobSpawner = true;
- 				}
++					if (org.bukkit.craftbukkit.event.CraftEventFactory.callSpawnerSpawnEvent(entity, blockposition).isCancelled()) {
++						continue;
+ 					}
+-				}
 -
 -				if (flag) {
 -					this.i();
-+				if (org.bukkit.craftbukkit.event.CraftEventFactory.callSpawnerSpawnEvent(entity, blockposition).isCancelled()) {
-+					continue;
- 				}
+-				}
 -				// Migot start
 -				else {
 -					this.spawnDelay += this.spawningPenalty;
 -					if (this.spawningPenalty < 40) {
 -						this.spawningPenalty++;
--					}
-+				// Spigot End
-+				ChunkRegionLoader.a(entity, world, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.SPAWNER); // CraftBukkit
-+                world.triggerEffect(2004, blockposition, 0);
-+                if (entityinsentient != null) {
-+                    entityinsentient.doSpawnEffect();
++					// Spigot End
++					
++					ChunkRegionLoader.a(entity, world, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.SPAWNER); // CraftBukkit
++					world.triggerEffect(2004, blockposition, 0);
++					if (entityinsentient != null) {
++						entityinsentient.doSpawnEffect();
+ 					}
  				}
 -				// Migot end
 -
@@ -594,6 +787,23 @@ index fa18fde..5ed6708 100644
  		}
  		// CraftBukkit end
  
+diff --git a/src/main/java/net/minecraft/server/TileEntityDispenser.java b/src/main/java/net/minecraft/server/TileEntityDispenser.java
+index 7037652..99f1947 100644
+--- a/src/main/java/net/minecraft/server/TileEntityDispenser.java
++++ b/src/main/java/net/minecraft/server/TileEntityDispenser.java
+@@ -10,9 +10,11 @@ import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+ import org.bukkit.entity.HumanEntity;
+ // CraftBukkit end
+ 
++import com.mrpowergamerbr.utils.LightRandom;
++
+ public class TileEntityDispenser extends TileEntityLootable implements IInventory {
+ 
+-	private static final Random f = new Random();
++	private static final LightRandom f = new LightRandom();
+ 	private ItemStack[] items = new ItemStack[9];
+ 	protected String a;
+ 
 diff --git a/src/main/java/net/minecraft/server/Village.java b/src/main/java/net/minecraft/server/Village.java
 index dcb66e6..a350816 100644
 --- a/src/main/java/net/minecraft/server/Village.java
@@ -633,6 +843,48 @@ index dcb66e6..a350816 100644
  		this.k = Lists.newArrayList();
  		this.a = world;
  	}
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index eefe729..eb0ad87 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -43,6 +43,7 @@ import com.google.common.collect.Lists;
+ import com.google.common.collect.Maps;
+ import com.google.common.collect.Queues;
+ import com.google.common.collect.Sets;
++import com.mrpowergamerbr.utils.LightRandom;
+ 
+ public abstract class World implements IBlockAccess {
+ 
+@@ -77,7 +78,7 @@ public abstract class World implements IBlockAccess {
+ 	protected final Map<Integer, Entity> entitiesById = new net.techcable.pineapple.collect.CopyOnWriteMap();
+ 	private long I = 16777215L;
+ 	private int J;
+-	protected int l = (new Random()).nextInt();
++	protected int l = (new LightRandom()).nextInt();
+ 	protected final int m = 1013904223;
+ 	protected float n;
+ 	protected float o;
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+index 2444650..cc0de59 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+@@ -129,6 +129,7 @@ import org.bukkit.potion.PotionType;
+ import org.bukkit.util.Vector;
+ 
+ import com.google.common.base.Preconditions;
++import com.mrpowergamerbr.utils.LightRandom;
+ 
+ import net.minecraft.server.*;
+ 
+@@ -149,7 +150,7 @@ public class CraftWorld implements World {
+ 	private int chunkLoadCount = 0;
+ 	private int chunkGCTickCount;
+ 
+-	private static final Random rand = new Random();
++	private static final LightRandom rand = new LightRandom();
+ 
+ 	public CraftWorld(WorldServer world, ChunkGenerator gen, Environment env) {
+ 		this.world = world;
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
 index 2271336..1db0295 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
@@ -659,6 +911,27 @@ index 2271336..1db0295 100644
  			getServer().getLogger().warning("Excessive velocity set detected: tried to set velocity of entity #"
  					+ getEntityId() + " to (" + vel.getX() + "," + vel.getY() + "," + vel.getZ() + ").");
  			Thread.dumpStack();
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftFirework.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftFirework.java
+index c0bd6ba..78d44ce 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftFirework.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftFirework.java
+@@ -10,6 +10,7 @@ import org.bukkit.entity.Firework;
+ import org.bukkit.inventory.meta.FireworkMeta;
+ 
+ import com.google.common.base.Optional;
++import com.mrpowergamerbr.utils.LightRandom;
+ 
+ import net.minecraft.server.EntityFireworks;
+ import net.minecraft.server.ItemStack;
+@@ -17,7 +18,7 @@ import net.minecraft.server.Items;
+ 
+ public class CraftFirework extends CraftEntity implements Firework {
+ 
+-	private final Random random = new Random();
++	private final LightRandom random = new LightRandom();
+ 	private final CraftItemStack item;
+ 
+ 	public CraftFirework(CraftServer server, EntityFireworks entity) {
 diff --git a/src/main/resources/configurations/migot.yml b/src/main/resources/configurations/migot.yml
 index c7428e6..70dc9bf 100644
 --- a/src/main/resources/configurations/migot.yml
