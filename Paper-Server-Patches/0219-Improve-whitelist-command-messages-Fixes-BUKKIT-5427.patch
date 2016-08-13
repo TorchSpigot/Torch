@@ -1,4 +1,4 @@
-From 23140405b5363f0c3d2f60ececb6d6521185a730 Mon Sep 17 00:00:00 2001
+From b0a33f292436542a7c5abcf8a309eedf3d0300db Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 7 Aug 2016 02:55:25 +0800
 Subject: [PATCH] Improve whitelist command messages - Fixes BUKKIT-5427
