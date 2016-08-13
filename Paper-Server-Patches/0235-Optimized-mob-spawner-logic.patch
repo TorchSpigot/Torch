@@ -1,4 +1,4 @@
-From e7347c6c654f0947caa4f761b46c991e3db319f1 Mon Sep 17 00:00:00 2001
+From d2695e0194a4e5448f6d538a9e70b6a3557d0a6e Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 13 Aug 2016 13:12:49 +0800
 Subject: [PATCH] Optimized mob spawner logic
@@ -354,7 +354,7 @@ index 327c8fd..dfd279b 100644
  
  public class NBTTagCompound extends NBTBase {
 diff --git a/src/main/java/net/minecraft/server/NetworkManager.java b/src/main/java/net/minecraft/server/NetworkManager.java
-index e71a6a9..36f3e8e 100644
+index e71a6a9..85a2184 100644
 --- a/src/main/java/net/minecraft/server/NetworkManager.java
 +++ b/src/main/java/net/minecraft/server/NetworkManager.java
 @@ -157,35 +157,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
@@ -489,7 +489,7 @@ index e71a6a9..36f3e8e 100644
 -		synchronized (this) {
 -			this.m();
 -		}
-+		this.m();
++		synchronized (this) { this.m(); }
  		if (this.m instanceof ITickable) {
  			((ITickable) this.m).c();
  		}
