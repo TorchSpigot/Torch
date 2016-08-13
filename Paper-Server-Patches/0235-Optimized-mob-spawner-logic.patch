@@ -1,9 +1,77 @@
-From 720e65f9cf99caf97f76d81e49c0c72d0c4ff80f Mon Sep 17 00:00:00 2001
+From 8bc0fec5649dd375e441fcdd6e9d863eda67cba0 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 13 Aug 2016 13:12:49 +0800
 Subject: [PATCH] Optimized mob spawner logic
 
 
+diff --git a/src/main/java/net/minecraft/server/LoginListener.java b/src/main/java/net/minecraft/server/LoginListener.java
+index e7df757..50da499 100644
+--- a/src/main/java/net/minecraft/server/LoginListener.java
++++ b/src/main/java/net/minecraft/server/LoginListener.java
+@@ -77,12 +77,6 @@ public class LoginListener implements PacketLoginInListener, ITickable {
+ 	}
+ 
+ 	public void disconnect(String s) {
+-		// Torch start - postpone disconnect until after pre-login event
+-		if (!this.preLoginEventFired) {
+-			this.disconnectReason = s;
+-			return;
+-		}
+-		// Torch end
+ 		try {
+ 			LoginListener.c.info("Disconnecting " + this.d() + ": " + s);
+ 			ChatComponentText chatcomponenttext = new ChatComponentText(s);
+@@ -257,17 +251,15 @@ public class LoginListener implements PacketLoginInListener, ITickable {
+ 						if (LoginListener.this.i != null) {
+ 							// CraftBukkit start - fire PlayerPreLoginEvent
+ 							if (!networkManager.isConnected()) {
+-								return; // Ensure player is still connected
+-							}
+-							LoginListener.c.info("UUID of player " + LoginListener.this.i.getName() + " is "
+-									+ LoginListener.this.i.getId());
+-							// new LoginHandler().fireEvents(); // Torch - use
++                                return;
++                            }
++
++                            new LoginHandler().fireEvents();
+ 							// our call event
+ 						} else if (LoginListener.this.server.R()) {
+ 							LoginListener.c.warn("Failed to verify username but will let them in anyway!");
+ 							LoginListener.this.i = LoginListener.this.a(gameprofile);
+-							// LoginListener.this.g =
+-							// LoginListener.EnumProtocolState.READY_TO_ACCEPT;
++							LoginListener.this.g = LoginListener.EnumProtocolState.READY_TO_ACCEPT;
+ 						} else {
+ 							LoginListener.this.disconnect("Failed to verify username!");
+ 							LoginListener.c.error(
+@@ -281,8 +273,7 @@ public class LoginListener implements PacketLoginInListener, ITickable {
+ 						if (LoginListener.this.server.R()) {
+ 							LoginListener.c.warn("Authentication servers are down but will let them in anyway!");
+ 							LoginListener.this.i = LoginListener.this.a(gameprofile);
+-							// LoginListener.this.g =
+-							// LoginListener.EnumProtocolState.READY_TO_ACCEPT;
++							LoginListener.this.g = LoginListener.EnumProtocolState.READY_TO_ACCEPT;
+ 						} else {
+ 							LoginListener.this
+ 									.disconnect("Authentication servers are down. Please try again later, sorry!");
+@@ -296,7 +287,6 @@ public class LoginListener implements PacketLoginInListener, ITickable {
+ 						// CraftBukkit end
+ 					}
+ 
+-					callPreLoginEvent(); // Torch
+ 				}
+ 			}).start();
+ 		}
+@@ -394,8 +384,7 @@ public class LoginListener implements PacketLoginInListener, ITickable {
+ 			// CraftBukkit end
+ 			LoginListener.c
+ 					.info("UUID of player " + LoginListener.this.i.getName() + " is " + LoginListener.this.i.getId());
+-			// LoginListener.this.g =
+-			// LoginListener.EnumProtocolState.READY_TO_ACCEPT;
++			LoginListener.this.g = LoginListener.EnumProtocolState.READY_TO_ACCEPT;
+ 		}
+ 	}
+ 	// Spigot end
 diff --git a/src/main/java/net/minecraft/server/MobSpawnerAbstract.java b/src/main/java/net/minecraft/server/MobSpawnerAbstract.java
 index ec0fa49..44c4fc2 100644
 --- a/src/main/java/net/minecraft/server/MobSpawnerAbstract.java
@@ -178,6 +246,43 @@ index ec0fa49..44c4fc2 100644
  
  	private void i() {
  		if (this.maxSpawnDelay <= this.minSpawnDelay) {
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index fa18fde..016616a 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -400,13 +400,6 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+ 				// d10 = d6 * d6 + d7 * d7 + d8 * d8;
+ 				boolean flag1 = false;
+ 
+-				/*
+-				 * if (d10 > org.spigotmc.SpigotConfig.movedWronglyThreshold) {
+-				 * // Spigot flag1 = true;
+-				 * PlayerConnection.LOGGER.warn(entity.getName() +
+-				 * " moved wrongly!"); }
+-				 */
+-
+ 				entity.setLocation(d3, d4, d5, f, f1);
+ 				boolean flag2 = worldserver.getCubes(entity, entity.getBoundingBox().shrink(0.0625D)).isEmpty();
+ 
+@@ -656,18 +649,6 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+ 						// d11 = d7 * d7 + d8 * d8 + d9 * d9;
+ 						boolean flag1 = false;
+ 
+-						/*
+-						 * if (!this.player.K() && d11 >
+-						 * org.spigotmc.SpigotConfig.movedWronglyThreshold &&
+-						 * !this.player.isSleeping() &&
+-						 * !this.player.playerInteractManager.isCreative() &&
+-						 * this.player.playerInteractManager.getGameMode() !=
+-						 * WorldSettings.EnumGamemode.SPECTATOR) { // Spigot
+-						 * flag1 = true;
+-						 * PlayerConnection.LOGGER.warn(this.player.getName() +
+-						 * " moved wrongly!"); }
+-						 */
+-
+ 						this.player.setLocation(d4, d5, d6, f, f1);
+ 						this.player.checkMovement(this.player.locX - d0, this.player.locY - d1, this.player.locZ - d2);
+ 						if (!this.player.noclip && !this.player.isSleeping()) {
 -- 
 2.8.2.windows.1
 
