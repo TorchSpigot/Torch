@@ -1,0 +1,55 @@
+From a5027038d242a8ef8a41f535f090de2194f0f629 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 15 Aug 2016 03:51:21 +0800
+Subject: [PATCH] Configurable mob spawner modify
+
+
+diff --git a/src/main/java/de/minetick/MigotConfig.java b/src/main/java/de/minetick/MigotConfig.java
+index 91866d3..b34c583 100644
+--- a/src/main/java/de/minetick/MigotConfig.java
++++ b/src/main/java/de/minetick/MigotConfig.java
+@@ -56,6 +56,7 @@ public class MigotConfig {
+ 		requisiteMods = configuration.getStringList("fml.requisite-mods");
+ 		kickInfo = configuration.getString("fml.kick-info", "Mod {MOD} is not allwoed in the server!");
+ 		enableVelocityWarning = configuration.getBoolean("settings.enable-velocity-warn", true);
++		disableSpawnerModify = configuration.getBoolean("world-settings.disable-mob-spanwer-modify", false);
+ 	}
+ 
+ 	private FileConfiguration loadConfig(File file) throws IOException, InvalidConfigurationException {
+@@ -93,5 +94,7 @@ public class MigotConfig {
+ 	public static boolean disableSleepChecking;
+ 	// Velocity warnings
+ 	public static boolean enableVelocityWarning;
++	// Spawner modify
++	public static boolean disableSpawnerModify;
+ 
+ }
+\ No newline at end of file
+diff --git a/src/main/java/net/minecraft/server/ItemMonsterEgg.java b/src/main/java/net/minecraft/server/ItemMonsterEgg.java
+index 1875d88..b1b0d72 100644
+--- a/src/main/java/net/minecraft/server/ItemMonsterEgg.java
++++ b/src/main/java/net/minecraft/server/ItemMonsterEgg.java
+@@ -35,7 +35,7 @@ public class ItemMonsterEgg extends Item {
+ 			if (iblockdata.getBlock() == Blocks.MOB_SPAWNER) {
+ 				TileEntity tileentity = world.getTileEntity(blockposition);
+ 
+-				if (tileentity instanceof TileEntityMobSpawner) {
++				if (tileentity instanceof TileEntityMobSpawner && !de.minetick.MigotConfig.disableSpawnerModify) {
+ 					MobSpawnerAbstract mobspawnerabstract = ((TileEntityMobSpawner) tileentity).getSpawner();
+ 
+ 					mobspawnerabstract.setMobName(h(itemstack));
+diff --git a/src/main/resources/configurations/migot.yml b/src/main/resources/configurations/migot.yml
+index 70dc9bf..82f76f5 100644
+--- a/src/main/resources/configurations/migot.yml
++++ b/src/main/resources/configurations/migot.yml
+@@ -10,6 +10,7 @@ settings:
+   enable-velocity-warn: true
+ world-settings:
+   disable-sleep-checking: false
++  disable-mob-spanwer-modify: false
+ fml:
+   enable-fml-monitor: false
+   disabled-mods: {}
+-- 
+2.8.2.windows.1
+
