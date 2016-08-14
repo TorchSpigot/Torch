@@ -1,11 +1,11 @@
-From c87cdd875875245803c6a4c6f03a9f0ecba3a4ee Mon Sep 17 00:00:00 2001
+From 1e0f902398dbc370fc93f778a34c5e172cc3d264 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Wed, 27 Jul 2016 08:44:54 +0800
 Subject: [PATCH] Add Command targets and Command utilities
 
 
 diff --git a/pom.xml b/pom.xml
-index b02927a..9a5620a 100644
+index 8c79f0c..3ed68b7 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -65,13 +65,13 @@

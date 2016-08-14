@@ -1,4 +1,4 @@
-From 6723a8ab648d109c7d8d315a6535995b1e4717b0 Mon Sep 17 00:00:00 2001
+From b0a72fe066edb7f4626fc2ceb9c5440cb1a5fa22 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 5 Aug 2016 13:21:30 +0800
 Subject: [PATCH] Fix hashCode and equals in BlockVector

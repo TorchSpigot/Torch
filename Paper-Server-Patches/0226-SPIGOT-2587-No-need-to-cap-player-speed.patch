@@ -1,4 +1,4 @@
-From b8744fa4ab9016ba012dcf21af0822c9fb55c938 Mon Sep 17 00:00:00 2001
+From 1a3111161c7fea173c61cdb1b95e3ece998f0da9 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 13 Aug 2016 02:34:59 +0800
 Subject: [PATCH] SPIGOT-2587: No need to cap player speed

@@ -1,11 +1,11 @@
-From f717f18fcf5890099fd0deaed597c1fc0dcda3f7 Mon Sep 17 00:00:00 2001
+From 25f7ed29ba0bb2bb16796299312f581effe6875e Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 6 Aug 2016 02:17:13 +0800
 Subject: [PATCH] Concurrent linked hash map cache
 
 
 diff --git a/pom.xml b/pom.xml
-index 247f61c..510a5c2 100644
+index b73b85a..2c92c40 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -91,6 +91,24 @@
