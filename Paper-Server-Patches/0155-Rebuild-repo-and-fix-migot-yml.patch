@@ -1,0 +1,29 @@
+From b5f80a49411d1cc5d156b01356396642727b7088 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Thu, 21 Jul 2016 03:26:29 +0800
+Subject: [PATCH] Rebuild repo and fix migot yml
+
+
+diff --git a/src/main/resources/configurations/bukkit.yml b/src/main/resources/configurations/bukkit.yml
+index 8bbb835..2533219 100644
+--- a/src/main/resources/configurations/bukkit.yml
++++ b/src/main/resources/configurations/bukkit.yml
+@@ -11,7 +11,6 @@
+ # Forums: http://www.spigotmc.org/
+ # Bug tracker: http://www.spigotmc.org/go/bugs
+ 
+-
+ settings:
+     allow-end: true
+     warn-on-overload: true
+diff --git a/src/main/resources/configurations/migot.yml b/src/main/resources/configurations/migot.yml
+index 2c1ee6b..e6b9f73 100644
+--- a/src/main/resources/configurations/migot.yml
++++ b/src/main/resources/configurations/migot.yml
+@@ -1,2 +1 @@
+-general-settings:
+ auto-save: false
+\ No newline at end of file
+-- 
+2.8.2.windows.1
+

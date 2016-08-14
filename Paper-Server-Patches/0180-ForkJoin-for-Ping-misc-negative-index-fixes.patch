@@ -1,0 +1,317 @@
+From dcaf9d7482607777f861332cf4d8cb572068cd83 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 25 Jul 2016 21:56:52 +0800
+Subject: [PATCH] ForkJoin for Ping, misc negative index fixes
+
+
+diff --git a/src/main/java/de/minetick/MigotConfig.java b/src/main/java/de/minetick/MigotConfig.java
+index 52e0f9c..b55597a 100644
+--- a/src/main/java/de/minetick/MigotConfig.java
++++ b/src/main/java/de/minetick/MigotConfig.java
+@@ -19,7 +19,6 @@ public class MigotConfig {
+     private final Logger logger = LogManager.getLogger();
+     private File configFile;
+     private FileConfiguration configuration;
+-	
+ 
+     public MigotConfig(File configFile) throws IOException, InvalidConfigurationException {
+         this.configFile = configFile;
+@@ -27,7 +26,7 @@ public class MigotConfig {
+         try {
+             this.configuration.save(configFile);
+         } catch(IOException e) {
+-            logger.error("[Torch] Could not save config file migot.yml!");
++            logger.error("Could not save config file migot.yml!");
+             logger.error(e.toString());
+         }
+ 
+@@ -44,7 +43,8 @@ public class MigotConfig {
+     }
+ 
+     private void loadConfigContent() {
+-		
++		AutoSaveEnabled = configuration.getBoolean("settings.auto-save", false);
++		ForkPingEnabled = configuration.getBoolean("settings.fork-ping", false);
+     }
+ 
+     private FileConfiguration loadConfig(File file) throws IOException, InvalidConfigurationException {
+@@ -65,7 +65,13 @@ public class MigotConfig {
+         return config;
+     }
+ 	
++	boolean AutoSaveEnabled = false;
+ 	public boolean getAutoSaveEnabled() {
+-        return configuration.getBoolean("auto-save", false);
++        return AutoSaveEnabled;
++    }
++	
++	boolean ForkPingEnabled = false;
++	public boolean getForkPingEnabled() {
++        return ForkPingEnabled;
+     }
+ }
+\ No newline at end of file
+diff --git a/src/main/java/net/minecraft/server/ChunkProviderServer.java b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+index 1623d40..f3a2192 100644
+--- a/src/main/java/net/minecraft/server/ChunkProviderServer.java
++++ b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+@@ -177,19 +177,13 @@ public class ChunkProviderServer implements IChunkProvider {
+         Chunk chunk = getChunkIfLoaded(i, j);
+         IChunkLoader loader = this.chunkLoader;
+ 
+-		/*
+-        if (this.chunkLoader instanceof ChunkRegionLoader) {
+-            loader = (ChunkRegionLoader) this.chunkLoader;
+-
+-        }
+-		*/
+         // We can only use the queue for already generated chunks
+         if (chunk == null && loader != null && loader.chunkExists(world, i, j)) {
+             if (runnable != null) {
+                 ChunkIOExecutor.queueChunkLoad(world, loader, this, i, j, runnable);
+                 return null;
+             } else {
+-				synchronized(this) {
++                synchronized(this) {
+ 					chunk = ChunkIOExecutor.syncChunkLoad(world, loader, this, i, j);
+ 				}
+             }
+@@ -207,7 +201,7 @@ public class ChunkProviderServer implements IChunkProvider {
+ 
+     public Chunk originalGetChunkAt(int i, int j) {
+         Chunk chunk = this.originalGetOrLoadChunkAt(i, j);
+-        boolean newChunk = false;
++		boolean newChunk = false;
+         // CraftBukkit end
+ 
+         if (chunk == null) {
+diff --git a/src/main/java/net/minecraft/server/PacketStatusInPing.java b/src/main/java/net/minecraft/server/PacketStatusInPing.java
+new file mode 100644
+index 0000000..d4cc5a9
+--- /dev/null
++++ b/src/main/java/net/minecraft/server/PacketStatusInPing.java
+@@ -0,0 +1,49 @@
++package net.minecraft.server;
++
++import java.io.IOException;
++import java.util.concurrent.RecursiveAction;
++import de.minetick.Migot;
++
++public class PacketStatusInPing implements Packet<PacketStatusInListener> {
++
++    private long a;
++
++    public PacketStatusInPing() {}
++
++    public void a(PacketDataSerializer packetdataserializer) throws IOException {
++        this.a = packetdataserializer.readLong();
++    }
++
++    public void b(PacketDataSerializer packetdataserializer) throws IOException {
++        packetdataserializer.writeLong(this.a);
++    }
++	
++	class InTask extends RecursiveAction {
++		PacketStatusInListener packetstatusinlistener;
++
++        InTask(PacketStatusInListener packetstatusinlistener) {
++			this.packetstatusinlistener = packetstatusinlistener;
++		}
++
++        @Override
++        protected void compute() {
++            a_task(packetstatusinlistener);
++        }
++
++    }
++
++    public void a(PacketStatusInListener packetstatusinlistener) {
++		if (Migot.getConfig().getForkPingEnabled()) {
++			InTask a_task = new InTask(packetstatusinlistener);
++			a_task.fork();
++		} else { packetstatusinlistener.a(this); }
++    }
++	
++	public void a_task(PacketStatusInListener packetstatusinlistener) {
++        packetstatusinlistener.a(this);
++    }
++
++    public long a() {
++        return this.a;
++    }
++}
+diff --git a/src/main/java/net/minecraft/server/PacketStatusInStart.java b/src/main/java/net/minecraft/server/PacketStatusInStart.java
+new file mode 100644
+index 0000000..76753cf
+--- /dev/null
++++ b/src/main/java/net/minecraft/server/PacketStatusInStart.java
+@@ -0,0 +1,40 @@
++package net.minecraft.server;
++
++import java.io.IOException;
++import java.util.concurrent.RecursiveAction;
++import de.minetick.Migot;
++
++public class PacketStatusInStart implements Packet<PacketStatusInListener> {
++
++    public PacketStatusInStart() {}
++
++    public void a(PacketDataSerializer packetdataserializer) throws IOException {}
++
++    public void b(PacketDataSerializer packetdataserializer) throws IOException {}
++	
++	class InTask extends RecursiveAction {
++		PacketStatusInListener packetstatusinlistener;
++
++        InTask(PacketStatusInListener packetstatusinlistener) {
++			this.packetstatusinlistener = packetstatusinlistener;
++		}
++
++        @Override
++        protected void compute() {
++            a_task(packetstatusinlistener);
++        }
++
++    }
++	
++    public void a(PacketStatusInListener packetstatusinlistener) {
++		if (Migot.getConfig().getForkPingEnabled()) {
++			InTask a_task = new InTask(packetstatusinlistener);
++			a_task.fork();
++		} else { packetstatusinlistener.a(this); }
++    }
++	
++    public void a_task(PacketStatusInListener packetstatusinlistener) {
++        packetstatusinlistener.a(this);
++    }
++	
++}
+diff --git a/src/main/java/net/minecraft/server/RegionFile.java b/src/main/java/net/minecraft/server/RegionFile.java
+index 3eca711..9fe8e9c 100644
+--- a/src/main/java/net/minecraft/server/RegionFile.java
++++ b/src/main/java/net/minecraft/server/RegionFile.java
+@@ -3,7 +3,8 @@ package net.minecraft.server;
+ import com.destroystokyo.paper.exception.ServerInternalException;
+ import com.google.common.collect.Lists;
+ 
+-/* // Torch start
++// Torch start
++/*
+ import java.io.BufferedInputStream;
+ import java.io.BufferedOutputStream;
+ import java.io.ByteArrayInputStream;
+@@ -90,23 +91,36 @@ public class RegionFile {
+             this.c.seek(0L);
+ 
+             int k;
+-
++			// Paper Start
++            ByteBuffer header = ByteBuffer.allocate(8192);
++            while (header.hasRemaining())  {
++                if (this.c.getChannel().read(header) == -1) throw new EOFException();
++            }
++            header.clear();
++            IntBuffer headerAsInts = header.asIntBuffer();
++            // Paper End
+             for (j = 0; j < 1024; ++j) {
+-                k = this.c.readInt();
++                k = headerAsInts.get(); // Paper
++				// System.out.println("k1: " + k);
+                 this.d[j] = k;
+-                if (k != 0 && (k >> 8) + (k & 255) <= this.f.size()) {
++				
++                if (k > 0 && (k >> 8) + (k & 255) <= this.f.size()) { // Torch
++					// System.out.println("k2: " + k);
+                     for (int l = 0; l < (k & 255); ++l) {
++						// System.out.println("k3: " + k);
++						// System.out.println("l: " + l);
+                         this.f.set((k >> 8) + l, Boolean.valueOf(false));
+                     }
+                 }
+             }
+ 
+             for (j = 0; j < 1024; ++j) {
+-                k = this.c.readInt();
++                k = headerAsInts.get(); // Paper
+                 this.e[j] = k;
+             }
+         } catch (IOException ioexception) {
+             ioexception.printStackTrace();
++			ServerInternalException.reportInternalException(ioexception); // Paper
+         }
+ 
+     }
+diff --git a/src/main/java/org/bukkit/command/defaults/GCCommand.java b/src/main/java/org/bukkit/command/defaults/GCCommand.java
+index b5ac6d9..30b7c32 100644
+--- a/src/main/java/org/bukkit/command/defaults/GCCommand.java
++++ b/src/main/java/org/bukkit/command/defaults/GCCommand.java
+@@ -10,6 +10,7 @@ import org.bukkit.command.CommandSender;
+ import org.bukkit.entity.Player;
+ import org.bukkit.util.StringUtil;
+ 
++import java.util.concurrent.RecursiveAction;
+ import java.util.ArrayList;
+ import java.util.Collections;
+ import java.util.List;
+@@ -26,18 +27,30 @@ public class GCCommand extends VanillaCommand {
+ 
+     @Override
+     public boolean execute(CommandSender sender, String currentAlias, String[] args) {
+-        if (!testPermission(sender)) return true;
+-
+-		long m1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+-        System.gc();
+-        System.runFinalization();
+-        long m2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+-        if (m2 < m1)
+-			sender.sendMessage(
+-			ChatColor.GOLD + "GC - Cleaned " + ChatColor.GREEN + ((m1 - m2) / 1024L / 1024L) + "MB" + ChatColor.GOLD + " memory.");
+-          else
+-            sender.sendMessage(ChatColor.GOLD + "GC - Memory not require clean now.");
+-
++        if (!testPermission(sender)) { return true; }
++		
++		GCTask task = new GCTask(sender);
++		task.fork();
++		
+         return true;
+     }
++	
++	public void task(CommandSender sender) {
++		long m1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
++		System.gc(); System.runFinalization();
++		long m2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
++				
++		if (m2 < m1) { sender.sendMessage(ChatColor.GOLD + "GC - Cleaned " + ChatColor.GREEN + ((m1 - m2) / 1024L / 1024L) + "MB" + ChatColor.GOLD + " memory."); }
++		else { sender.sendMessage(ChatColor.GOLD + "GC - Memory not require clean now."); }
++	}
++	
++	class GCTask extends RecursiveAction {
++		CommandSender sender;
++        GCTask(CommandSender sender) { this.sender = sender; }
++        
++        @Override
++        protected void compute() {
++            task(sender);
++        }
++    }
+ }
+diff --git a/src/main/resources/configurations/migot.yml b/src/main/resources/configurations/migot.yml
+index e6b9f73..444a7c6 100644
+--- a/src/main/resources/configurations/migot.yml
++++ b/src/main/resources/configurations/migot.yml
+@@ -1 +1,8 @@
+-auto-save: false
+\ No newline at end of file
++# This is the main configuration file for Migot by @Poweruser.
++# NOTICE: There are some changes by Torch.
++# 
++# ( GH: https://github.com/Poweruser/Migot )
++
++settings:
++  auto-save: false
++  fork-ping: false
+\ No newline at end of file
+-- 
+2.8.2.windows.1
+

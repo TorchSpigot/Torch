@@ -1,0 +1,22 @@
+From aa611ce715087d6c89ac2abca6f0dafdf83b9d76 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 1 Aug 2016 05:13:56 +0800
+Subject: [PATCH] Fix entity tracking when the player is the vehicle
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityTrackerEntry.java b/src/main/java/net/minecraft/server/EntityTrackerEntry.java
+index 8c59e15..8c5a219 100644
+--- a/src/main/java/net/minecraft/server/EntityTrackerEntry.java
++++ b/src/main/java/net/minecraft/server/EntityTrackerEntry.java
+@@ -487,7 +487,7 @@ public class EntityTrackerEntry {
+         return false;
+     }
+     private static boolean isTrackedBy(Entity entity, EntityPlayer entityplayer) {
+-        return entity.tracker != null && entity.tracker.trackedPlayers.contains(entityplayer);
++        return entity == entityplayer || entity.tracker != null && entity.tracker.trackedPlayers.contains(entityplayer);
+     }
+     private void updatePassengers(EntityPlayer player) {
+         if (tracker.isVehicle()) {
+-- 
+2.8.2.windows.1
+

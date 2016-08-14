@@ -1,0 +1,225 @@
+From a2fa318112a1990570e73c6285b2cb7ea62da43f Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 25 Jul 2016 19:21:43 +0800
+Subject: [PATCH] Adds the ability to store hidden metadata in item lore
+
+
+diff --git a/src/main/java/com/domnian/paperdragon/DragonWorldConfig.java b/src/main/java/com/domnian/paperdragon/DragonWorldConfig.java
+new file mode 100644
+index 0000000..c462821
+--- /dev/null
++++ b/src/main/java/com/domnian/paperdragon/DragonWorldConfig.java
+@@ -0,0 +1,79 @@
++package com.domnian.paperdragon;
++
++import com.destroystokyo.paper.PaperConfig;
++import com.destroystokyo.paper.PaperWorldConfig;
++import org.bukkit.Bukkit;
++import org.bukkit.configuration.file.YamlConfiguration;
++import org.spigotmc.SpigotWorldConfig;
++
++import java.util.List;
++
++public class DragonWorldConfig {
++
++    private final String worldName;
++    private final SpigotWorldConfig spigotConfig;
++    private final PaperWorldConfig paperConfig;
++    private final YamlConfiguration config;
++    private boolean verbose;
++
++    public DragonWorldConfig(String worldName, SpigotWorldConfig spigotConfig, PaperWorldConfig paperConfig) {
++        this.worldName = worldName;
++        this.spigotConfig = spigotConfig;
++        this.paperConfig = paperConfig;
++        this.config = DragonConfig.config;
++        init();
++    }
++
++    public void init() {
++        this.verbose = getBoolean("verbose", false);
++
++        log("-------- World Settings For [" + worldName + "] --------");
++        DragonConfig.readConfig(DragonWorldConfig.class, this);
++    }
++
++    private void log(String s) {
++        if (verbose) {
++            Bukkit.getLogger().info(s);
++        }
++    }
++
++    private void set(String path, Object val) {
++        config.set("world-settings.default." + path, val);
++        if (config.get("world-settings." + worldName + "." + path) != null) {
++            config.set("world-settings." + worldName + "." + path, val);
++        }
++    }
++
++    private boolean getBoolean(String path, boolean def) {
++        config.addDefault("world-settings.default." + path, def);
++        return config.getBoolean("world-settings." + worldName + "." + path, config.getBoolean("world-settings.default." + path));
++    }
++
++    private double getDouble(String path, double def) {
++        config.addDefault("world-settings.default." + path, def);
++        return config.getDouble("world-settings." + worldName + "." + path, config.getDouble("world-settings.default." + path));
++    }
++
++    private int getInt(String path, int def) {
++        config.addDefault("world-settings.default." + path, def);
++        return config.getInt("world-settings." + worldName + "." + path, config.getInt("world-settings.default." + path));
++    }
++
++    private float getFloat(String path, float def) {
++        // TODO: Figure out why getFloat() always returns the default value.
++        return (float) getDouble(path, (double) def);
++    }
++
++    private <T> List getList(String path, T def) {
++        config.addDefault("world-settings.default." + path, def);
++        return (List<T>) config.getList("world-settings." + worldName + "." + path, config.getList("world-settings.default." + path));
++    }
++
++    private String getString(String path, String def) {
++        config.addDefault("world-settings.default." + path, def);
++        return config.getString("world-settings." + worldName + "." + path, config.getString("world-settings.default." + path));
++    }
++
++    // TODO Add New Settings!! :D
++
++}
+\ No newline at end of file
+diff --git a/src/main/java/com/domnian/paperdragon/HiddenItemMeta.java b/src/main/java/com/domnian/paperdragon/HiddenItemMeta.java
+new file mode 100644
+index 0000000..45c3ab9
+--- /dev/null
++++ b/src/main/java/com/domnian/paperdragon/HiddenItemMeta.java
+@@ -0,0 +1,52 @@
++package com.domnian.paperdragon;
++
++import net.minecraft.server.NBTTagCompound;
++import net.minecraft.server.NBTTagList;
++import net.minecraft.server.NBTTagString;
++
++public class HiddenItemMeta {
++    public static NBTTagCompound filterItemLore(NBTTagCompound nbttagcompound, boolean storeOriginal) {
++        if (nbttagcompound != null && nbttagcompound.hasKey("display")) {
++            NBTTagCompound display = nbttagcompound.getCompound("display");
++            if (display.hasKey("Lore")) {
++                NBTTagList lore = display.getList("Lore", 8);
++                int lastLine = 0;
++                boolean hasSpecial = false;
++                boolean hasShiny = false;
++                for (int i = 0; i < lore.size(); i++) {
++                    String line = lore.getString(i);
++
++                    if (line.equals("&&::META")) {
++                        hasSpecial = true;
++                        break;
++                    } else if (!line.isEmpty()) {
++                        if (line.equals("&&::SHINY")) {
++                            hasShiny = true;
++                            hasSpecial = true;
++                            break;
++                        } else {
++                            lastLine = i+1;
++                        }
++                    }
++                }
++                if (hasSpecial) {
++                    NBTTagList newlore = new NBTTagList();
++                    for (int x = 0; x < lastLine; x++) {
++                        newlore.add(new NBTTagString(lore.getString(x)));
++                    }
++
++                    nbttagcompound = (NBTTagCompound) nbttagcompound.clone();
++                    if (hasShiny && !nbttagcompound.hasKey("ench")) {
++                        nbttagcompound.set("ench" , new NBTTagList());
++                    }
++                    display = nbttagcompound.getCompound("display");
++                    display.set("Lore", newlore);
++                    if (storeOriginal) {
++                        display.set("OriginalLore", lore);
++                    }
++                }
++            }
++        }
++        return nbttagcompound;
++    }
++}
+\ No newline at end of file
+diff --git a/src/main/java/net/minecraft/server/ItemStack.java b/src/main/java/net/minecraft/server/ItemStack.java
+index b5057bb..ed9fd93 100644
+--- a/src/main/java/net/minecraft/server/ItemStack.java
++++ b/src/main/java/net/minecraft/server/ItemStack.java
+@@ -30,7 +30,7 @@ public final class ItemStack {
+     public int count;
+     public int c;
+     private Item item;
+-    private NBTTagCompound tag;
++    public NBTTagCompound tag; // PaperDragon - Import Patch From EMC
+     private int damage;
+     private EntityItemFrame g;
+     private Block h;
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 4d6e739..cd93c15 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -22,6 +22,7 @@ import org.apache.logging.log4j.Logger;
+ import org.bukkit.craftbukkit.Main;
+ import org.bukkit.craftbukkit.chunkio2.impl.CraftNBTStorage;
+ import de.minetick.Migot;
++import com.domnian.paperdragon.DragonConfig;
+ 
+ // Migot start
+ import de.minetick.AutoSaveJob;
+diff --git a/src/main/java/net/minecraft/server/PacketDataSerializer.java b/src/main/java/net/minecraft/server/PacketDataSerializer.java
+index 255c728..102f8d7 100644
+--- a/src/main/java/net/minecraft/server/PacketDataSerializer.java
++++ b/src/main/java/net/minecraft/server/PacketDataSerializer.java
+@@ -260,6 +260,7 @@ public class PacketDataSerializer extends ByteBuf {
+                 CraftItemStack.setItemMeta(itemstack, CraftItemStack.getItemMeta(itemstack));
+                 // Spigot end
+                 nbttagcompound = itemstack.getTag();
++				nbttagcompound = com.domnian.paperdragon.HiddenItemMeta.filterItemLore(nbttagcompound, true); // PaperDragon - Import Patch From EMC
+             }
+ 
+             this.a(nbttagcompound);
+@@ -281,6 +282,21 @@ public class PacketDataSerializer extends ByteBuf {
+             itemstack.setTag(this.j());
+             // CraftBukkit start
+             if (itemstack.getTag() != null) {
++				// PaperDragon start - Import Patch From EMC - get around creative menu having ultimate control of the NBT...
++                if (itemstack.tag.hasKey("display")) {
++                    NBTTagCompound display = itemstack.tag.getCompound("display");
++                    if (display.hasKey("OriginalLore")) {
++                        display.set("Lore", display.getList("OriginalLore", 8));
++                        display.remove("OriginalLore");
++                    }
++                }
++                // If shiny was used
++                if (itemstack.tag.hasKey("ench")) {
++                    if (itemstack.tag.getList("ench", 10).isEmpty()) {
++                        itemstack.tag.remove("ench");
++                    }
++                }
++                // PaperDragon end
+                 CraftItemStack.setItemMeta(itemstack, CraftItemStack.getItemMeta(itemstack));
+             }
+             // CraftBukkit end
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index d2b1671..3d35e09 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -1878,7 +1878,6 @@ public final class CraftServer implements Server {
+         }
+ 		
+ 		// PaperDragon - PaperDragon Config Files
+-        @Override
+         public YamlConfiguration getDragonConfig() {
+             return com.domnian.paperdragon.DragonConfig.config;
+         }
+-- 
+2.8.2.windows.1
+

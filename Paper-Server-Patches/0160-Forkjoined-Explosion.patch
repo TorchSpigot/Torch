@@ -1,0 +1,175 @@
+From b838ec974cacdd50612101c99d1601ecc72a1950 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Fri, 22 Jul 2016 02:53:53 +0800
+Subject: [PATCH] Forkjoined Explosion
+
+
+diff --git a/src/main/java/net/minecraft/server/Explosion.java b/src/main/java/net/minecraft/server/Explosion.java
+index ee5cd2c..7fc49cb 100644
+--- a/src/main/java/net/minecraft/server/Explosion.java
++++ b/src/main/java/net/minecraft/server/Explosion.java
+@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
+ import com.google.common.collect.Maps;
+ import com.google.common.collect.Sets;
+ import java.util.HashSet;
++import java.util.Set;
+ import java.util.Iterator;
+ import java.util.List;
+ import java.util.Map;
+@@ -19,6 +20,8 @@ import org.bukkit.event.block.BlockExplodeEvent;
+ 
+ import java.util.concurrent.ConcurrentHashMap;
+ import java.util.concurrent.ConcurrentMap;
++import java.util.concurrent.RecursiveAction;
++import java.util.concurrent.CopyOnWriteArrayList;
+ 
+ public class Explosion {
+ 
+@@ -31,7 +34,7 @@ public class Explosion {
+     private final double posZ;
+     public final Entity source;
+     private final float size;
+-    private final List<BlockPosition> blocks = Lists.newArrayList();
++    private final List<BlockPosition> blocks = new CopyOnWriteArrayList<BlockPosition>(); // Torch
+     private final ConcurrentHashMap<EntityHuman, Vec3D> k = new ConcurrentHashMap<EntityHuman, Vec3D>(); // Hose
+     public boolean wasCanceled = false; // CraftBukkit - add field
+ 
+@@ -45,14 +48,26 @@ public class Explosion {
+         this.a = flag;
+         this.b = flag1;
+     }
+-
+-    public void a() {
++	
++	/*
++	// Torch start - Fork/Join
++	public void a() {
++		ExplosionTask et_task = new ExplosionTask(this.size);
++		et_task.fork();
++		// this.aI(); // Fire original-method
++		// et_task = null; // Clear leaked
++	}
++	// Torch end
++	*/
++
++    // public void aI() {
++	public void a() {
+         // CraftBukkit start
+         if (this.size < 0.1F) {
+             return;
+         }
+         // CraftBukkit end
+-        HashSet hashset = Sets.newHashSet();
++        Set hashset = Sets.newConcurrentHashSet(); // Torch
+         boolean flag = true;
+ 
+         int i;
+@@ -169,8 +184,20 @@ public class Explosion {
+         }
+ 
+     }
+-
+-    public void a(boolean flag) {
++	
++	/*
++	// Torch start - Fork/Join
++	public void a(boolean flag) {
++		ExplosionTaskI eti_task = new ExplosionTaskI(flag);
++		eti_task.fork();
++		// this.aI(flag); // Fire orininal-method
++		// eti_task = null; // Clear leaked
++	}
++	// Torch end
++	*/
++
++    // public void aI(boolean flag) {
++	public void a(boolean flag) {
+         this.world.a((EntityHuman) null, this.posX, this.posY, this.posZ, SoundEffects.bE, SoundCategory.BLOCKS, 4.0F, (1.0F + (this.world.random.nextFloat() - this.world.random.nextFloat()) * 0.2F) * 0.7F);
+         if (this.size >= 2.0F && this.b) {
+             this.world.addParticle(EnumParticle.EXPLOSION_HUGE, this.posX, this.posY, this.posZ, 1.0D, 0.0D, 0.0D, new int[0]);
+@@ -383,4 +410,41 @@ public class Explosion {
+         }
+     }
+     // Paper end
++	
++	/*
++    class ExplosionTask extends RecursiveAction {
++		float size;
++
++        ExplosionTask(float size) {
++			// System.out.println("Debug aI method -> ExplosionTask(float size)");
++			this.size = size;
++        }
++		
++        @Override
++        protected void compute() {
++			// System.out.println("Debug aI method -> compute()");
++			if (size < 0.1F) {
++				System.out.println("Debug aI method -> size -> return");
++				return;
++			}
++            aI();
++        }
++    }
++	
++	class ExplosionTaskI extends RecursiveAction {
++		boolean flag;
++                
++        ExplosionTaskI(boolean flag) {
++			// System.out.println("Debug aI method with flag -> ExplosionTaskI(boolean flag)");
++			this.flag = flag;
++        }
++		
++        @Override
++        protected void compute() {
++			// System.out.println("Debug aI method with flag -> compute()");
++            aI(flag);
++        }
++    }
++	*/
++	
+ }
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index 7b08a50..85a7962 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -2171,6 +2171,7 @@ public abstract class World implements IBlockAccess {
+         return false;
+     }
+ 
++	
+     public Explosion explode(@Nullable Entity entity, double d0, double d1, double d2, float f, boolean flag) {
+         return this.createExplosion(entity, d0, d1, d2, f, false, flag);
+     }
+@@ -2178,10 +2179,26 @@ public abstract class World implements IBlockAccess {
+     public Explosion createExplosion(@Nullable Entity entity, double d0, double d1, double d2, float f, boolean flag, boolean flag1) {
+         Explosion explosion = new Explosion(this, entity, d0, d1, d2, f, flag, flag1);
+ 
+-        explosion.a();
+-        explosion.a(true);
++        // explosion.a();
++        // explosion.a(true);
++		ExplosionTask et_task = new ExplosionTask(explosion);
++		et_task.fork();
+         return explosion;
+     }
++	
++	class ExplosionTask extends RecursiveAction {
++		Explosion explosion;
++
++        ExplosionTask(Explosion explosion) {
++			this.explosion = explosion;
++        }
++		
++        @Override
++        protected void compute() {
++			explosion.a();
++            explosion.a(true);
++        }
++    }
+ 
+     public float a(Vec3D vec3d, AxisAlignedBB axisalignedbb) {
+         double d0 = 1.0D / ((axisalignedbb.d - axisalignedbb.a) * 2.0D + 1.0D);
+-- 
+2.8.2.windows.1
+

@@ -1,0 +1,23 @@
+From 08353d2d0808a605a440ce9ec4e69956880c7b90 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 13 Aug 2016 12:33:31 +0800
+Subject: [PATCH] Remove armorToughness limit
+
+
+diff --git a/src/main/java/net/minecraft/server/GenericAttributes.java b/src/main/java/net/minecraft/server/GenericAttributes.java
+index 03775da..2cda661 100644
+--- a/src/main/java/net/minecraft/server/GenericAttributes.java
++++ b/src/main/java/net/minecraft/server/GenericAttributes.java
+@@ -27,8 +27,7 @@ public class GenericAttributes {
+ 			1024.0D)).a(true);
+ 	public static final IAttribute g = (new AttributeRanged((IAttribute) null, "generic.armor", 0.0D, 0.0D, 30.0D))
+ 			.a(true);
+-	public static final IAttribute h = (new AttributeRanged((IAttribute) null, "generic.armorToughness", 0.0D, 0.0D,
+-			20.0D)).a(true);
++	public static final IAttribute h = (new AttributeRanged((IAttribute) null, "generic.armorToughness", 0.0D, 0.0D, Double.POSITIVE_INFINITY)).a(true);
+ 	public static final IAttribute i = (new AttributeRanged((IAttribute) null, "generic.luck", 0.0D, -1024.0D, 1024.0D))
+ 			.a(true);
+ 	// Spigot end
+-- 
+2.8.2.windows.1
+

@@ -1,0 +1,47 @@
+From c8b18e02f3a40358dde6a4136a29c073161f3b3c Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 7 Aug 2016 15:24:49 +0800
+Subject: [PATCH] SPIGOT-2578: Method to get PotionEffect of specific type.
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java
+index b8fb477..9853b45 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java
+@@ -325,6 +325,12 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
+     public boolean hasPotionEffect(PotionEffectType type) {
+         return getHandle().hasEffect(MobEffectList.fromId(type.getId()));
+     }
++	
++	@Override
++    public PotionEffect getPotionEffect(PotionEffectType type) {
++        MobEffect handle = getHandle().getEffect(MobEffectList.fromId(type.getId()));
++        return (handle == null) ? null : new PotionEffect(PotionEffectType.getById(MobEffectList.getId(handle.getMobEffect())), handle.getDuration(), handle.getAmplifier(), handle.isAmbient(), handle.isShowParticles());
++    }
+ 
+     public void removePotionEffect(PotionEffectType type) {
+         getHandle().removeEffect(MobEffectList.fromId(type.getId()));
+diff --git a/src/main/java/org/bukkit/entity/LivingEntity.java b/src/main/java/org/bukkit/entity/LivingEntity.java
+index 570da41..af68f37 100644
+--- a/src/main/java/org/bukkit/entity/LivingEntity.java
++++ b/src/main/java/org/bukkit/entity/LivingEntity.java
+@@ -275,6 +275,16 @@ public interface LivingEntity extends Attributable, Entity, Damageable, Projecti
+      * @return whether the living entity has this potion effect active on them
+      */
+     public boolean hasPotionEffect(PotionEffectType type);
++	
++	 /**
++     * Returns the active {@link PotionEffect} of the specified type.
++     * <p>
++     * If the effect is not present on the entity then null will be returned.
++     *
++     * @param type the potion type to check
++     * @return the effect active on this entity, or null if not active.
++     */
++    public PotionEffect getPotionEffect(PotionEffectType type);
+ 
+     /**
+      * Removes any effects present of the given {@link PotionEffectType}.
+-- 
+2.8.2.windows.1
+

@@ -1,0 +1,121 @@
+From 177d5b06f3e36e25018027d3440f11e3c5001cd0 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 25 Jul 2016 02:59:27 +0800
+Subject: [PATCH] Do not stop server if it already stopped, miscs
+
+
+diff --git a/src/main/java/net/minecraft/server/BlockCactus.java b/src/main/java/net/minecraft/server/BlockCactus.java
+index cdd5ec6..fec2f0a 100644
+--- a/src/main/java/net/minecraft/server/BlockCactus.java
++++ b/src/main/java/net/minecraft/server/BlockCactus.java
+@@ -89,7 +89,7 @@ public class BlockCactus extends Block {
+         return false;
+     }
+ 
+-    public synchronized void a(World world, BlockPosition blockposition, IBlockData iblockdata, Entity entity) {
++    public void a(World world, BlockPosition blockposition, IBlockData iblockdata, Entity entity) {
+         CraftEventFactory.blockDamage = world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ()); // CraftBukkit
+         entity.damageEntity(DamageSource.CACTUS, 1.0F);
+         CraftEventFactory.blockDamage = null; // CraftBukkit
+diff --git a/src/main/java/net/minecraft/server/CrashReport.java b/src/main/java/net/minecraft/server/CrashReport.java
+index 92dc3c7..2a399a2 100644
+--- a/src/main/java/net/minecraft/server/CrashReport.java
++++ b/src/main/java/net/minecraft/server/CrashReport.java
+@@ -267,10 +267,6 @@ public class CrashReport {
+ 
+             if (k < 0) {
+                 System.out.println("Negative index in crash report handler (" + astacktraceelement.length + "/" + j + ")");
+-				System.out.println("Torch debug - s: " + s);
+-				System.out.println("Torch debug - i: " + i);
+-				System.out.println("Torch debug - j: " + j);
+-				System.out.println("Torch debug - k: " + k);
+             }
+ 
+             if (astacktraceelement != null && 0 <= k && k < astacktraceelement.length) {
+diff --git a/src/main/java/net/minecraft/server/EntityFallingBlock.java b/src/main/java/net/minecraft/server/EntityFallingBlock.java
+index 0dc7e12..e476881 100644
+--- a/src/main/java/net/minecraft/server/EntityFallingBlock.java
++++ b/src/main/java/net/minecraft/server/EntityFallingBlock.java
+@@ -58,24 +58,6 @@ public class EntityFallingBlock extends Entity {
+         return !this.dead;
+     }
+ 	
+-	/* // Torch start - Fork/Join
+-	FallingTask task = new FallingTask();
+-	public void m() {
+-        task.fork(); // Fork task for 'm'
+-	}
+-	
+-	class FallingTask extends RecursiveAction {
+-		
+-        FallingTask() {}
+-		
+-        @Override
+-        protected void compute() {
+-            m_();
+-        }
+-    }
+-
+-    public void m_() { // Original method
+-	*/ // Torch end
+ 	public void m() {
+         Block block = this.block.getBlock();
+ 
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index 720b9f5..8f7c60f 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -1029,33 +1029,6 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+                 this.player.setSpectatorTarget(this.player);
+                 this.player.stopRiding();
+ 
+-                /* CraftBukkit start - replace with bukkit handling for multi-world
+-                if (entity.world != this.player.world) {
+-                    WorldServer worldserver1 = this.player.x();
+-                    WorldServer worldserver2 = (WorldServer) entity.world;
+-
+-                    this.player.dimension = entity.dimension;
+-                    this.sendPacket(new PacketPlayOutRespawn(this.player.dimension, worldserver1.getDifficulty(), worldserver1.getWorldData().getType(), this.player.playerInteractManager.getGameMode()));
+-                    this.minecraftServer.getPlayerList().f(this.player);
+-                    worldserver1.removeEntity(this.player);
+-                    this.player.dead = false;
+-                    this.player.setPositionRotation(entity.locX, entity.locY, entity.locZ, entity.yaw, entity.pitch);
+-                    if (this.player.isAlive()) {
+-                        worldserver1.entityJoinedWorld(this.player, false);
+-                        worldserver2.addEntity(this.player);
+-                        worldserver2.entityJoinedWorld(this.player, false);
+-                    }
+-
+-                    this.player.spawnIn(worldserver2);
+-                    this.minecraftServer.getPlayerList().a(this.player, worldserver1);
+-                    this.player.enderTeleportTo(entity.locX, entity.locY, entity.locZ);
+-                    this.player.playerInteractManager.a(worldserver2);
+-                    this.minecraftServer.getPlayerList().b(this.player, worldserver2);
+-                    this.minecraftServer.getPlayerList().updateClient(this.player);
+-                } else {
+-                    this.player.enderTeleportTo(entity.locX, entity.locY, entity.locZ);
+-                }
+-                */
+                 this.player.getBukkitEntity().teleport(entity.getBukkitEntity(), PlayerTeleportEvent.TeleportCause.SPECTATE);
+                 // CraftBukkit end
+             }
+diff --git a/src/main/java/org/bukkit/craftbukkit/util/ServerShutdownThread.java b/src/main/java/org/bukkit/craftbukkit/util/ServerShutdownThread.java
+index ae3481b..0a65e95 100644
+--- a/src/main/java/org/bukkit/craftbukkit/util/ServerShutdownThread.java
++++ b/src/main/java/org/bukkit/craftbukkit/util/ServerShutdownThread.java
+@@ -13,7 +13,11 @@ public class ServerShutdownThread extends Thread {
+     @Override
+     public void run() {
+         try {
+-            server.stop();
++			// Torch start
++            if(!server.isStopped()) {
++                server.stop();
++            }
++			// Torch end
+         } catch (ExceptionWorldConflict ex) {
+             ex.printStackTrace();
+         } finally {
+-- 
+2.8.2.windows.1
+
