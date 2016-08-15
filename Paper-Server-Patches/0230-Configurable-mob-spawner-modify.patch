@@ -1,4 +1,4 @@
-From 81e56defc7433185a785db05c7dda7e2727a7d71 Mon Sep 17 00:00:00 2001
+From 5bdecb818d17628c734732bd8d54e618d4308de5 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 15 Aug 2016 03:51:21 +0800
 Subject: [PATCH] Configurable mob spawner modify
@@ -1072,7 +1072,7 @@ index 0000000..8200d7a
 +}
 diff --git a/src/main/java/net/minecraft/server/Item.java b/src/main/java/net/minecraft/server/Item.java
 new file mode 100644
-index 0000000..abe783a
+index 0000000..e8331ee
 --- /dev/null
 +++ b/src/main/java/net/minecraft/server/Item.java
 @@ -0,0 +1,894 @@
@@ -1087,7 +1087,7 @@ index 0000000..abe783a
 +import com.google.common.collect.HashMultimap;
 +import com.google.common.collect.Maps;
 +import com.google.common.collect.Multimap;
-+import com.mrpowergamerbr.utils.LightRandom;
++import java.util.Random;
 +
 +public class Item {
 +
@@ -1105,7 +1105,7 @@ index 0000000..abe783a
 +	protected static final UUID h = UUID.fromString("CB3F55D3-645C-4F38-A497-9C13A33DB5CF");
 +	protected static final UUID i = UUID.fromString("FA233E1C-4180-4865-B01B-BCCE9785ACA3");
 +	private CreativeModeTab n;
-+	protected static LightRandom j = com.mrpowergamerbr.parappatown.utils.LightStatic.random;
++	protected static Random j = com.mrpowergamerbr.parappatown.utils.LightStatic.RNG;
 +	protected int maxStackSize = 64;
 +	private int durability;
 +	protected boolean l;
