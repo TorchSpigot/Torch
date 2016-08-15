@@ -1,4 +1,4 @@
-From 25f7ed29ba0bb2bb16796299312f581effe6875e Mon Sep 17 00:00:00 2001
+From 900f99bf5c9c18a14a40fc5b649f5f9e273656f5 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 6 Aug 2016 02:17:13 +0800
 Subject: [PATCH] Concurrent linked hash map cache

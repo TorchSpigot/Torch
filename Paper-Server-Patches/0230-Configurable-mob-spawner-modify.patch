@@ -1,4 +1,4 @@
-From 5bdecb818d17628c734732bd8d54e618d4308de5 Mon Sep 17 00:00:00 2001
+From 63a2d4213f36f7dc72851239f552119a3382af41 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 15 Aug 2016 03:51:21 +0800
 Subject: [PATCH] Configurable mob spawner modify
@@ -1072,7 +1072,7 @@ index 0000000..8200d7a
 +}
 diff --git a/src/main/java/net/minecraft/server/Item.java b/src/main/java/net/minecraft/server/Item.java
 new file mode 100644
-index 0000000..e8331ee
+index 0000000..63ba5f6
 --- /dev/null
 +++ b/src/main/java/net/minecraft/server/Item.java
 @@ -0,0 +1,894 @@
@@ -2065,145 +2065,178 @@ index 7dc0f35..7fd311c 100644
  
  		MinecraftTimings.timeUpdateTimer.startTiming(); // Spigot
 diff --git a/src/main/java/net/minecraft/server/MobSpawnerAbstract.java b/src/main/java/net/minecraft/server/MobSpawnerAbstract.java
-index ccc9fad..7f5adae 100644
+index ccc9fad..e3d0a05 100644
 --- a/src/main/java/net/minecraft/server/MobSpawnerAbstract.java
 +++ b/src/main/java/net/minecraft/server/MobSpawnerAbstract.java
-@@ -50,28 +50,28 @@ public abstract class MobSpawnerAbstract {
- 		}
- 		tickDelay = this.a().paperConfig.mobSpawnerTickRate;
- 		// Paper end
+@@ -44,92 +44,88 @@ public abstract class MobSpawnerAbstract {
+ 
+ 	// Torch start
+ 	public void c() {
+-		// Paper start - Configurable mob spawner tick rate
+-		if (spawnDelay > 0 && --tickDelay > 0) {
+-			return;
+-		}
+-		tickDelay = this.a().paperConfig.mobSpawnerTickRate;
+-		// Paper end
 -		
-+
- 		if (!this.h()) {
- 			this.e = this.d;
+-		if (!this.h()) {
+-			this.e = this.d;
 -            return;
 -        }
++        // Paper start - Configurable mob spawner tick rate
++        if (spawnDelay > 0 && --tickDelay > 0) return;
++        tickDelay = this.a().paperConfig.mobSpawnerTickRate;
++        // Paper end
+ 		
+-		World world = this.a();
+-		BlockPosition blockposition = this.b();
 -		
-+			return;
-+		}
-+
- 		World world = this.a();
- 		BlockPosition blockposition = this.b();
--		
-+
- 		if (world.isClientSide) {
+-		if (world.isClientSide) {
 -            double d0 = (double) ((float) blockposition.getX() + world.random.nextFloat());
 -            double d1 = (double) ((float) blockposition.getY() + world.random.nextFloat());
 -            double d2 = (double) ((float) blockposition.getZ() + world.random.nextFloat());
-+			double d0 = (double) ((float) blockposition.getX() + world.random.nextFloat());
-+			double d1 = (double) ((float) blockposition.getY() + world.random.nextFloat());
-+			double d2 = (double) ((float) blockposition.getZ() + world.random.nextFloat());
- 
+-
 -            world.addParticle(EnumParticle.SMOKE_NORMAL, d0, d1, d2, 0.0D, 0.0D, 0.0D, new int[0]);
 -            world.addParticle(EnumParticle.FLAME, d0, d1, d2, 0.0D, 0.0D, 0.0D, new int[0]);
 -            if (this.spawnDelay > 0) {
-+			world.addParticle(EnumParticle.SMOKE_NORMAL, d0, d1, d2, 0.0D, 0.0D, 0.0D, new int[0]);
-+			world.addParticle(EnumParticle.FLAME, d0, d1, d2, 0.0D, 0.0D, 0.0D, new int[0]);
-+			if (this.spawnDelay > 0) {
- 				this.spawnDelay -= tickDelay; // Paper
+-				this.spawnDelay -= tickDelay; // Paper
 -            }
-+			}
- 
--            this.e = this.d;
+-
++        if (!this.h()) {
+             this.e = this.d;
 -            this.d = (this.d + (double) (1000.0F / ((float) this.spawnDelay + 200.0F))) % 360.0D;
-+			this.e = this.d;
-+			this.d = (this.d + (double) (1000.0F / ((float) this.spawnDelay + 200.0F))) % 360.0D;
- 		} else {
- 			if (this.spawnDelay < -tickDelay) { // Paper
- 				this.i();
-@@ -80,55 +80,69 @@ public abstract class MobSpawnerAbstract {
- 				this.spawnDelay -= tickDelay; // Paper
- 				return;
- 			}
+-		} else {
+-			if (this.spawnDelay < -tickDelay) { // Paper
+-				this.i();
+-			}
+-			if (this.spawnDelay > 0) {
+-				this.spawnDelay -= tickDelay; // Paper
+-				return;
+-			}
 -			
-+
- 			for (int i = 0; i < this.spawnCount; ++i) {
- 				NBTTagCompound nbttagcompound = this.spawnData.b();
+-			for (int i = 0; i < this.spawnCount; ++i) {
+-				NBTTagCompound nbttagcompound = this.spawnData.b();
 -                NBTTagList nbttaglist = nbttagcompound.getList("Pos", 6);
 -                int j = nbttaglist.size();
 -                double d3 = j >= 1 ? nbttaglist.e(0) : (double) blockposition.getX() + (world.random.nextDouble() - world.random.nextDouble()) * (double) this.spawnRange + 0.5D;
 -                double d4 = j >= 2 ? nbttaglist.e(1) : (double) (blockposition.getY() + world.random.nextInt(3) - 1);
 -                double d5 = j >= 3 ? nbttaglist.e(2) : (double) blockposition.getZ() + (world.random.nextDouble() - world.random.nextDouble()) * (double) this.spawnRange + 0.5D;
-+				NBTTagList nbttaglist = nbttagcompound.getList("Pos", 6);
-+				int j = nbttaglist.size();
-+				double d3 = j >= 1 ? nbttaglist.e(0)
-+						: (double) blockposition.getX()
-+								+ (world.random.nextDouble() - world.random.nextDouble()) * (double) this.spawnRange
-+								+ 0.5D;
-+				double d4 = j >= 2 ? nbttaglist.e(1) : (double) (blockposition.getY() + world.random.nextInt(3) - 1);
-+				double d5 = j >= 3 ? nbttaglist.e(2)
-+						: (double) blockposition.getZ()
-+								+ (world.random.nextDouble() - world.random.nextDouble()) * (double) this.spawnRange
-+								+ 0.5D;
- 				Entity entity = ChunkRegionLoader.a(nbttagcompound, world, d3, d4, d5, false);
- 
- 				if (entity == null) {
- 					return;
- 				}
+-				Entity entity = ChunkRegionLoader.a(nbttagcompound, world, d3, d4, d5, false);
+-
+-				if (entity == null) {
+-					return;
+-				}
 -			
 -				int k = world.a(entity.getClass(), (new AxisAlignedBB(blockposition.getX(), blockposition.getY(), blockposition.getZ(), blockposition.getX() + 1, blockposition.getY() + 1, blockposition.getZ() + 1)).g(this.spawnRange)).size();
 -			
+-				if (k >= this.maxNearbyEntities) {
+-					this.i();
+-					return;
+-				}
++        } else {
++            BlockPosition blockposition = this.b();
 +
-+				int k = world.a(entity.getClass(),
-+						(new AxisAlignedBB(blockposition.getX(), blockposition.getY(), blockposition.getZ(),
-+								blockposition.getX() + 1, blockposition.getY() + 1, blockposition.getZ() + 1))
-+										.g(this.spawnRange))
-+						.size();
++            if (this.a().isClientSide) {
++                double d0 = (double) ((float) blockposition.getX() + this.a().random.nextFloat());
++                double d1 = (double) ((float) blockposition.getY() + this.a().random.nextFloat());
++                double d2 = (double) ((float) blockposition.getZ() + this.a().random.nextFloat());
 +
- 				if (k >= this.maxNearbyEntities) {
- 					this.i();
- 					return;
- 				}
++                this.a().addParticle(EnumParticle.SMOKE_NORMAL, d0, d1, d2, 0.0D, 0.0D, 0.0D, new int[0]);
++                this.a().addParticle(EnumParticle.FLAME, d0, d1, d2, 0.0D, 0.0D, 0.0D, new int[0]);
++                if (this.spawnDelay > 0) {
++                    this.spawnDelay -= tickDelay; // Paper
++                }
++
++                this.e = this.d;
++                this.d = (this.d + (double) (1000.0F / ((float) this.spawnDelay + 200.0F))) % 360.0D;
++            } else {
++                if (this.spawnDelay < -tickDelay) { // Paper
++                    this.i();
++                }
++
++                if (this.spawnDelay > 0) {
++                    this.spawnDelay -= tickDelay; // Paper
++                    return;
++                }
++
++                for (int i = 0; i < this.spawnCount; ++i) {
++                    NBTTagCompound nbttagcompound = this.spawnData.b();
++                    NBTTagList nbttaglist = nbttagcompound.getList("Pos", 6);
++                    World world = this.a();
++                    int j = nbttaglist.size();
++                    double d3 = j >= 1 ? nbttaglist.e(0) : (double) blockposition.getX() + (world.random.nextDouble() - world.random.nextDouble()) * (double) this.spawnRange + 0.5D;
++                    double d4 = j >= 2 ? nbttaglist.e(1) : (double) (blockposition.getY() + world.random.nextInt(3) - 1);
++                    double d5 = j >= 3 ? nbttaglist.e(2) : (double) blockposition.getZ() + (world.random.nextDouble() - world.random.nextDouble()) * (double) this.spawnRange + 0.5D;
++                    Entity entity = ChunkRegionLoader.a(nbttagcompound, world, d3, d4, d5, false);
++
++                    if (entity == null) {
++                        return;
++                    }
++
++                    int k = world.a(entity.getClass(), (new AxisAlignedBB((double) blockposition.getX(), (double) blockposition.getY(), (double) blockposition.getZ(), (double) (blockposition.getX() + 1), (double) (blockposition.getY() + 1), (double) (blockposition.getZ() + 1))).g((double) this.spawnRange)).size();
  
 -				EntityInsentient entityinsentient = entity instanceof EntityInsentient ? (EntityInsentient) entity : null;
 -				entity.setPositionRotation(entity.locX, entity.locY, entity.locZ, world.random.nextFloat() * 360.0F, 0.0F);
 -				
-+				EntityInsentient entityinsentient = entity instanceof EntityInsentient ? (EntityInsentient) entity
-+						: null;
-+				entity.setPositionRotation(entity.locX, entity.locY, entity.locZ, world.random.nextFloat() * 360.0F,
-+						0.0F);
-+
- 				if (entityinsentient == null || entityinsentient.cG() && entityinsentient.canSpawn()) {
+-				if (entityinsentient == null || entityinsentient.cG() && entityinsentient.canSpawn()) {
 -					
 -					if (nbttagcompound.d() == 1 && nbttagcompound.hasKeyOfType("id", 8) && entity instanceof EntityInsentient) {
 -                        ((EntityInsentient) entity).prepare(world.D(new BlockPosition(entity)), (GroupDataEntity) null);
--                    }
++                    if (k >= this.maxNearbyEntities) {
++                        this.i();
++                        return;
+                     }
 -					
-+
-+					if (nbttagcompound.d() == 1 && nbttagcompound.hasKeyOfType("id", 8)
-+							&& entity instanceof EntityInsentient) {
-+						((EntityInsentient) entity).prepare(world.D(new BlockPosition(entity)), (GroupDataEntity) null);
-+					}
-+
- 					// Spigot Start
- 					if (entity.world.spigotConfig.nerfSpawnerMobs) {
- 						entity.fromMobSpawner = true;
- 					}
+-					// Spigot Start
+-					if (entity.world.spigotConfig.nerfSpawnerMobs) {
+-						entity.fromMobSpawner = true;
+-					}
 -					if (org.bukkit.craftbukkit.event.CraftEventFactory.callSpawnerSpawnEvent(entity, blockposition).isCancelled()) {
-+					if (org.bukkit.craftbukkit.event.CraftEventFactory.callSpawnerSpawnEvent(entity, blockposition)
-+							.isCancelled()) {
- 						continue;
- 					}
- 					// Spigot End
+-						continue;
+-					}
+-					// Spigot End
 -					
+-					ChunkRegionLoader.a(entity, world, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.SPAWNER); // CraftBukkit
+-					world.triggerEffect(2004, blockposition, 0);
+-					if (entityinsentient != null) {
+-						entityinsentient.doSpawnEffect();
+-					}
+-				}
 +
- 					ChunkRegionLoader.a(entity, world, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.SPAWNER); // CraftBukkit
- 					world.triggerEffect(2004, blockposition, 0);
- 					if (entityinsentient != null) {
- 						entityinsentient.doSpawnEffect();
- 					}
- 				}
--            }
--        }
++                    EntityInsentient entityinsentient = entity instanceof EntityInsentient ? (EntityInsentient) entity : null;
++
++                    entity.setPositionRotation(entity.locX, entity.locY, entity.locZ, world.random.nextFloat() * 360.0F, 0.0F);
++                    if (entityinsentient == null || entityinsentient.cG() && entityinsentient.canSpawn()) {
++                        if (this.spawnData.b().d() == 1 && this.spawnData.b().hasKeyOfType("id", 8) && entity instanceof EntityInsentient) {
++                            ((EntityInsentient) entity).prepare(world.D(new BlockPosition(entity)), (GroupDataEntity) null);
++                        }
++						// Spigot Start
++						if (entity.world.spigotConfig.nerfSpawnerMobs) {
++							entity.fromMobSpawner = true;
++						}
++                        if (org.bukkit.craftbukkit.event.CraftEventFactory.callSpawnerSpawnEvent(entity, blockposition).isCancelled()) {
++                            continue;
++                        }
++						// Spigot End
++                        ChunkRegionLoader.a(entity, world, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.SPAWNER); // CraftBukkit
++                        world.triggerEffect(2004, blockposition, 0);
++                        if (entityinsentient != null) {
++                            entityinsentient.doSpawnEffect();
++                        }
++                    }
++                }
++
++                this.i();
+             }
++
+         }
 -		
 -        this.i();
-+			}
-+		}
-+
-+		this.i();
- 	}
+-	}
++    }
  	// Torch end
  
+ 	private void i() {
 diff --git a/src/main/java/net/minecraft/server/NBTTagCompound.java b/src/main/java/net/minecraft/server/NBTTagCompound.java
 index dfd279b..327c8fd 100644
 --- a/src/main/java/net/minecraft/server/NBTTagCompound.java
@@ -2899,15 +2932,16 @@ index 566c280..4322ff8 100644
  		}
  	}
 diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
-index 5ed6708..9707f41 100644
+index 5ed6708..2bf92cd 100644
 --- a/src/main/java/net/minecraft/server/PlayerConnection.java
 +++ b/src/main/java/net/minecraft/server/PlayerConnection.java
-@@ -1231,13 +1231,20 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+@@ -1231,24 +1231,28 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
  		}
  
  	}
 -	
 +
++	/*
  	class SendTask extends RecursiveAction {
  		Packet<?> packet;
 -        SendTask(Packet<?> packet) { this.packet = packet; }
@@ -2928,22 +2962,20 @@ index 5ed6708..9707f41 100644
  	public void sendPacket(Packet<?> packet) {
  		SendTask task = new SendTask(packet);
  		task.fork();
-@@ -1245,10 +1252,12 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+ 	}
++	*/
  
- 	public void sendPacket_sub(final Packet<?> packet) {
- 		if (packet instanceof PacketPlayOutUnloadChunk) {
+-	public void sendPacket_sub(final Packet<?> packet) {
+-		if (packet instanceof PacketPlayOutUnloadChunk) {
 -			synchronized(this) { this.networkManager.sendPacket(packet); }
-+			synchronized (this) {
-+				this.networkManager.sendPacket(packet);
-+			}
- 			return;
- 		}
+-			return;
+-		}
 -		
-+
++	public void sendPacket(final Packet<?> packet) {
  		if (packet instanceof PacketPlayOutChat) {
  			PacketPlayOutChat packetplayoutchat = (PacketPlayOutChat) packet;
  			EntityHuman.EnumChatVisibility entityhuman_enumchatvisibility = this.player.getChatFlags();
-@@ -1267,7 +1276,8 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+@@ -1267,7 +1271,8 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
  			return;
  		} else if (packet instanceof PacketPlayOutSpawnPosition) {
  			PacketPlayOutSpawnPosition packet6 = (PacketPlayOutSpawnPosition) packet;
@@ -2953,7 +2985,7 @@ index 5ed6708..9707f41 100644
  		}
  		// CraftBukkit end
  
-@@ -2476,7 +2486,8 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+@@ -2476,7 +2481,8 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
  			TileEntitySign tileentitysign = (TileEntitySign) tileentity;
  
  			if (!tileentitysign.c() || tileentitysign.d() != this.player) {
@@ -2963,7 +2995,7 @@ index 5ed6708..9707f41 100644
  				this.sendPacket(tileentity.getUpdatePacket()); // CraftBukkit
  				return;
  			}
-@@ -2581,7 +2592,9 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+@@ -2581,7 +2587,9 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
  		String result = "";
  		for (String name : mods.keySet()) {
  			result += name + ": " + mods.get(name) + "\n";
@@ -2974,7 +3006,7 @@ index 5ed6708..9707f41 100644
  		}
  		return result;
  	}
-@@ -2614,7 +2627,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+@@ -2614,7 +2622,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
  	private void infoOutput(String player) {
  		this.logOutput("Player %s status:\n" + "Mod(s):%s", player, this.formatMods(this.mods));
  	}

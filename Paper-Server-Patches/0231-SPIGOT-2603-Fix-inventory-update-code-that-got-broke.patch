@@ -1,0 +1,91 @@
+From 211fad7f34dbdbe20f64507e1fc5df81174920c9 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 15 Aug 2016 22:44:42 +0800
+Subject: [PATCH] SPIGOT-2603: Fix inventory update code that got broken in
+ update
+
+
+diff --git a/src/main/java/net/minecraft/server/Container.java b/src/main/java/net/minecraft/server/Container.java
+index bc1c125..a6449a1 100644
+--- a/src/main/java/net/minecraft/server/Container.java
++++ b/src/main/java/net/minecraft/server/Container.java
+@@ -89,9 +89,7 @@ public abstract class Container {
+ 			ItemStack itemstack = this.c.get(i).getItem();
+ 			ItemStack itemstack1 = this.b.get(i);
+ 
+-			if (!ItemStack.fastMatches(itemstack1, itemstack)
+-					|| (tickCount++ % org.spigotmc.SpigotConfig.itemDirtyTicks == 0
+-							&& !ItemStack.matches(itemstack1, itemstack))) { // Spigot
++			if (!ItemStack.fastMatches(itemstack1, itemstack) || (tickCount % org.spigotmc.SpigotConfig.itemDirtyTicks == 0 && !ItemStack.matches(itemstack1, itemstack))) { // Spigot
+ 				itemstack1 = itemstack == null ? null : itemstack.cloneItemStack();
+ 				this.b.set(i, itemstack1);
+ 
+@@ -101,6 +99,7 @@ public abstract class Container {
+ 			}
+ 		}
+ 
++	tickCount++; // Spigot
+ 	}
+ 
+ 	public boolean a(EntityHuman entityhuman, int i) {
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index 2bf92cd..3518c0b 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -1231,27 +1231,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+ 		}
+ 
+ 	}
+-
+-	/*
+-	class SendTask extends RecursiveAction {
+-		Packet<?> packet;
+-
+-		SendTask(Packet<?> packet) {
+-			this.packet = packet;
+-		}
+-
+-		@Override
+-		protected void compute() {
+-			sendPacket_sub(packet);
+-		}
+-	}
+-
+-	public void sendPacket(Packet<?> packet) {
+-		SendTask task = new SendTask(packet);
+-		task.fork();
+-	}
+-	*/
+-
++	
+ 	public void sendPacket(final Packet<?> packet) {
+ 		if (packet instanceof PacketPlayOutChat) {
+ 			PacketPlayOutChat packetplayoutchat = (PacketPlayOutChat) packet;
+@@ -1271,8 +1251,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+ 			return;
+ 		} else if (packet instanceof PacketPlayOutSpawnPosition) {
+ 			PacketPlayOutSpawnPosition packet6 = (PacketPlayOutSpawnPosition) packet;
+-			this.player.compassTarget = new Location(this.getPlayer().getWorld(), packet6.position.getX(),
+-					packet6.position.getY(), packet6.position.getZ());
++			this.player.compassTarget = new Location(this.getPlayer().getWorld(), packet6.position.getX(), packet6.position.getY(), packet6.position.getZ());
+ 		}
+ 		// CraftBukkit end
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftZombie.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftZombie.java
+index 9dd904a..6c44dee 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftZombie.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftZombie.java
+@@ -63,8 +63,7 @@ public class CraftZombie extends CraftMonster implements Zombie {
+ 
+ 	@Override
+ 	public Villager.Profession getVillagerProfession() {
+-		// if (!isVillager()) return null; // Torch - better map Zombie/Villager
+-		// professions.
+-		return Villager.Profession.getProfession(getHandle().getVillagerType());
++		if (!isVillager()) return null;
++        return Villager.Profession.getProfession(getHandle().getVillagerType());
+ 	}
+ }
+-- 
+2.8.2.windows.1
+

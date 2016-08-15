@@ -1,4 +1,4 @@
-From 3c2b8cdb18edd4b47ab73de3c1c7fde1254fb23f Mon Sep 17 00:00:00 2001
+From 4effa5165a592a5a23452c90377f4529c8a16a10 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 7 Aug 2016 03:07:06 +0800
 Subject: [PATCH] Makes Pumpkins, Melons extend Crops. Adds BUKKIT-4780
