@@ -2,7 +2,7 @@ Torch
 ===========
 ![Torch](https://i.imgur.com/cJWj0we.png) 
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg?style=flat)](http://pan.baidu.com/s/1hsBEdxU/) [![Minecraft](https://img.shields.io/badge/Minecraft-1.9.4-green.svg?style=flat)](https://www.minecraft.net/) [![Java](https://img.shields.io/badge/Java_JDK-v1.8-blue.svg?style=flat)](https://www.java.com/) [![Team](https://img.shields.io/badge/Powered_by-iMinecraft-green.svg?style=flat)](https://github.com/TorchSpigot/Torch) [![MCStats](https://img.shields.io/badge/MCStats-TorchSpigot-blue.svg?style=flat)](http://mcstats.org/plugin/TorchSpigot) 
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg?style=flat)](http://pan.baidu.com/s/1hsBEdxU/) [![Minecraft](https://img.shields.io/badge/Minecraft-1.9.4-green.svg?style=flat)](https://www.minecraft.net/) [![Java](https://img.shields.io/badge/Java_JDK-v1.8-blue.svg?style=flat)](https://www.java.com/) [![Team](https://img.shields.io/badge/Powered_by-iMinecraft-green.svg?style=flat)](http://free.mcrmb.com/cz) [![MCStats](https://img.shields.io/badge/MCStats-TorchSpigot-blue.svg?style=flat)](http://mcstats.org/plugin/TorchSpigot) 
 
 
 The main repository of TorchSpigot
