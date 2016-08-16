@@ -1,4 +1,4 @@
-From 0fab83e0f00a5873e36ab7660fc6fe066094d351 Mon Sep 17 00:00:00 2001
+From 96cb59009df1422089ee843719255dbc809df982 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 15 Aug 2016 22:44:42 +0800
 Subject: [PATCH] SPIGOT-2603: Fix inventory update code that got broken in
@@ -192,7 +192,7 @@ index 0cf92e1..3fc0b0c 100644
  			this.networkManager.close(PacketStatusListener.a);
  		} else {
 diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
-index 2bf92cd..4a85b45 100644
+index 2bf92cd..4d67ba9 100644
 --- a/src/main/java/net/minecraft/server/PlayerConnection.java
 +++ b/src/main/java/net/minecraft/server/PlayerConnection.java
 @@ -1231,8 +1231,8 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
@@ -206,10 +206,12 @@ index 2bf92cd..4a85b45 100644
  	class SendTask extends RecursiveAction {
  		Packet<?> packet;
  
-@@ -1247,12 +1247,19 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+@@ -1246,13 +1246,20 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+ 		}
  	}
  
- 	public void sendPacket(Packet<?> packet) {
+-	public void sendPacket(Packet<?> packet) {
++	public void sendPacket(final Packet<?> packet) {
 +		if (packet == null || this.processedDisconnect) { // Spigot
 +			return;
 +		}
