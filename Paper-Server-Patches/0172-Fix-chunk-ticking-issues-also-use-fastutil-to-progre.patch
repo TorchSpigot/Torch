@@ -1,4 +1,4 @@
-From 1d801ecddc23cd063ed5a1a12b94ee6db8c6dfb6 Mon Sep 17 00:00:00 2001
+From a75a6f7ceee74b7bd7bd2e44d5c6a1103494ee23 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 24 Jul 2016 19:01:11 +0800
 Subject: [PATCH] Fix chunk ticking issues, also use fastutil to progress the
@@ -6,7 +6,7 @@ Subject: [PATCH] Fix chunk ticking issues, also use fastutil to progress the
 
 
 diff --git a/pom.xml b/pom.xml
-index e775bc6..bb81ffd 100644
+index 53f5116..e2be3d0 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -10,7 +10,7 @@

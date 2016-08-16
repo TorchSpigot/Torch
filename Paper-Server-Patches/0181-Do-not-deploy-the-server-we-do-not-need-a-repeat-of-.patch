@@ -1,4 +1,4 @@
-From a0554eab705dce30a426643cf451fdf7c119487b Mon Sep 17 00:00:00 2001
+From 26b521542e85590c14d2e2486454d438a22ad4a5 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 26 Jul 2016 14:33:08 +0800
 Subject: [PATCH] Do not deploy the server, we do not need a repeat of the
@@ -6,7 +6,7 @@ Subject: [PATCH] Do not deploy the server, we do not need a repeat of the
 
 
 diff --git a/pom.xml b/pom.xml
-index bb81ffd..8c79f0c 100644
+index e2be3d0..49a7a7e 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -232,6 +232,15 @@

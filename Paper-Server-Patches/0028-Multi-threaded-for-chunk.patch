@@ -1,4 +1,4 @@
-From bc12aa3e090f96d09dd7301a2b12a134a1c073a4 Mon Sep 17 00:00:00 2001
+From 193479e606b913604ea0efaf4d834a2b8d1503cb Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 06:52:05 +0800
 Subject: [PATCH] Multi threaded for chunk

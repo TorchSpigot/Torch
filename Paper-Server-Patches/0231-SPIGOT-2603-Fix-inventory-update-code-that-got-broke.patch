@@ -1,4 +1,4 @@
-From b66ef449fa8dacf405c938136b61ef6b77519553 Mon Sep 17 00:00:00 2001
+From 0fab83e0f00a5873e36ab7660fc6fe066094d351 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 15 Aug 2016 22:44:42 +0800
 Subject: [PATCH] SPIGOT-2603: Fix inventory update code that got broken in
@@ -28,6 +28,169 @@ index bc1c125..a6449a1 100644
  	}
  
  	public boolean a(EntityHuman entityhuman, int i) {
+diff --git a/src/main/java/net/minecraft/server/PacketStatusInPing.java b/src/main/java/net/minecraft/server/PacketStatusInPing.java
+deleted file mode 100644
+index a638cc8..0000000
+--- a/src/main/java/net/minecraft/server/PacketStatusInPing.java
++++ /dev/null
+@@ -1,54 +0,0 @@
+-package net.minecraft.server;
+-
+-import java.io.IOException;
+-import java.util.concurrent.RecursiveAction;
+-
+-public class PacketStatusInPing implements Packet<PacketStatusInListener> {
+-
+-	private long a;
+-
+-	public PacketStatusInPing() {
+-	}
+-
+-	@Override
+-	public void a(PacketDataSerializer packetdataserializer) throws IOException {
+-		this.a = packetdataserializer.readLong();
+-	}
+-
+-	@Override
+-	public void b(PacketDataSerializer packetdataserializer) throws IOException {
+-		packetdataserializer.writeLong(this.a);
+-	}
+-
+-	class InTask extends RecursiveAction {
+-		PacketStatusInListener packetstatusinlistener;
+-
+-		InTask(PacketStatusInListener packetstatusinlistener) {
+-			this.packetstatusinlistener = packetstatusinlistener;
+-		}
+-
+-		@Override
+-		protected void compute() {
+-			a_task(packetstatusinlistener);
+-		}
+-
+-	}
+-
+-	@Override
+-	public void a(PacketStatusInListener packetstatusinlistener) {
+-		if (de.minetick.MigotConfig.enabledForkPing) {
+-			InTask a_task = new InTask(packetstatusinlistener);
+-			a_task.fork();
+-		} else {
+-			packetstatusinlistener.a(this);
+-		}
+-	}
+-
+-	public void a_task(PacketStatusInListener packetstatusinlistener) {
+-		packetstatusinlistener.a(this);
+-	}
+-
+-	public long a() {
+-		return this.a;
+-	}
+-}
+diff --git a/src/main/java/net/minecraft/server/PacketStatusInStart.java b/src/main/java/net/minecraft/server/PacketStatusInStart.java
+deleted file mode 100644
+index 887923a..0000000
+--- a/src/main/java/net/minecraft/server/PacketStatusInStart.java
++++ /dev/null
+@@ -1,47 +0,0 @@
+-package net.minecraft.server;
+-
+-import java.io.IOException;
+-import java.util.concurrent.RecursiveAction;
+-
+-public class PacketStatusInStart implements Packet<PacketStatusInListener> {
+-
+-	public PacketStatusInStart() {
+-	}
+-
+-	@Override
+-	public void a(PacketDataSerializer packetdataserializer) throws IOException {
+-	}
+-
+-	@Override
+-	public void b(PacketDataSerializer packetdataserializer) throws IOException {
+-	}
+-
+-	class InTask extends RecursiveAction {
+-		PacketStatusInListener packetstatusinlistener;
+-
+-		InTask(PacketStatusInListener packetstatusinlistener) {
+-			this.packetstatusinlistener = packetstatusinlistener;
+-		}
+-
+-		@Override
+-		protected void compute() {
+-			a_task(packetstatusinlistener);
+-		}
+-
+-	}
+-
+-	@Override
+-	public void a(PacketStatusInListener packetstatusinlistener) {
+-		if (de.minetick.MigotConfig.enabledForkPing) {
+-			InTask a_task = new InTask(packetstatusinlistener);
+-			a_task.fork();
+-		} else {
+-			packetstatusinlistener.a(this);
+-		}
+-	}
+-
+-	public void a_task(PacketStatusInListener packetstatusinlistener) {
+-		packetstatusinlistener.a(this);
+-	}
+-
+-}
+diff --git a/src/main/java/net/minecraft/server/PacketStatusListener.java b/src/main/java/net/minecraft/server/PacketStatusListener.java
+index 0cf92e1..3fc0b0c 100644
+--- a/src/main/java/net/minecraft/server/PacketStatusListener.java
++++ b/src/main/java/net/minecraft/server/PacketStatusListener.java
+@@ -2,6 +2,7 @@ package net.minecraft.server;
+ 
+ import java.net.InetSocketAddress;
+ import java.util.Iterator;
++import java.util.concurrent.RecursiveAction;
+ 
+ import org.bukkit.craftbukkit.util.CraftIconCache;
+ import org.bukkit.entity.Player;
+@@ -22,13 +23,36 @@ public class PacketStatusListener implements PacketStatusInListener {
+ 		this.minecraftServer = minecraftserver;
+ 		this.networkManager = networkmanager;
+ 	}
+-
++	
+ 	@Override
+ 	public void a(IChatBaseComponent ichatbasecomponent) {
+ 	}
++	
++	class StatusTask extends RecursiveAction {
++		PacketStatusInStart packetstatusinstart;
++
++		StatusTask(PacketStatusInStart packetstatusinstart) {
++			this.packetstatusinstart = packetstatusinstart;
++		}
++
++		@Override
++		protected void compute() {
++			a_task(packetstatusinstart);
++		}
++
++	}
+ 
+ 	@Override
+ 	public void a(PacketStatusInStart packetstatusinstart) {
++		if (de.minetick.MigotConfig.enabledForkPing) {
++			StatusTask a_task = new StatusTask(packetstatusinstart);
++			a_task.fork();
++		} else {
++			a_task(packetstatusinstart);
++		}
++	}
++	
++	public void a_task(PacketStatusInStart packetstatusinstart) {
+ 		if (this.d) {
+ 			this.networkManager.close(PacketStatusListener.a);
+ 		} else {
 diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
 index 2bf92cd..4a85b45 100644
 --- a/src/main/java/net/minecraft/server/PlayerConnection.java

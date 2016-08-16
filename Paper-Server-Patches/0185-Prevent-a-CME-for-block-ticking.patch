@@ -1,11 +1,11 @@
-From 16a08a3d76e56e7ba674f5d21e5579b277d1d72e Mon Sep 17 00:00:00 2001
+From bd63f85ea0a45a5d6b92ebc752dec711e49be21d Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Thu, 28 Jul 2016 17:30:57 +0800
 Subject: [PATCH] Prevent a CME for block ticking
 
 
 diff --git a/pom.xml b/pom.xml
-index 3ed68b7..b73b85a 100644
+index 186e507..84f969a 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -62,6 +62,12 @@
