@@ -1,4 +1,4 @@
-From 3a690cfdb719cce9eef492fd69087217577c96f1 Mon Sep 17 00:00:00 2001
+From 494fc334fdaff97ad03d2823f6e1f5e0ff926705 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 15 Aug 2016 22:44:42 +0800
 Subject: [PATCH] SPIGOT-2603: Fix inventory update code that got broken in
@@ -50,6 +50,21 @@ index 49b692b..56297c6 100644
          </plugins>
      </build>
  </project>
+diff --git a/src/main/java/com/mrpowergamerbr/parappatown/utils/LightStatic.java b/src/main/java/com/mrpowergamerbr/parappatown/utils/LightStatic.java
+index 8c14690..2a1856a 100644
+--- a/src/main/java/com/mrpowergamerbr/parappatown/utils/LightStatic.java
++++ b/src/main/java/com/mrpowergamerbr/parappatown/utils/LightStatic.java
+@@ -5,7 +5,6 @@ import java.util.Random;
+ import com.mrpowergamerbr.utils.LightRandom;
+ 
+ public class LightStatic {
+-	
+-	public static LightRandom random = new LightRandom();
+-	public static Random RNG = new Random();
++	public final static LightRandom random = new LightRandom();
++	public final static Random RNG = new Random();
+ }
+\ No newline at end of file
 diff --git a/src/main/java/net/minecraft/server/BlockMinecartTrackAbstract.java b/src/main/java/net/minecraft/server/BlockMinecartTrackAbstract.java
 index d2516a5..12ad0c3 100644
 --- a/src/main/java/net/minecraft/server/BlockMinecartTrackAbstract.java
@@ -76,8 +91,87 @@ index d99e66d..04b8ac6 100644
  
  		private PooledBlockPosition(int i, int j, int k) {
  			super(i, j, k);
+diff --git a/src/main/java/net/minecraft/server/BlockStateEnum.java b/src/main/java/net/minecraft/server/BlockStateEnum.java
+index 1e061f7..15f9b77 100644
+--- a/src/main/java/net/minecraft/server/BlockStateEnum.java
++++ b/src/main/java/net/minecraft/server/BlockStateEnum.java
+@@ -3,6 +3,7 @@ package net.minecraft.server;
+ import java.util.Collection;
+ import java.util.Iterator;
+ import java.util.Map;
++import java.util.concurrent.ThreadLocalRandom;
+ 
+ import com.google.common.base.Predicate;
+ import com.google.common.base.Predicates;
+@@ -15,23 +16,20 @@ public class BlockStateEnum<T extends Enum<T> & INamable> extends BlockState<T>
+ 
+ 	private final ImmutableSet<T> a;
+ 	private final Map<String, T> b = Maps.newHashMap();
+-
+-	protected BlockStateEnum(String s, Class<T> oclass, Collection<T> collection) {
+-		super(s, oclass);
+-		this.a = ImmutableSet.copyOf(collection);
+-		Iterator iterator = collection.iterator();
+-
+-		while (iterator.hasNext()) {
+-			T oenum = (T) iterator.next(); // TacoSpigot - fix decompile error
+-			String s1 = ((INamable) oenum).getName();
+-
+-			if (this.b.containsKey(s1)) {
+-				throw new IllegalArgumentException("Multiple values have the same name \'" + s1 + "\'");
++  
++	boolean hasHashCode = false;
++	int cachedHashCode = 0;
++	
++	protected BlockStateEnum(String paramString, Class<T> paramClass, Collection<T> paramCollection) {
++		super(paramString, paramClass);
++		this.a = ImmutableSet.copyOf(paramCollection);
++		for (Enum localEnum : paramCollection) {
++			String str = ((INamable)localEnum).getName();
++			if (this.b.containsKey(str)) {
++				throw new IllegalArgumentException("Multiple values have the same name '" + str + "'");
+ 			}
+-
+-			this.b.put(s1, oenum);
++			this.b.put(str, (T) localEnum);
+ 		}
+-
+ 	}
+ 
+ 	@Override
+@@ -73,14 +71,17 @@ public class BlockStateEnum<T extends Enum<T> & INamable> extends BlockState<T>
+ 			return false;
+ 		}
+ 	}
+-
++	
+ 	@Override
+ 	public int hashCode() {
++		if (hasHashCode) { return cachedHashCode; }
++		
+ 		int i = super.hashCode();
+-
++	  
+ 		i = 31 * i + this.a.hashCode();
+ 		i = 31 * i + this.b.hashCode();
+-		return i;
++		hasHashCode = true;
++		return cachedHashCode = i;
+ 	}
+ 
+ 	public static <T extends Enum<T> & INamable> BlockStateEnum<T> of(String s, Class<T> oclass) {
+@@ -96,8 +97,7 @@ public class BlockStateEnum<T extends Enum<T> & INamable> extends BlockState<T>
+ 		return a(s, oclass, (Collection) Lists.newArrayList(at));
+ 	}
+ 
+-	public static <T extends Enum<T> & INamable> BlockStateEnum<T> a(String s, Class<T> oclass,
+-			Collection<T> collection) {
++	public static <T extends Enum<T> & INamable> BlockStateEnum<T> a(String s, Class<T> oclass, Collection<T> collection) {
+ 		return new BlockStateEnum(s, oclass, collection);
+ 	}
+ }
 diff --git a/src/main/java/net/minecraft/server/Chunk.java b/src/main/java/net/minecraft/server/Chunk.java
-index c573276..8631004 100644
+index c573276..ed29ba4 100644
 --- a/src/main/java/net/minecraft/server/Chunk.java
 +++ b/src/main/java/net/minecraft/server/Chunk.java
 @@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
@@ -88,7 +182,7 @@ index c573276..8631004 100644
  
  import com.destroystokyo.paper.antixray.Lock; // Paper - Async-Anti-Xray - Used to lock data which is used while creating chunk-packets asynchronously (those locks freeze the main thread but they occur very rare, worst case is "synchonous-anti-xray-behavior")
  import com.destroystokyo.paper.exception.ServerInternalException;
-@@ -23,7 +24,6 @@ import com.google.common.collect.Lists; // CraftBukkit
+@@ -23,33 +24,11 @@ import com.google.common.collect.Lists; // CraftBukkit
  import com.google.common.collect.Queues;
  import com.mrpowergamerbr.utils.LightRandom;
  
@@ -96,7 +190,35 @@ index c573276..8631004 100644
  
  public class Chunk {
  
-@@ -133,7 +133,7 @@ public class Chunk {
+-	public final Lock blocksLock = new Lock(); // Paper - Async-Anti-Xray -
+-												// Locks blocks and sections and
+-												// is applied before a packet of
+-												// this chunk or a
+-												// neighbor-chunk is added to
+-												// the
+-												// obfuscation-executor-service
+-												// on the main-thread until the
+-												// obfuscator-thread is finished
+-												// to ensure
+-												// "single-thread-behavior" and
+-												// thread-safety
+-	public final Lock dataLock = new Lock(); // Paper - Async-Anti-Xray - Locks
+-												// sky light, emitted light and
+-												// biome index and is applied
+-												// before a packet of this chunk
+-												// is added to the
+-												// obfuscation-executor-service
+-												// on the main-thread until the
+-												// obfuscator-thread is finished
+-												// to ensure
+-												// "single-thread-behavior" and
+-												// thread-safety
++	public final Lock blocksLock = new Lock(); // Paper - Async-Anti-Xray - Locks blocks and sections and is applied before a packet of this chunk or a neighbor-chunk is added to the obfuscation-executor-service on the main-thread until the obfuscator-thread is finished to ensure "single-thread-behavior" and thread-safety
++	public final Lock dataLock = new Lock(); // Paper - Async-Anti-Xray - Locks sky light, emitted light and biome index and is applied before a packet of this chunk is added to the obfuscation-executor-service on the main-thread until the obfuscator-thread is finished to ensure "single-thread-behavior" and thread-safety
+ 	private static final Logger e = LogManager.getLogger();
+ 	public static final ChunkSection a = null;
+ 	private final ChunkSection[] sections;
+@@ -133,7 +112,7 @@ public class Chunk {
  		this.g = new byte[256];
  		this.h = new int[256];
  		this.i = new boolean[256];
@@ -105,6 +227,211 @@ index c573276..8631004 100644
  		this.x = 4096;
  		this.y = Queues.newConcurrentLinkedQueue();
  		this.entitySlices = (new CopyOnWriteArrayList[16]); // Spigot
+@@ -174,19 +153,9 @@ public class Chunk {
+ 						int j1 = i1 >> 4;
+ 
+ 						if (this.sections[j1] == Chunk.a) {
+-							this.sections[j1] = new ChunkSection(j1 << 4, flag,
+-									world.paperConfig.antiXrayInstance.getPredefinedBlockData(this, j1)); // Paper
+-																											// -
+-																											// Anti-Xray
+-																											// -
+-																											// Add
+-																											// blocks
+-																											// used
+-																											// for
+-																											// obfuscation
+-																											// to
+-																											// the
+-																											// DataPalette
++							///
++                            this.sections[j1] = new ChunkSection(j1 << 4, flag, world.paperConfig.antiXrayInstance.getPredefinedBlockData(this, j1));
++							///
+ 						}
+ 
+ 						this.sections[j1].setType(k, i1 & 15, l, iblockdata);
+@@ -271,22 +240,7 @@ public class Chunk {
+ 								ChunkSection chunksection = this.sections[i1 >> 4];
+ 
+ 								if (chunksection != Chunk.a) {
+-									this.dataLock.waitUntilUnlock(); // Paper -
+-																		// Async-Anti-Xray
+-																		// -
+-																		// Note:
+-																		// Lock
+-																		// is
+-																		// applied
+-																		// on
+-																		// the
+-																		// same
+-																		// thread
+-																		// (main
+-																		// thread)
+-																		// -> no
+-																		// race
+-																		// condition
++									this.dataLock.waitUntilUnlock(); // Paper
+ 									chunksection.a(j, i1 & 15, k, l);
+ 									this.world.m(new BlockPosition((this.locX << 4) + j, i1, (this.locZ << 4) + k));
+ 								}
+@@ -410,15 +364,7 @@ public class Chunk {
+ 					for (l1 = i1; l1 < l; ++l1) {
+ 						chunksection = this.sections[l1 >> 4];
+ 						if (chunksection != Chunk.a) {
+-							this.dataLock.waitUntilUnlock(); // Paper -
+-																// Async-Anti-Xray
+-																// - Note: Lock
+-																// is applied on
+-																// the same
+-																// thread (main
+-																// thread) -> no
+-																// race
+-																// condition
++							this.dataLock.waitUntilUnlock(); // Paper
+ 							chunksection.a(i, l1 & 15, k, 15);
+ 							this.world.m(new BlockPosition((this.locX << 4) + i, l1, (this.locZ << 4) + k));
+ 						}
+@@ -427,15 +373,7 @@ public class Chunk {
+ 					for (l1 = l; l1 < i1; ++l1) {
+ 						chunksection = this.sections[l1 >> 4];
+ 						if (chunksection != Chunk.a) {
+-							this.dataLock.waitUntilUnlock(); // Paper -
+-																// Async-Anti-Xray
+-																// - Note: Lock
+-																// is applied on
+-																// the same
+-																// thread (main
+-																// thread) -> no
+-																// race
+-																// condition
++							this.dataLock.waitUntilUnlock(); // Paper
+ 							chunksection.a(i, l1 & 15, k, 0);
+ 							this.world.m(new BlockPosition((this.locX << 4) + i, l1, (this.locZ << 4) + k));
+ 						}
+@@ -459,13 +397,7 @@ public class Chunk {
+ 					ChunkSection chunksection1 = this.sections[i1 >> 4];
+ 
+ 					if (chunksection1 != Chunk.a) {
+-						this.dataLock.waitUntilUnlock(); // Paper -
+-															// Async-Anti-Xray -
+-															// Note: Lock is
+-															// applied on the
+-															// same thread (main
+-															// thread) -> no
+-															// race condition
++						this.dataLock.waitUntilUnlock(); // Paper
+ 						chunksection1.a(i, i1 & 15, k, l1);
+ 					}
+ 				}
+@@ -594,31 +526,14 @@ public class Chunk {
+ 					return null;
+ 				}
+ 
+-				chunksection = this.sections[j >> 4] = new ChunkSection(j >> 4 << 4, !this.world.worldProvider.m(),
+-						this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(this, j >> 4)); // Paper
+-																										// -
+-																										// Anti-Xray
+-																										// -
+-																										// Add
+-																										// blocks
+-																										// used
+-																										// for
+-																										// obfuscation
+-																										// to
+-																										// the
+-																										// DataPalette
+-				this.blocksLock.waitUntilUnlock(); // Paper - Async-Anti-Xray -
+-													// Note: Lock is applied on
+-													// the same thread (main
+-													// thread) -> no race
+-													// condition
++				///
++                chunksection = this.sections[j >> 4] = new ChunkSection(j >> 4 << 4, !this.world.worldProvider.m(), this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(this, j >> 4));
++                this.blocksLock.waitUntilUnlock();
++				///
+ 				flag = j >= i1;
+ 			}
+ 
+-			this.dataLock.waitUntilUnlock(); // Paper - Async-Anti-Xray - Note:
+-												// Lock is applied on the same
+-												// thread (main thread) -> no
+-												// race condition
++			this.dataLock.waitUntilUnlock(); // Paper
+ 			chunksection.setType(i, j & 15, k, iblockdata);
+ 			if (block1 != block) {
+ 				if (!this.world.isClientSide) {
+@@ -706,41 +621,21 @@ public class Chunk {
+ 		ChunkSection chunksection = this.sections[k >> 4];
+ 
+ 		if (chunksection == Chunk.a) {
+-			chunksection = this.sections[k >> 4] = new ChunkSection(k >> 4 << 4, !this.world.worldProvider.m(),
+-					this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(this, k >> 4)); // Paper
+-																									// -
+-																									// Anti-Xray
+-																									// -
+-																									// Add
+-																									// blocks
+-																									// used
+-																									// for
+-																									// obfuscation
+-																									// to
+-																									// the
+-																									// DataPalette
+-			this.blocksLock.waitUntilUnlock(); // Paper - Async-Anti-Xray -
+-												// Note: Lock is applied on the
+-												// same thread (main thread) ->
+-												// no race condition
++			///
++            chunksection = this.sections[k >> 4] = new ChunkSection(k >> 4 << 4, !this.world.worldProvider.m(), this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(this, k >> 4));
++			this.blocksLock.waitUntilUnlock();
++			///
+ 			this.initLighting();
+ 		}
+ 
+ 		this.s = true;
+ 		if (enumskyblock == EnumSkyBlock.SKY) {
+ 			if (!this.world.worldProvider.m()) {
+-				this.dataLock.waitUntilUnlock(); // Paper - Async-Anti-Xray -
+-													// Note: Lock is applied on
+-													// the same thread (main
+-													// thread) -> no race
+-													// condition
++				this.dataLock.waitUntilUnlock(); // Paper
+ 				chunksection.a(j, k & 15, l, i);
+ 			}
+ 		} else if (enumskyblock == EnumSkyBlock.BLOCK) {
+-			this.dataLock.waitUntilUnlock(); // Paper - Async-Anti-Xray - Note:
+-												// Lock is applied on the same
+-												// thread (main thread) -> no
+-												// race condition
++			this.dataLock.waitUntilUnlock(); // Paper
+ 			chunksection.b(j, k & 15, l, i);
+ 		}
+ 
+@@ -1431,10 +1326,7 @@ public class Chunk {
+ 		if (k == 255) {
+ 			biomebase = worldchunkmanager.getBiome(blockposition, Biomes.c);
+ 			k = BiomeBase.a(biomebase);
+-			this.dataLock.waitUntilUnlock(); // Paper - Async-Anti-Xray - Note:
+-												// Lock is applied on the same
+-												// thread (main thread) -> no
+-												// race condition
++			this.dataLock.waitUntilUnlock(); // Paper
+ 			this.g[j << 4 | i] = (byte) (k & 255);
+ 		}
+ 
+@@ -1451,10 +1343,7 @@ public class Chunk {
+ 			Chunk.e.warn("Could not set level chunk biomes, array length is " + abyte.length + " instead of "
+ 					+ this.g.length);
+ 		} else {
+-			this.dataLock.waitUntilUnlock(); // Paper - Async-Anti-Xray - Note:
+-												// Lock is applied on the same
+-												// thread (main thread) -> no
+-												// race condition
++			this.dataLock.waitUntilUnlock(); // Paper
+ 			System.arraycopy(abyte, 0, this.g, 0, this.g.length); // Torch
+ 
+ 		}
 diff --git a/src/main/java/net/minecraft/server/ChunkProviderFlat.java b/src/main/java/net/minecraft/server/ChunkProviderFlat.java
 index 6b006ba..bd3f8f0 100644
 --- a/src/main/java/net/minecraft/server/ChunkProviderFlat.java
@@ -131,6 +458,85 @@ index ee9313c..ed7ab0e 100644
  	public final ChunkGenerator chunkGenerator;
  	private final IChunkLoader chunkLoader;
  	// Paper start
+diff --git a/src/main/java/net/minecraft/server/ChunkRegionLoader.java b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+index 5fe5d59..454657b 100644
+--- a/src/main/java/net/minecraft/server/ChunkRegionLoader.java
++++ b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+@@ -417,19 +417,9 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+ 		for (int k = 0; k < nbttaglist.size(); ++k) {
+ 			NBTTagCompound nbttagcompound1 = nbttaglist.get(k);
+ 			byte b1 = nbttagcompound1.getByte("Y");
+-			ChunkSection chunksection = new ChunkSection(b1 << 4, flag,
+-					world.paperConfig.antiXrayInstance.getPredefinedBlockData(chunk, b0)); // Paper
+-																							// -
+-																							// Anti-Xray
+-																							// -
+-																							// Add
+-																							// blocks
+-																							// used
+-																							// for
+-																							// obfuscation
+-																							// to
+-																							// the
+-																							// DataPalette
++			///
++			ChunkSection chunksection = new ChunkSection(b1 << 4, flag, world.paperConfig.antiXrayInstance.getPredefinedBlockData(chunk, b1));
++			///
+ 			byte[] abyte = nbttagcompound1.getByteArray("Blocks");
+ 			NibbleArray nibblearray = new NibbleArray(nbttagcompound1.getByteArray("Data"));
+ 			NibbleArray nibblearray1 = nbttagcompound1.hasKeyOfType("Add", 7)
+diff --git a/src/main/java/net/minecraft/server/ChunkSection.java b/src/main/java/net/minecraft/server/ChunkSection.java
+index 25a9eb7..0f57ef6 100644
+--- a/src/main/java/net/minecraft/server/ChunkSection.java
++++ b/src/main/java/net/minecraft/server/ChunkSection.java
+@@ -18,22 +18,8 @@ public class ChunkSection {
+ 	// Paper end
+ 
+ 	public ChunkSection(int i, boolean flag, @Nullable IBlockData[] predefinedBlockData) { // Paper
+-																							// -
+-																							// Anti-Xray
+-																							// -
+-																							// Blocks
+-																							// used
+-																							// for
+-																							// obfuscation
+ 		this.yPos = i;
+-		this.blockIds = new DataPaletteBlock(predefinedBlockData); // Paper -
+-																	// Anti-Xray
+-																	// - Add
+-																	// blocks
+-																	// used for
+-																	// obfuscation
+-																	// to the
+-																	// DataPalette
++		this.blockIds = new DataPaletteBlock(predefinedBlockData); // Paper
+ 		this.emittedLight = new NibbleArray();
+ 		if (flag) {
+ 			this.skyLight = new NibbleArray();
+@@ -49,22 +35,8 @@ public class ChunkSection {
+ 
+ 	// CraftBukkit start
+ 	public ChunkSection(int y, boolean flag, char[] blockIds, @Nullable IBlockData[] predefinedBlockData) { // Paper
+-																											// -
+-																											// Anti-Xray
+-																											// -
+-																											// Blocks
+-																											// used
+-																											// for
+-																											// obfuscation
+ 		this.yPos = y;
+-		this.blockIds = new DataPaletteBlock(predefinedBlockData); // Paper -
+-																	// Anti-Xray
+-																	// - Add
+-																	// blocks
+-																	// used for
+-																	// obfuscation
+-																	// to the
+-																	// DataPalette
++		this.blockIds = new DataPaletteBlock(predefinedBlockData); // Paper
+ 		for (int i = 0; i < blockIds.length; i++) {
+ 			int xx = i & 15;
+ 			int yy = (i >> 8) & 15;
 diff --git a/src/main/java/net/minecraft/server/Container.java b/src/main/java/net/minecraft/server/Container.java
 index bc1c125..a6449a1 100644
 --- a/src/main/java/net/minecraft/server/Container.java
@@ -167,6 +573,152 @@ index 42cf109..cfde9ec 100644
  	private File f;
  	private boolean g = true;
  	private StackTraceElement[] h = new StackTraceElement[0];
+diff --git a/src/main/java/net/minecraft/server/DataBits.java b/src/main/java/net/minecraft/server/DataBits.java
+index 6ae27c0..c34316b 100644
+--- a/src/main/java/net/minecraft/server/DataBits.java
++++ b/src/main/java/net/minecraft/server/DataBits.java
+@@ -34,67 +34,23 @@ public class DataBits {
+ 
+ 	}
+ 
+-	// Paper start - Anti-Xray - Add methods used inside the obfuscator loop to
+-	// set fake-blocks to data
+-	public long obfuscate(int blockIndex, int bits, long data) { // Paper -
+-																	// Anti-Xray
+-																	// - First
+-																	// part of
+-																	// this.a(int
+-																	// i, int
+-																	// j),
+-																	// doesn't
+-																	// modify
+-																	// this.a
+-																	// but the
+-																	// data-paramater
+-																	// and
+-																	// returns
+-																	// it
++	// Paper start - Anti-Xray - Add methods used inside the obfuscator loop to set fake-blocks to data
++	public long obfuscate(int blockIndex, int bits, long data) { // Paper
+ 		int j1 = (blockIndex * this.b) % 64;
+ 		return data & ~(this.c << j1) | (bits & this.c) << j1;
+ 	}
+ 
+ 	public long obfuscateSplittedPart(int blockIndex, int bits, long data) { // Paper
+-																				// -
+-																				// Anti-Xray
+-																				// -
+-																				// Second
+-																				// part
+-																				// of
+-																				// this.a(int
+-																				// i,
+-																				// int
+-																				// j),
+-																				// doesn't
+-																				// modify
+-																				// this.a
+-																				// but
+-																				// the
+-																				// data-paramater
+-																				// and
+-																				// returns
+-																				// it
+ 		int k1 = 64 - (blockIndex * this.b) % 64;
+ 		int l1 = this.b - k1;
+ 		return data >>> l1 << l1 | (bits & this.c) >> k1;
+ 	}
+ 
+-	public int getArrayIndex(int blockIndex) { // Paper - Anti-Xray - Returns
+-												// the array index of blockIndex
+-												// for this.a
++	public int getArrayIndex(int blockIndex) { // Paper
+ 		return (blockIndex * this.b) / 64;
+ 	}
+ 
+-	public boolean isSplitted(int blockIndex, int arrayIndex) { // Paper -
+-																// Anti-Xray -
+-																// Returns true
+-																// if and only
+-																// if the block
+-																// data is
+-																// splitted over
+-																// two array
+-																// indexes
++	public boolean isSplitted(int blockIndex, int arrayIndex) { // Paper
+ 		return arrayIndex != ((blockIndex + 1) * this.b - 1) / 64;
+ 	}
+ 	// Paper end
+diff --git a/src/main/java/net/minecraft/server/DataPaletteBlock.java b/src/main/java/net/minecraft/server/DataPaletteBlock.java
+index 4467384..0f67cb3 100644
+--- a/src/main/java/net/minecraft/server/DataPaletteBlock.java
++++ b/src/main/java/net/minecraft/server/DataPaletteBlock.java
+@@ -9,21 +9,8 @@ public class DataPaletteBlock implements DataPaletteExpandable {
+ 	protected DataBits b; // Paper - nope
+ 	protected DataPalette c;
+ 	private int e = 0;
+-	private final IBlockData[] predefinedBlockData; // Paper - Anti-Xray -
+-													// Blocks used for
+-													// obfuscation (since 1.9 MC
+-													// uses DataPalettes which
+-													// have to be changed if
+-													// more different blocks are
+-													// used in a ChunkSection ->
+-													// to avoid that while
+-													// setting the fake-blocks
+-													// we add them from the
+-													// beginning)
+-	private final int[] currentPredefinedBlockData; // Paper - Anti-Xray -
+-													// Current used data bits of
+-													// blocks used for
+-													// obfuscation
++	private final IBlockData[] predefinedBlockData; // Paper
++	private final int[] currentPredefinedBlockData; // Paper
+ 
+ 	// Paper start - Anti-Xray - Support default constructor
+ 	public DataPaletteBlock() {
+@@ -33,38 +20,19 @@ public class DataPaletteBlock implements DataPaletteExpandable {
+ 
+ 	// Paper start - Anti-Xray - Modified constructor
+ 	public DataPaletteBlock(@Nullable IBlockData[] predefinedBlockData) { // Paper
+-																			// -
+-																			// Anti-Xray
+-																			// -
+-																			// Add
+-																			// blocks
+-																			// used
+-																			// for
+-																			// obfuscation
+-																			// to
+-																			// the
+-																			// DataPalette
+ 		this.predefinedBlockData = predefinedBlockData;
+-		if (predefinedBlockData == null) { // Paper - Anti-Xray - default
+-											// constructor
++		if (predefinedBlockData == null) { // Paper - Anti-Xray - default constructor
+ 			this.currentPredefinedBlockData = null;
+ 			this.b(4);
+ 		} else {
+ 			this.currentPredefinedBlockData = new int[predefinedBlockData.length];
+-			int maxIndex = predefinedBlockData.length; // Paper - Anti-Xray -
+-														// count bits of the
+-														// maximum array index
+-														// (+1 because AIR is
+-														// also added) -> array
+-														// length
++			int maxIndex = predefinedBlockData.length; // Paper
+ 			int bitCount = 0;
+ 			while (maxIndex != 0) {
+ 				maxIndex >>= 1;
+ 				bitCount++;
+ 			}
+-			this.b(bitCount == 0 ? 4 : bitCount); // Paper - Anti-Xray -
+-													// initialize a DataPalette
+-													// with bitCount
++			this.b(bitCount == 0 ? 4 : bitCount); // Paper - Anti-Xray - initialize a DataPalette with bitCount
+ 		}
+ 	}
+ 	// Paper end
 diff --git a/src/main/java/net/minecraft/server/DataWatcher.java b/src/main/java/net/minecraft/server/DataWatcher.java
 index 2a48653..4679aa0 100644
 --- a/src/main/java/net/minecraft/server/DataWatcher.java
@@ -268,25 +820,94 @@ index 6abee8f..55d401d 100644
  	private static int throttleCounter = 0;
  	// CraftBukkit end
  
+diff --git a/src/main/java/net/minecraft/server/MathHelper.java b/src/main/java/net/minecraft/server/MathHelper.java
+index dbaf24a..327cb1b 100644
+--- a/src/main/java/net/minecraft/server/MathHelper.java
++++ b/src/main/java/net/minecraft/server/MathHelper.java
+@@ -111,12 +111,8 @@ public class MathHelper {
+ 
+ 	public static double a(long[] along) {
+ 		long i = 0L;
+-		long[] along1 = along;
+-		int j = along.length;
+-
+-		for (int k = 0; k < j; ++k) {
+-			long l = along1[k];
+-
++		
++		for (long l : along) {
+ 			i += l;
+ 		}
+ 
+@@ -125,41 +121,17 @@ public class MathHelper {
+ 
+ 	public static float g(float f) {
+ 		f %= 360.0F;
+-		if (f >= 180.0F) {
+-			f -= 360.0F;
+-		}
+-
+-		if (f < -180.0F) {
+-			f += 360.0F;
+-		}
+-
+-		return f;
++		return f < -180.0F ? (f += 360.0F) : (f -= 360.0F);
+ 	}
+ 
+ 	public static double g(double d0) {
+ 		d0 %= 360.0D;
+-		if (d0 >= 180.0D) {
+-			d0 -= 360.0D;
+-		}
+-
+-		if (d0 < -180.0D) {
+-			d0 += 360.0D;
+-		}
+-
+-		return d0;
++		return d0 < -180.0D ? (d0 += 360.0D) : (d0 -= 360.0D);
+ 	}
+ 
+ 	public static int b(int i) {
+ 		i %= 360;
+-		if (i >= 180) {
+-			i -= 360;
+-		}
+-
+-		if (i < -180) {
+-			i += 360;
+-		}
+-
+-		return i;
++		return i < -180 ? (i += 360) : (i -= 360);
+ 	}
+ 
+ 	public static int a(String s, int i) {
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 7fd311c..27af288 100644
+index 7fd311c..f3533fc 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
-@@ -906,10 +906,10 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
- 		this.server.getScheduler().mainThreadHeartbeat(this.ticks); // CraftBukkit
- 		this.methodProfiler.a("jobs");
- 		// Spigot start
--		FutureTask<?> entry;
--		int count = this.j.size();
--		while (count-- > 0 && (entry = this.j.poll()) != null) {
+@@ -123,7 +123,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 		networkQueue.add(ListenableFutureTask.create(run));
+ 	}
+ 
+-	synchronized static void processNetworkQueue() {
++	static void processNetworkQueue() {
+ 		FutureTask<?> entry;
+ 		int count = networkQueue.size();
+ 		while (count-- > 0 && (entry = networkQueue.poll()) != null) {
+@@ -909,9 +909,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 		FutureTask<?> entry;
+ 		int count = this.j.size();
+ 		while (count-- > 0 && (entry = this.j.poll()) != null) {
 -			synchronized (this) {
-+		synchronized(this) {
-+			FutureTask<?> entry;
-+			int count = this.j.size();
-+			while (count-- > 0 && (entry = this.j.poll()) != null) {
- 				SystemUtils.a(entry, MinecraftServer.LOGGER);
- 			}
+-				SystemUtils.a(entry, MinecraftServer.LOGGER);
+-			}
++			SystemUtils.a(entry, MinecraftServer.LOGGER);
  		}
+ 		// Spigot end
+ 		MinecraftTimings.minecraftSchedulerTimer.stopTiming(); // Paper
 diff --git a/src/main/java/net/minecraft/server/NameReferencingFileConverter.java b/src/main/java/net/minecraft/server/NameReferencingFileConverter.java
 index f83be8f..1938b0f 100644
 --- a/src/main/java/net/minecraft/server/NameReferencingFileConverter.java
@@ -594,10 +1215,110 @@ index af20910..d3e8bda 100644
  		this.k.a(false);
  		this.l.a(false);
 diff --git a/src/main/java/net/minecraft/server/RegionFile.java b/src/main/java/net/minecraft/server/RegionFile.java
-index 67b2555..b9b32d2 100644
+index 67b2555..2f1072a 100644
 --- a/src/main/java/net/minecraft/server/RegionFile.java
 +++ b/src/main/java/net/minecraft/server/RegionFile.java
-@@ -303,18 +303,7 @@ public class RegionFile {
+@@ -12,14 +12,9 @@ import java.util.List;
+ import java.util.zip.DeflaterOutputStream;
+ import java.util.zip.GZIPInputStream;
+ import java.util.zip.InflaterInputStream;
++import java.util.concurrent.atomic.AtomicIntegerArray;
+ 
+ // Torch start
+-/*
+-import java.io.BufferedInputStream;
+-import java.io.BufferedOutputStream;
+-import java.io.ByteArrayInputStream;
+-import java.io.ByteArrayOutputStream;
+-*/
+ import org.torch.util.io.FastBufferedInputStream;
+ import org.torch.util.io.FastBufferedOutputStream;
+ import org.torch.util.io.FastByteArrayInputStream;
+@@ -38,8 +33,8 @@ public class RegionFile {
+ 													// empty 4k block
+ 	private final File b;
+ 	private RandomAccessFile c;
+-	private final int[] d = new int[1024];
+-	private final int[] e = new int[1024];
++	private final AtomicIntegerArray d = new AtomicIntegerArray(1024);
++	private final AtomicIntegerArray e = new AtomicIntegerArray(1024);
+ 	private List<Boolean> f;
+ 	private int g;
+ 	private long h;
+@@ -82,16 +77,16 @@ public class RegionFile {
+ 			}
+ 
+ 			i = (int) this.c.length() / 4096;
+-			this.f = Lists.newArrayListWithCapacity(i); // Torch
++			synchronized(this) { this.f = Lists.newArrayListWithCapacity(i); }
+ 
+ 			int j;
+ 
+ 			for (j = 0; j < i; ++j) {
+-				this.f.add(Boolean.valueOf(true));
++				synchronized(this) { this.f.add(Boolean.valueOf(true)); }
+ 			}
+ 
+-			this.f.set(0, Boolean.valueOf(false));
+-			this.f.set(1, Boolean.valueOf(false));
++			synchronized(this) { this.f.set(0, Boolean.valueOf(false));
++			this.f.set(1, Boolean.valueOf(false)); }
+ 			this.c.seek(0L);
+ 
+ 			int k;
+@@ -108,21 +103,21 @@ public class RegionFile {
+ 			for (j = 0; j < 1024; ++j) {
+ 				k = headerAsInts.get(); // Paper
+ 				// System.out.println("k1: " + k);
+-				this.d[j] = k;
++				this.d.set(j, k);
+ 
+ 				if (k > 0 && (k >> 8) + (k & 255) <= this.f.size()) { // Torch
+ 					// System.out.println("k2: " + k);
+ 					for (int l = 0; l < (k & 255); ++l) {
+ 						// System.out.println("k3: " + k);
+ 						// System.out.println("l: " + l);
+-						this.f.set((k >> 8) + l, Boolean.valueOf(false));
++						synchronized(this) { this.f.set((k >> 8) + l, Boolean.valueOf(false)); }
+ 					}
+ 				}
+ 			}
+ 
+ 			for (j = 0; j < 1024; ++j) {
+ 				k = headerAsInts.get(); // Paper
+-				this.e[j] = k;
++				this.e.set(j, k);
+ 			}
+ 		} catch (IOException ioexception) {
+ 			ioexception.printStackTrace();
+@@ -251,7 +246,7 @@ public class RegionFile {
+ 				int l1;
+ 
+ 				for (l1 = 0; l1 < j1; ++l1) {
+-					this.f.set(i1 + l1, Boolean.valueOf(true));
++					synchronized(this) { this.f.set(i1 + l1, Boolean.valueOf(true)); }
+ 				}
+ 
+ 				l1 = this.f.indexOf(Boolean.valueOf(true));
+@@ -282,7 +277,7 @@ public class RegionFile {
+ 					this.a(i, j, l1 << 8 | k1);
+ 
+ 					for (j2 = 0; j2 < k1; ++j2) {
+-						this.f.set(i1 + j2, Boolean.valueOf(false));
++						synchronized(this) { this.f.set(i1 + j2, Boolean.valueOf(false)); }
+ 					}
+ 
+ 					this.a(i1, abyte, k);
+@@ -292,7 +287,7 @@ public class RegionFile {
+ 
+ 					for (j2 = 0; j2 < k1; ++j2) {
+ 						this.c.write(RegionFile.a);
+-						this.f.add(Boolean.valueOf(false));
++						synchronized(this) { this.f.add(Boolean.valueOf(false)); }
+ 					}
+ 
+ 					this.g += 4096 * k1;
+@@ -303,18 +298,7 @@ public class RegionFile {
  
  			this.b(i, j, (int) (MinecraftServer.av() / 1000L));
  		} catch (IOException ioexception) {
@@ -614,6 +1335,41 @@ index 67b2555..b9b32d2 100644
 -																			// //
 -																			// Torch
 +			org.spigotmc.SneakyThrow.sneaky(ioexception); // Paper - we want the upper try/catch to retry this
+ 		}
+ 
+ 	}
+@@ -331,7 +315,7 @@ public class RegionFile {
+ 	}
+ 
+ 	private int e(int i, int j) {
+-		return this.d[i + j * 32];
++		return this.d.get(i + j * 32);
+ 	}
+ 
+ 	public boolean c(int i, int j) {
+@@ -339,22 +323,20 @@ public class RegionFile {
+ 	}
+ 
+ 	private void a(int i, int j, int k) throws IOException {
+-		this.d[i + j * 32] = k;
++		this.d.set(i + j * 32, k);
+ 		this.c.seek((i + j * 32) * 4);
+ 		this.c.writeInt(k);
+ 	}
+ 
+ 	private void b(int i, int j, int k) throws IOException {
+-		this.e[i + j * 32] = k;
++		this.e.set(i + j * 32, k);
+ 		this.c.seek(4096 + (i + j * 32) * 4);
+ 		this.c.writeInt(k);
+ 	}
+ 
+ 	public void c() throws IOException {
+ 		if (this.c != null) {
+-			synchronized (this) {
+-				this.c.close();
+-			}
++			this.c.close();
  		}
  
  	}
@@ -685,7 +1441,7 @@ index 0acc231..6e42157 100644
  	public int k = -1; // PAIL: private -> public
  	private int levels = 0;
 diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
-index 87d1f5f..1dc6c28 100644
+index 87d1f5f..f2ce689 100644
 --- a/src/main/java/net/minecraft/server/World.java
 +++ b/src/main/java/net/minecraft/server/World.java
 @@ -11,7 +11,6 @@ import java.util.Random;
@@ -696,16 +1452,26 @@ index 87d1f5f..1dc6c28 100644
  // Paper end
  import java.util.concurrent.RecursiveAction;
  import java.util.concurrent.RecursiveTask;
-@@ -52,7 +51,7 @@ public abstract class World implements IBlockAccess {
+@@ -52,30 +51,17 @@ public abstract class World implements IBlockAccess {
  	// Spigot start - guard entity list from removals
  	protected boolean cancelHeavyCalculations = false;
  
 -	public final List<Entity> entityList = Lists.newCopyOnWriteArrayList(); // Hose
-+	public final List<Entity> entityList = new org.torch.util.ConcurrentIterableArrayList(); // Hose
- 	/*
- 	 * public final List<Entity> entityList = new java.util.ArrayList<Entity>()
- 	 * {
-@@ -70,12 +69,12 @@ public abstract class World implements IBlockAccess {
+-	/*
+-	 * public final List<Entity> entityList = new java.util.ArrayList<Entity>()
+-	 * {
+-	 * 
+-	 * @Override public Entity remove(int index) { guard(); return super.remove(
+-	 * index ); }
+-	 * 
+-	 * @Override public boolean remove(Object o) { guard(); return super.remove(
+-	 * o ); }
+-	 * 
+-	 * private void guard() { if ( guardEntityList ) { throw new
+-	 * java.util.ConcurrentModificationException(); } } };
+-	 */
++	public final List<Entity> entityList = new java.util.concurrent.CopyOnWriteArrayList();
+ 	// Spigot end
  	protected final Queue<Entity> f = Queues.newConcurrentLinkedQueue();
  	// public final List<TileEntity> tileEntityList = Lists.newArrayList(); //
  	// Paper - remove unused list
@@ -721,7 +1487,7 @@ index 87d1f5f..1dc6c28 100644
  	private long I = 16777215L;
  	private int J;
  	protected int l = com.mrpowergamerbr.parappatown.utils.LightStatic.random.nextInt();
-@@ -146,7 +145,7 @@ public abstract class World implements IBlockAccess {
+@@ -146,7 +132,7 @@ public abstract class World implements IBlockAccess {
  	private org.spigotmc.TickLimiter entityLimiter;
  	private org.spigotmc.TickLimiter tileLimiter;
  	private int tileTickPosition;
@@ -730,6 +1496,125 @@ index 87d1f5f..1dc6c28 100644
  																																// -
  																																// Optimize
  																																// explosions
+@@ -1607,56 +1593,6 @@ public abstract class World implements IBlockAccess {
+ 	public void b(BlockPosition blockposition, Block block, int i, int j) {
+ 	}
+ 
+-	public void tick_hose(Entity entity) {
+-		Entity entity1 = entity.bz();
+-
+-		if (entity1 != null) {
+-			if (!entity1.dead && entity1.w(entity)) {
+-				return;
+-			}
+-			entity.stopRiding();
+-		}
+-		this.methodProfiler.a("tick");
+-		if (!entity.dead && !(entity instanceof EntityPlayer)) {
+-			try {
+-				entity.tickTimer.startTiming(); // Paper
+-				this.g(entity);
+-				entity.tickTimer.stopTiming(); // Paper
+-			} catch (Throwable throwable1) {
+-				entity.tickTimer.stopTiming();
+-				// Paper start - Prevent tile entity and entity crashes
+-				String msg = "Entity threw exception at " + entity.world.getWorld().getName() + ":" + entity.locX + ","
+-						+ entity.locY + "," + entity.locZ;
+-				System.err.println(msg);
+-				throwable1.printStackTrace();
+-				getServer().getPluginManager()
+-						.callEvent(new ServerExceptionEvent(new ServerInternalException(msg, throwable1)));
+-				entity.dead = true;
+-				return;
+-				// Paper end
+-			}
+-		}
+-
+-		this.methodProfiler.b();
+-		this.methodProfiler.a("remove");
+-		if (entity.dead) {
+-			int j = entity.ab;
+-			int l = entity.ad;
+-
+-			if (entity.aa && this.isChunkLoaded(j, l, true)) {
+-				this.getChunkAt(j, l).b(entity);
+-			}
+-
+-			guardEntityList = false; // Spigot
+-			this.entityList.remove(entity); // CraftBukkit - Use field for loop
+-											// variable
+-			guardEntityList = true; // Spigot
+-			this.c(entity);
+-		}
+-
+-		this.methodProfiler.b();
+-	}
+-
+ 	public void tickEntities() {
+ 		this.methodProfiler.a("entities");
+ 		this.methodProfiler.a("global");
+@@ -1764,11 +1700,56 @@ public abstract class World implements IBlockAccess {
+ 		// if (tickPosition < 0) tickPosition = 0;
+ 		for (tickPosition = 0; tickPosition < entityList.size(); tickPosition++) {
+ 			// Paper end
+-			tickPosition = (tickPosition < entityList.size()) ? tickPosition : 0;
+-			entity = this.entityList.get(this.tickPosition);
+-			tick_hose(entity);
+-			// CraftBukkit end
+-		}
++            tickPosition = (tickPosition < entityList.size()) ? tickPosition : 0;
++            entity = (Entity) this.entityList.get(this.tickPosition);
++            // CraftBukkit end
++            Entity entity1 = entity.bz();
++
++            if (entity1 != null) {
++                if (!entity1.dead && entity1.w(entity)) {
++                    continue;
++                }
++
++                entity.stopRiding();
++            }
++
++            this.methodProfiler.a("tick");
++            if (!entity.dead && !(entity instanceof EntityPlayer)) {
++                try {
++                    entity.tickTimer.startTiming(); // Paper
++                    this.g(entity);
++                    entity.tickTimer.stopTiming(); // Paper
++                } catch (Throwable throwable1) {
++                    entity.tickTimer.stopTiming();
++                    // Paper start - Prevent tile entity and entity crashes
++                    String msg = "Entity threw exception at " + entity.world.getWorld().getName() + ":" + entity.locX + "," + entity.locY + "," + entity.locZ;
++                    System.err.println(msg);
++                    throwable1.printStackTrace();
++                    getServer().getPluginManager().callEvent(new ServerExceptionEvent(new ServerInternalException(msg, throwable1)));
++                    entity.dead = true;
++                    continue;
++                    // Paper end
++                }
++            }
++
++            this.methodProfiler.b();
++            this.methodProfiler.a("remove");
++            if (entity.dead) {
++                j = entity.ab;
++                int l = entity.ad;
++
++                if (entity.aa && this.isChunkLoaded(j, l, true)) {
++                    this.getChunkAt(j, l).b(entity);
++                }
++
++                guardEntityList = false; // Spigot
++                this.entityList.remove(this.tickPosition--); // CraftBukkit - Use field for loop variable
++                guardEntityList = true; // Spigot
++                this.c(entity);
++            }
++
++            this.methodProfiler.b();
++        }
+ 		guardEntityList = false; // Spigot
+ 
+ 		timings.entityTick.stopTiming(); // Spigot
 diff --git a/src/main/java/net/minecraft/server/WorldBorder.java b/src/main/java/net/minecraft/server/WorldBorder.java
 index 13f6f2e..8d3c40c 100644
 --- a/src/main/java/net/minecraft/server/WorldBorder.java
@@ -1502,6 +2387,96 @@ index 9dd904a..6c44dee 100644
 +        return Villager.Profession.getProfession(getHandle().getVillagerType());
  	}
  }
+diff --git a/src/main/java/org/bukkit/craftbukkit/generator/CustomChunkGenerator.java b/src/main/java/org/bukkit/craftbukkit/generator/CustomChunkGenerator.java
+index 1d663b8..d2565d3 100644
+--- a/src/main/java/org/bukkit/craftbukkit/generator/CustomChunkGenerator.java
++++ b/src/main/java/org/bukkit/craftbukkit/generator/CustomChunkGenerator.java
+@@ -84,18 +84,7 @@ public class CustomChunkGenerator extends InternalChunkGenerator {
+ 				// Build chunk section
+ 				if (emptyTest != 0) {
+ 					csect[sec] = new ChunkSection(sec << 4, true, section,
+-							this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(chunk, sec)); // Paper
+-																											// -
+-																											// Anti-Xray
+-																											// -
+-																											// Add
+-																											// blocks
+-																											// used
+-																											// for
+-																											// obfuscation
+-																											// to
+-																											// the
+-																											// DataPalette
++					this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(chunk, sec)); // Paper
+ 				}
+ 			}
+ 		} else {
+@@ -120,18 +109,7 @@ public class CustomChunkGenerator extends InternalChunkGenerator {
+ 					}
+ 					// Build chunk section
+ 					csect[sec] = new ChunkSection(sec << 4, true, secBlkID,
+-							this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(chunk, sec)); // Paper
+-																											// -
+-																											// Anti-Xray
+-																											// -
+-																											// Add
+-																											// blocks
+-																											// used
+-																											// for
+-																											// obfuscation
+-																											// to
+-																											// the
+-																											// DataPalette
++					this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(chunk, sec)); // Paper
+ 				}
+ 			} else { // Else check for byte-per-block section data
+ 				byte[][] btypes = generator.generateBlockSections(this.world.getWorld(), this.random, x, z, biomegrid);
+@@ -150,22 +128,10 @@ public class CustomChunkGenerator extends InternalChunkGenerator {
+ 						char[] secBlkID = new char[4096]; // Allocate block ID
+ 															// bytes
+ 						for (int i = 0; i < secBlkID.length; i++) {
+-							Block.getById(btypes[sec][i] & 0xFF);
+-							csect[sec] = new ChunkSection(sec << 4, true, secBlkID,
+-									this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(chunk, sec)); // Paper
+-																													// -
+-																													// Anti-Xray
+-																													// -
+-																													// Add
+-																													// blocks
+-																													// used
+-																													// for
+-																													// obfuscation
+-																													// to
+-																													// the
+-																													// DataPalette
++							Block b = Block.getById(btypes[sec][i] & 0xFF);
++                            secBlkID[i] = (char) Block.REGISTRY_ID.getId(b.getBlockData());
+ 						}
+-						csect[sec] = new ChunkSection(sec << 4, true, secBlkID);
++						csect[sec] = new ChunkSection(sec << 4, true, secBlkID, this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(chunk, sec)); // Paper
+ 					}
+ 				} else { // Else, fall back to pre 1.2 method
+ 					@SuppressWarnings("deprecation")
+@@ -207,18 +173,7 @@ public class CustomChunkGenerator extends InternalChunkGenerator {
+ 						// If section built, finish prepping its state
+ 						if (csbytes != null) {
+ 							ChunkSection cs = csect[sec] = new ChunkSection(sec << 4, true, csbytes,
+-									this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(chunk, sec)); // Paper
+-																													// -
+-																													// Anti-Xray
+-																													// -
+-																													// Add
+-																													// blocks
+-																													// used
+-																													// for
+-																													// obfuscation
+-																													// to
+-																													// the
+-																													// DataPalette
++							this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(chunk, sec)); // Paper
+ 							cs.recalcBlockCounts();
+ 						}
+ 					}
 diff --git a/src/main/java/org/bukkit/craftbukkit/potion/CraftPotionBrewer.java b/src/main/java/org/bukkit/craftbukkit/potion/CraftPotionBrewer.java
 index ee34a9e..23d4355 100644
 --- a/src/main/java/org/bukkit/craftbukkit/potion/CraftPotionBrewer.java
