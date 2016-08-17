@@ -1,4 +1,4 @@
-From df96d9a1e060df98504a4540c1940a429f4b1c57 Mon Sep 17 00:00:00 2001
+From 8abdff15acede1804c4e4ee52a30e42a342b3988 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 15 Aug 2016 22:44:42 +0800
 Subject: [PATCH] SPIGOT-2603: Fix inventory update code that got broken in
@@ -6,7 +6,7 @@ Subject: [PATCH] SPIGOT-2603: Fix inventory update code that got broken in
 
 
 diff --git a/pom.xml b/pom.xml
-index 49b692b..143bd4e 100644
+index 49b692b..56297c6 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -91,24 +91,6 @@
@@ -34,6 +34,22 @@ index 49b692b..143bd4e 100644
          <!-- testing -->
          <dependency>
              <groupId>junit</groupId>
+@@ -256,15 +238,6 @@
+                     </excludes>
+                 </configuration>
+             </plugin>
+-			  <!-- Torch - Do not deploy the server -->
+-            <plugin>
+-                <groupId>org.apache.maven.plugins</groupId>
+-                <artifactId>maven-deploy-plugin</artifactId>
+-                <version>2.8.2</version>
+-                <configuration>
+-                    <skip>true</skip>
+-                </configuration>
+-            </plugin>
+         </plugins>
+     </build>
+ </project>
 diff --git a/src/main/java/net/minecraft/server/BlockMinecartTrackAbstract.java b/src/main/java/net/minecraft/server/BlockMinecartTrackAbstract.java
 index d2516a5..12ad0c3 100644
 --- a/src/main/java/net/minecraft/server/BlockMinecartTrackAbstract.java
