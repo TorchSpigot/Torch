@@ -1,4 +1,4 @@
-From 8abdff15acede1804c4e4ee52a30e42a342b3988 Mon Sep 17 00:00:00 2001
+From 3a690cfdb719cce9eef492fd69087217577c96f1 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 15 Aug 2016 22:44:42 +0800
 Subject: [PATCH] SPIGOT-2603: Fix inventory update code that got broken in
@@ -634,6 +634,43 @@ index 7ff0117..9c1174d 100644
  
  	public StatisticManager() {
  	}
+diff --git a/src/main/java/net/minecraft/server/SystemUtils.java b/src/main/java/net/minecraft/server/SystemUtils.java
+deleted file mode 100644
+index 8de936d..0000000
+--- a/src/main/java/net/minecraft/server/SystemUtils.java
++++ /dev/null
+@@ -1,30 +0,0 @@
+-package net.minecraft.server;
+-
+-import java.util.List;
+-import java.util.concurrent.ExecutionException;
+-import java.util.concurrent.FutureTask;
+-
+-import javax.annotation.Nullable;
+-
+-import org.apache.logging.log4j.Logger;
+-
+-public class SystemUtils {
+-
+-	@Nullable
+-	public static synchronized <V> V a(FutureTask<V> futuretask, Logger logger) {
+-		try {
+-			futuretask.run();
+-			return futuretask.get();
+-		} catch (ExecutionException executionexception) {
+-			logger.fatal("Error executing task", executionexception);
+-		} catch (InterruptedException interruptedexception) {
+-			logger.fatal("Error executing task", interruptedexception);
+-		}
+-
+-		return null;
+-	}
+-
+-	public static <T> T a(List<T> list) {
+-		return list.get(list.size() - 1);
+-	}
+-}
+\ No newline at end of file
 diff --git a/src/main/java/net/minecraft/server/TileEntityBeacon.java b/src/main/java/net/minecraft/server/TileEntityBeacon.java
 index 0acc231..6e42157 100644
 --- a/src/main/java/net/minecraft/server/TileEntityBeacon.java
