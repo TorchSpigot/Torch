@@ -1,4 +1,4 @@
-From fa5f3c5d63abd8381b5159ad6417bf066d8706c1 Mon Sep 17 00:00:00 2001
+From 3a9704b472cf0f82f37c4beb75e480f411edc867 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 03:53:02 +0800
 Subject: [PATCH] Better error logging on IO threads

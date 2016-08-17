@@ -1,4 +1,4 @@
-From f42000fc9f896b42971464c5c5661c57ade28f6a Mon Sep 17 00:00:00 2001
+From ac8d9bda724d6ac81fa9cc06105f36ad35b1eedf Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 14 Aug 2016 07:08:05 +0800
 Subject: [PATCH] Improve redstone calculate

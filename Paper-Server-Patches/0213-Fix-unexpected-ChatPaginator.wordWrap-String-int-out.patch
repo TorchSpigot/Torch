@@ -1,4 +1,4 @@
-From 46cadff0e1fcf4482cfe5e830f78a9c086570191 Mon Sep 17 00:00:00 2001
+From a2ccb026679eab3335f059381ac606320304c2db Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 7 Aug 2016 02:58:17 +0800
 Subject: [PATCH] Fix unexpected ChatPaginator.wordWrap(String, int) output in

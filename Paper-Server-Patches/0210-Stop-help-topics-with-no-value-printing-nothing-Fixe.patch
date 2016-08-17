@@ -1,4 +1,4 @@
-From f03f2263bb4ad88644b095cafc830cd59c4a8eba Mon Sep 17 00:00:00 2001
+From b830c4b65ce37a75b071120336f4ff5bb61b747b Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 7 Aug 2016 02:30:43 +0800
 Subject: [PATCH] Stop help topics with no value printing nothing - Fixes

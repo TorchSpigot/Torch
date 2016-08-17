@@ -1,4 +1,4 @@
-From 55a1ba1b86088ddf58f16dc2cef46b40cc10aa1c Mon Sep 17 00:00:00 2001
+From 39c62bfd6744a7c56c725f163eabec99647bb4d0 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 06:36:22 +0800
 Subject: [PATCH] MC-72248 Fix FallingSand creating invisible blocks
