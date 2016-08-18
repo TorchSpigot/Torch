@@ -1,4 +1,4 @@
-From ca02f9636d62456dc75ce0ee7d642add04afdaf0 Mon Sep 17 00:00:00 2001
+From 799483bf7c6d78dd169547884791da7ed351b8ff Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 15 Aug 2016 22:44:42 +0800
 Subject: [PATCH] SPIGOT-2603: Fix inventory update code that got broken in
@@ -658,6 +658,27 @@ index bc1c125..a6449a1 100644
  	}
  
  	public boolean a(EntityHuman entityhuman, int i) {
+diff --git a/src/main/java/net/minecraft/server/ContainerEnchantTable.java b/src/main/java/net/minecraft/server/ContainerEnchantTable.java
+index c49b13f..677e753 100644
+--- a/src/main/java/net/minecraft/server/ContainerEnchantTable.java
++++ b/src/main/java/net/minecraft/server/ContainerEnchantTable.java
+@@ -3,6 +3,7 @@ package net.minecraft.server;
+ import java.util.List;
+ // CraftBukkit start
+ import java.util.Map;
++import java.util.Random;
+ 
+ import javax.annotation.Nullable;
+ 
+@@ -39,7 +40,7 @@ public class ContainerEnchantTable extends Container {
+ 	};
+ 	private World world;
+ 	private BlockPosition position;
+-	private LightRandom l = com.mrpowergamerbr.parappatown.utils.LightStatic.random;
++	private Random l = com.mrpowergamerbr.parappatown.utils.LightStatic.RNG;
+ 	public int f;
+ 	public int[] costs = new int[3];
+ 	public int[] h = new int[] { -1, -1, -1 };
 diff --git a/src/main/java/net/minecraft/server/CrashReport.java b/src/main/java/net/minecraft/server/CrashReport.java
 index 42cf109..cfde9ec 100644
 --- a/src/main/java/net/minecraft/server/CrashReport.java

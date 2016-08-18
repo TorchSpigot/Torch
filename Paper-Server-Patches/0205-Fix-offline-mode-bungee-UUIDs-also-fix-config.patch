@@ -1,4 +1,4 @@
-From 3cf1bf40a4c59df5d2dcf119e9d9c29bcb1abfba Mon Sep 17 00:00:00 2001
+From 01272daefff570a8acc3a87003e30055a789ce93 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 5 Aug 2016 13:31:51 +0800
 Subject: [PATCH] Fix offline-mode bungee UUIDs, also fix config
