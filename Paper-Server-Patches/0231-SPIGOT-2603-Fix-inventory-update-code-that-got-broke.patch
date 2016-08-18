@@ -1,4 +1,4 @@
-From 494fc334fdaff97ad03d2823f6e1f5e0ff926705 Mon Sep 17 00:00:00 2001
+From edc8218dbc893aea4d61a142de3a00b782f6029d Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 15 Aug 2016 22:44:42 +0800
 Subject: [PATCH] SPIGOT-2603: Fix inventory update code that got broken in
@@ -885,7 +885,7 @@ index dbaf24a..327cb1b 100644
  
  	public static int a(String s, int i) {
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 7fd311c..f3533fc 100644
+index 7fd311c..d6638b6 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
 @@ -123,7 +123,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
@@ -897,6 +897,15 @@ index 7fd311c..f3533fc 100644
  		FutureTask<?> entry;
  		int count = networkQueue.size();
  		while (count-- > 0 && (entry = networkQueue.poll()) != null) {
+@@ -132,7 +132,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 	}
+ 
+ 	// CraftBukkit start
+-	public List<WorldServer> worlds = new ArrayList<WorldServer>();
++	public List<WorldServer> worlds = new org.torch.util.ConcurrentIterableArrayList<WorldServer>();
+ 	// public List<WorldServer> worlds = Collections.synchronizedList(new
+ 	// ArrayList<WorldServer>());
+ 	public org.bukkit.craftbukkit.CraftServer server;
 @@ -909,9 +909,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
  		FutureTask<?> entry;
  		int count = this.j.size();
