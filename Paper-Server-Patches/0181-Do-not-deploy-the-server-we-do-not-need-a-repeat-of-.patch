@@ -1,4 +1,4 @@
-From 7169da6532254191c4736eb0d482b2a57cc0a126 Mon Sep 17 00:00:00 2001
+From 80545987203c98155c545b62ff1c50e6281ab9ca Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 26 Jul 2016 14:33:08 +0800
 Subject: [PATCH] Do not deploy the server, we do not need a repeat of the

@@ -1,4 +1,4 @@
-From 2d587054242354440a083e65064f2660fb258124 Mon Sep 17 00:00:00 2001
+From 86dad277dbb84dd6f71c87291e604c3df97ab245 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 12 Jul 2016 05:34:27 +0800
 Subject: [PATCH] Do not Spam Hopper InventoryMoveItemEvents, miscs

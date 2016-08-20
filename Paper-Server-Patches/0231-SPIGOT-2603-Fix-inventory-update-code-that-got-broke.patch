@@ -1,4 +1,4 @@
-From 799483bf7c6d78dd169547884791da7ed351b8ff Mon Sep 17 00:00:00 2001
+From 834c1dec16895c80e58d3238e96fa51cb8f2f970 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 15 Aug 2016 22:44:42 +0800
 Subject: [PATCH] SPIGOT-2603: Fix inventory update code that got broken in

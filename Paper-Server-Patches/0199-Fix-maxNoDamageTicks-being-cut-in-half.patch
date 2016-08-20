@@ -1,4 +1,4 @@
-From 2d6699fd459a91e82afb12c649454e76478786cc Mon Sep 17 00:00:00 2001
+From 15247fd328d8279bf26f0eaa77ddbbd9a3a2894a Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 2 Aug 2016 11:54:14 +0800
 Subject: [PATCH] Fix maxNoDamageTicks being cut in half

@@ -1,4 +1,4 @@
-From 1b77b4f752b69be30a685cd7967bf983c24854e1 Mon Sep 17 00:00:00 2001
+From 22d8feb0c0630fab9e076d0600eb026fca22cfe6 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 08:40:36 +0800
 Subject: [PATCH] Fix Torch version
