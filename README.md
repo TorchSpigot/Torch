@@ -2,7 +2,7 @@ Torch
 ===========
 ![Torch](https://i.imgur.com/cJWj0we.png) 
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg?style=flat)](http://pan.baidu.com/s/1hsBEdxU/) [![Minecraft](https://img.shields.io/badge/Minecraft-1.9.4-green.svg?style=flat)](https://www.minecraft.net/) [![Java](https://img.shields.io/badge/Java_JDK-v1.8-blue.svg?style=flat)](https://www.java.com/) [![Team](https://img.shields.io/badge/Powered_by-iMinecraft-green.svg?style=flat)](http://free.mcrmb.com/cz) [![MCStats](https://img.shields.io/badge/MCStats-TorchSpigot-blue.svg?style=flat)](http://mcstats.org/plugin/TorchSpigot) 
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg?style=flat)](http://pan.baidu.com/s/1hsBEdxU/) [![Minecraft](https://img.shields.io/badge/Minecraft-1.9.4-green.svg?style=flat)](https://www.minecraft.net/) [![Java](https://img.shields.io/badge/Java_JDK-v1.8-blue.svg?style=flat)](https://www.java.com/) [![Team](https://img.shields.io/badge/Powered_by-iMinecraft-green.svg?style=flat)](https://github.com/TorchSpigot) [![MCStats](https://img.shields.io/badge/MCStats-TorchSpigot-blue.svg?style=flat)](http://mcstats.org/plugin/TorchSpigot) 
 
 
 The main repository of TorchSpigot
@@ -18,7 +18,7 @@ For Minecraft **1.8**, *[Click Here](https://github.com/TorchSpigot/Torch-1.8)*
 
 (If you're running a previous Beta, upgrading is highly recommended.)
 
-####Features
+####Advantages:
 * All features of TacoSpigot/Paper/Spigot are included.
 * Backported latest changes from CB/Paper/SportBukkit and more.
 * Implement new chunk system for better performance and experience.
@@ -27,7 +27,7 @@ For Minecraft **1.8**, *[Click Here](https://github.com/TorchSpigot/Torch-1.8)*
 * Added via protocol support for Minecraft 1.9 to 1.9.2
 * The enhanced API and more!
 
-####How To (Server Admins)
+####Download/How To (Server Admins)
 To use Torch, you need **Java 8**(or above).
 
 * Download the binary file: *[Click Here](http://t.im/torch)*, and use *Torch-1.9.4-R1.x.jar*, to start server directly.
@@ -52,5 +52,7 @@ Have an idea for an optimization, or found a bug?
 * Feel free to open a PR or issue.
 
 ####Entity performance test
-
 ![Result](http://i1.piimg.com/1949/d617db7d55cd75ab.png) 
+
+####Donate/Support
+*[Link](http://mc.50zf.com/spay/56)*  :)
