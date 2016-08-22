@@ -1,4 +1,4 @@
-From 834c1dec16895c80e58d3238e96fa51cb8f2f970 Mon Sep 17 00:00:00 2001
+From 50803c74feefd32d53b84478f92009fe164a2ce8 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 15 Aug 2016 22:44:42 +0800
 Subject: [PATCH] SPIGOT-2603: Fix inventory update code that got broken in
@@ -6,7 +6,7 @@ Subject: [PATCH] SPIGOT-2603: Fix inventory update code that got broken in
 
 
 diff --git a/pom.xml b/pom.xml
-index 49b692b..56297c6 100644
+index 49b692b..56297c66 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -91,24 +91,6 @@

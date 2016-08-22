@@ -1,0 +1,44 @@
+From 2c03245f684b130f49b0bacad82bdd10786e8732 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 21 Aug 2016 08:06:36 +0800
+Subject: [PATCH] Fork chunk lighting init
+
+
+diff --git a/src/main/java/net/minecraft/server/Chunk.java b/src/main/java/net/minecraft/server/Chunk.java
+index ed29ba4..96aefd6 100644
+--- a/src/main/java/net/minecraft/server/Chunk.java
++++ b/src/main/java/net/minecraft/server/Chunk.java
+@@ -7,6 +7,7 @@ import java.util.Map;
+ import java.util.Random;
+ import java.util.concurrent.ConcurrentLinkedQueue;
+ import java.util.concurrent.CopyOnWriteArrayList;
++import java.util.concurrent.RecursiveAction;
+ 
+ import javax.annotation.Nullable;
+ 
+@@ -198,8 +199,22 @@ public class Chunk {
+ 	public ChunkSection[] getSections() {
+ 		return this.sections;
+ 	}
++	
++	public class LightingTask extends RecursiveAction {
++		LightingTask() {}
+ 
++		@Override
++		protected void compute() {
++			initLighting_task();
++		}
++	}
++	
+ 	public void initLighting() {
++		LightingTask task = new LightingTask();
++		task.fork();
++	}
++
++	public void initLighting_task() {
+ 		int i = this.g();
+ 
+ 		this.v = Integer.MAX_VALUE;
+-- 
+2.8.2.windows.1
+

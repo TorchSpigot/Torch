@@ -18,7 +18,7 @@ For Minecraft **1.8**, *[Click Here](https://github.com/TorchSpigot/Torch-1.8)*
 
 (If you're running a previous Beta, upgrading is highly recommended.)
 
-####Advantages:
+####Advantages
 * All features of TacoSpigot/Paper/Spigot are included.
 * Backported latest changes from CB/Paper/SportBukkit and more.
 * Implement new chunk system for better performance and experience.
