@@ -1,4 +1,4 @@
-From d212ff27903bff71727ad40a032e7aaaaadc4358 Mon Sep 17 00:00:00 2001
+From 3a75241600d492dca3aaebb53300e6b12aadeb0e Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 23 Aug 2016 13:17:13 +0800
 Subject: [PATCH] BiomeCache concurrent
@@ -93,6 +93,21 @@ index 0000000..ce21cce
 +        }
 +    }
 +}
+diff --git a/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java b/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
+index 085366a..ff04c60 100644
+--- a/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
++++ b/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
+@@ -216,7 +216,9 @@ public class PacketPlayOutMapChunk implements Packet<PacketListenerPlayOut> {
+ 		}
+ 
+ 		if (this.e()) {
+-			packetdataserializer.writeBytes(chunk.getBiomeIndex());
++			synchronized(this) {
++				packetdataserializer.writeBytes(chunk.getBiomeIndex());
++			}
+ 		}
+ 
+ 		return j;
 diff --git a/src/main/java/net/minecraft/server/PlayerList.java b/src/main/java/net/minecraft/server/PlayerList.java
 index d3e8bda..4d66e45 100644
 --- a/src/main/java/net/minecraft/server/PlayerList.java
