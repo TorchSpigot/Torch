@@ -1,4 +1,4 @@
-From 6b6b5ac0e76dbf29370f0f8b660218c06d1864ba Mon Sep 17 00:00:00 2001
+From 5ec6606b345f8a94abb7ab888ea63bee6c25d8d5 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 08:27:24 +0800
 Subject: [PATCH] SPIGOT-1264, misc SPIGOT-1405: Call EntityChangeBlockEvent

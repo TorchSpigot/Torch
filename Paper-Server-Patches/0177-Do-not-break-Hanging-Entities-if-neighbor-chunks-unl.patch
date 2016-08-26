@@ -1,4 +1,4 @@
-From c75be019261e79a5e52c6c47d0cfb3d93df7a272 Mon Sep 17 00:00:00 2001
+From e3b45a7be423b689f90368fb7d02544abb57bca0 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 25 Jul 2016 18:19:21 +0800
 Subject: [PATCH] Do not break Hanging Entities if neighbor chunks unloaded,
