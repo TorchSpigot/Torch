@@ -1,4 +1,4 @@
-From 55b4bb05831708080c58aa7c63d124dcf5e244ca Mon Sep 17 00:00:00 2001
+From 97f80b9ff306783eec506733c87f2739001caf44 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 15:22:19 +0800
 Subject: [PATCH] SPIGOT-661, misc update clients when setting blocks to air

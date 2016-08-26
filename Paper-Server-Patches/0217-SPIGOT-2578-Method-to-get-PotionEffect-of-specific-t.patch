@@ -1,4 +1,4 @@
-From aa00027114fa2e9ed8b1f646ee1d81cfd6c6f46b Mon Sep 17 00:00:00 2001
+From f80343339a4ddf34071989cdb8322f2632436b8e Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 7 Aug 2016 15:24:49 +0800
 Subject: [PATCH] SPIGOT-2578: Method to get PotionEffect of specific type.
