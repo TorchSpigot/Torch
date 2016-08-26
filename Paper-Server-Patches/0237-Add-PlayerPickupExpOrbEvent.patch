@@ -1,4 +1,4 @@
-From 629873d0e5fe817d25b9ae35bb168d1af48af3a1 Mon Sep 17 00:00:00 2001
+From 2266895832398acda7f329a288893b051e3ddc5f Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Thu, 25 Aug 2016 15:12:25 +0800
 Subject: [PATCH] Add PlayerPickupExpOrbEvent
@@ -164,3 +164,4 @@ index 0ac1986..8bdc131 100644
  		}
 -- 
 2.8.2.windows.1
+

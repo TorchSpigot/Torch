@@ -1,4 +1,4 @@
-From 87e1d60d0ac32d870a9d3be344b97452236338ff Mon Sep 17 00:00:00 2001
+From b05af4cdb19f12da3dc9f5a60c397445a048eae7 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 20 Aug 2016 14:04:57 +0800
 Subject: [PATCH] Enhanced ServerListPingEvent
