@@ -4,24 +4,6 @@ Date: Sun, 28 Aug 2016 16:24:27 +0800
 Subject: [PATCH] Make getEntity check more specific
 
 
-diff --git a/src/main/java/com/mrpowergamerbr/parappatown/utils/LightStatic.java b/src/main/java/com/mrpowergamerbr/parappatown/utils/LightStatic.java
-index 2a1856a..7fb915d 100644
---- a/src/main/java/com/mrpowergamerbr/parappatown/utils/LightStatic.java
-+++ b/src/main/java/com/mrpowergamerbr/parappatown/utils/LightStatic.java
-@@ -1,10 +1,11 @@
- package com.mrpowergamerbr.parappatown.utils;
- 
- import java.util.Random;
-+import java.util.concurrent.ThreadLocalRandom;
- 
- import com.mrpowergamerbr.utils.LightRandom;
- 
- public class LightStatic {
- 	public final static LightRandom random = new LightRandom();
--	public final static Random RNG = new Random();
-+	public final static Random RNG = (Random) ThreadLocalRandom.current();
- }
-\ No newline at end of file
 diff --git a/src/main/java/net/minecraft/server/AttributeMapBase.java b/src/main/java/net/minecraft/server/AttributeMapBase.java
 new file mode 100644
 index 0000000..697a094
