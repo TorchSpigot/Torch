@@ -1,11 +1,11 @@
-From 5205561bc6758d23f083c9177f52f21871a87c15 Mon Sep 17 00:00:00 2001
+From a1bfa1aa2a7d3d671ec59d5967858734d24581ac Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 14 Aug 2016 07:08:05 +0800
 Subject: [PATCH] Improve redstone calculate
 
 
 diff --git a/src/main/java/net/minecraft/server/BlockRedstoneWire.java b/src/main/java/net/minecraft/server/BlockRedstoneWire.java
-index bc48dbb..2818242 100644
+index bc48dbb..32adbc5 100644
 --- a/src/main/java/net/minecraft/server/BlockRedstoneWire.java
 +++ b/src/main/java/net/minecraft/server/BlockRedstoneWire.java
 @@ -1,13 +1,13 @@

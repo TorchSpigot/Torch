@@ -1,4 +1,4 @@
-From 4a7008a208c67d59ad1d6ae305e7dd482d2b9efb Mon Sep 17 00:00:00 2001
+From 6962b95b8349342cce108b480aa07e542dcecdcc Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:31:39 +0800
 Subject: [PATCH] Implement EnchantmentTarget.BREAKABLE

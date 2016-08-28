@@ -1,4 +1,4 @@
-From e6db790c1ca77adcb8d28a7897bbe2a3a45dfa7b Mon Sep 17 00:00:00 2001
+From 3d39448da73970aab67a8bf6299966a3d983f4f1 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 12 Aug 2016 23:32:28 +0800
 Subject: [PATCH] Disable sleep checking option and fml checking enhanced

@@ -1,4 +1,4 @@
-From be74cfba6317499ba97e371101ff402370540e09 Mon Sep 17 00:00:00 2001
+From a62574bc5e193303919a2099931599d5d34b3397 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 7 Aug 2016 03:09:17 +0800
 Subject: [PATCH] MaterialData#toItemStack without amount should make 1 item by

@@ -1,0 +1,371 @@
+From 5d2b925b287f7ca60fa5fbcabc6018c41063f134 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Fri, 26 Aug 2016 11:57:45 +0800
+Subject: [PATCH] Better thread safety
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityInsentient.java b/src/main/java/net/minecraft/server/EntityInsentient.java
+index 4b06fef..49e93e7 100644
+--- a/src/main/java/net/minecraft/server/EntityInsentient.java
++++ b/src/main/java/net/minecraft/server/EntityInsentient.java
+@@ -713,10 +713,18 @@ public abstract class EntityInsentient extends EntityLiving {
+ 		this.targetSelector.a();
+ 		this.world.methodProfiler.b();
+ 		this.world.methodProfiler.a("goalSelector");
+-		this.goalSelector.a();
++		try {
++			this.goalSelector.a();
++		} catch (Exception ex) {
++			;
++		}
+ 		this.world.methodProfiler.b();
+ 		this.world.methodProfiler.a("navigation");
+-		this.navigation.l();
++		try {
++			this.navigation.l();
++		} catch (Exception ex) {
++			;
++		}
+ 		this.world.methodProfiler.b();
+ 		this.world.methodProfiler.a("mob tick");
+ 		this.M();
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index d6638b6..4352e0e 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -1051,10 +1051,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 		this.methodProfiler.c("tickables");
+ 
+ 		MinecraftTimings.tickablesTimer.startTiming(); // Spigot
+-		Iterator it = this.o.iterator();
+-		while (it.hasNext()) {
+-			((ITickable) it.next()).c(); // Torch
+-		}
++		this.o.parallelStream().forEach(it -> { ((ITickable) it).c(); });
+ 		MinecraftTimings.tickablesTimer.stopTiming(); // Spigot
+ 
+ 		this.methodProfiler.b();
+diff --git a/src/main/java/net/minecraft/server/NavigationListener.java b/src/main/java/net/minecraft/server/NavigationListener.java
+index 3c08385..c824461 100644
+--- a/src/main/java/net/minecraft/server/NavigationListener.java
++++ b/src/main/java/net/minecraft/server/NavigationListener.java
+@@ -2,14 +2,16 @@ package net.minecraft.server;
+ 
+ import java.util.List;
+ import java.util.Map.Entry;
++import java.util.Queue;
+ 
+ import javax.annotation.Nullable;
+ 
++import com.google.common.collect.Queues;
+ import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap; // Torch
+ 
+ public class NavigationListener implements IWorldAccess {
+ 
+-	private final List<NavigationAbstract> a = new org.torch.util.ConcurrentIterableArrayList<NavigationAbstract>();
++	private final Queue<NavigationAbstract> a = Queues.newConcurrentLinkedQueue();
+ 
+ 	public NavigationListener() {
+ 	}
+diff --git a/src/main/java/net/minecraft/server/PersistentVillage.java b/src/main/java/net/minecraft/server/PersistentVillage.java
+index 9060b7d..5709460 100644
+--- a/src/main/java/net/minecraft/server/PersistentVillage.java
++++ b/src/main/java/net/minecraft/server/PersistentVillage.java
+@@ -1,5 +1,6 @@
+ package net.minecraft.server;
+ 
++import java.util.Collections;
+ import java.util.Iterator;
+ import java.util.List;
+ 
+@@ -8,7 +9,7 @@ import com.google.common.collect.Lists;
+ public class PersistentVillage extends PersistentBase {
+ 
+ 	private World world;
+-	private final List<BlockPosition> c = Lists.newArrayList();
++	private final List<BlockPosition> c = Collections.synchronizedList(Lists.newArrayList());
+ 	private final List<VillageDoor> d = Lists.newArrayList();
+ 	private final List<Village> villages = Lists.newArrayList();
+ 	private int time;
+diff --git a/src/main/java/net/minecraft/server/PlayerList.java b/src/main/java/net/minecraft/server/PlayerList.java
+index 4d66e45..ae8bf73 100644
+--- a/src/main/java/net/minecraft/server/PlayerList.java
++++ b/src/main/java/net/minecraft/server/PlayerList.java
+@@ -1333,10 +1333,7 @@ public abstract class PlayerList {
+ 	}
+ 
+ 	public void savePlayers() {
+-		for (int i = 0; i < this.players.size(); ++i) {
+-			this.savePlayerFile(this.players.get(i));
+-		}
+-
++		this.players.parallelStream().forEach(pl -> this.savePlayerFile((EntityPlayer) pl));
+ 	}
+ 
+ 	public void addWhitelist(GameProfile gameprofile) {
+diff --git a/src/main/java/net/minecraft/server/SpawnerCreature.java b/src/main/java/net/minecraft/server/SpawnerCreature.java
+index 1619873..ab6f128 100644
+--- a/src/main/java/net/minecraft/server/SpawnerCreature.java
++++ b/src/main/java/net/minecraft/server/SpawnerCreature.java
+@@ -186,7 +186,7 @@ public final class SpawnerCreature {
+ 																					// allowed
+ 							// CraftBukkit start = use LongHash and
+ 							// LongObjectHashMap
+-							long key = ((Long) iterator1.next()).longValue();
++							long key = ((Long) iterator1.next());
+ 							BlockPosition blockposition1 = getRandomPosition(worldserver, LongHash.msw(key),
+ 									LongHash.lsw(key));
+ 							// CraftBukkit
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index 1e4ab90..b256286 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -1634,24 +1634,6 @@ public abstract class World implements IBlockAccess {
+ 			}
+ 		}
+ 
+-		/*
+-		 * for (i = 0; i < this.j.size(); ++i) { entity = (Entity)
+-		 * this.j.get(i); // CraftBukkit start - Fixed an NPE if (entity ==
+-		 * null) { continue; } // CraftBukkit end
+-		 * 
+-		 * try { ++entity.ticksLived; entity.m(); } catch (Throwable throwable)
+-		 * { CrashReport crashreport = CrashReport.a(throwable, "Ticking entity"
+-		 * ); CrashReportSystemDetails crashreportsystemdetails = crashreport.a(
+-		 * "Entity being ticked");
+-		 * 
+-		 * if (entity == null) { crashreportsystemdetails.a("Entity", (Object)
+-		 * "~~NULL~~"); } else {
+-		 * entity.appendEntityCrashDetails(crashreportsystemdetails); }
+-		 * 
+-		 * throw new ReportedException(crashreport); }
+-		 * 
+-		 * if (entity.dead) { this.j.remove(i--); } }
+-		 */
+ 		// Hose end
+ 
+ 		this.methodProfiler.c("remove");
+@@ -1677,16 +1659,6 @@ public abstract class World implements IBlockAccess {
+ 			this.c(entity);
+ 		}
+ 		// Torch end
+-
+-		/*
+-		 * // Paper start - Set based removal lists for (Entity e : this.f) { j
+-		 * = e.getChunkX(); int k = e.getChunkZ();
+-		 * 
+-		 * if (e.aa && this.isChunkLoaded(j, k, true)) { this.getChunkAt(j,
+-		 * k).b(e); } }
+-		 * 
+-		 * for (Entity e : this.f) { this.c(e); } // Paper end
+-		 */
+ 		// Hose end
+ 
+ 		this.f.clear();
+@@ -1829,13 +1801,6 @@ public abstract class World implements IBlockAccess {
+ 		timings.tileEntityTick.stopTiming(); // Spigot
+ 		timings.tileEntityPending.startTiming(); // Spigot
+ 		this.M = false;
+-		/*
+-		 * CraftBukkit start - Moved up if
+-		 * (!this.tileEntityListUnload.isEmpty()) {
+-		 * this.tileEntityListTick.removeAll(this.tileEntityListUnload);
+-		 * this.tileEntityList.removeAll(this.tileEntityListUnload);
+-		 * this.tileEntityListUnload.clear(); } // CraftBukkit end
+-		 */
+ 
+ 		this.methodProfiler.c("pendingBlockEntities");
+ 		if (!this.b.isEmpty()) {
+@@ -1859,21 +1824,6 @@ public abstract class World implements IBlockAccess {
+ 					}
+ 				}
+ 			}
+-			/*
+-			 * for (int i1 = 0; i1 < this.b.size(); ++i1) { TileEntity
+-			 * tileentity1 = (TileEntity) this.b.get(i1);
+-			 * 
+-			 * if (!tileentity1.x()) { if
+-			 * (this.isLoaded(tileentity1.getPosition())) { Chunk chunk =
+-			 * this.getChunkAtWorldCoords(tileentity1.getPosition()); IBlockData
+-			 * iblockdata = chunk.getBlockData(tileentity1.getPosition());
+-			 * 
+-			 * chunk.a(tileentity1.getPosition(), tileentity1);
+-			 * this.notify(tileentity1.getPosition(), iblockdata, iblockdata,
+-			 * 3); // CraftBukkit start // From above, don't screw this up -
+-			 * SPIGOT-1746 if (true) { // Paper - remove unused list
+-			 * this.a(tileentity1); } // CraftBukkit end } } }
+-			 */
+ 			// Hose end
+ 
+ 			this.b.clear();
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index f09e305..d27348a 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -373,7 +373,7 @@ public final class CraftServer implements Server {
+ 
+ 		for (Plugin plugin : plugins) {
+ 			if ((!plugin.isEnabled()) && (plugin.getDescription().getLoad() == type)) {
+-				loadPlugin(plugin);
++				enablePlugin(plugin);
+ 			}
+ 		}
+ 
+@@ -415,7 +415,7 @@ public final class CraftServer implements Server {
+ 		}
+ 	}
+ 
+-	private void loadPlugin(Plugin plugin) {
++	private void enablePlugin(Plugin plugin) {
+ 		try {
+ 			pluginManager.enablePlugin(plugin);
+ 
+@@ -433,6 +433,8 @@ public final class CraftServer implements Server {
+ 			Logger.getLogger(CraftServer.class.getName()).log(Level.SEVERE,
+ 					ex.getMessage() + " loading " + plugin.getDescription().getFullName() + " (Is it up to date?)", ex);
+ 		}
++		
++		pluginManager.enablePlugin(plugin);
+ 	}
+ 
+ 	@Override
+diff --git a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
+index 997a6cc..cfa302d 100644
+--- a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
++++ b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
+@@ -629,8 +629,7 @@ public class CraftEventFactory {
+ 			} else if (source == DamageSource.DRAGON_BREATH) {
+ 				cause = DamageCause.DRAGON_BREATH;
+ 			} else {
+-				throw new RuntimeException(String.format("Unhandled damage of %s by %s from %s", entity,
+-						damager.getHandle(), source.translationIndex)); // Spigot
++				cause = DamageCause.CONTACT;
+ 			}
+ 			EntityDamageEvent event = callEvent(new EntityDamageByEntityEvent(damager, entity.getBukkitEntity(), cause,
+ 					modifiers, modifierFunctions));
+@@ -671,7 +670,7 @@ public class CraftEventFactory {
+ 			return callEntityDamageEvent(null, entity, cause, modifiers, modifierFunctions);
+ 		}
+ 
+-		throw new RuntimeException(String.format("Unhandled damage of %s from %s", entity, source.translationIndex)); // Spigot
++		return callEntityDamageEvent(null, entity, DamageCause.CONTACT, modifiers, modifierFunctions);
+ 	}
+ 
+ 	private static EntityDamageEvent callEntityDamageEvent(Entity damager, Entity damagee, DamageCause cause,
+diff --git a/src/main/java/org/spigotmc/AsyncCatcher.java b/src/main/java/org/spigotmc/AsyncCatcher.java
+index 3ccc1f9..c2d5def 100644
+--- a/src/main/java/org/spigotmc/AsyncCatcher.java
++++ b/src/main/java/org/spigotmc/AsyncCatcher.java
+@@ -3,6 +3,7 @@ package org.spigotmc;
+ // TacoSpigot start
+ import java.util.List;
+ import java.util.Set;
++import java.util.concurrent.ForkJoinTask;
+ 
+ import com.google.common.collect.ForwardingList;
+ import com.google.common.collect.ForwardingSet;
+@@ -17,12 +18,8 @@ public class AsyncCatcher {
+ 
+ 	public static void catchOp(String reason) {
+ 		if (enabled && Thread.currentThread() != MinecraftServer.getServer().primaryThread) {
+-			MinecraftServer.getServer().postToMainThread(Thread.currentThread());
+-			// MinecraftServer.LOGGER.warn(reason + " called async on " +
+-			// Thread.currentThread().getName()); // TacoSpigot - log // Torch
+-			// throw new IllegalStateException( "Asynchronous " + reason + " on
+-			// thread " + Thread.currentThread().getName() + "!" ); //
+-			// TacoSpigot - give thread // Torch
++			SpigotWorldConfig.TickTask = ForkJoinTask.adapt(Thread.currentThread());
++			SpigotWorldConfig.TickPool.submit(SpigotWorldConfig.TickTask);
+ 		}
+ 	}
+ 
+diff --git a/src/main/java/org/spigotmc/SpigotWorldConfig.java b/src/main/java/org/spigotmc/SpigotWorldConfig.java
+index 63369ad..37d023a 100644
+--- a/src/main/java/org/spigotmc/SpigotWorldConfig.java
++++ b/src/main/java/org/spigotmc/SpigotWorldConfig.java
+@@ -2,38 +2,59 @@ package org.spigotmc;
+ 
+ import java.util.List;
+ import java.util.concurrent.ForkJoinPool;
++import java.util.concurrent.ForkJoinTask;
+ import java.util.concurrent.ForkJoinWorkerThread;
+ 
+ import org.bukkit.Bukkit;
+ import org.bukkit.configuration.file.YamlConfiguration;
+ 
++import net.minecraft.server.Chunk;
++
+ public class SpigotWorldConfig {
+ 
+ 	// Hose start
+ 	static public final int cpu_core = Runtime.getRuntime().availableProcessors();
+-
+-	static final ForkJoinPool.ForkJoinWorkerThreadFactory fcp = new ForkJoinPool.ForkJoinWorkerThreadFactory() {
+-		@Override
+-		public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
+-			final ForkJoinWorkerThread thread = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
+-			thread.setName("ChunkPool-" + thread.getPoolIndex());
+-			return thread;
+-		}
+-	};
+-
+-	public static ForkJoinPool ChunkPool;
+-
+-	public static int worldtickentitypool_core_multiple;
+-
+-	public static int getthreadnumber() {
+-		return cpu_core * worldtickentitypool_core_multiple;
+-	}
+-
+-	private void wetp_core_multiple() {
+-		worldtickentitypool_core_multiple = getInt("wetp-core-multiple", 4);
+-		ChunkPool = new ForkJoinPool(getthreadnumber(), fcp, null, false);
+-		log("WETP Core Multiple: " + worldtickentitypool_core_multiple);
+-	}
++    
++    static final ForkJoinPool.ForkJoinWorkerThreadFactory ftp = new ForkJoinPool.ForkJoinWorkerThreadFactory() {
++        @Override
++        public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
++            final ForkJoinWorkerThread thread = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
++            thread.setName("TickPool-" + thread.getPoolIndex());
++            //thread.setDaemon(true);
++            return thread;
++        }
++    };
++    
++    static final ForkJoinPool.ForkJoinWorkerThreadFactory fcp = new ForkJoinPool.ForkJoinWorkerThreadFactory() {
++        @Override
++        public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
++            final ForkJoinWorkerThread thread = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
++            thread.setName("ChunkPool-" + thread.getPoolIndex());
++            return thread;
++        }
++    };
++    
++    public static ForkJoinTask<?> TickTask;
++    public static ForkJoinTask<Chunk> ChunkTask;
++    public static ForkJoinPool TickPool;
++    public static ForkJoinPool ChunkPool;
++    
++    public static int worldtickentitypool_core_multiple;
++    
++    public static int getthreadnumber(){
++        return cpu_core*worldtickentitypool_core_multiple;
++    }
++    
++    private void wetp_core_multiple()
++    {
++        worldtickentitypool_core_multiple = getInt("wetp-core-multiple", 2);
++        
++        TickPool = new ForkJoinPool(getthreadnumber(), ftp, null, false);
++        ChunkPool = new ForkJoinPool(getthreadnumber(), fcp, null, false);
++        
++        log("WETP Core Multiple: " + worldtickentitypool_core_multiple);
++    }
++	
+ 	// Hose end
+ 
+ 	private final String worldName;
+-- 
+2.8.2.windows.1
+

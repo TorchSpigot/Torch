@@ -1,4 +1,4 @@
-From def0293ae963b7a8b3080ba5b9334a86c0c020c5 Mon Sep 17 00:00:00 2001
+From 34a64c90c3ec29ab949744d066bdf53b0437d6c7 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 13 Aug 2016 02:34:59 +0800
 Subject: [PATCH] No need to cap player speed

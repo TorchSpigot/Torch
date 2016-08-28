@@ -1,4 +1,4 @@
-From 2609faeb3134171f43a803a2b8d24aac83ebd996 Mon Sep 17 00:00:00 2001
+From b7ab5b3c12284da042f678d576001d3ba630d280 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Thu, 21 Jul 2016 15:59:31 +0800
 Subject: [PATCH] Do not disconnect if progressing

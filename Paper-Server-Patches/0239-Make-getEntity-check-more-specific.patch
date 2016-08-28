@@ -1,0 +1,40 @@
+From 7640efe40b5e893877a0b465d54ec39e647434f6 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 28 Aug 2016 16:24:27 +0800
+Subject: [PATCH] Make getEntity check more specific
+
+
+diff --git a/src/main/java/com/mrpowergamerbr/parappatown/utils/LightStatic.java b/src/main/java/com/mrpowergamerbr/parappatown/utils/LightStatic.java
+index 2a1856a..7fb915d 100644
+--- a/src/main/java/com/mrpowergamerbr/parappatown/utils/LightStatic.java
++++ b/src/main/java/com/mrpowergamerbr/parappatown/utils/LightStatic.java
+@@ -1,10 +1,11 @@
+ package com.mrpowergamerbr.parappatown.utils;
+ 
+ import java.util.Random;
++import java.util.concurrent.ThreadLocalRandom;
+ 
+ import com.mrpowergamerbr.utils.LightRandom;
+ 
+ public class LightStatic {
+ 	public final static LightRandom random = new LightRandom();
+-	public final static Random RNG = new Random();
++	public final static Random RNG = (Random) ThreadLocalRandom.current();
+ }
+\ No newline at end of file
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 4352e0e..b260010 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -1634,7 +1634,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 			if (worldserver != null) {
+ 				Entity entity = worldserver.getEntity(uuid);
+ 
+-				if (entity != null) {
++				if (entity != null && !entity.dead) {
+ 					return entity;
+ 				}
+ 			}
+-- 
+2.8.2.windows.1
+
