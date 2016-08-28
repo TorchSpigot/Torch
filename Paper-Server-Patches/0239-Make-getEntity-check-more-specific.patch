@@ -1,4 +1,4 @@
-From 7640efe40b5e893877a0b465d54ec39e647434f6 Mon Sep 17 00:00:00 2001
+From b07fa389a3f8c6c741b56e0d6db09434bb2b3149 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 28 Aug 2016 16:24:27 +0800
 Subject: [PATCH] Make getEntity check more specific
@@ -22,6 +22,113 @@ index 2a1856a..7fb915d 100644
 +	public final static Random RNG = (Random) ThreadLocalRandom.current();
  }
 \ No newline at end of file
+diff --git a/src/main/java/net/minecraft/server/AttributeMapBase.java b/src/main/java/net/minecraft/server/AttributeMapBase.java
+new file mode 100644
+index 0000000..697a094
+--- /dev/null
++++ b/src/main/java/net/minecraft/server/AttributeMapBase.java
+@@ -0,0 +1,81 @@
++package net.minecraft.server;
++
++import com.google.common.collect.HashMultimap;
++import com.google.common.collect.Maps;
++import com.google.common.collect.Multimap;
++import java.util.Collection;
++import java.util.Iterator;
++import java.util.concurrent.ConcurrentHashMap;
++import java.util.Map;
++import java.util.Map.Entry;
++
++public abstract class AttributeMapBase {
++
++    protected final Map<IAttribute, AttributeInstance> a = new ConcurrentHashMap();
++    protected final Map<String, AttributeInstance> b = new InsensitiveStringMap();
++    protected final Multimap<IAttribute, IAttribute> c = HashMultimap.create();
++
++    public AttributeMapBase() {}
++
++    public AttributeInstance a(IAttribute iattribute) {
++        return (AttributeInstance) this.a.get(iattribute);
++    }
++
++    public AttributeInstance a(String s) {
++        return (AttributeInstance) this.b.get(s);
++    }
++
++    public AttributeInstance b(IAttribute iattribute) {
++        if (this.b.containsKey(iattribute.getName())) {
++            throw new IllegalArgumentException("Attribute is already registered!");
++        } else {
++            AttributeInstance attributeinstance = this.c(iattribute);
++
++            this.b.put(iattribute.getName(), attributeinstance);
++            this.a.put(iattribute, attributeinstance);
++
++            for (IAttribute iattribute1 = iattribute.d(); iattribute1 != null; iattribute1 = iattribute1.d()) {
++                this.c.put(iattribute1, iattribute);
++            }
++
++            return attributeinstance;
++        }
++    }
++
++    protected abstract AttributeInstance c(IAttribute iattribute);
++
++    public Collection<AttributeInstance> a() {
++        return this.b.values();
++    }
++
++    public void a(AttributeInstance attributeinstance) {}
++
++    public void a(Multimap<String, AttributeModifier> multimap) {
++        Iterator iterator = multimap.entries().iterator();
++
++        while (iterator.hasNext()) {
++            Entry entry = (Entry) iterator.next();
++            AttributeInstance attributeinstance = this.a((String) entry.getKey());
++
++            if (attributeinstance != null) {
++                attributeinstance.c((AttributeModifier) entry.getValue());
++            }
++        }
++
++    }
++
++    public void b(Multimap<String, AttributeModifier> multimap) {
++        Iterator iterator = multimap.entries().iterator();
++
++        while (iterator.hasNext()) {
++            Entry entry = (Entry) iterator.next();
++            AttributeInstance attributeinstance = this.a((String) entry.getKey());
++
++            if (attributeinstance != null) {
++                attributeinstance.c((AttributeModifier) entry.getValue());
++                attributeinstance.b((AttributeModifier) entry.getValue());
++            }
++        }
++
++    }
++}
+diff --git a/src/main/java/net/minecraft/server/EntityLiving.java b/src/main/java/net/minecraft/server/EntityLiving.java
+index df8fe70..459eda8 100644
+--- a/src/main/java/net/minecraft/server/EntityLiving.java
++++ b/src/main/java/net/minecraft/server/EntityLiving.java
+@@ -1201,14 +1201,7 @@ public abstract class EntityLiving extends Entity {
+ 		if (!damagesource.ignoresArmor()) {
+ 			// this.damageArmor(f); // CraftBukkit - Moved into
+ 			// damageEntity0(DamageSource, float)
+-			f = CombatMath.a(f, this.getArmorStrength(),
+-					(float) this.getAttributeInstance(GenericAttributes.h).getValue()); // TacoSpigot
+-																						// -
+-																						// take
+-																						// armor
+-																						// toughness
+-																						// into
+-																						// account
++			f = CombatMath.a(f, this.getArmorStrength(), (float) this.getAttributeInstance(GenericAttributes.h).getValue()); // TacoSpigot - take armor toughness into account
+ 		}
+ 
+ 		return f;
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
 index 4352e0e..b260010 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
