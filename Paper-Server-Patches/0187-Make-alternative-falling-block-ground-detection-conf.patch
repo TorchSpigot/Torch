@@ -1,4 +1,4 @@
-From 9905d01a9709a2e413065068c2f9ec37bf58b2b9 Mon Sep 17 00:00:00 2001
+From 10e733c37c907c38793ec54a8db92a6cf5b4da41 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 29 Jul 2016 10:39:31 +0800
 Subject: [PATCH] Make alternative falling block ground detection configurable

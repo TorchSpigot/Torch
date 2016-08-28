@@ -1,4 +1,4 @@
-From dcdc0f2d64fe80bcfe9a876f74340431359ea2f7 Mon Sep 17 00:00:00 2001
+From 984b424c14bd986924a7cc832a390d92e1017d4c Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 23:38:56 +0800
 Subject: [PATCH] SPIGOT-538: Add some missing growth rates, miscs
