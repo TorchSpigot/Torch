@@ -1,4 +1,4 @@
-From 9b36a92a2ebe64c242f0fe548e352f856c0524f6 Mon Sep 17 00:00:00 2001
+From 44acf0621e6eebc2a23e84ae62fec5d67c3bb1d3 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 14:07:52 +0800
 Subject: [PATCH] Simplify and optimize BlockStateArrays

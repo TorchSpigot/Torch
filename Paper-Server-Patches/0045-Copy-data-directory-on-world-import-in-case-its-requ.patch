@@ -1,0 +1,29 @@
+From c875859bab8980266b61dc7928979f37af1d048b Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 13:58:51 +0800
+Subject: [PATCH] Copy data directory on world import in case its required
+
+
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 3e9f52c..7f31070 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -300,6 +300,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+                             // Migrate world data too.
+                             try {
+                                 com.google.common.io.Files.copy(new File(new File(s), "level.dat"), new File(new File(name), "level.dat"));
++								org.apache.commons.io.FileUtils.copyDirectory(new File(new File(s), "data"), new File(new File(name), "data"));
+                             } catch (IOException exception) {
+                                 MinecraftServer.LOGGER.warn("Unable to migrate world data.");
+                             }
+@@ -806,7 +807,6 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 
+         MinecraftTimings.bukkitSchedulerTimer.startTiming(); // Paper
+         // CraftBukkit start
+-        this.server.getScheduler().mainThreadHeartbeat(this.ticks);
+         MinecraftTimings.bukkitSchedulerTimer.stopTiming(); // Paper
+ 
+         // Run tasks that are waiting on processing
+-- 
+2.8.2.windows.1
+

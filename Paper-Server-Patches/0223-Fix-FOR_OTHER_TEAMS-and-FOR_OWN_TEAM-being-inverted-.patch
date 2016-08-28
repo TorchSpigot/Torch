@@ -1,4 +1,4 @@
-From 4b0271b02c4eb4cb06622b0f105d262efef11a37 Mon Sep 17 00:00:00 2001
+From 971b399f2bb610d4f0b572e7966289e7f486728e Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Thu, 11 Aug 2016 01:57:05 +0800
 Subject: [PATCH] Fix FOR_OTHER_TEAMS and FOR_OWN_TEAM being inverted for

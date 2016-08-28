@@ -1,4 +1,4 @@
-From dc7aa1bfe65c19298aa627948008f2f71dcf37bd Mon Sep 17 00:00:00 2001
+From 2f01b45606f6c23553c69d60f5ec5fbbf9dae2d6 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 16:13:26 +0800
 Subject: [PATCH] Fix NBT data load when player first join

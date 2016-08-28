@@ -1,0 +1,90 @@
+From aa346776c4a7ad3fb8c7831de483f3c9b0e5ecd9 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 11 Jul 2016 18:06:45 +0800
+Subject: [PATCH] Add EntityBreedEvent actually
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityAnimal.java b/src/main/java/net/minecraft/server/EntityAnimal.java
+index ff0ed49..9c4f14e 100644
+--- a/src/main/java/net/minecraft/server/EntityAnimal.java
++++ b/src/main/java/net/minecraft/server/EntityAnimal.java
+@@ -7,6 +7,7 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimal {
+     protected Block bz;
+     private int bw;
+     private EntityHuman bx;
++	public ItemStack breedItem; // CraftBukkit - Add breedItem variable
+ 
+     public EntityAnimal(World world) {
+         super(world);
+@@ -124,6 +125,7 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimal {
+     public void c(EntityHuman entityhuman) {
+         this.bw = 600;
+         this.bx = entityhuman;
++		this.breedItem = entityhuman.inventory.getItemInHand(); // CraftBukkit
+         this.world.broadcastEntityEffect(this, (byte) 18);
+     }
+ 
+diff --git a/src/main/java/net/minecraft/server/PathfinderGoalBreed.java b/src/main/java/net/minecraft/server/PathfinderGoalBreed.java
+index 99cac40..6a11577 100644
+--- a/src/main/java/net/minecraft/server/PathfinderGoalBreed.java
++++ b/src/main/java/net/minecraft/server/PathfinderGoalBreed.java
+@@ -79,6 +79,13 @@ public class PathfinderGoalBreed extends PathfinderGoal {
+             if (entityhuman == null && this.partner.getBreedCause() != null) {
+                 entityhuman = this.partner.getBreedCause();
+             }
++			// CraftBukkit start - call EntityBreedEvent
++            int experience = this.animal.getRandom().nextInt(7) + 1;
++            org.bukkit.event.entity.EntityBreedEvent entityBreedEvent = org.bukkit.craftbukkit.event.CraftEventFactory.callEntityBreedEvent(entityageable, animal, partner, entityhuman, this.animal.breedItem, experience);
++            if (entityBreedEvent.isCancelled()) {
++                return;
++            }
++            // CraftBukkit end
+ 
+             if (entityhuman != null) {
+                 entityhuman.b(StatisticList.C);
+@@ -108,7 +115,7 @@ public class PathfinderGoalBreed extends PathfinderGoal {
+             }
+ 
+             if (this.a.getGameRules().getBoolean("doMobLoot")) {
+-                this.a.addEntity(new EntityExperienceOrb(this.a, this.animal.locX, this.animal.locY, this.animal.locZ, random.nextInt(7) + 1));
++                this.a.addEntity(new EntityExperienceOrb(this.a, this.animal.locX, this.animal.locY, this.animal.locZ, entityBreedEvent.getExperience())); // CraftBukkit - use event experience
+             }
+ 
+         }
+diff --git a/src/main/java/net/minecraft/server/PathfinderGoalMakeLove.java b/src/main/java/net/minecraft/server/PathfinderGoalMakeLove.java
+index 6c3efc8..25bbbf7 100644
+--- a/src/main/java/net/minecraft/server/PathfinderGoalMakeLove.java
++++ b/src/main/java/net/minecraft/server/PathfinderGoalMakeLove.java
+@@ -80,6 +80,11 @@ public class PathfinderGoalMakeLove extends PathfinderGoal {
+ 
+     private void i() {
+         EntityVillager entityvillager = this.b.b((EntityAgeable) this.c);
++		// CraftBukkit start - call EntityBreedEvent
++        if (org.bukkit.craftbukkit.event.CraftEventFactory.callEntityBreedEvent(entityvillager, this.b, this.c, null, null, 0).isCancelled()) {
++            return;
++        }
++        // CraftBukkit end
+ 
+         this.c.setAgeRaw(6000);
+         this.b.setAgeRaw(6000);
+diff --git a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
+index 613cf57..a387b23 100644
+--- a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
++++ b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
+@@ -1024,4 +1024,13 @@ public class CraftEventFactory {
+ 		cloud.world.getServer().getPluginManager().callEvent(event);
+ 		return event;
+ 	}
++	
++	public static EntityBreedEvent callEntityBreedEvent(EntityLiving child, EntityLiving mother, EntityLiving father, EntityLiving breeder, ItemStack bredWith, int experience) {
++        org.bukkit.entity.LivingEntity breederEntity = (LivingEntity)(breeder == null ? null : breeder.getBukkitEntity());
++        CraftItemStack bredWithStack = bredWith == null ? null : CraftItemStack.asCraftMirror(bredWith).clone();
++
++        EntityBreedEvent event = new EntityBreedEvent((LivingEntity) child.getBukkitEntity(), (LivingEntity) mother.getBukkitEntity(), (LivingEntity) father.getBukkitEntity(), breederEntity, bredWithStack, experience);
++        child.world.getServer().getPluginManager().callEvent(event);
++        return event;
++    }
+ }
+-- 
+2.8.2.windows.1
+

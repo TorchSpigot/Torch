@@ -1,4 +1,4 @@
-From acf6ebd2b56e85136bf6bb99230c619209dd1579 Mon Sep 17 00:00:00 2001
+From 3e222d84c50a4fcffa3d0db3115544742c04d028 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 25 Jul 2016 17:58:33 +0800
 Subject: [PATCH] Hook into World for light getters due to additional

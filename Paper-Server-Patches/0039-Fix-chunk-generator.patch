@@ -1,0 +1,256 @@
+From 80d5e838c9cbfbf08b2c1473a846f7e0772335bf Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sat, 2 Jul 2016 12:46:22 +0800
+Subject: [PATCH] Fix chunk generator
+
+
+diff --git a/src/main/java/net/minecraft/server/Chunk.java b/src/main/java/net/minecraft/server/Chunk.java
+index 03dad67..d433e87 100644
+--- a/src/main/java/net/minecraft/server/Chunk.java
++++ b/src/main/java/net/minecraft/server/Chunk.java
+@@ -98,7 +98,6 @@ public class Chunk {
+ 		this.tileEntities = Maps.newConcurrentMap();
+         this.x = 4096;
+         this.y = Queues.newConcurrentLinkedQueue();
+-        // this.entitySlices = (List[]) (new List[16]); // Spigot
+ 		this.entitySlices = (Queue[]) (new ConcurrentLinkedQueue[16]); // Hose
+         this.world = world;
+         this.locX = i;
+@@ -626,9 +625,9 @@ public class Chunk {
+ 
+         if (i != this.locX || j != this.locZ) {
+             // CraftBukkit start
+-            Bukkit.getLogger().warning("Wrong location for " + entity + " in world '" + world.getWorld().getName() + "'!");
+-            // Chunk.e.warn("Wrong location! (" + i + ", " + j + ") should be (" + this.locX + ", " + this.locZ + "), " + entity, new Object[] { entity});
+-            Bukkit.getLogger().warning("Entity is at " + entity.locX + "," + entity.locZ + " (chunk " + i + "," + j + ") but was stored in chunk " + this.locX + "," + this.locZ);
++            // Bukkit.getLogger().warning("Wrong location for " + entity + " in world '" + world.getWorld().getName() + "'!"); // Torch - silenty
++            // Chunk.e.warn("Wrong location! (" + i + ", " + j + ") should be (" + this.locX + ", " + this.locZ + "), " + entity, new Object[] { entity}); // Torch - silenty
++            // Bukkit.getLogger().warning("Entity is at " + entity.locX + "," + entity.locZ + " (chunk " + i + "," + j + ") but was stored in chunk " + this.locX + "," + this.locZ); // Torch - silenty
+             // CraftBukkit end
+ 			// new Exception("Stack trace").printStackTrace();
+             entity.die();
+diff --git a/src/main/java/net/minecraft/server/ChunkProviderGenerate.java b/src/main/java/net/minecraft/server/ChunkProviderGenerate.java
+index 926f32d..534fd9f 100644
+--- a/src/main/java/net/minecraft/server/ChunkProviderGenerate.java
++++ b/src/main/java/net/minecraft/server/ChunkProviderGenerate.java
+@@ -96,21 +96,21 @@ public class ChunkProviderGenerate implements ChunkGenerator {
+                     double d2 = this.q[l1 + k2];
+                     double d3 = this.q[i2 + k2];
+                     double d4 = this.q[j2 + k2];
+-                    double d5 = (this.q[k1 + k2 + 1] - d1) * d0;
+-                    double d6 = (this.q[l1 + k2 + 1] - d2) * d0;
+-                    double d7 = (this.q[i2 + k2 + 1] - d3) * d0;
+-                    double d8 = (this.q[j2 + k2 + 1] - d4) * d0;
++                    double d5 = (this.q[k1 + k2 + 1] - d1) * 0.125D;
++                    double d6 = (this.q[l1 + k2 + 1] - d2) * 0.125D;
++                    double d7 = (this.q[i2 + k2 + 1] - d3) * 0.125D;
++                    double d8 = (this.q[j2 + k2 + 1] - d4) * 0.125D;
+ 
+                     for (int l2 = 0; l2 < 8; ++l2) {
+                         double d9 = 0.25D;
+                         double d10 = d1;
+                         double d11 = d2;
+-                        double d12 = (d3 - d1) * d9;
+-                        double d13 = (d4 - d2) * d9;
++                        double d12 = (d3 - d1) * 0.25D;
++                        double d13 = (d4 - d2) * 0.25D;
+ 
+                         for (int i3 = 0; i3 < 4; ++i3) {
+                             double d14 = 0.25D;
+-                            double d15 = (d11 - d10) * d14;
++                            double d15 = (d11 - d10) * 0.25D;
+                             double d16 = d10 - d15;
+ 
+                             for (int j3 = 0; j3 < 4; ++j3) {
+@@ -139,7 +139,7 @@ public class ChunkProviderGenerate implements ChunkGenerator {
+     public void a(int i, int j, ChunkSnapshot chunksnapshot, BiomeBase[] abiomebase) {
+         double d0 = 0.03125D;
+ 
+-        this.u = this.m.a(this.u, (double) (i * 16), (double) (j * 16), 16, 16, d0 * 2.0D, d0 * 2.0D, 1.0D);
++        this.u = this.m.a(this.u, (double) (i * 16), (double) (j * 16), 16, 16, 0.0625D, 0.0625D, 1.0D);
+ 
+         for (int k = 0; k < 16; ++k) {
+             for (int l = 0; l < 16; ++l) {
+@@ -207,8 +207,6 @@ public class ChunkProviderGenerate implements ChunkGenerator {
+         this.e = this.l.a(this.e, i, j, k, 5, 33, 5, (double) (f / this.s.h), (double) (f1 / this.s.i), (double) (f / this.s.j));
+         this.f = this.j.a(this.f, i, j, k, 5, 33, 5, (double) f, (double) f1, (double) f);
+         this.g = this.k.a(this.g, i, j, k, 5, 33, 5, (double) f, (double) f1, (double) f);
+-        boolean flag = false;
+-        boolean flag1 = false;
+         int l = 0;
+         int i1 = 0;
+ 
+@@ -217,11 +215,11 @@ public class ChunkProviderGenerate implements ChunkGenerator {
+                 float f2 = 0.0F;
+                 float f3 = 0.0F;
+                 float f4 = 0.0F;
+-                byte b0 = 2;
++                boolean flag = true;
+                 BiomeBase biomebase = this.C[j1 + 2 + (k1 + 2) * 10];
+ 
+-                for (int l1 = -b0; l1 <= b0; ++l1) {
+-                    for (int i2 = -b0; i2 <= b0; ++i2) {
++                for (int l1 = -2; l1 <= 2; ++l1) {
++                    for (int i2 = -2; i2 <= 2; ++i2) {
+                         BiomeBase biomebase1 = this.C[j1 + l1 + 2 + (k1 + i2 + 2) * 10];
+                         float f5 = this.s.n + biomebase1.j() * this.s.m;
+                         float f6 = this.s.p + biomebase1.m() * this.s.o;
+diff --git a/src/main/java/net/minecraft/server/ChunkProviderServer.java b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+index e500764..3627ac0 100644
+--- a/src/main/java/net/minecraft/server/ChunkProviderServer.java
++++ b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+@@ -33,6 +33,7 @@ public class ChunkProviderServer implements IChunkProvider {
+     private final IChunkLoader chunkLoader;
+     // Paper start
+     protected Chunk lastChunkByPos = null;
++	/*
+     public Long2ObjectOpenHashMap<Chunk> chunks = new Long2ObjectOpenHashMap<Chunk>(8192) {
+ 
+         @Override
+@@ -51,6 +52,7 @@ public class ChunkProviderServer implements IChunkProvider {
+             return super.remove(key);
+         }
+     }; // CraftBukkit
++	*/
+     // Paper end
+     public final WorldServer world;
+ 
+diff --git a/src/main/java/net/minecraft/server/Entity.java b/src/main/java/net/minecraft/server/Entity.java
+index 3375cfa..64e8b09 100644
+--- a/src/main/java/net/minecraft/server/Entity.java
++++ b/src/main/java/net/minecraft/server/Entity.java
+@@ -1161,7 +1161,7 @@ public abstract class Entity implements ICommandListener {
+                     ++this.fireTicks;
+                     // CraftBukkit start - Not on fire yet
+                     if (this.fireTicks <= 0) { // Only throw events on the first combust, otherwise it spams
+-                        EntityCombustEvent event = new EntityCombustEvent(getBukkitEntity(), 8);
++                        EntityCombustEvent event = new org.bukkit.event.entity.EntityCombustByBlockEvent(null, getBukkitEntity(), 8); // Torch - SPIGOT-2405
+                         world.getServer().getPluginManager().callEvent(event);
+ 
+                         if (!event.isCancelled()) {
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 6779069..3e9f52c 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -21,6 +21,12 @@ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ import org.bukkit.craftbukkit.Main;
+ 
++import java.util.Iterator;
++import java.util.LinkedList;
++import java.util.concurrent.RecursiveAction;
++import org.hose.ChunkGen_Pool;
++import org.spigotmc.SpigotWorldConfig;
++
+ import javax.imageio.ImageIO;
+ import java.awt.*;
+ import java.awt.image.BufferedImage;
+@@ -60,7 +66,8 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+     public Convertable convertable;
+     private final MojangStatisticsGenerator m = new MojangStatisticsGenerator("server", this, av());
+     public File universe;
+-    private final List<ITickable> o = Lists.newArrayList();
++    // private final List<ITickable> o = Lists.newArrayList();
++	private final Queue<ITickable> o = Queues.newConcurrentLinkedQueue();
+     protected final ICommandHandler b;
+     public final MethodProfiler methodProfiler = new MethodProfiler();
+     private ServerConnection p; // Spigot
+@@ -357,6 +364,8 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+             i = 0;
+ 
+             short radius = worldserver.paperConfig.keepLoadedRange; // Paper
++			List<int[]> chunkgen_list = new LinkedList();
++            int[] pos = new int[2];
+             for (int k = -radius; k <= radius && this.isRunning(); k += 16) { // Paper
+                 for (int l = -radius; l <= radius && this.isRunning(); l += 16) { // Paper
+                     long i1 = av();
+@@ -367,9 +376,13 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+                     }
+ 
+                     ++i;
+-                    worldserver.getChunkProviderServer().getChunkAt(blockposition.getX() + k >> 4, blockposition.getZ() + l >> 4);
++                    // worldserver.getChunkProviderServer().getChunkAt(blockposition.getX() + k >> 4, blockposition.getZ() + l >> 4);
++					pos[0] = blockposition.getX() + k >> 4;
++                    pos[1] = blockposition.getZ() + l >> 4;
++                    chunkgen_list.add(pos);
+                 }
+             }
++			SpigotWorldConfig.ChunkPool.invoke(new ChunkGen_Pool(worldserver, chunkgen_list)); // Torch
+         }
+ 
+         for (WorldServer world : this.worlds) {
+@@ -892,8 +905,9 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+         this.methodProfiler.c("tickables");
+ 
+         MinecraftTimings.tickablesTimer.startTiming(); // Spigot
+-        for (i = 0; i < this.o.size(); ++i) {
+-            ((ITickable) this.o.get(i)).c();
++		Iterator it = this.o.iterator();
++        while (it.hasNext()) {
++            ((ITickable) it.next()).c(); // Torch
+         }
+         MinecraftTimings.tickablesTimer.stopTiming(); // Spigot
+ 
+@@ -1170,7 +1184,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+     }
+ 
+     public String getName() {
+-        return "Server";
++        return org.bukkit.ChatColor.GREEN + "Server"; // Torch
+     }
+ 
+     public void sendMessage(IChatBaseComponent ichatbasecomponent) {
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index 733e5eb..5541fe7 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -1526,14 +1526,14 @@ public abstract class World implements IBlockAccess {
+         while (it.hasNext()) {
+             entity = (Entity) it.next();
+ 			
+-            j = e.getChunkX();
+-			k = e.getChunkZ();
++            j = entity.getChunkX();
++			k = entity.getChunkZ();
+ 			
+             if (entity.aa && this.isChunkLoaded(j, k, true)) {
+ 				this.getChunkAt(k, j).b(entity);
+             }
+ 			
+-			this.c(entity)
++			this.c(entity);
+         }
+ 		// Torch end
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftFallingSand.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftFallingSand.java
+index 65e1408..2471a0b 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftFallingSand.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftFallingSand.java
+@@ -64,4 +64,12 @@ public class CraftFallingSand extends CraftEntity implements FallingSand {
+         return getOrigin();
+     }
+     // Paper end
++	
++	@Override
++    public void setTicksLived(int value) {
++        super.setTicksLived(value);
++
++        // Second field for EntityFallingBlock
++        getHandle().ticksLived = value;
++    }
+ }
+diff --git a/src/main/java/org/spigotmc/AsyncCatcher.java b/src/main/java/org/spigotmc/AsyncCatcher.java
+index 29983a6..8475d3d 100644
+--- a/src/main/java/org/spigotmc/AsyncCatcher.java
++++ b/src/main/java/org/spigotmc/AsyncCatcher.java
+@@ -18,6 +18,7 @@ public class AsyncCatcher
+     {
+         if ( enabled && Thread.currentThread() != MinecraftServer.getServer().primaryThread )
+         {
++			MinecraftServer.getServer().postToMainThread(Thread.currentThread());
+             // MinecraftServer.LOGGER.warn(reason + " called async on " + Thread.currentThread().getName()); // TacoSpigot - log // Torch
+             throw new IllegalStateException( "Asynchronous " + reason + " on thread " + Thread.currentThread().getName() + "!" ); // TacoSpigot - give thread
+         }
+-- 
+2.8.2.windows.1
+

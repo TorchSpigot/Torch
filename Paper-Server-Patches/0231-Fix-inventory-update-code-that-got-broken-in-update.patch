@@ -1,0 +1,2674 @@
+From d172a155dcd51898ab9109d5e3d733b5c500a65b Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Mon, 15 Aug 2016 22:44:42 +0800
+Subject: [PATCH] Fix inventory update code that got broken in update
+
+
+diff --git a/pom.xml b/pom.xml
+index 49b692b..56297c66 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -91,24 +91,6 @@
+             <artifactId>trove4j</artifactId>
+             <version>3.0.3</version>
+         </dependency>
+-		 <dependency>
+-            <groupId>com.google.guava</groupId>
+-            <artifactId>guava</artifactId>
+-            <version>19.0-rc3</version>
+-        </dependency>
+-        <dependency>
+-            <groupId>org.projectlombok</groupId>
+-            <artifactId>lombok</artifactId>
+-            <version>1.16.10</version>
+-            <scope>provided</scope>
+-            <!-- They aren't required to use lombok -->
+-            <optional>true</optional>
+-        </dependency>
+-        <dependency>
+-            <groupId>com.google.code.findbugs</groupId>
+-            <artifactId>jsr305</artifactId>
+-            <version>3.0.1</version>
+-        </dependency>
+         <!-- testing -->
+         <dependency>
+             <groupId>junit</groupId>
+@@ -256,15 +238,6 @@
+                     </excludes>
+                 </configuration>
+             </plugin>
+-			  <!-- Torch - Do not deploy the server -->
+-            <plugin>
+-                <groupId>org.apache.maven.plugins</groupId>
+-                <artifactId>maven-deploy-plugin</artifactId>
+-                <version>2.8.2</version>
+-                <configuration>
+-                    <skip>true</skip>
+-                </configuration>
+-            </plugin>
+         </plugins>
+     </build>
+ </project>
+diff --git a/src/main/java/com/mrpowergamerbr/parappatown/utils/LightStatic.java b/src/main/java/com/mrpowergamerbr/parappatown/utils/LightStatic.java
+index 8c14690..2a1856a 100644
+--- a/src/main/java/com/mrpowergamerbr/parappatown/utils/LightStatic.java
++++ b/src/main/java/com/mrpowergamerbr/parappatown/utils/LightStatic.java
+@@ -5,7 +5,6 @@ import java.util.Random;
+ import com.mrpowergamerbr.utils.LightRandom;
+ 
+ public class LightStatic {
+-	
+-	public static LightRandom random = new LightRandom();
+-	public static Random RNG = new Random();
++	public final static LightRandom random = new LightRandom();
++	public final static Random RNG = new Random();
+ }
+\ No newline at end of file
+diff --git a/src/main/java/net/minecraft/server/BlockMinecartTrackAbstract.java b/src/main/java/net/minecraft/server/BlockMinecartTrackAbstract.java
+index d2516a5..12ad0c3 100644
+--- a/src/main/java/net/minecraft/server/BlockMinecartTrackAbstract.java
++++ b/src/main/java/net/minecraft/server/BlockMinecartTrackAbstract.java
+@@ -235,7 +235,7 @@ public abstract class BlockMinecartTrackAbstract extends Block {
+ 		private final BlockMinecartTrackAbstract d;
+ 		private IBlockData e;
+ 		private final boolean f;
+-		private final List<BlockPosition> g = new java.util.concurrent.CopyOnWriteArrayList<BlockPosition>();
++		private final List<BlockPosition> g = new org.torch.util.ConcurrentIterableArrayList<BlockPosition>();
+ 
+ 		public MinecartTrackLogic(World world, BlockPosition blockposition, IBlockData iblockdata) {
+ 			this.b = world;
+diff --git a/src/main/java/net/minecraft/server/BlockPosition.java b/src/main/java/net/minecraft/server/BlockPosition.java
+index d99e66d..04b8ac6 100644
+--- a/src/main/java/net/minecraft/server/BlockPosition.java
++++ b/src/main/java/net/minecraft/server/BlockPosition.java
+@@ -315,7 +315,7 @@ public class BlockPosition extends BaseBlockPosition {
+ 	public static final class PooledBlockPosition extends BlockPosition.MutableBlockPosition {
+ 
+ 		private boolean f;
+-		private static final List<BlockPosition.PooledBlockPosition> g = new java.util.concurrent.CopyOnWriteArrayList<BlockPosition.PooledBlockPosition>();
++		private static final List<BlockPosition.PooledBlockPosition> g = new org.torch.util.ConcurrentIterableArrayList<BlockPosition.PooledBlockPosition>();
+ 
+ 		private PooledBlockPosition(int i, int j, int k) {
+ 			super(i, j, k);
+diff --git a/src/main/java/net/minecraft/server/BlockStateEnum.java b/src/main/java/net/minecraft/server/BlockStateEnum.java
+index 1e061f7..98df79e 100644
+--- a/src/main/java/net/minecraft/server/BlockStateEnum.java
++++ b/src/main/java/net/minecraft/server/BlockStateEnum.java
+@@ -1,103 +1,95 @@
+ package net.minecraft.server;
+ 
+-import java.util.Collection;
+-import java.util.Iterator;
+-import java.util.Map;
+-
+ import com.google.common.base.Predicate;
+ import com.google.common.base.Predicates;
+ import com.google.common.collect.Collections2;
+ import com.google.common.collect.ImmutableSet;
+ import com.google.common.collect.Lists;
+ import com.google.common.collect.Maps;
++import java.util.Collection;
++import java.util.Iterator;
++import java.util.Map;
+ 
+ public class BlockStateEnum<T extends Enum<T> & INamable> extends BlockState<T> {
+ 
+-	private final ImmutableSet<T> a;
+-	private final Map<String, T> b = Maps.newHashMap();
+-
+-	protected BlockStateEnum(String s, Class<T> oclass, Collection<T> collection) {
+-		super(s, oclass);
+-		this.a = ImmutableSet.copyOf(collection);
+-		Iterator iterator = collection.iterator();
+-
+-		while (iterator.hasNext()) {
+-			T oenum = (T) iterator.next(); // TacoSpigot - fix decompile error
+-			String s1 = ((INamable) oenum).getName();
+-
+-			if (this.b.containsKey(s1)) {
+-				throw new IllegalArgumentException("Multiple values have the same name \'" + s1 + "\'");
++    private final ImmutableSet<T> a;
++    private final Map<String, T> b = Maps.newHashMap();
++	
++	boolean hasHashCode = false;
++    int cachedHashCode = 0;
++
++	protected BlockStateEnum(String paramString, Class<T> paramClass, Collection<T> paramCollection) {
++		super(paramString, paramClass);
++		this.a = ImmutableSet.copyOf(paramCollection);
++		for (Enum localEnum : paramCollection) {
++			String str = ((INamable)localEnum).getName();
++			if (this.b.containsKey(str)) {
++				throw new IllegalArgumentException("Multiple values have the same name '" + str + "'");
+ 			}
+-
+-			this.b.put(s1, oenum);
+-		}
+-
+-	}
+-
+-	@Override
+-	public Collection<T> c() {
+-		return this.a;
+-	}
+-
+-	@Override
+-	public String a(T t0) {
+-		return ((INamable) t0).getName();
+-	}
+-
+-	// TacoSpigot start
+-	@Override
+-	public int getValueId(T value) {
+-		return value.ordinal();
+-	}
+-
+-	@Override
+-	public T getByValueId(int id) {
+-		T[] values = this.b().getEnumConstants();
+-		if (id >= 0 && id < values.length) {
+-			return values[id];
+-		} else {
+-			throw new IllegalArgumentException("Invalid id: " + id);
++			this.b.put(str, (T) localEnum);
+ 		}
+ 	}
+-	// TacoSpigot end
+ 
+-	@Override
+-	public boolean equals(Object object) {
+-		if (this == object) {
+-			return true;
+-		} else if (object instanceof BlockStateEnum && super.equals(object)) {
+-			BlockStateEnum blockstateenum = (BlockStateEnum) object;
++    public Collection<T> c() {
++        return this.a;
++    }
++    public String a(T t0) {
++        return ((INamable) t0).getName();
++    }
++
++    // TacoSpigot start
++    @Override
++    public int getValueId(T value) {
++        return value.ordinal();
++    }
++
++    @Override
++    public T getByValueId(int id) {
++        T[] values = this.b().getEnumConstants();
++        if (id >= 0 && id < values.length) {
++            return values[id];
++        } else {
++            throw new IllegalArgumentException("Invalid id: " + id);
++        }
++    }
++    // TacoSpigot end
++
++    public boolean equals(Object object) {
++        if (this == object) {
++            return true;
++        } else if (object instanceof BlockStateEnum && super.equals(object)) {
++            BlockStateEnum blockstateenum = (BlockStateEnum) object;
++
++            return this.a.equals(blockstateenum.a) && this.b.equals(blockstateenum.b);
++        } else {
++            return false;
++        }
++    }
+ 
+-			return this.a.equals(blockstateenum.a) && this.b.equals(blockstateenum.b);
+-		} else {
+-			return false;
+-		}
+-	}
+-
+-	@Override
+ 	public int hashCode() {
++		if (hasHashCode) {
++			return cachedHashCode;
++		}
+ 		int i = super.hashCode();
+-
+ 		i = 31 * i + this.a.hashCode();
+ 		i = 31 * i + this.b.hashCode();
+-		return i;
++		hasHashCode = true;
++		return cachedHashCode = i;
+ 	}
+ 
+-	public static <T extends Enum<T> & INamable> BlockStateEnum<T> of(String s, Class<T> oclass) {
+-		return a(s, oclass, Predicates.alwaysTrue());
+-	}
++    public static <T extends Enum<T> & INamable> BlockStateEnum<T> of(String s, Class<T> oclass) {
++        return a(s, oclass, Predicates.alwaysTrue());
++    }
+ 
+-	public static <T extends Enum<T> & INamable> BlockStateEnum<T> a(String s, Class<T> oclass,
+-			Predicate<T> predicate) {
+-		return a(s, oclass, Collections2.filter(Lists.newArrayList(oclass.getEnumConstants()), predicate));
+-	}
++    public static <T extends Enum<T> & INamable> BlockStateEnum<T> a(String s, Class<T> oclass, Predicate<T> predicate) {
++        return a(s, oclass, Collections2.filter(Lists.newArrayList(oclass.getEnumConstants()), predicate));
++    }
+ 
+-	public static <T extends Enum<T> & INamable> BlockStateEnum<T> of(String s, Class<T> oclass, T... at) {
+-		return a(s, oclass, (Collection) Lists.newArrayList(at));
+-	}
++    public static <T extends Enum<T> & INamable> BlockStateEnum<T> of(String s, Class<T> oclass, T... at) {
++        return a(s, oclass, (Collection) Lists.newArrayList(at));
++    }
+ 
+-	public static <T extends Enum<T> & INamable> BlockStateEnum<T> a(String s, Class<T> oclass,
+-			Collection<T> collection) {
+-		return new BlockStateEnum(s, oclass, collection);
+-	}
++    public static <T extends Enum<T> & INamable> BlockStateEnum<T> a(String s, Class<T> oclass, Collection<T> collection) {
++        return new BlockStateEnum(s, oclass, collection);
++    }
+ }
+diff --git a/src/main/java/net/minecraft/server/Chunk.java b/src/main/java/net/minecraft/server/Chunk.java
+index c573276..ed29ba4 100644
+--- a/src/main/java/net/minecraft/server/Chunk.java
++++ b/src/main/java/net/minecraft/server/Chunk.java
+@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
+ import org.bukkit.Server; // CraftBukkit
+ import org.bukkit.craftbukkit.util.CraftMagicNumbers;
+ import org.hose.ChunkPopulate_Pool;
++import org.torch.util.ConcurrentIterableArrayList;
+ 
+ import com.destroystokyo.paper.antixray.Lock; // Paper - Async-Anti-Xray - Used to lock data which is used while creating chunk-packets asynchronously (those locks freeze the main thread but they occur very rare, worst case is "synchonous-anti-xray-behavior")
+ import com.destroystokyo.paper.exception.ServerInternalException;
+@@ -23,33 +24,11 @@ import com.google.common.collect.Lists; // CraftBukkit
+ import com.google.common.collect.Queues;
+ import com.mrpowergamerbr.utils.LightRandom;
+ 
+-import net.techcable.pineapple.collect.CopyOnWriteMap;
+ 
+ public class Chunk {
+ 
+-	public final Lock blocksLock = new Lock(); // Paper - Async-Anti-Xray -
+-												// Locks blocks and sections and
+-												// is applied before a packet of
+-												// this chunk or a
+-												// neighbor-chunk is added to
+-												// the
+-												// obfuscation-executor-service
+-												// on the main-thread until the
+-												// obfuscator-thread is finished
+-												// to ensure
+-												// "single-thread-behavior" and
+-												// thread-safety
+-	public final Lock dataLock = new Lock(); // Paper - Async-Anti-Xray - Locks
+-												// sky light, emitted light and
+-												// biome index and is applied
+-												// before a packet of this chunk
+-												// is added to the
+-												// obfuscation-executor-service
+-												// on the main-thread until the
+-												// obfuscator-thread is finished
+-												// to ensure
+-												// "single-thread-behavior" and
+-												// thread-safety
++	public final Lock blocksLock = new Lock(); // Paper - Async-Anti-Xray - Locks blocks and sections and is applied before a packet of this chunk or a neighbor-chunk is added to the obfuscation-executor-service on the main-thread until the obfuscator-thread is finished to ensure "single-thread-behavior" and thread-safety
++	public final Lock dataLock = new Lock(); // Paper - Async-Anti-Xray - Locks sky light, emitted light and biome index and is applied before a packet of this chunk is added to the obfuscation-executor-service on the main-thread until the obfuscator-thread is finished to ensure "single-thread-behavior" and thread-safety
+ 	private static final Logger e = LogManager.getLogger();
+ 	public static final ChunkSection a = null;
+ 	private final ChunkSection[] sections;
+@@ -133,7 +112,7 @@ public class Chunk {
+ 		this.g = new byte[256];
+ 		this.h = new int[256];
+ 		this.i = new boolean[256];
+-		this.tileEntities = new CopyOnWriteMap();
++		this.tileEntities = new java.util.concurrent.ConcurrentHashMap();
+ 		this.x = 4096;
+ 		this.y = Queues.newConcurrentLinkedQueue();
+ 		this.entitySlices = (new CopyOnWriteArrayList[16]); // Spigot
+@@ -174,19 +153,9 @@ public class Chunk {
+ 						int j1 = i1 >> 4;
+ 
+ 						if (this.sections[j1] == Chunk.a) {
+-							this.sections[j1] = new ChunkSection(j1 << 4, flag,
+-									world.paperConfig.antiXrayInstance.getPredefinedBlockData(this, j1)); // Paper
+-																											// -
+-																											// Anti-Xray
+-																											// -
+-																											// Add
+-																											// blocks
+-																											// used
+-																											// for
+-																											// obfuscation
+-																											// to
+-																											// the
+-																											// DataPalette
++							///
++                            this.sections[j1] = new ChunkSection(j1 << 4, flag, world.paperConfig.antiXrayInstance.getPredefinedBlockData(this, j1));
++							///
+ 						}
+ 
+ 						this.sections[j1].setType(k, i1 & 15, l, iblockdata);
+@@ -271,22 +240,7 @@ public class Chunk {
+ 								ChunkSection chunksection = this.sections[i1 >> 4];
+ 
+ 								if (chunksection != Chunk.a) {
+-									this.dataLock.waitUntilUnlock(); // Paper -
+-																		// Async-Anti-Xray
+-																		// -
+-																		// Note:
+-																		// Lock
+-																		// is
+-																		// applied
+-																		// on
+-																		// the
+-																		// same
+-																		// thread
+-																		// (main
+-																		// thread)
+-																		// -> no
+-																		// race
+-																		// condition
++									this.dataLock.waitUntilUnlock(); // Paper
+ 									chunksection.a(j, i1 & 15, k, l);
+ 									this.world.m(new BlockPosition((this.locX << 4) + j, i1, (this.locZ << 4) + k));
+ 								}
+@@ -410,15 +364,7 @@ public class Chunk {
+ 					for (l1 = i1; l1 < l; ++l1) {
+ 						chunksection = this.sections[l1 >> 4];
+ 						if (chunksection != Chunk.a) {
+-							this.dataLock.waitUntilUnlock(); // Paper -
+-																// Async-Anti-Xray
+-																// - Note: Lock
+-																// is applied on
+-																// the same
+-																// thread (main
+-																// thread) -> no
+-																// race
+-																// condition
++							this.dataLock.waitUntilUnlock(); // Paper
+ 							chunksection.a(i, l1 & 15, k, 15);
+ 							this.world.m(new BlockPosition((this.locX << 4) + i, l1, (this.locZ << 4) + k));
+ 						}
+@@ -427,15 +373,7 @@ public class Chunk {
+ 					for (l1 = l; l1 < i1; ++l1) {
+ 						chunksection = this.sections[l1 >> 4];
+ 						if (chunksection != Chunk.a) {
+-							this.dataLock.waitUntilUnlock(); // Paper -
+-																// Async-Anti-Xray
+-																// - Note: Lock
+-																// is applied on
+-																// the same
+-																// thread (main
+-																// thread) -> no
+-																// race
+-																// condition
++							this.dataLock.waitUntilUnlock(); // Paper
+ 							chunksection.a(i, l1 & 15, k, 0);
+ 							this.world.m(new BlockPosition((this.locX << 4) + i, l1, (this.locZ << 4) + k));
+ 						}
+@@ -459,13 +397,7 @@ public class Chunk {
+ 					ChunkSection chunksection1 = this.sections[i1 >> 4];
+ 
+ 					if (chunksection1 != Chunk.a) {
+-						this.dataLock.waitUntilUnlock(); // Paper -
+-															// Async-Anti-Xray -
+-															// Note: Lock is
+-															// applied on the
+-															// same thread (main
+-															// thread) -> no
+-															// race condition
++						this.dataLock.waitUntilUnlock(); // Paper
+ 						chunksection1.a(i, i1 & 15, k, l1);
+ 					}
+ 				}
+@@ -594,31 +526,14 @@ public class Chunk {
+ 					return null;
+ 				}
+ 
+-				chunksection = this.sections[j >> 4] = new ChunkSection(j >> 4 << 4, !this.world.worldProvider.m(),
+-						this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(this, j >> 4)); // Paper
+-																										// -
+-																										// Anti-Xray
+-																										// -
+-																										// Add
+-																										// blocks
+-																										// used
+-																										// for
+-																										// obfuscation
+-																										// to
+-																										// the
+-																										// DataPalette
+-				this.blocksLock.waitUntilUnlock(); // Paper - Async-Anti-Xray -
+-													// Note: Lock is applied on
+-													// the same thread (main
+-													// thread) -> no race
+-													// condition
++				///
++                chunksection = this.sections[j >> 4] = new ChunkSection(j >> 4 << 4, !this.world.worldProvider.m(), this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(this, j >> 4));
++                this.blocksLock.waitUntilUnlock();
++				///
+ 				flag = j >= i1;
+ 			}
+ 
+-			this.dataLock.waitUntilUnlock(); // Paper - Async-Anti-Xray - Note:
+-												// Lock is applied on the same
+-												// thread (main thread) -> no
+-												// race condition
++			this.dataLock.waitUntilUnlock(); // Paper
+ 			chunksection.setType(i, j & 15, k, iblockdata);
+ 			if (block1 != block) {
+ 				if (!this.world.isClientSide) {
+@@ -706,41 +621,21 @@ public class Chunk {
+ 		ChunkSection chunksection = this.sections[k >> 4];
+ 
+ 		if (chunksection == Chunk.a) {
+-			chunksection = this.sections[k >> 4] = new ChunkSection(k >> 4 << 4, !this.world.worldProvider.m(),
+-					this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(this, k >> 4)); // Paper
+-																									// -
+-																									// Anti-Xray
+-																									// -
+-																									// Add
+-																									// blocks
+-																									// used
+-																									// for
+-																									// obfuscation
+-																									// to
+-																									// the
+-																									// DataPalette
+-			this.blocksLock.waitUntilUnlock(); // Paper - Async-Anti-Xray -
+-												// Note: Lock is applied on the
+-												// same thread (main thread) ->
+-												// no race condition
++			///
++            chunksection = this.sections[k >> 4] = new ChunkSection(k >> 4 << 4, !this.world.worldProvider.m(), this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(this, k >> 4));
++			this.blocksLock.waitUntilUnlock();
++			///
+ 			this.initLighting();
+ 		}
+ 
+ 		this.s = true;
+ 		if (enumskyblock == EnumSkyBlock.SKY) {
+ 			if (!this.world.worldProvider.m()) {
+-				this.dataLock.waitUntilUnlock(); // Paper - Async-Anti-Xray -
+-													// Note: Lock is applied on
+-													// the same thread (main
+-													// thread) -> no race
+-													// condition
++				this.dataLock.waitUntilUnlock(); // Paper
+ 				chunksection.a(j, k & 15, l, i);
+ 			}
+ 		} else if (enumskyblock == EnumSkyBlock.BLOCK) {
+-			this.dataLock.waitUntilUnlock(); // Paper - Async-Anti-Xray - Note:
+-												// Lock is applied on the same
+-												// thread (main thread) -> no
+-												// race condition
++			this.dataLock.waitUntilUnlock(); // Paper
+ 			chunksection.b(j, k & 15, l, i);
+ 		}
+ 
+@@ -1431,10 +1326,7 @@ public class Chunk {
+ 		if (k == 255) {
+ 			biomebase = worldchunkmanager.getBiome(blockposition, Biomes.c);
+ 			k = BiomeBase.a(biomebase);
+-			this.dataLock.waitUntilUnlock(); // Paper - Async-Anti-Xray - Note:
+-												// Lock is applied on the same
+-												// thread (main thread) -> no
+-												// race condition
++			this.dataLock.waitUntilUnlock(); // Paper
+ 			this.g[j << 4 | i] = (byte) (k & 255);
+ 		}
+ 
+@@ -1451,10 +1343,7 @@ public class Chunk {
+ 			Chunk.e.warn("Could not set level chunk biomes, array length is " + abyte.length + " instead of "
+ 					+ this.g.length);
+ 		} else {
+-			this.dataLock.waitUntilUnlock(); // Paper - Async-Anti-Xray - Note:
+-												// Lock is applied on the same
+-												// thread (main thread) -> no
+-												// race condition
++			this.dataLock.waitUntilUnlock(); // Paper
+ 			System.arraycopy(abyte, 0, this.g, 0, this.g.length); // Torch
+ 
+ 		}
+diff --git a/src/main/java/net/minecraft/server/ChunkProviderFlat.java b/src/main/java/net/minecraft/server/ChunkProviderFlat.java
+index 6b006ba..bd3f8f0 100644
+--- a/src/main/java/net/minecraft/server/ChunkProviderFlat.java
++++ b/src/main/java/net/minecraft/server/ChunkProviderFlat.java
+@@ -13,7 +13,7 @@ public class ChunkProviderFlat implements ChunkGenerator {
+ 	private final Random b;
+ 	private final IBlockData[] c = new IBlockData[256];
+ 	private final WorldGenFlatInfo d;
+-	private final List<StructureGenerator> e = new java.util.concurrent.CopyOnWriteArrayList<StructureGenerator>();
++	private final List<StructureGenerator> e = new org.torch.util.ConcurrentIterableArrayList<StructureGenerator>();
+ 	private final boolean f;
+ 	private final boolean g;
+ 	private WorldGenLakes h;
+diff --git a/src/main/java/net/minecraft/server/ChunkProviderServer.java b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+index ee9313c..ed7ab0e 100644
+--- a/src/main/java/net/minecraft/server/ChunkProviderServer.java
++++ b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+@@ -26,7 +26,7 @@ public class ChunkProviderServer implements IChunkProvider {
+ 																													// //
+ 																													// Paper
+ 	// public final Map<Long, Chunk> chunks = Maps.newConcurrentHMap(); // Hose
+-	public final Map<Long, Chunk> chunks = new net.techcable.pineapple.collect.CopyOnWriteMap(); // Torch
++	public final Map<Long, Chunk> chunks = new java.util.concurrent.ConcurrentHashMap(); // Torch
+ 	public final ChunkGenerator chunkGenerator;
+ 	private final IChunkLoader chunkLoader;
+ 	// Paper start
+diff --git a/src/main/java/net/minecraft/server/ChunkRegionLoader.java b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+index 5fe5d59..454657b 100644
+--- a/src/main/java/net/minecraft/server/ChunkRegionLoader.java
++++ b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+@@ -417,19 +417,9 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+ 		for (int k = 0; k < nbttaglist.size(); ++k) {
+ 			NBTTagCompound nbttagcompound1 = nbttaglist.get(k);
+ 			byte b1 = nbttagcompound1.getByte("Y");
+-			ChunkSection chunksection = new ChunkSection(b1 << 4, flag,
+-					world.paperConfig.antiXrayInstance.getPredefinedBlockData(chunk, b0)); // Paper
+-																							// -
+-																							// Anti-Xray
+-																							// -
+-																							// Add
+-																							// blocks
+-																							// used
+-																							// for
+-																							// obfuscation
+-																							// to
+-																							// the
+-																							// DataPalette
++			///
++			ChunkSection chunksection = new ChunkSection(b1 << 4, flag, world.paperConfig.antiXrayInstance.getPredefinedBlockData(chunk, b1));
++			///
+ 			byte[] abyte = nbttagcompound1.getByteArray("Blocks");
+ 			NibbleArray nibblearray = new NibbleArray(nbttagcompound1.getByteArray("Data"));
+ 			NibbleArray nibblearray1 = nbttagcompound1.hasKeyOfType("Add", 7)
+diff --git a/src/main/java/net/minecraft/server/ChunkSection.java b/src/main/java/net/minecraft/server/ChunkSection.java
+index 25a9eb7..0f57ef6 100644
+--- a/src/main/java/net/minecraft/server/ChunkSection.java
++++ b/src/main/java/net/minecraft/server/ChunkSection.java
+@@ -18,22 +18,8 @@ public class ChunkSection {
+ 	// Paper end
+ 
+ 	public ChunkSection(int i, boolean flag, @Nullable IBlockData[] predefinedBlockData) { // Paper
+-																							// -
+-																							// Anti-Xray
+-																							// -
+-																							// Blocks
+-																							// used
+-																							// for
+-																							// obfuscation
+ 		this.yPos = i;
+-		this.blockIds = new DataPaletteBlock(predefinedBlockData); // Paper -
+-																	// Anti-Xray
+-																	// - Add
+-																	// blocks
+-																	// used for
+-																	// obfuscation
+-																	// to the
+-																	// DataPalette
++		this.blockIds = new DataPaletteBlock(predefinedBlockData); // Paper
+ 		this.emittedLight = new NibbleArray();
+ 		if (flag) {
+ 			this.skyLight = new NibbleArray();
+@@ -49,22 +35,8 @@ public class ChunkSection {
+ 
+ 	// CraftBukkit start
+ 	public ChunkSection(int y, boolean flag, char[] blockIds, @Nullable IBlockData[] predefinedBlockData) { // Paper
+-																											// -
+-																											// Anti-Xray
+-																											// -
+-																											// Blocks
+-																											// used
+-																											// for
+-																											// obfuscation
+ 		this.yPos = y;
+-		this.blockIds = new DataPaletteBlock(predefinedBlockData); // Paper -
+-																	// Anti-Xray
+-																	// - Add
+-																	// blocks
+-																	// used for
+-																	// obfuscation
+-																	// to the
+-																	// DataPalette
++		this.blockIds = new DataPaletteBlock(predefinedBlockData); // Paper
+ 		for (int i = 0; i < blockIds.length; i++) {
+ 			int xx = i & 15;
+ 			int yy = (i >> 8) & 15;
+diff --git a/src/main/java/net/minecraft/server/Container.java b/src/main/java/net/minecraft/server/Container.java
+index bc1c125..a6449a1 100644
+--- a/src/main/java/net/minecraft/server/Container.java
++++ b/src/main/java/net/minecraft/server/Container.java
+@@ -89,9 +89,7 @@ public abstract class Container {
+ 			ItemStack itemstack = this.c.get(i).getItem();
+ 			ItemStack itemstack1 = this.b.get(i);
+ 
+-			if (!ItemStack.fastMatches(itemstack1, itemstack)
+-					|| (tickCount++ % org.spigotmc.SpigotConfig.itemDirtyTicks == 0
+-							&& !ItemStack.matches(itemstack1, itemstack))) { // Spigot
++			if (!ItemStack.fastMatches(itemstack1, itemstack) || (tickCount % org.spigotmc.SpigotConfig.itemDirtyTicks == 0 && !ItemStack.matches(itemstack1, itemstack))) { // Spigot
+ 				itemstack1 = itemstack == null ? null : itemstack.cloneItemStack();
+ 				this.b.set(i, itemstack1);
+ 
+@@ -101,6 +99,7 @@ public abstract class Container {
+ 			}
+ 		}
+ 
++	tickCount++; // Spigot
+ 	}
+ 
+ 	public boolean a(EntityHuman entityhuman, int i) {
+diff --git a/src/main/java/net/minecraft/server/ContainerEnchantTable.java b/src/main/java/net/minecraft/server/ContainerEnchantTable.java
+index c49b13f..677e753 100644
+--- a/src/main/java/net/minecraft/server/ContainerEnchantTable.java
++++ b/src/main/java/net/minecraft/server/ContainerEnchantTable.java
+@@ -3,6 +3,7 @@ package net.minecraft.server;
+ import java.util.List;
+ // CraftBukkit start
+ import java.util.Map;
++import java.util.Random;
+ 
+ import javax.annotation.Nullable;
+ 
+@@ -39,7 +40,7 @@ public class ContainerEnchantTable extends Container {
+ 	};
+ 	private World world;
+ 	private BlockPosition position;
+-	private LightRandom l = com.mrpowergamerbr.parappatown.utils.LightStatic.random;
++	private Random l = com.mrpowergamerbr.parappatown.utils.LightStatic.RNG;
+ 	public int f;
+ 	public int[] costs = new int[3];
+ 	public int[] h = new int[] { -1, -1, -1 };
+diff --git a/src/main/java/net/minecraft/server/CrashReport.java b/src/main/java/net/minecraft/server/CrashReport.java
+index 42cf109..cfde9ec 100644
+--- a/src/main/java/net/minecraft/server/CrashReport.java
++++ b/src/main/java/net/minecraft/server/CrashReport.java
+@@ -22,7 +22,7 @@ public class CrashReport {
+ 	private final String b;
+ 	private final Throwable c;
+ 	private final CrashReportSystemDetails d = new CrashReportSystemDetails(this, "System Details");
+-	private final List<CrashReportSystemDetails> e = new java.util.concurrent.CopyOnWriteArrayList<CrashReportSystemDetails>();
++	private final List<CrashReportSystemDetails> e = new org.torch.util.ConcurrentIterableArrayList<CrashReportSystemDetails>();
+ 	private File f;
+ 	private boolean g = true;
+ 	private StackTraceElement[] h = new StackTraceElement[0];
+diff --git a/src/main/java/net/minecraft/server/DataBits.java b/src/main/java/net/minecraft/server/DataBits.java
+index 6ae27c0..c34316b 100644
+--- a/src/main/java/net/minecraft/server/DataBits.java
++++ b/src/main/java/net/minecraft/server/DataBits.java
+@@ -34,67 +34,23 @@ public class DataBits {
+ 
+ 	}
+ 
+-	// Paper start - Anti-Xray - Add methods used inside the obfuscator loop to
+-	// set fake-blocks to data
+-	public long obfuscate(int blockIndex, int bits, long data) { // Paper -
+-																	// Anti-Xray
+-																	// - First
+-																	// part of
+-																	// this.a(int
+-																	// i, int
+-																	// j),
+-																	// doesn't
+-																	// modify
+-																	// this.a
+-																	// but the
+-																	// data-paramater
+-																	// and
+-																	// returns
+-																	// it
++	// Paper start - Anti-Xray - Add methods used inside the obfuscator loop to set fake-blocks to data
++	public long obfuscate(int blockIndex, int bits, long data) { // Paper
+ 		int j1 = (blockIndex * this.b) % 64;
+ 		return data & ~(this.c << j1) | (bits & this.c) << j1;
+ 	}
+ 
+ 	public long obfuscateSplittedPart(int blockIndex, int bits, long data) { // Paper
+-																				// -
+-																				// Anti-Xray
+-																				// -
+-																				// Second
+-																				// part
+-																				// of
+-																				// this.a(int
+-																				// i,
+-																				// int
+-																				// j),
+-																				// doesn't
+-																				// modify
+-																				// this.a
+-																				// but
+-																				// the
+-																				// data-paramater
+-																				// and
+-																				// returns
+-																				// it
+ 		int k1 = 64 - (blockIndex * this.b) % 64;
+ 		int l1 = this.b - k1;
+ 		return data >>> l1 << l1 | (bits & this.c) >> k1;
+ 	}
+ 
+-	public int getArrayIndex(int blockIndex) { // Paper - Anti-Xray - Returns
+-												// the array index of blockIndex
+-												// for this.a
++	public int getArrayIndex(int blockIndex) { // Paper
+ 		return (blockIndex * this.b) / 64;
+ 	}
+ 
+-	public boolean isSplitted(int blockIndex, int arrayIndex) { // Paper -
+-																// Anti-Xray -
+-																// Returns true
+-																// if and only
+-																// if the block
+-																// data is
+-																// splitted over
+-																// two array
+-																// indexes
++	public boolean isSplitted(int blockIndex, int arrayIndex) { // Paper
+ 		return arrayIndex != ((blockIndex + 1) * this.b - 1) / 64;
+ 	}
+ 	// Paper end
+diff --git a/src/main/java/net/minecraft/server/DataPaletteBlock.java b/src/main/java/net/minecraft/server/DataPaletteBlock.java
+index 4467384..0f67cb3 100644
+--- a/src/main/java/net/minecraft/server/DataPaletteBlock.java
++++ b/src/main/java/net/minecraft/server/DataPaletteBlock.java
+@@ -9,21 +9,8 @@ public class DataPaletteBlock implements DataPaletteExpandable {
+ 	protected DataBits b; // Paper - nope
+ 	protected DataPalette c;
+ 	private int e = 0;
+-	private final IBlockData[] predefinedBlockData; // Paper - Anti-Xray -
+-													// Blocks used for
+-													// obfuscation (since 1.9 MC
+-													// uses DataPalettes which
+-													// have to be changed if
+-													// more different blocks are
+-													// used in a ChunkSection ->
+-													// to avoid that while
+-													// setting the fake-blocks
+-													// we add them from the
+-													// beginning)
+-	private final int[] currentPredefinedBlockData; // Paper - Anti-Xray -
+-													// Current used data bits of
+-													// blocks used for
+-													// obfuscation
++	private final IBlockData[] predefinedBlockData; // Paper
++	private final int[] currentPredefinedBlockData; // Paper
+ 
+ 	// Paper start - Anti-Xray - Support default constructor
+ 	public DataPaletteBlock() {
+@@ -33,38 +20,19 @@ public class DataPaletteBlock implements DataPaletteExpandable {
+ 
+ 	// Paper start - Anti-Xray - Modified constructor
+ 	public DataPaletteBlock(@Nullable IBlockData[] predefinedBlockData) { // Paper
+-																			// -
+-																			// Anti-Xray
+-																			// -
+-																			// Add
+-																			// blocks
+-																			// used
+-																			// for
+-																			// obfuscation
+-																			// to
+-																			// the
+-																			// DataPalette
+ 		this.predefinedBlockData = predefinedBlockData;
+-		if (predefinedBlockData == null) { // Paper - Anti-Xray - default
+-											// constructor
++		if (predefinedBlockData == null) { // Paper - Anti-Xray - default constructor
+ 			this.currentPredefinedBlockData = null;
+ 			this.b(4);
+ 		} else {
+ 			this.currentPredefinedBlockData = new int[predefinedBlockData.length];
+-			int maxIndex = predefinedBlockData.length; // Paper - Anti-Xray -
+-														// count bits of the
+-														// maximum array index
+-														// (+1 because AIR is
+-														// also added) -> array
+-														// length
++			int maxIndex = predefinedBlockData.length; // Paper
+ 			int bitCount = 0;
+ 			while (maxIndex != 0) {
+ 				maxIndex >>= 1;
+ 				bitCount++;
+ 			}
+-			this.b(bitCount == 0 ? 4 : bitCount); // Paper - Anti-Xray -
+-													// initialize a DataPalette
+-													// with bitCount
++			this.b(bitCount == 0 ? 4 : bitCount); // Paper - Anti-Xray - initialize a DataPalette with bitCount
+ 		}
+ 	}
+ 	// Paper end
+diff --git a/src/main/java/net/minecraft/server/DataWatcher.java b/src/main/java/net/minecraft/server/DataWatcher.java
+index 2a48653..4679aa0 100644
+--- a/src/main/java/net/minecraft/server/DataWatcher.java
++++ b/src/main/java/net/minecraft/server/DataWatcher.java
+@@ -24,7 +24,7 @@ import net.techcable.tacospigot.TacoSpigotConfig;
+ 
+ public class DataWatcher {
+ 
+-	private static final Map<Class<? extends Entity>, Integer> a = new net.techcable.pineapple.collect.CopyOnWriteMap();
++	private static final Map<Class<? extends Entity>, Integer> a = new java.util.concurrent.ConcurrentHashMap();
+ 	private final Entity b;
+ 	private final Int2ObjectMap<Item<?>> c = TacoSpigotConfig.useArraysForDatawatcher ? new ArrayMap<>()
+ 			: new Int2ObjectOpenHashMap<>(); // Paper // TacoSpigot - use
+diff --git a/src/main/java/net/minecraft/server/EnderDragonBattle.java b/src/main/java/net/minecraft/server/EnderDragonBattle.java
+index 8727302..037fa1f 100644
+--- a/src/main/java/net/minecraft/server/EnderDragonBattle.java
++++ b/src/main/java/net/minecraft/server/EnderDragonBattle.java
+@@ -46,7 +46,7 @@ public class EnderDragonBattle {
+ 	public EnderDragonBattle(WorldServer worldserver, NBTTagCompound nbttagcompound) {
+ 		this.c = (BossBattleServer) (new BossBattleServer(new ChatMessage("entity.EnderDragon.name", new Object[0]),
+ 				BossBattle.BarColor.PINK, BossBattle.BarStyle.PROGRESS)).setPlayMusic(true).c(true);
+-		this.e = new java.util.concurrent.CopyOnWriteArrayList<Integer>();
++		this.e = new org.torch.util.ConcurrentIterableArrayList<Integer>();
+ 		this.g = 0;
+ 		this.h = 0;
+ 		this.i = 0;
+diff --git a/src/main/java/net/minecraft/server/Entity.java b/src/main/java/net/minecraft/server/Entity.java
+index 5f9b9e8..0a843fc 100644
+--- a/src/main/java/net/minecraft/server/Entity.java
++++ b/src/main/java/net/minecraft/server/Entity.java
+@@ -229,7 +229,7 @@ public abstract class Entity implements ICommandListener, org.spigotmc.Optimized
+ 
+ 	public Entity(World world) {
+ 		this.id = Entity.entityCount++;
+-		this.passengers = new java.util.concurrent.CopyOnWriteArrayList<Entity>();
++		this.passengers = new org.torch.util.ConcurrentIterableArrayList<Entity>();
+ 		this.boundingBox = Entity.b;
+ 		this.width = 0.6F;
+ 		this.length = 1.8F;
+diff --git a/src/main/java/net/minecraft/server/EntityFallingBlock.java b/src/main/java/net/minecraft/server/EntityFallingBlock.java
+index e867fe5..3821b8b 100644
+--- a/src/main/java/net/minecraft/server/EntityFallingBlock.java
++++ b/src/main/java/net/minecraft/server/EntityFallingBlock.java
+@@ -218,7 +218,7 @@ public class EntityFallingBlock extends Entity {
+ 			int i = MathHelper.f(f - 1.0F);
+ 
+ 			if (i > 0) {
+-				List arraylist = Lists.newCopyOnWriteArrayList(this.world.getEntities(this, this.getBoundingBox()));
++				List arraylist = Lists.newArrayList(this.world.getEntities(this, this.getBoundingBox()));
+ 				boolean flag = block == Blocks.ANVIL;
+ 				DamageSource damagesource = flag ? DamageSource.ANVIL : DamageSource.FALLING_BLOCK;
+ 				Iterator iterator = arraylist.iterator();
+diff --git a/src/main/java/net/minecraft/server/EntitySlice.java b/src/main/java/net/minecraft/server/EntitySlice.java
+index 801c362..773d4fc 100644
+--- a/src/main/java/net/minecraft/server/EntitySlice.java
++++ b/src/main/java/net/minecraft/server/EntitySlice.java
+@@ -17,7 +17,7 @@ public class EntitySlice<T> extends AbstractSet<T> {
+ 	private final Map<Class<?>, List<T>> b = Maps.newHashMap();
+ 	private final Set<Class<?>> c = Sets.newIdentityHashSet();
+ 	private final Class<T> d;
+-	private final List<T> e = new java.util.concurrent.CopyOnWriteArrayList<T>();
++	private final List<T> e = new org.torch.util.ConcurrentIterableArrayList<T>();
+ 
+ 	public EntitySlice(Class<T> oclass) {
+ 		this.d = oclass;
+diff --git a/src/main/java/net/minecraft/server/Explosion.java b/src/main/java/net/minecraft/server/Explosion.java
+index 105ee7c..f8dbae8 100644
+--- a/src/main/java/net/minecraft/server/Explosion.java
++++ b/src/main/java/net/minecraft/server/Explosion.java
+@@ -4,7 +4,6 @@ import java.util.Iterator;
+ import java.util.List;
+ import java.util.Set;
+ import java.util.concurrent.ConcurrentMap;
+-import java.util.concurrent.CopyOnWriteArrayList;
+ 
+ import org.bukkit.Location;
+ // CraftBukkit start
+@@ -28,8 +27,8 @@ public class Explosion {
+ 	private final double posZ;
+ 	public final Entity source;
+ 	private final float size;
+-	private final List<BlockPosition> blocks = new CopyOnWriteArrayList<BlockPosition>(); // Torch
+-	private final net.techcable.pineapple.collect.CopyOnWriteMap<EntityHuman, Vec3D> k = new net.techcable.pineapple.collect.CopyOnWriteMap<EntityHuman, Vec3D>(); // Hose
++	private final List<BlockPosition> blocks = new org.torch.util.ConcurrentIterableArrayList<BlockPosition>(); // Torch
++	private final java.util.concurrent.ConcurrentHashMap<EntityHuman, Vec3D> k = new java.util.concurrent.ConcurrentHashMap<EntityHuman, Vec3D>(); // Hose
+ 	public boolean wasCanceled = false; // CraftBukkit - add field
+ 
+ 	public Explosion(World world, Entity entity, double d0, double d1, double d2, float f, boolean flag,
+diff --git a/src/main/java/net/minecraft/server/HandshakeListener.java b/src/main/java/net/minecraft/server/HandshakeListener.java
+index 6abee8f..55d401d 100644
+--- a/src/main/java/net/minecraft/server/HandshakeListener.java
++++ b/src/main/java/net/minecraft/server/HandshakeListener.java
+@@ -18,7 +18,7 @@ public class HandshakeListener implements PacketHandshakingInListener {
+ 																					// legacy
+ 																					// name
+ 	// CraftBukkit start - add fields
+-	private static final net.techcable.pineapple.collect.CopyOnWriteMap<InetAddress, Long> throttleTracker = new net.techcable.pineapple.collect.CopyOnWriteMap<InetAddress, Long>();
++	private static final java.util.concurrent.ConcurrentHashMap<InetAddress, Long> throttleTracker = new java.util.concurrent.ConcurrentHashMap<InetAddress, Long>();
+ 	private static int throttleCounter = 0;
+ 	// CraftBukkit end
+ 
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 7fd311c..d6638b6 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -123,7 +123,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 		networkQueue.add(ListenableFutureTask.create(run));
+ 	}
+ 
+-	synchronized static void processNetworkQueue() {
++	static void processNetworkQueue() {
+ 		FutureTask<?> entry;
+ 		int count = networkQueue.size();
+ 		while (count-- > 0 && (entry = networkQueue.poll()) != null) {
+@@ -132,7 +132,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 	}
+ 
+ 	// CraftBukkit start
+-	public List<WorldServer> worlds = new ArrayList<WorldServer>();
++	public List<WorldServer> worlds = new org.torch.util.ConcurrentIterableArrayList<WorldServer>();
+ 	// public List<WorldServer> worlds = Collections.synchronizedList(new
+ 	// ArrayList<WorldServer>());
+ 	public org.bukkit.craftbukkit.CraftServer server;
+@@ -909,9 +909,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 		FutureTask<?> entry;
+ 		int count = this.j.size();
+ 		while (count-- > 0 && (entry = this.j.poll()) != null) {
+-			synchronized (this) {
+-				SystemUtils.a(entry, MinecraftServer.LOGGER);
+-			}
++			SystemUtils.a(entry, MinecraftServer.LOGGER);
+ 		}
+ 		// Spigot end
+ 		MinecraftTimings.minecraftSchedulerTimer.stopTiming(); // Paper
+diff --git a/src/main/java/net/minecraft/server/NameReferencingFileConverter.java b/src/main/java/net/minecraft/server/NameReferencingFileConverter.java
+index f83be8f..1938b0f 100644
+--- a/src/main/java/net/minecraft/server/NameReferencingFileConverter.java
++++ b/src/main/java/net/minecraft/server/NameReferencingFileConverter.java
+@@ -333,7 +333,7 @@ public class NameReferencingFileConverter {
+ 			if (gameprofile != null && gameprofile.getId() != null) {
+ 				return gameprofile.getId().toString();
+ 			} else if (!minecraftserver.R() && minecraftserver.getOnlineMode()) {
+-				final List arraylist = new java.util.concurrent.CopyOnWriteArrayList();
++				final ArrayList arraylist = Lists.newArrayList();
+ 				ProfileLookupCallback profilelookupcallback = new ProfileLookupCallback() {
+ 					@Override
+ 					public void onProfileLookupSucceeded(GameProfile gameprofile) {
+diff --git a/src/main/java/net/minecraft/server/NavigationListener.java b/src/main/java/net/minecraft/server/NavigationListener.java
+index e8bc6a0..3c08385 100644
+--- a/src/main/java/net/minecraft/server/NavigationListener.java
++++ b/src/main/java/net/minecraft/server/NavigationListener.java
+@@ -9,7 +9,7 @@ import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap; // Torch
+ 
+ public class NavigationListener implements IWorldAccess {
+ 
+-	private final List<NavigationAbstract> a = new java.util.concurrent.CopyOnWriteArrayList<NavigationAbstract>();
++	private final List<NavigationAbstract> a = new org.torch.util.ConcurrentIterableArrayList<NavigationAbstract>();
+ 
+ 	public NavigationListener() {
+ 	}
+diff --git a/src/main/java/net/minecraft/server/PacketStatusInPing.java b/src/main/java/net/minecraft/server/PacketStatusInPing.java
+deleted file mode 100644
+index a638cc8..0000000
+--- a/src/main/java/net/minecraft/server/PacketStatusInPing.java
++++ /dev/null
+@@ -1,54 +0,0 @@
+-package net.minecraft.server;
+-
+-import java.io.IOException;
+-import java.util.concurrent.RecursiveAction;
+-
+-public class PacketStatusInPing implements Packet<PacketStatusInListener> {
+-
+-	private long a;
+-
+-	public PacketStatusInPing() {
+-	}
+-
+-	@Override
+-	public void a(PacketDataSerializer packetdataserializer) throws IOException {
+-		this.a = packetdataserializer.readLong();
+-	}
+-
+-	@Override
+-	public void b(PacketDataSerializer packetdataserializer) throws IOException {
+-		packetdataserializer.writeLong(this.a);
+-	}
+-
+-	class InTask extends RecursiveAction {
+-		PacketStatusInListener packetstatusinlistener;
+-
+-		InTask(PacketStatusInListener packetstatusinlistener) {
+-			this.packetstatusinlistener = packetstatusinlistener;
+-		}
+-
+-		@Override
+-		protected void compute() {
+-			a_task(packetstatusinlistener);
+-		}
+-
+-	}
+-
+-	@Override
+-	public void a(PacketStatusInListener packetstatusinlistener) {
+-		if (de.minetick.MigotConfig.enabledForkPing) {
+-			InTask a_task = new InTask(packetstatusinlistener);
+-			a_task.fork();
+-		} else {
+-			packetstatusinlistener.a(this);
+-		}
+-	}
+-
+-	public void a_task(PacketStatusInListener packetstatusinlistener) {
+-		packetstatusinlistener.a(this);
+-	}
+-
+-	public long a() {
+-		return this.a;
+-	}
+-}
+diff --git a/src/main/java/net/minecraft/server/PacketStatusInStart.java b/src/main/java/net/minecraft/server/PacketStatusInStart.java
+deleted file mode 100644
+index 887923a..0000000
+--- a/src/main/java/net/minecraft/server/PacketStatusInStart.java
++++ /dev/null
+@@ -1,47 +0,0 @@
+-package net.minecraft.server;
+-
+-import java.io.IOException;
+-import java.util.concurrent.RecursiveAction;
+-
+-public class PacketStatusInStart implements Packet<PacketStatusInListener> {
+-
+-	public PacketStatusInStart() {
+-	}
+-
+-	@Override
+-	public void a(PacketDataSerializer packetdataserializer) throws IOException {
+-	}
+-
+-	@Override
+-	public void b(PacketDataSerializer packetdataserializer) throws IOException {
+-	}
+-
+-	class InTask extends RecursiveAction {
+-		PacketStatusInListener packetstatusinlistener;
+-
+-		InTask(PacketStatusInListener packetstatusinlistener) {
+-			this.packetstatusinlistener = packetstatusinlistener;
+-		}
+-
+-		@Override
+-		protected void compute() {
+-			a_task(packetstatusinlistener);
+-		}
+-
+-	}
+-
+-	@Override
+-	public void a(PacketStatusInListener packetstatusinlistener) {
+-		if (de.minetick.MigotConfig.enabledForkPing) {
+-			InTask a_task = new InTask(packetstatusinlistener);
+-			a_task.fork();
+-		} else {
+-			packetstatusinlistener.a(this);
+-		}
+-	}
+-
+-	public void a_task(PacketStatusInListener packetstatusinlistener) {
+-		packetstatusinlistener.a(this);
+-	}
+-
+-}
+diff --git a/src/main/java/net/minecraft/server/PacketStatusListener.java b/src/main/java/net/minecraft/server/PacketStatusListener.java
+index 0cf92e1..3fc0b0c 100644
+--- a/src/main/java/net/minecraft/server/PacketStatusListener.java
++++ b/src/main/java/net/minecraft/server/PacketStatusListener.java
+@@ -2,6 +2,7 @@ package net.minecraft.server;
+ 
+ import java.net.InetSocketAddress;
+ import java.util.Iterator;
++import java.util.concurrent.RecursiveAction;
+ 
+ import org.bukkit.craftbukkit.util.CraftIconCache;
+ import org.bukkit.entity.Player;
+@@ -22,13 +23,36 @@ public class PacketStatusListener implements PacketStatusInListener {
+ 		this.minecraftServer = minecraftserver;
+ 		this.networkManager = networkmanager;
+ 	}
+-
++	
+ 	@Override
+ 	public void a(IChatBaseComponent ichatbasecomponent) {
+ 	}
++	
++	class StatusTask extends RecursiveAction {
++		PacketStatusInStart packetstatusinstart;
++
++		StatusTask(PacketStatusInStart packetstatusinstart) {
++			this.packetstatusinstart = packetstatusinstart;
++		}
++
++		@Override
++		protected void compute() {
++			a_task(packetstatusinstart);
++		}
++
++	}
+ 
+ 	@Override
+ 	public void a(PacketStatusInStart packetstatusinstart) {
++		if (de.minetick.MigotConfig.enabledForkPing) {
++			StatusTask a_task = new StatusTask(packetstatusinstart);
++			a_task.fork();
++		} else {
++			a_task(packetstatusinstart);
++		}
++	}
++	
++	public void a_task(PacketStatusInStart packetstatusinstart) {
+ 		if (this.d) {
+ 			this.networkManager.close(PacketStatusListener.a);
+ 		} else {
+diff --git a/src/main/java/net/minecraft/server/PlayerChunk.java b/src/main/java/net/minecraft/server/PlayerChunk.java
+index dfe703a..e05b2b0 100644
+--- a/src/main/java/net/minecraft/server/PlayerChunk.java
++++ b/src/main/java/net/minecraft/server/PlayerChunk.java
+@@ -18,7 +18,7 @@ public class PlayerChunk {
+ 
+ 	private static final Logger a = LogManager.getLogger();
+ 	private final PlayerChunkMap playerChunkMap;
+-	public final List<EntityPlayer> c = new java.util.concurrent.CopyOnWriteArrayList<EntityPlayer>(); // CraftBukkit
++	public final List<EntityPlayer> c = new org.torch.util.ConcurrentIterableArrayList<EntityPlayer>(); // CraftBukkit
+ 																										// -
+ 																										// public
+ 	private final ChunkCoordIntPair location;
+diff --git a/src/main/java/net/minecraft/server/PlayerChunkMap.java b/src/main/java/net/minecraft/server/PlayerChunkMap.java
+index 4322ff8..ed5ed4f 100644
+--- a/src/main/java/net/minecraft/server/PlayerChunkMap.java
++++ b/src/main/java/net/minecraft/server/PlayerChunkMap.java
+@@ -25,7 +25,6 @@ import com.google.common.collect.Queues;
+ import com.google.common.collect.Sets;
+ 
+ import co.aikar.timings.Timing;
+-import net.techcable.pineapple.collect.CopyOnWriteMap;
+ 
+ public class PlayerChunkMap {
+ 
+@@ -53,11 +52,10 @@ public class PlayerChunkMap {
+ 
+ 	private final WorldServer world;
+ 	// TacoSpigot start - catch async access
+-	private final List<EntityPlayer> managedPlayers = AsyncCatcher.catchAsyncUsage(
+-			new java.util.concurrent.CopyOnWriteArrayList(), "list access PlayerChunkMap.managedPlayers");
++	private final List<EntityPlayer> managedPlayers = new org.torch.util.ConcurrentIterableArrayList();
+ 	// private final Long2ObjectMap<PlayerChunk> e = new
+ 	// Long2ObjectOpenHashMap(4096);
+-	private final Map<Long, PlayerChunk> e = new CopyOnWriteMap();
++	private final Map<Long, PlayerChunk> e = new java.util.concurrent.ConcurrentHashMap();
+ 	// private final Set<PlayerChunk> f =
+ 	// AsyncCatcher.catchAsyncUsage(Sets.newHashSet(), "set access
+ 	// PlayerChunkMap.f");
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index 2bf92cd..4d67ba9 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -1231,8 +1231,8 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+ 		}
+ 
+ 	}
+-
+-	/*
++	
++	// Torch start
+ 	class SendTask extends RecursiveAction {
+ 		Packet<?> packet;
+ 
+@@ -1246,13 +1246,20 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+ 		}
+ 	}
+ 
+-	public void sendPacket(Packet<?> packet) {
++	public void sendPacket(final Packet<?> packet) {
++		if (packet == null || this.processedDisconnect) { // Spigot
++			return;
++		}
++		if (packet instanceof PacketPlayOutRespawn) {
++			this.networkManager.sendPacket(packet);
++			return;
++		}
++		
+ 		SendTask task = new SendTask(packet);
+ 		task.fork();
+ 	}
+-	*/
+-
+-	public void sendPacket(final Packet<?> packet) {
++	
++	public void sendPacket_sub(final Packet<?> packet) {
+ 		if (packet instanceof PacketPlayOutChat) {
+ 			PacketPlayOutChat packetplayoutchat = (PacketPlayOutChat) packet;
+ 			EntityHuman.EnumChatVisibility entityhuman_enumchatvisibility = this.player.getChatFlags();
+@@ -1267,12 +1274,10 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+ 		}
+ 
+ 		// CraftBukkit start
+-		if (packet == null || this.processedDisconnect) { // Spigot
+-			return;
+-		} else if (packet instanceof PacketPlayOutSpawnPosition) {
++		// Torch end
++		if (packet instanceof PacketPlayOutSpawnPosition) {
+ 			PacketPlayOutSpawnPosition packet6 = (PacketPlayOutSpawnPosition) packet;
+-			this.player.compassTarget = new Location(this.getPlayer().getWorld(), packet6.position.getX(),
+-					packet6.position.getY(), packet6.position.getZ());
++			this.player.compassTarget = new Location(this.getPlayer().getWorld(), packet6.position.getX(), packet6.position.getY(), packet6.position.getZ());
+ 		}
+ 		// CraftBukkit end
+ 
+diff --git a/src/main/java/net/minecraft/server/PlayerList.java b/src/main/java/net/minecraft/server/PlayerList.java
+index af20910..d3e8bda 100644
+--- a/src/main/java/net/minecraft/server/PlayerList.java
++++ b/src/main/java/net/minecraft/server/PlayerList.java
+@@ -50,7 +50,7 @@ public abstract class PlayerList {
+ 	private static final Logger f = LogManager.getLogger();
+ 	private static final SimpleDateFormat g = new SimpleDateFormat("yyyy-MM-dd \'at\' HH:mm:ss z");
+ 	private final MinecraftServer server;
+-	public final List<EntityPlayer> players = new java.util.concurrent.CopyOnWriteArrayList(); // CraftBukkit
++	public final List<EntityPlayer> players = new org.torch.util.ConcurrentIterableArrayList(); // CraftBukkit
+ 																								// -
+ 																								// ArrayList
+ 																								// ->
+@@ -88,7 +88,7 @@ public abstract class PlayerList {
+ 		this.operators = new OpList(PlayerList.c);
+ 		this.whitelist = new WhiteList(PlayerList.d);
+ 		// this.o = Maps.newHashMap();
+-		this.o = new net.techcable.pineapple.collect.CopyOnWriteMap();
++		this.o = new java.util.concurrent.ConcurrentHashMap();
+ 		this.server = minecraftserver;
+ 		this.k.a(false);
+ 		this.l.a(false);
+diff --git a/src/main/java/net/minecraft/server/RegionFile.java b/src/main/java/net/minecraft/server/RegionFile.java
+index 67b2555..2f1072a 100644
+--- a/src/main/java/net/minecraft/server/RegionFile.java
++++ b/src/main/java/net/minecraft/server/RegionFile.java
+@@ -12,14 +12,9 @@ import java.util.List;
+ import java.util.zip.DeflaterOutputStream;
+ import java.util.zip.GZIPInputStream;
+ import java.util.zip.InflaterInputStream;
++import java.util.concurrent.atomic.AtomicIntegerArray;
+ 
+ // Torch start
+-/*
+-import java.io.BufferedInputStream;
+-import java.io.BufferedOutputStream;
+-import java.io.ByteArrayInputStream;
+-import java.io.ByteArrayOutputStream;
+-*/
+ import org.torch.util.io.FastBufferedInputStream;
+ import org.torch.util.io.FastBufferedOutputStream;
+ import org.torch.util.io.FastByteArrayInputStream;
+@@ -38,8 +33,8 @@ public class RegionFile {
+ 													// empty 4k block
+ 	private final File b;
+ 	private RandomAccessFile c;
+-	private final int[] d = new int[1024];
+-	private final int[] e = new int[1024];
++	private final AtomicIntegerArray d = new AtomicIntegerArray(1024);
++	private final AtomicIntegerArray e = new AtomicIntegerArray(1024);
+ 	private List<Boolean> f;
+ 	private int g;
+ 	private long h;
+@@ -82,16 +77,16 @@ public class RegionFile {
+ 			}
+ 
+ 			i = (int) this.c.length() / 4096;
+-			this.f = Lists.newArrayListWithCapacity(i); // Torch
++			synchronized(this) { this.f = Lists.newArrayListWithCapacity(i); }
+ 
+ 			int j;
+ 
+ 			for (j = 0; j < i; ++j) {
+-				this.f.add(Boolean.valueOf(true));
++				synchronized(this) { this.f.add(Boolean.valueOf(true)); }
+ 			}
+ 
+-			this.f.set(0, Boolean.valueOf(false));
+-			this.f.set(1, Boolean.valueOf(false));
++			synchronized(this) { this.f.set(0, Boolean.valueOf(false));
++			this.f.set(1, Boolean.valueOf(false)); }
+ 			this.c.seek(0L);
+ 
+ 			int k;
+@@ -108,21 +103,21 @@ public class RegionFile {
+ 			for (j = 0; j < 1024; ++j) {
+ 				k = headerAsInts.get(); // Paper
+ 				// System.out.println("k1: " + k);
+-				this.d[j] = k;
++				this.d.set(j, k);
+ 
+ 				if (k > 0 && (k >> 8) + (k & 255) <= this.f.size()) { // Torch
+ 					// System.out.println("k2: " + k);
+ 					for (int l = 0; l < (k & 255); ++l) {
+ 						// System.out.println("k3: " + k);
+ 						// System.out.println("l: " + l);
+-						this.f.set((k >> 8) + l, Boolean.valueOf(false));
++						synchronized(this) { this.f.set((k >> 8) + l, Boolean.valueOf(false)); }
+ 					}
+ 				}
+ 			}
+ 
+ 			for (j = 0; j < 1024; ++j) {
+ 				k = headerAsInts.get(); // Paper
+-				this.e[j] = k;
++				this.e.set(j, k);
+ 			}
+ 		} catch (IOException ioexception) {
+ 			ioexception.printStackTrace();
+@@ -251,7 +246,7 @@ public class RegionFile {
+ 				int l1;
+ 
+ 				for (l1 = 0; l1 < j1; ++l1) {
+-					this.f.set(i1 + l1, Boolean.valueOf(true));
++					synchronized(this) { this.f.set(i1 + l1, Boolean.valueOf(true)); }
+ 				}
+ 
+ 				l1 = this.f.indexOf(Boolean.valueOf(true));
+@@ -282,7 +277,7 @@ public class RegionFile {
+ 					this.a(i, j, l1 << 8 | k1);
+ 
+ 					for (j2 = 0; j2 < k1; ++j2) {
+-						this.f.set(i1 + j2, Boolean.valueOf(false));
++						synchronized(this) { this.f.set(i1 + j2, Boolean.valueOf(false)); }
+ 					}
+ 
+ 					this.a(i1, abyte, k);
+@@ -292,7 +287,7 @@ public class RegionFile {
+ 
+ 					for (j2 = 0; j2 < k1; ++j2) {
+ 						this.c.write(RegionFile.a);
+-						this.f.add(Boolean.valueOf(false));
++						synchronized(this) { this.f.add(Boolean.valueOf(false)); }
+ 					}
+ 
+ 					this.g += 4096 * k1;
+@@ -303,18 +298,7 @@ public class RegionFile {
+ 
+ 			this.b(i, j, (int) (MinecraftServer.av() / 1000L));
+ 		} catch (IOException ioexception) {
+-			net.techcable.pineapple.SneakyThrow.sneakyThrow(ioexception); // Paper
+-																			// -
+-																			// we
+-																			// want
+-																			// the
+-																			// upper
+-																			// try/catch
+-																			// to
+-																			// retry
+-																			// this
+-																			// //
+-																			// Torch
++			org.spigotmc.SneakyThrow.sneaky(ioexception); // Paper - we want the upper try/catch to retry this
+ 		}
+ 
+ 	}
+@@ -331,7 +315,7 @@ public class RegionFile {
+ 	}
+ 
+ 	private int e(int i, int j) {
+-		return this.d[i + j * 32];
++		return this.d.get(i + j * 32);
+ 	}
+ 
+ 	public boolean c(int i, int j) {
+@@ -339,22 +323,20 @@ public class RegionFile {
+ 	}
+ 
+ 	private void a(int i, int j, int k) throws IOException {
+-		this.d[i + j * 32] = k;
++		this.d.set(i + j * 32, k);
+ 		this.c.seek((i + j * 32) * 4);
+ 		this.c.writeInt(k);
+ 	}
+ 
+ 	private void b(int i, int j, int k) throws IOException {
+-		this.e[i + j * 32] = k;
++		this.e.set(i + j * 32, k);
+ 		this.c.seek(4096 + (i + j * 32) * 4);
+ 		this.c.writeInt(k);
+ 	}
+ 
+ 	public void c() throws IOException {
+ 		if (this.c != null) {
+-			synchronized (this) {
+-				this.c.close();
+-			}
++			this.c.close();
+ 		}
+ 
+ 	}
+diff --git a/src/main/java/net/minecraft/server/StatisticManager.java b/src/main/java/net/minecraft/server/StatisticManager.java
+index 7ff0117..9c1174d 100644
+--- a/src/main/java/net/minecraft/server/StatisticManager.java
++++ b/src/main/java/net/minecraft/server/StatisticManager.java
+@@ -2,11 +2,9 @@ package net.minecraft.server;
+ 
+ import java.util.Map;
+ 
+-import net.techcable.pineapple.collect.CopyOnWriteMap;
+-
+ public class StatisticManager {
+ 
+-	protected final Map<Statistic, StatisticWrapper> a = new CopyOnWriteMap();
++	protected final Map<Statistic, StatisticWrapper> a = new java.util.concurrent.ConcurrentHashMap();
+ 
+ 	public StatisticManager() {
+ 	}
+diff --git a/src/main/java/net/minecraft/server/SystemUtils.java b/src/main/java/net/minecraft/server/SystemUtils.java
+deleted file mode 100644
+index 8de936d..0000000
+--- a/src/main/java/net/minecraft/server/SystemUtils.java
++++ /dev/null
+@@ -1,30 +0,0 @@
+-package net.minecraft.server;
+-
+-import java.util.List;
+-import java.util.concurrent.ExecutionException;
+-import java.util.concurrent.FutureTask;
+-
+-import javax.annotation.Nullable;
+-
+-import org.apache.logging.log4j.Logger;
+-
+-public class SystemUtils {
+-
+-	@Nullable
+-	public static synchronized <V> V a(FutureTask<V> futuretask, Logger logger) {
+-		try {
+-			futuretask.run();
+-			return futuretask.get();
+-		} catch (ExecutionException executionexception) {
+-			logger.fatal("Error executing task", executionexception);
+-		} catch (InterruptedException interruptedexception) {
+-			logger.fatal("Error executing task", interruptedexception);
+-		}
+-
+-		return null;
+-	}
+-
+-	public static <T> T a(List<T> list) {
+-		return list.get(list.size() - 1);
+-	}
+-}
+\ No newline at end of file
+diff --git a/src/main/java/net/minecraft/server/TileEntityBeacon.java b/src/main/java/net/minecraft/server/TileEntityBeacon.java
+index 0acc231..6e42157 100644
+--- a/src/main/java/net/minecraft/server/TileEntityBeacon.java
++++ b/src/main/java/net/minecraft/server/TileEntityBeacon.java
+@@ -28,7 +28,7 @@ public class TileEntityBeacon extends TileEntityContainer implements ITickable,
+ 			{ MobEffects.FASTER_MOVEMENT, MobEffects.FASTER_DIG }, { MobEffects.RESISTANCE, MobEffects.JUMP },
+ 			{ MobEffects.INCREASE_DAMAGE }, { MobEffects.REGENERATION } };
+ 	private static final Set<MobEffectList> f = Sets.newConcurrentHashSet();
+-	private final List<TileEntityBeacon.BeaconColorTracker> g = new java.util.concurrent.CopyOnWriteArrayList<TileEntityBeacon.BeaconColorTracker>();
++	private final List<TileEntityBeacon.BeaconColorTracker> g = new org.torch.util.ConcurrentIterableArrayList<TileEntityBeacon.BeaconColorTracker>();
+ 	private boolean j;
+ 	public int k = -1; // PAIL: private -> public
+ 	private int levels = 0;
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index 87d1f5f..f2ce689 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -11,7 +11,6 @@ import java.util.Random;
+ // Paper start
+ import java.util.Set;
+ import java.util.UUID;
+-import java.util.concurrent.CopyOnWriteArrayList;
+ // Paper end
+ import java.util.concurrent.RecursiveAction;
+ import java.util.concurrent.RecursiveTask;
+@@ -52,30 +51,17 @@ public abstract class World implements IBlockAccess {
+ 	// Spigot start - guard entity list from removals
+ 	protected boolean cancelHeavyCalculations = false;
+ 
+-	public final List<Entity> entityList = Lists.newCopyOnWriteArrayList(); // Hose
+-	/*
+-	 * public final List<Entity> entityList = new java.util.ArrayList<Entity>()
+-	 * {
+-	 * 
+-	 * @Override public Entity remove(int index) { guard(); return super.remove(
+-	 * index ); }
+-	 * 
+-	 * @Override public boolean remove(Object o) { guard(); return super.remove(
+-	 * o ); }
+-	 * 
+-	 * private void guard() { if ( guardEntityList ) { throw new
+-	 * java.util.ConcurrentModificationException(); } } };
+-	 */
++	public final List<Entity> entityList = new java.util.concurrent.CopyOnWriteArrayList();
+ 	// Spigot end
+ 	protected final Queue<Entity> f = Queues.newConcurrentLinkedQueue();
+ 	// public final List<TileEntity> tileEntityList = Lists.newArrayList(); //
+ 	// Paper - remove unused list
+-	public final List<TileEntity> tileEntityListTick = new CopyOnWriteArrayList<TileEntity>();
++	public final List<TileEntity> tileEntityListTick = new org.torch.util.ConcurrentIterableArrayList<TileEntity>();
+ 	private final Queue<TileEntity> b = Queues.newConcurrentLinkedQueue();
+ 	private final Set<TileEntity> tileEntityListUnload = Sets.newConcurrentHashSet(); // Paper
+-	public final List<EntityHuman> players = new CopyOnWriteArrayList<EntityHuman>();
++	public final List<EntityHuman> players = new org.torch.util.ConcurrentIterableArrayList<EntityHuman>();
+ 	public final Queue<Entity> j = Queues.newConcurrentLinkedQueue();
+-	protected final Map<Integer, Entity> entitiesById = new net.techcable.pineapple.collect.CopyOnWriteMap();
++	protected final Map<Integer, Entity> entitiesById = new java.util.concurrent.ConcurrentHashMap();
+ 	private long I = 16777215L;
+ 	private int J;
+ 	protected int l = com.mrpowergamerbr.parappatown.utils.LightStatic.random.nextInt();
+@@ -146,7 +132,7 @@ public abstract class World implements IBlockAccess {
+ 	private org.spigotmc.TickLimiter entityLimiter;
+ 	private org.spigotmc.TickLimiter tileLimiter;
+ 	private int tileTickPosition;
+-	public final Map<Explosion.CacheKey, Float> explosionDensityCache = new net.techcable.pineapple.collect.CopyOnWriteMap<>(); // Paper
++	public final Map<Explosion.CacheKey, Float> explosionDensityCache = new java.util.concurrent.ConcurrentHashMap<>(); // Paper
+ 																																// -
+ 																																// Optimize
+ 																																// explosions
+@@ -1607,56 +1593,6 @@ public abstract class World implements IBlockAccess {
+ 	public void b(BlockPosition blockposition, Block block, int i, int j) {
+ 	}
+ 
+-	public void tick_hose(Entity entity) {
+-		Entity entity1 = entity.bz();
+-
+-		if (entity1 != null) {
+-			if (!entity1.dead && entity1.w(entity)) {
+-				return;
+-			}
+-			entity.stopRiding();
+-		}
+-		this.methodProfiler.a("tick");
+-		if (!entity.dead && !(entity instanceof EntityPlayer)) {
+-			try {
+-				entity.tickTimer.startTiming(); // Paper
+-				this.g(entity);
+-				entity.tickTimer.stopTiming(); // Paper
+-			} catch (Throwable throwable1) {
+-				entity.tickTimer.stopTiming();
+-				// Paper start - Prevent tile entity and entity crashes
+-				String msg = "Entity threw exception at " + entity.world.getWorld().getName() + ":" + entity.locX + ","
+-						+ entity.locY + "," + entity.locZ;
+-				System.err.println(msg);
+-				throwable1.printStackTrace();
+-				getServer().getPluginManager()
+-						.callEvent(new ServerExceptionEvent(new ServerInternalException(msg, throwable1)));
+-				entity.dead = true;
+-				return;
+-				// Paper end
+-			}
+-		}
+-
+-		this.methodProfiler.b();
+-		this.methodProfiler.a("remove");
+-		if (entity.dead) {
+-			int j = entity.ab;
+-			int l = entity.ad;
+-
+-			if (entity.aa && this.isChunkLoaded(j, l, true)) {
+-				this.getChunkAt(j, l).b(entity);
+-			}
+-
+-			guardEntityList = false; // Spigot
+-			this.entityList.remove(entity); // CraftBukkit - Use field for loop
+-											// variable
+-			guardEntityList = true; // Spigot
+-			this.c(entity);
+-		}
+-
+-		this.methodProfiler.b();
+-	}
+-
+ 	public void tickEntities() {
+ 		this.methodProfiler.a("entities");
+ 		this.methodProfiler.a("global");
+@@ -1764,11 +1700,56 @@ public abstract class World implements IBlockAccess {
+ 		// if (tickPosition < 0) tickPosition = 0;
+ 		for (tickPosition = 0; tickPosition < entityList.size(); tickPosition++) {
+ 			// Paper end
+-			tickPosition = (tickPosition < entityList.size()) ? tickPosition : 0;
+-			entity = this.entityList.get(this.tickPosition);
+-			tick_hose(entity);
+-			// CraftBukkit end
+-		}
++            tickPosition = (tickPosition < entityList.size()) ? tickPosition : 0;
++            entity = (Entity) this.entityList.get(this.tickPosition);
++            // CraftBukkit end
++            Entity entity1 = entity.bz();
++
++            if (entity1 != null) {
++                if (!entity1.dead && entity1.w(entity)) {
++                    continue;
++                }
++
++                entity.stopRiding();
++            }
++
++            this.methodProfiler.a("tick");
++            if (!entity.dead && !(entity instanceof EntityPlayer)) {
++                try {
++                    entity.tickTimer.startTiming(); // Paper
++                    this.g(entity);
++                    entity.tickTimer.stopTiming(); // Paper
++                } catch (Throwable throwable1) {
++                    entity.tickTimer.stopTiming();
++                    // Paper start - Prevent tile entity and entity crashes
++                    String msg = "Entity threw exception at " + entity.world.getWorld().getName() + ":" + entity.locX + "," + entity.locY + "," + entity.locZ;
++                    System.err.println(msg);
++                    throwable1.printStackTrace();
++                    getServer().getPluginManager().callEvent(new ServerExceptionEvent(new ServerInternalException(msg, throwable1)));
++                    entity.dead = true;
++                    continue;
++                    // Paper end
++                }
++            }
++
++            this.methodProfiler.b();
++            this.methodProfiler.a("remove");
++            if (entity.dead) {
++                j = entity.ab;
++                int l = entity.ad;
++
++                if (entity.aa && this.isChunkLoaded(j, l, true)) {
++                    this.getChunkAt(j, l).b(entity);
++                }
++
++                guardEntityList = false; // Spigot
++                this.entityList.remove(this.tickPosition--); // CraftBukkit - Use field for loop variable
++                guardEntityList = true; // Spigot
++                this.c(entity);
++            }
++
++            this.methodProfiler.b();
++        }
+ 		guardEntityList = false; // Spigot
+ 
+ 		timings.entityTick.stopTiming(); // Spigot
+diff --git a/src/main/java/net/minecraft/server/WorldBorder.java b/src/main/java/net/minecraft/server/WorldBorder.java
+index 13f6f2e..8d3c40c 100644
+--- a/src/main/java/net/minecraft/server/WorldBorder.java
++++ b/src/main/java/net/minecraft/server/WorldBorder.java
+@@ -7,7 +7,7 @@ import com.google.common.collect.Lists;
+ 
+ public class WorldBorder {
+ 
+-	private final List<IWorldBorderListener> a = new java.util.concurrent.CopyOnWriteArrayList<IWorldBorderListener>();
++	private final List<IWorldBorderListener> a = new org.torch.util.ConcurrentIterableArrayList<IWorldBorderListener>();
+ 	private double b = 0.0D;
+ 	private double c = 0.0D;
+ 	private double d = 6.0E7D;
+diff --git a/src/main/java/net/minecraft/server/WorldMap.java b/src/main/java/net/minecraft/server/WorldMap.java
+index 4c5455c..e9d535c 100644
+--- a/src/main/java/net/minecraft/server/WorldMap.java
++++ b/src/main/java/net/minecraft/server/WorldMap.java
+@@ -28,7 +28,7 @@ public class WorldMap extends PersistentBase {
+ 	public List<WorldMap.WorldMapHumanTracker> h = Lists.newArrayList();
+ 	// public Map<EntityHuman, WorldMap.WorldMapHumanTracker> j =
+ 	// Maps.newHashMap(); // Spigot
+-	public final Map<EntityHuman, WorldMap.WorldMapHumanTracker> j = new net.techcable.pineapple.collect.CopyOnWriteMap();
++	public final Map<EntityHuman, WorldMap.WorldMapHumanTracker> j = new java.util.concurrent.ConcurrentHashMap();
+ 	// public Map<UUID, MapIcon> decorations = Maps.newLinkedHashMap(); //
+ 	// Spigot
+ 	public ConcurrentLinkedHashMap<UUID, MapIcon> decorations = new ConcurrentLinkedHashMap.Builder<UUID, MapIcon>()
+diff --git a/src/main/java/net/techcable/pineapple/SneakyThrow.java b/src/main/java/net/techcable/pineapple/SneakyThrow.java
+deleted file mode 100644
+index 09dbdbc..0000000
+--- a/src/main/java/net/techcable/pineapple/SneakyThrow.java
++++ /dev/null
+@@ -1,34 +0,0 @@
+-/**
+- * The MIT License
+- * Copyright (c) 2016 Techcable
+- *
+- * Permission is hereby granted, free of charge, to any person obtaining a copy
+- * of this software and associated documentation files (the "Software"), to deal
+- * in the Software without restriction, including without limitation the rights
+- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+- * copies of the Software, and to permit persons to whom the Software is
+- * furnished to do so, subject to the following conditions:
+- *
+- * The above copyright notice and this permission notice shall be included in
+- * all copies or substantial portions of the Software.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+- * THE SOFTWARE.
+- */
+-package net.techcable.pineapple;
+-
+-public class SneakyThrow {
+-	public static AssertionError sneakyThrow(Throwable t) {
+-		return sneakyThrow0(t);
+-	}
+-
+-	@SuppressWarnings("unchecked")
+-	private static <T extends Throwable> AssertionError sneakyThrow0(Throwable t) throws T {
+-		throw (T) t;
+-	}
+-}
+diff --git a/src/main/java/net/techcable/pineapple/collect/CopyOnWriteMap.java b/src/main/java/net/techcable/pineapple/collect/CopyOnWriteMap.java
+deleted file mode 100644
+index 513cd58..0000000
+--- a/src/main/java/net/techcable/pineapple/collect/CopyOnWriteMap.java
++++ /dev/null
+@@ -1,284 +0,0 @@
+-/**
+- * The MIT License
+- * Copyright (c) 2016 Techcable
+- *
+- * Permission is hereby granted, free of charge, to any person obtaining a copy
+- * of this software and associated documentation files (the "Software"), to deal
+- * in the Software without restriction, including without limitation the rights
+- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+- * copies of the Software, and to permit persons to whom the Software is
+- * furnished to do so, subject to the following conditions:
+- *
+- * The above copyright notice and this permission notice shall be included in
+- * all copies or substantial portions of the Software.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+- * THE SOFTWARE.
+- */
+-package net.techcable.pineapple.collect;
+-
+-import static com.google.common.base.Preconditions.checkNotNull;
+-
+-import java.util.AbstractMap;
+-import java.util.Collections;
+-import java.util.HashMap;
+-import java.util.Map;
+-import java.util.concurrent.ConcurrentMap;
+-import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
+-import java.util.function.BiConsumer;
+-import java.util.function.BiFunction;
+-import java.util.function.Function;
+-
+-import javax.annotation.Nonnull;
+-import javax.annotation.Nullable;
+-import javax.annotation.ParametersAreNonnullByDefault;
+-
+-import com.google.common.collect.ImmutableCollection;
+-import com.google.common.collect.ImmutableMap;
+-import com.google.common.collect.ImmutableSet;
+-
+-@ParametersAreNonnullByDefault
+-public class CopyOnWriteMap<K, V> extends AbstractMap<K, V> implements ConcurrentMap<K, V> {
+-	@SuppressWarnings("AtomicFieldUpdaterIssues") // Generic.......
+-	private static final AtomicReferenceFieldUpdater<CopyOnWriteMap, ImmutableMap> MAP_UPDATER = AtomicReferenceFieldUpdater
+-			.newUpdater(CopyOnWriteMap.class, ImmutableMap.class, "bakedMap");
+-	private final Map<K, V> map = Collections.synchronizedMap(new HashMap<K, V>());
+-	@Nullable
+-	private volatile ImmutableMap<K, V> bakedMap = null;
+-
+-	@Nonnull
+-	private ImmutableMap<K, V> bakedMap() {
+-		ImmutableMap<K, V> bakedMap = this.bakedMap;
+-		if (bakedMap == null) {
+-			return bakeMap();
+-		} else {
+-			return bakedMap;
+-		}
+-	}
+-
+-	private ImmutableMap<K, V> bakeMap() {
+-		synchronized (map) {
+-			return this.bakedMap = ImmutableMap.copyOf(map);
+-		}
+-	}
+-
+-	@Override
+-	public int size() {
+-		return bakedMap().size();
+-	}
+-
+-	@Override
+-	public boolean containsKey(Object key) {
+-		return bakedMap().containsKey(key);
+-	}
+-
+-	@Override
+-	public boolean containsValue(Object value) {
+-		return bakedMap().containsValue(value);
+-	}
+-
+-	@Override
+-	@Nullable
+-	public V get(Object key) {
+-		return bakedMap().get(key);
+-	}
+-
+-	@Override
+-	@Nullable
+-	public V put(K key, V value) {
+-		checkNotNull(key, "Null key");
+-		checkNotNull(value, "Null value");
+-		synchronized (map) {
+-			bakedMap = null;
+-			return map.put(key, value);
+-		}
+-	}
+-
+-	@Override
+-	@Nullable
+-	public V remove(Object key) {
+-		checkNotNull(key, "Null key");
+-		synchronized (map) {
+-			bakedMap = null;
+-			return map.remove(key);
+-		}
+-	}
+-
+-	@Override
+-	public void putAll(Map<? extends K, ? extends V> m) {
+-		checkNotNull(m, "Null bakedMap");
+-		synchronized (map) {
+-			bakedMap = null;
+-			map.putAll(m);
+-		}
+-	}
+-
+-	@Override
+-	public void clear() {
+-		synchronized (map) {
+-			bakedMap = ImmutableMap.of();
+-		}
+-	}
+-
+-	@Override
+-	@Nonnull
+-	public ImmutableSet<K> keySet() {
+-		return bakedMap().keySet();
+-	}
+-
+-	@Override
+-	@Nonnull
+-	public ImmutableCollection<V> values() {
+-		return bakedMap().values();
+-	}
+-
+-	@Override
+-	@Nonnull
+-	public ImmutableSet<Entry<K, V>> entrySet() {
+-		return bakedMap().entrySet();
+-	}
+-
+-	@Override
+-	@Nullable
+-	public V getOrDefault(Object key, V defaultValue) {
+-		return bakedMap().getOrDefault(checkNotNull(key, "Null key"), defaultValue);
+-	}
+-
+-	@Override
+-	public void forEach(BiConsumer<? super K, ? super V> action) {
+-		checkNotNull(action, "Null action");
+-		ImmutableMaps.forEach(bakedMap(), action);
+-	}
+-
+-	@Override
+-	public V putIfAbsent(K key, V value) {
+-		checkNotNull(key, "Null key");
+-		checkNotNull(value, "Null value");
+-		Map<K, V> bakedMap = this.bakedMap;
+-		V oldValue;
+-		if (bakedMap == null || (oldValue = bakedMap.get(key)) == null) {
+-			return putIfAbsent0(key, value);
+-		} else {
+-			return oldValue;
+-		}
+-	}
+-
+-	private V putIfAbsent0(K key, V value) {
+-		synchronized (map) {
+-			bakedMap = null;
+-			return map.putIfAbsent(key, value);
+-		}
+-	}
+-
+-	@Override
+-	public boolean remove(Object key, Object value) {
+-		checkNotNull(key, "Null key");
+-		checkNotNull(value, "Null value");
+-		synchronized (map) {
+-			bakedMap = null;
+-			return map.remove(key, value);
+-		}
+-	}
+-
+-	@Override
+-	public boolean replace(K key, V oldValue, V newValue) {
+-		checkNotNull(key, "Null key");
+-		checkNotNull(oldValue, "Null old value");
+-		checkNotNull(newValue, "Null new value");
+-		synchronized (map) {
+-			bakedMap = null;
+-			return map.replace(key, oldValue, newValue);
+-		}
+-	}
+-
+-	@Override
+-	@Nullable
+-	public V replace(K key, V value) {
+-		checkNotNull(key, "Null key");
+-		checkNotNull(value, "Null value");
+-		synchronized (map) {
+-			bakedMap = null;
+-			return map.replace(key, value);
+-		}
+-	}
+-
+-	@Override
+-	public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+-		checkNotNull(function, "Null function");
+-		synchronized (map) {
+-			bakedMap = null;
+-			map.replaceAll(function);
+-		}
+-	}
+-
+-	@Override
+-	@Nonnull
+-	public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+-		checkNotNull(key, "Null key");
+-		checkNotNull(mappingFunction, "Null function");
+-		Map<K, V> bakedMap = this.bakedMap;
+-		V value;
+-		if (bakedMap == null || (value = bakedMap.get(key)) == null) {
+-			return computeIfAbsent0(key, mappingFunction);
+-		} else {
+-			return value;
+-		}
+-	}
+-
+-	@Nonnull
+-	private V computeIfAbsent0(K key, Function<? super K, ? extends V> mappingFunction) {
+-		synchronized (map) {
+-			this.bakedMap = null;
+-			V value = map.get(key);
+-			if (value == null) {
+-				value = mappingFunction.apply(key);
+-				if (value == null) {
+-					throw new IllegalArgumentException("Mapping function " + mappingFunction.getClass().getTypeName()
+-							+ " returned null value for key " + key);
+-				}
+-			}
+-			return value;
+-		}
+-	}
+-
+-	@Override
+-	@Nullable
+-	public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+-		checkNotNull(remappingFunction, "Null remapping function");
+-		Map<K, V> bakedMap = this.bakedMap;
+-		if (bakedMap == null || bakedMap.get(key) != null) {
+-			synchronized (map) {
+-				this.bakedMap = null;
+-				return map.computeIfPresent(key, remappingFunction);
+-			}
+-		} else {
+-			return null;
+-		}
+-	}
+-
+-	@Override
+-	public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+-		checkNotNull(key, "Null key");
+-		checkNotNull(remappingFunction, "Null remapping function");
+-		synchronized (map) {
+-			bakedMap = null;
+-			return map.compute(key, remappingFunction);
+-		}
+-	}
+-
+-	@Override
+-	public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+-		checkNotNull(key, "Null key");
+-		checkNotNull(value, "Null value");
+-		checkNotNull(remappingFunction, "Null remapping function");
+-		synchronized (map) {
+-			bakedMap = null;
+-			return map.merge(key, value, remappingFunction);
+-		}
+-	}
+-}
+diff --git a/src/main/java/net/techcable/pineapple/collect/ImmutableLists.java b/src/main/java/net/techcable/pineapple/collect/ImmutableLists.java
+deleted file mode 100644
+index 01d2fca..0000000
+--- a/src/main/java/net/techcable/pineapple/collect/ImmutableLists.java
++++ /dev/null
+@@ -1,86 +0,0 @@
+-/**
+- * The MIT License
+- * Copyright (c) 2016 Techcable
+- *
+- * Permission is hereby granted, free of charge, to any person obtaining a copy
+- * of this software and associated documentation files (the "Software"), to deal
+- * in the Software without restriction, including without limitation the rights
+- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+- * copies of the Software, and to permit persons to whom the Software is
+- * furnished to do so, subject to the following conditions:
+- *
+- * The above copyright notice and this permission notice shall be included in
+- * all copies or substantial portions of the Software.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+- * THE SOFTWARE.
+- */
+-package net.techcable.pineapple.collect;
+-
+-import lombok.*;
+-
+-import static com.google.common.base.Preconditions.checkArgument;
+-import static com.google.common.base.Preconditions.checkNotNull;
+-
+-import java.lang.invoke.MethodHandle;
+-import java.util.List;
+-import java.util.function.Function;
+-
+-import javax.annotation.Nonnull;
+-import javax.annotation.ParametersAreNonnullByDefault;
+-
+-import com.google.common.collect.ImmutableList;
+-
+-import net.techcable.pineapple.reflection.Reflection;
+-
+-@ParametersAreNonnullByDefault
+-public class ImmutableLists {
+-	@Nonnull
+-	public static <T, U> ImmutableList<U> transform(List<T> list, Function<T, U> transformer) {
+-		ImmutableList.Builder<U> resultBuilder = builder(checkNotNull(list, "Null list").size());
+-		list.forEach((oldElement) -> {
+-			U newElement = checkNotNull(transformer, "Null transformer").apply(oldElement);
+-			if (newElement == null) {
+-				throw new NullPointerException(
+-						"Transformer  " + transformer.getClass().getTypeName() + " returned null.");
+-			}
+-			resultBuilder.add(newElement);
+-		});
+-		return resultBuilder.build();
+-	}
+-
+-	@Nonnull
+-	public static <T, U> ImmutableList<U> transform(ImmutableList<T> list, Function<T, U> transformer) {
+-		ImmutableList.Builder<U> resultBuilder = builder(checkNotNull(list, "Null list").size());
+-		for (int i = 0; i < list.size(); i++) {
+-			T oldElement = list.get(i);
+-			U newElement = checkNotNull(transformer, "Null transformer").apply(oldElement);
+-			if (newElement == null) {
+-				throw new NullPointerException(
+-						"Transformer  " + transformer.getClass().getTypeName() + " returned null.");
+-			}
+-			resultBuilder.add(newElement);
+-		}
+-		return resultBuilder.build();
+-	}
+-
+-	//
+-	// Reflection and dark magic
+-	//
+-
+-	private static final MethodHandle BUILDER_CONSTRUCTOR = Reflection.getConstructor(ImmutableList.Builder.class,
+-			int.class);
+-
+-	@SneakyThrows
+-	@SuppressWarnings("unchecked")
+-	@Nonnull
+-    public static <T> ImmutableList.Builder<T> builder(int size) {
+-        checkArgument(size >= 0, "Negative size %s", size);
+-        return BUILDER_CONSTRUCTOR != null ? (ImmutableList.Builder<T>) BUILDER_CONSTRUCTOR.invokeExact(size) : ImmutableList.builder();
+-    }
+-}
+diff --git a/src/main/java/net/techcable/pineapple/collect/ImmutableMaps.java b/src/main/java/net/techcable/pineapple/collect/ImmutableMaps.java
+deleted file mode 100644
+index 67552d1..0000000
+--- a/src/main/java/net/techcable/pineapple/collect/ImmutableMaps.java
++++ /dev/null
+@@ -1,114 +0,0 @@
+-/**
+- * The MIT License
+- * Copyright (c) 2016 Techcable
+- *
+- * Permission is hereby granted, free of charge, to any person obtaining a copy
+- * of this software and associated documentation files (the "Software"), to deal
+- * in the Software without restriction, including without limitation the rights
+- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+- * copies of the Software, and to permit persons to whom the Software is
+- * furnished to do so, subject to the following conditions:
+- *
+- * The above copyright notice and this permission notice shall be included in
+- * all copies or substantial portions of the Software.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+- * THE SOFTWARE.
+- */
+-package net.techcable.pineapple.collect;
+-
+-import lombok.*;
+-import lombok.experimental.*;
+-
+-import static com.google.common.base.Preconditions.checkArgument;
+-import static com.google.common.base.Preconditions.checkNotNull;
+-
+-import java.lang.invoke.MethodHandle;
+-import java.util.Map;
+-import java.util.function.BiConsumer;
+-import java.util.function.Function;
+-
+-import javax.annotation.Nonnull;
+-import javax.annotation.ParametersAreNonnullByDefault;
+-
+-import com.google.common.collect.ImmutableList;
+-import com.google.common.collect.ImmutableMap;
+-
+-import net.techcable.pineapple.reflection.FastField;
+-import net.techcable.pineapple.reflection.Reflection;
+-
+-@ParametersAreNonnullByDefault
+-public class ImmutableMaps {
+-
+-	public static <K1, K2, V> ImmutableMap<K2, V> transformKeys(ImmutableMap<K1, V> original,
+-			Function<K1, K2> keyTransformer) {
+-		return transform(original, keyTransformer, Function.identity());
+-	}
+-
+-	@Nonnull
+-    public static <K1, K2, V1, V2> ImmutableMap<K2, V2> transform(ImmutableMap<K1, V1> original, Function<K1, K2> keyTransformer, Function<V1, V2> valueTransformer) {
+-        ImmutableMap.Builder<K2, V2> resultBuilder = builder(checkNotNull(original, "Null map").size());
+-        forEach(original, (originalKey, originalValue) -> {
+-            K2 newKey = checkNotNull(keyTransformer, "Null key transformer").apply(originalKey);
+-            V2 newValue = checkNotNull(valueTransformer, "Null value transformer").apply(originalValue);
+-            resultBuilder.put(newKey, newValue);
+-        });
+-        return resultBuilder.build();
+-    }
+-
+-	//
+-	// Dark Magic
+-	//
+-
+-	private static final Class<? extends ImmutableMap> REGULAR_IMMUTABLE_MAP_CLASS = Reflection
+-			.getClass("com.google.common.collect.RegularImmutableMap", ImmutableMap.class);
+-	private static final MethodHandle BUILDER_CONSTRUCTOR = Reflection.getConstructor(ImmutableMap.Builder.class,
+-			int.class);
+-	@SuppressWarnings("unchecked")
+-	private static final FastField<ImmutableMap, Map.Entry[]> ENTRIES_ARRAY_FIELD = REGULAR_IMMUTABLE_MAP_CLASS != null
+-			? FastField.create("entries", (Class<ImmutableMap>) REGULAR_IMMUTABLE_MAP_CLASS, Map.Entry[].class) : null;
+-
+-	@SneakyThrows
+-	@SuppressWarnings("unchecked") // Generics are a lie
+-	@Nonnull
+-	public static <K, V> ImmutableMap.Builder<K, V> builder(int initialCapacity) {
+-		checkArgument(initialCapacity >= 0, "Negative initial capacity %s");
+-		return BUILDER_CONSTRUCTOR != null
+-				? (ImmutableMap.Builder<K, V>) BUILDER_CONSTRUCTOR.invokeExact(initialCapacity)
+-				: ImmutableMap.builder();
+-	}
+-
+-	@SuppressWarnings("unchecked")
+-	public static <K, V> void forEach(ImmutableMap<K, V> map, BiConsumer<? super K, ? super V> action) {
+-		checkNotNull(map, "Null map");
+-		if (ENTRIES_ARRAY_FIELD != null && ENTRIES_ARRAY_FIELD.getDeclaringType().isInstance(map)) {
+-			for (Map.Entry<K, V> entry : ENTRIES_ARRAY_FIELD.get(map)) {
+-				K key = entry.getKey();
+-				V value = entry.getValue();
+-				checkNotNull(action, "Null action").accept(key, value);
+-			}
+-		} else {
+-			ImmutableList<Map.Entry<K, V>> entryList = map.entrySet().asList(); // Since
+-																				// they
+-																				// don't
+-																				// support
+-																				// forEach
+-																				// this
+-																				// is
+-																				// the
+-																				// fastest
+-																				// way
+-																				// to
+-																				// iterate
+-			for (int i = 0; i < entryList.size(); i++) {
+-				Map.Entry<K, V> entry = entryList.get(i);
+-				action.accept(entry.getKey(), entry.getValue());
+-			}
+-		}
+-	}
+-}
+diff --git a/src/main/java/net/techcable/pineapple/reflection/FastField.java b/src/main/java/net/techcable/pineapple/reflection/FastField.java
+deleted file mode 100644
+index c97ad98..0000000
+--- a/src/main/java/net/techcable/pineapple/reflection/FastField.java
++++ /dev/null
+@@ -1,116 +0,0 @@
+-/**
+- * The MIT License
+- * Copyright (c) 2016 Techcable
+- *
+- * Permission is hereby granted, free of charge, to any person obtaining a copy
+- * of this software and associated documentation files (the "Software"), to deal
+- * in the Software without restriction, including without limitation the rights
+- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+- * copies of the Software, and to permit persons to whom the Software is
+- * furnished to do so, subject to the following conditions:
+- *
+- * The above copyright notice and this permission notice shall be included in
+- * all copies or substantial portions of the Software.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+- * THE SOFTWARE.
+- */
+-package net.techcable.pineapple.reflection;
+-
+-import lombok.*;
+-
+-import static com.google.common.base.Preconditions.checkArgument;
+-import static com.google.common.base.Preconditions.checkNotNull;
+-
+-import java.lang.reflect.Field;
+-import java.lang.reflect.Modifier;
+-
+-import com.google.common.base.Verify;
+-import com.google.common.primitives.Primitives;
+-
+-import sun.misc.Unsafe;
+-
+-@Getter
+-public class FastField<T, V> {
+-	private final Field field;
+-	private final Class<T> declaringType;
+-	private final Class<V> fieldType;
+-
+-	private FastField(Field field, Class<T> declaringType, Class<V> fieldType) {
+-		this.field = checkNotNull(field, "Null field");
+-		this.declaringType = checkNotNull(declaringType, "Null declaring type");
+-		this.fieldType = checkNotNull(fieldType, "Null field type");
+-		field.setAccessible(true);
+-		checkArgument(fieldType.isAssignableFrom(Primitives.wrap(field.getType())));
+-		checkArgument(declaringType == field.getDeclaringClass());
+-	}
+-
+-	private static final Unsafe UNSAFE;
+-	static {
+-		Unsafe u;
+-		try {
+-			Class.forName("sun.misc.Unsafe");
+-			Field field = Unsafe.class.getDeclaredField("theUnsafe");
+-			field.setAccessible(true);
+-			u = (Unsafe) field.get(null);
+-		} catch (ClassNotFoundException | NoSuchFieldException | SecurityException | IllegalAccessException e) {
+-			u = null;
+-		}
+-		UNSAFE = u;
+-	}
+-
+-	public static <T> FastField<T, ?> create(String name, Class<T> declaringType) {
+-		return create(name, declaringType, Object.class);
+-	}
+-
+-	public static <T, V> FastField<T, V> create(String name, Class<T> declaringType, Class<V> fieldType) {
+-		Field field;
+-		try {
+-			field = checkNotNull(declaringType, "Null declaring type")
+-					.getDeclaredField(checkNotNull(name, "Null fieldName"));
+-		} catch (NoSuchFieldException e) {
+-			return null;
+-		}
+-		checkArgument(checkNotNull(fieldType, "Null field type").isAssignableFrom(Primitives.wrap(field.getType())),
+-				"Field type %s doesn't equal expected field type %s", fieldType);
+-		if (!fieldType.isPrimitive() && UNSAFE != null) {
+-			return new UnsafeFastField<>(field, declaringType, fieldType);
+-		} else {
+-			return new FastField<>(field, declaringType, fieldType);
+-		}
+-	}
+-
+-	@SuppressWarnings("unchecked") // The caller will check ;)
+-	public V get(T instance) {
+-		try {
+-			return (V) field.get(instance);
+-		} catch (IllegalAccessException e) {
+-			throw new AssertionError("Field " + field + " should've been set accessible!");
+-		}
+-	}
+-
+-	public static class UnsafeFastField<T, V> extends FastField<T, V> {
+-
+-		private long fieldOffset;
+-
+-		private UnsafeFastField(Field field, Class<T> declaringType, Class<V> fieldType) {
+-			super(field, declaringType, fieldType);
+-			checkArgument(!field.getType().isPrimitive(), "Field is a primitive type %s", field.getType());
+-			checkArgument(!Modifier.isStatic(field.getType().getModifiers()), "Static field %s", field);
+-			fieldOffset = UNSAFE.objectFieldOffset(field);
+-			Verify.verify(fieldOffset >= 0);
+-		}
+-
+-		@Override
+-		@SuppressWarnings("unchecked")
+-		public V get(T instance) {
+-			getDeclaringType().cast(checkNotNull(instance, "Null instance"));
+-			return (V) UNSAFE.getObject(instance, fieldOffset);
+-		}
+-	}
+-}
+diff --git a/src/main/java/net/techcable/pineapple/reflection/Reflection.java b/src/main/java/net/techcable/pineapple/reflection/Reflection.java
+deleted file mode 100644
+index b1c5e24..0000000
+--- a/src/main/java/net/techcable/pineapple/reflection/Reflection.java
++++ /dev/null
+@@ -1,61 +0,0 @@
+-/**
+- * The MIT License
+- * Copyright (c) 2016 Techcable
+- *
+- * Permission is hereby granted, free of charge, to any person obtaining a copy
+- * of this software and associated documentation files (the "Software"), to deal
+- * in the Software without restriction, including without limitation the rights
+- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+- * copies of the Software, and to permit persons to whom the Software is
+- * furnished to do so, subject to the following conditions:
+- *
+- * The above copyright notice and this permission notice shall be included in
+- * all copies or substantial portions of the Software.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+- * THE SOFTWARE.
+- */
+-package net.techcable.pineapple.reflection;
+-
+-import static com.google.common.base.Preconditions.checkNotNull;
+-
+-import java.lang.invoke.MethodHandle;
+-import java.lang.invoke.MethodHandles;
+-import java.lang.reflect.Constructor;
+-
+-import javax.annotation.ParametersAreNonnullByDefault;
+-
+-@ParametersAreNonnullByDefault
+-public class Reflection {
+-	public static MethodHandle getConstructor(Class<?> declaringType, Class<?>... parameterTypes) {
+-		try {
+-			checkNotNull(parameterTypes, "Null parameters");
+-			Constructor<?> constructor = checkNotNull(declaringType, "Null declaring type")
+-					.getConstructor(parameterTypes);
+-			constructor.setAccessible(true);
+-			return MethodHandles.lookup().unreflectConstructor(constructor);
+-		} catch (NoSuchMethodException e) {
+-			return null;
+-		} catch (IllegalAccessException e) {
+-			throw new AssertionError(e);
+-		}
+-	}
+-
+-	public static <T> Class<? extends T> getClass(String name, Class<T> superclass) {
+-		Class<?> raw = getClass(name);
+-		return raw == null ? null : raw.asSubclass(checkNotNull(superclass, "Null superclass"));
+-	}
+-
+-	public static Class<?> getClass(String name) {
+-		try {
+-			return Class.forName(checkNotNull(name, "Null name"));
+-		} catch (ClassNotFoundException e) {
+-			return null;
+-		}
+-	}
+-}
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftZombie.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftZombie.java
+index 9dd904a..6c44dee 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftZombie.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftZombie.java
+@@ -63,8 +63,7 @@ public class CraftZombie extends CraftMonster implements Zombie {
+ 
+ 	@Override
+ 	public Villager.Profession getVillagerProfession() {
+-		// if (!isVillager()) return null; // Torch - better map Zombie/Villager
+-		// professions.
+-		return Villager.Profession.getProfession(getHandle().getVillagerType());
++		if (!isVillager()) return null;
++        return Villager.Profession.getProfession(getHandle().getVillagerType());
+ 	}
+ }
+diff --git a/src/main/java/org/bukkit/craftbukkit/generator/CustomChunkGenerator.java b/src/main/java/org/bukkit/craftbukkit/generator/CustomChunkGenerator.java
+index 1d663b8..d2565d3 100644
+--- a/src/main/java/org/bukkit/craftbukkit/generator/CustomChunkGenerator.java
++++ b/src/main/java/org/bukkit/craftbukkit/generator/CustomChunkGenerator.java
+@@ -84,18 +84,7 @@ public class CustomChunkGenerator extends InternalChunkGenerator {
+ 				// Build chunk section
+ 				if (emptyTest != 0) {
+ 					csect[sec] = new ChunkSection(sec << 4, true, section,
+-							this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(chunk, sec)); // Paper
+-																											// -
+-																											// Anti-Xray
+-																											// -
+-																											// Add
+-																											// blocks
+-																											// used
+-																											// for
+-																											// obfuscation
+-																											// to
+-																											// the
+-																											// DataPalette
++					this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(chunk, sec)); // Paper
+ 				}
+ 			}
+ 		} else {
+@@ -120,18 +109,7 @@ public class CustomChunkGenerator extends InternalChunkGenerator {
+ 					}
+ 					// Build chunk section
+ 					csect[sec] = new ChunkSection(sec << 4, true, secBlkID,
+-							this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(chunk, sec)); // Paper
+-																											// -
+-																											// Anti-Xray
+-																											// -
+-																											// Add
+-																											// blocks
+-																											// used
+-																											// for
+-																											// obfuscation
+-																											// to
+-																											// the
+-																											// DataPalette
++					this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(chunk, sec)); // Paper
+ 				}
+ 			} else { // Else check for byte-per-block section data
+ 				byte[][] btypes = generator.generateBlockSections(this.world.getWorld(), this.random, x, z, biomegrid);
+@@ -150,22 +128,10 @@ public class CustomChunkGenerator extends InternalChunkGenerator {
+ 						char[] secBlkID = new char[4096]; // Allocate block ID
+ 															// bytes
+ 						for (int i = 0; i < secBlkID.length; i++) {
+-							Block.getById(btypes[sec][i] & 0xFF);
+-							csect[sec] = new ChunkSection(sec << 4, true, secBlkID,
+-									this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(chunk, sec)); // Paper
+-																													// -
+-																													// Anti-Xray
+-																													// -
+-																													// Add
+-																													// blocks
+-																													// used
+-																													// for
+-																													// obfuscation
+-																													// to
+-																													// the
+-																													// DataPalette
++							Block b = Block.getById(btypes[sec][i] & 0xFF);
++                            secBlkID[i] = (char) Block.REGISTRY_ID.getId(b.getBlockData());
+ 						}
+-						csect[sec] = new ChunkSection(sec << 4, true, secBlkID);
++						csect[sec] = new ChunkSection(sec << 4, true, secBlkID, this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(chunk, sec)); // Paper
+ 					}
+ 				} else { // Else, fall back to pre 1.2 method
+ 					@SuppressWarnings("deprecation")
+@@ -207,18 +173,7 @@ public class CustomChunkGenerator extends InternalChunkGenerator {
+ 						// If section built, finish prepping its state
+ 						if (csbytes != null) {
+ 							ChunkSection cs = csect[sec] = new ChunkSection(sec << 4, true, csbytes,
+-									this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(chunk, sec)); // Paper
+-																													// -
+-																													// Anti-Xray
+-																													// -
+-																													// Add
+-																													// blocks
+-																													// used
+-																													// for
+-																													// obfuscation
+-																													// to
+-																													// the
+-																													// DataPalette
++							this.world.paperConfig.antiXrayInstance.getPredefinedBlockData(chunk, sec)); // Paper
+ 							cs.recalcBlockCounts();
+ 						}
+ 					}
+diff --git a/src/main/java/org/bukkit/craftbukkit/potion/CraftPotionBrewer.java b/src/main/java/org/bukkit/craftbukkit/potion/CraftPotionBrewer.java
+index ee34a9e..23d4355 100644
+--- a/src/main/java/org/bukkit/craftbukkit/potion/CraftPotionBrewer.java
++++ b/src/main/java/org/bukkit/craftbukkit/potion/CraftPotionBrewer.java
+@@ -14,7 +14,6 @@ import com.google.common.collect.ImmutableList;
+ 
+ import net.minecraft.server.MobEffect;
+ import net.minecraft.server.PotionRegistry;
+-import net.techcable.pineapple.collect.CopyOnWriteMap;
+ 
+ public class CraftPotionBrewer implements PotionBrewer {
+ 	// private static final Map<PotionType, Collection<PotionEffect>> cache =
+@@ -22,7 +21,7 @@ public class CraftPotionBrewer implements PotionBrewer {
+ 	// pivate static final ConcurrentMap<PotionType, Collection<PotionEffect>>
+ 	// cache = new ConcurrentHashMap<PotionType, Collection<PotionEffect>>(); //
+ 	// Hose
+-	private static final CopyOnWriteMap<PotionType, Collection<PotionEffect>> cache = new CopyOnWriteMap<PotionType, Collection<PotionEffect>>(); // Torch
++	private static final java.util.concurrent.ConcurrentHashMap<PotionType, Collection<PotionEffect>> cache = new java.util.concurrent.ConcurrentHashMap<PotionType, Collection<PotionEffect>>(); // Torch
+ 
+ 	@Override
+ 	public Collection<PotionEffect> getEffects(PotionType damage, boolean upgraded, boolean extended) {
+diff --git a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
+index 6cbb5a9..8bb8ceb 100644
+--- a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
++++ b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
+@@ -83,7 +83,7 @@ public class CraftScheduler implements BukkitScheduler {
+ 	 * These are tasks that are currently active. It's provided for 'viewing'
+ 	 * the current state.
+ 	 */
+-	private final net.techcable.pineapple.collect.CopyOnWriteMap<Integer, CraftTask> runners = new net.techcable.pineapple.collect.CopyOnWriteMap<Integer, CraftTask>();
++	private final java.util.concurrent.ConcurrentHashMap<Integer, CraftTask> runners = new java.util.concurrent.ConcurrentHashMap<Integer, CraftTask>();
+ 	private volatile int currentTick = -1;
+ 	private final Executor executor = Executors
+ 			.newCachedThreadPool(new com.google.common.util.concurrent.ThreadFactoryBuilder()
+diff --git a/src/main/java/org/bukkit/permissions/PermissibleBase.java b/src/main/java/org/bukkit/permissions/PermissibleBase.java
+index 35632ae..82c4bc7 100644
+--- a/src/main/java/org/bukkit/permissions/PermissibleBase.java
++++ b/src/main/java/org/bukkit/permissions/PermissibleBase.java
+@@ -10,8 +10,6 @@ import java.util.logging.Level;
+ import org.bukkit.Bukkit;
+ import org.bukkit.plugin.Plugin;
+ 
+-import net.techcable.pineapple.collect.CopyOnWriteMap;
+-
+ /**
+  * Base Permissible for use in any Permissible object via proxy or extension
+  */
+@@ -19,7 +17,7 @@ public class PermissibleBase implements Permissible {
+ 	private ServerOperator opable = null;
+ 	private Permissible parent = this;
+ 	private final List<PermissionAttachment> attachments = new LinkedList<PermissionAttachment>();
+-	private final Map<String, PermissionAttachmentInfo> permissions = new CopyOnWriteMap<String, PermissionAttachmentInfo>();
++	private final Map<String, PermissionAttachmentInfo> permissions = new java.util.concurrent.ConcurrentHashMap<String, PermissionAttachmentInfo>();
+ 	// private final Map<String, PermissionAttachmentInfo> permissions = new
+ 	// HashMap<String, PermissionAttachmentInfo>();
+ 
+diff --git a/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java b/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java
+index 4e60654..db813aa 100644
+--- a/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java
++++ b/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java
+@@ -45,7 +45,7 @@ import org.yaml.snakeyaml.error.YAMLException;
+ public final class JavaPluginLoader implements PluginLoader {
+ 	final Server server;
+ 	private final Pattern[] fileFilters = new Pattern[] { Pattern.compile("\\.jar$"), };
+-	private final Map<String, Class<?>> classes = new net.techcable.pineapple.collect.CopyOnWriteMap<String, Class<?>>(); // Spigot
++	private final Map<String, Class<?>> classes = new java.util.concurrent.ConcurrentHashMap<String, Class<?>>(); // Spigot
+ 	private final Map<String, PluginClassLoader> loaders = new LinkedHashMap<String, PluginClassLoader>();
+ 
+ 	/**
+diff --git a/src/main/java/org/bukkit/plugin/java/PluginClassLoader.java b/src/main/java/org/bukkit/plugin/java/PluginClassLoader.java
+index 80dcae5..17e4d62 100644
+--- a/src/main/java/org/bukkit/plugin/java/PluginClassLoader.java
++++ b/src/main/java/org/bukkit/plugin/java/PluginClassLoader.java
+@@ -20,7 +20,7 @@ public final class PluginClassLoader extends URLClassLoader { // Spigot
+ 	} // Spigot
+ 
+ 	private final JavaPluginLoader loader;
+-	private final Map<String, Class<?>> classes = new net.techcable.pineapple.collect.CopyOnWriteMap<String, Class<?>>(); // Spigot
++	private final Map<String, Class<?>> classes = new  java.util.concurrent.ConcurrentHashMap<String, Class<?>>(); // Spigot
+ 	private final PluginDescriptionFile description;
+ 	private final File dataFolder;
+ 	private final File file;
+diff --git a/src/main/java/org/torch/util/ConcurrentIterableArrayList.java b/src/main/java/org/torch/util/ConcurrentIterableArrayList.java
+new file mode 100644
+index 0000000..e2fd90d
+--- /dev/null
++++ b/src/main/java/org/torch/util/ConcurrentIterableArrayList.java
+@@ -0,0 +1,40 @@
++package org.torch.util;
++
++/**
++ * From TickThreading project.
++ * @Link: https://github.com/nallar/TickThreading
++ */
++
++import java.util.*;
++
++public class ConcurrentIterableArrayList<T> extends ArrayList<T> {
++	private static final long serialVersionUID = 0;
++	private int index;
++
++	public synchronized void reset() {
++		index = 0;
++	}
++
++	public synchronized T next() {
++		return index < size() ? this.get(index++) : null;
++	}
++
++	@Override
++	public synchronized T remove(int index) {
++		if (index < this.index) {
++			this.index--;
++		}
++		return super.remove(index);
++	}
++
++	@Override
++	public boolean remove(Object o) {
++		for (int index = 0; index < size(); index++) {
++			if (o.equals(get(index))) {
++				remove(index);
++				return true;
++			}
++		}
++		return false;
++	}
++}
+\ No newline at end of file
+-- 
+2.8.2.windows.1
+
