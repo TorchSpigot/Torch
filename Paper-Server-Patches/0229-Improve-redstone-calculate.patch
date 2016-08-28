@@ -325,7 +325,7 @@ index bc48dbb..2818242 100644
 +		this.updatedRedstoneWire.clear();
 +
 +		for (BlockPosition posi : blocksNeedingUpdate) {
-+			world.e(posi, this);
++			world.applyPhysics(posi, this);
 +		}
  	}
  

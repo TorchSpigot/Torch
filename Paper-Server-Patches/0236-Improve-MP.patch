@@ -1,7 +1,7 @@
 From a94ea1b69d93ed8e6ff7a7779c2c73ecc7ba0c47 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 26 Aug 2016 11:57:45 +0800
-Subject: [PATCH] Improve MP
+Subject: [PATCH] Better thread safety
 
 
 diff --git a/src/main/java/net/minecraft/server/EntityInsentient.java b/src/main/java/net/minecraft/server/EntityInsentient.java
