@@ -1,0 +1,74 @@
+From 47c5803aa40f8be96ff0d1eb8f493b8c89447e12 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Sun, 28 Aug 2016 10:01:15 +0800
+Subject: [PATCH] Speedup plugin loader
+
+
+diff --git a/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java b/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java
+index 1f229a9..4276eb1 100644
+--- a/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java
++++ b/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java
+@@ -11,6 +11,8 @@ import java.util.HashSet;
+ import java.util.LinkedHashMap;
+ import java.util.Map;
+ import java.util.Set;
++import java.util.concurrent.Callable;
++import java.util.concurrent.RecursiveAction;
+ import java.util.jar.JarEntry;
+ import java.util.jar.JarFile;
+ import java.util.Collections;
+@@ -60,8 +62,7 @@ public final class JavaPluginLoader implements PluginLoader {
+ 		Validate.notNull(instance, "Server cannot be null");
+ 		server = instance;
+ 	}
+-
+-	@Override
++	
+ 	public Plugin loadPlugin(final File file) throws InvalidPluginException {
+ 		Validate.notNull(file, "File cannot be null");
+ 
+@@ -119,8 +120,10 @@ public final class JavaPluginLoader implements PluginLoader {
+ 		} catch (Throwable ex) {
+ 			throw new InvalidPluginException(ex);
+ 		}
+-
+-		loaders.put(description.getName(), loader);
++		
++		synchronized(loaders) {
++			loaders.put(description.getName(), loader);
++		}
+ 
+ 		return loader.plugin;
+ 	}
+@@ -305,9 +308,28 @@ public final class JavaPluginLoader implements PluginLoader {
+ 		}
+ 		return ret;
+ 	}
++	
++	class pluginEnabler extends RecursiveAction {
++		final Plugin plugin;
++		
++        pluginEnabler(final Plugin plugin){
++			this.plugin = plugin;
++        }
++
++		@Override
++		protected void compute() {
++			originalEnablePlugin(plugin);
++		}
++        
++    }
+ 
+ 	@Override
+ 	public void enablePlugin(final Plugin plugin) {
++		pluginEnabler enabler = new pluginEnabler(plugin);
++		enabler.fork();
++	}
++
++	public void originalEnablePlugin(final Plugin plugin) {
+ 		Validate.isTrue(plugin instanceof JavaPlugin, "Plugin is not associated with this PluginLoader");
+ 
+ 		if (!plugin.isEnabled()) {
+-- 
+2.8.2.windows.1
+
