@@ -1,4 +1,4 @@
-From c2af28ad3484b9603844d28d94299f05188a2747 Mon Sep 17 00:00:00 2001
+From 64cfc5c7eccc11d6476d93970b835bff5004911e Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 23 Jul 2016 00:41:27 +0800
 Subject: [PATCH] Relax skull check even for nominally invalid skulls.

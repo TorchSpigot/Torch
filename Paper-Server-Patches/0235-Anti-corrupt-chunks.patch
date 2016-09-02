@@ -1,4 +1,4 @@
-From 134b00ce22a8f3cc5910a4faf0075acd59245864 Mon Sep 17 00:00:00 2001
+From 2f88f042f611e9d997c3de12762e4d59275e4d94 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Wed, 24 Aug 2016 13:15:14 +0800
 Subject: [PATCH] Anti corrupt chunks

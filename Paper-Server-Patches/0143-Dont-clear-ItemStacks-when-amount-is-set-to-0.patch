@@ -1,4 +1,4 @@
-From d4c48c531b9b14b84f4b6153f3b89c397169e6d5 Mon Sep 17 00:00:00 2001
+From a54cf31a2de7c774944dcb4333b1889336a2cbb8 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 06:54:03 +0800
 Subject: [PATCH] Dont clear ItemStacks when amount is set to 0

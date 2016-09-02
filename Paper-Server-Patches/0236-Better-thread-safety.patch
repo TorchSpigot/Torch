@@ -1,4 +1,4 @@
-From 5d2b925b287f7ca60fa5fbcabc6018c41063f134 Mon Sep 17 00:00:00 2001
+From eac3db1696031c8e1be8e8190e4382da08c15d52 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 26 Aug 2016 11:57:45 +0800
 Subject: [PATCH] Better thread safety
