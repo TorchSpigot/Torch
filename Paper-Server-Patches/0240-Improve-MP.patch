@@ -1,4 +1,4 @@
-From ec22b701133aedca2ad0b78b6684fa62fcc1d3d6 Mon Sep 17 00:00:00 2001
+From c955db294e34125de826771131d9dac4f4c81164 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 2 Sep 2016 21:08:04 +0800
 Subject: [PATCH] Improve MP
@@ -788,20 +788,22 @@ index c899cbb..63539cc 100644
  				} finally {
  					this.world.populating = false;
 diff --git a/src/main/java/net/minecraft/server/ChunkProviderServer.java b/src/main/java/net/minecraft/server/ChunkProviderServer.java
-index 4058fc5..2a7dbd2 100644
+index 4058fc5..cf3e83d 100644
 --- a/src/main/java/net/minecraft/server/ChunkProviderServer.java
 +++ b/src/main/java/net/minecraft/server/ChunkProviderServer.java
-@@ -5,7 +5,9 @@ import java.util.Collection;
+@@ -5,7 +5,11 @@ import java.util.Collection;
  import java.util.Iterator;
  import java.util.List;
  import java.util.Map;
 +import java.util.concurrent.Callable;
  import java.util.concurrent.ConcurrentHashMap;
 +import java.util.concurrent.ForkJoinTask;
++import java.util.concurrent.RecursiveAction;
++import java.util.concurrent.RecursiveTask;
  
  import javax.annotation.Nullable;
  
-@@ -14,6 +16,7 @@ import org.apache.logging.log4j.Logger;
+@@ -14,6 +18,7 @@ import org.apache.logging.log4j.Logger;
  import org.bukkit.craftbukkit.chunkio.ChunkIOExecutor;
  import org.bukkit.event.world.ChunkUnloadEvent;
  // CraftBukkit end
@@ -809,40 +811,50 @@ index 4058fc5..2a7dbd2 100644
  
  import com.destroystokyo.paper.exception.ServerInternalException;
  
-@@ -203,6 +206,21 @@ public class ChunkProviderServer implements IChunkProvider {
+@@ -203,6 +208,21 @@ public class ChunkProviderServer implements IChunkProvider {
  
  		return chunk;
  	}
 +	
-+	class originalGetChunkAt implements Callable<Chunk> {
++	class GetChunkAtTask extends RecursiveTask {
 +		int i, j;
 +        
-+        originalGetChunkAt(int i, int j){
++		GetChunkAtTask(int i, int j){
 +            this.i = i;
 +            this.j = j;
 +        }
-+        
-+        @Override
-+        public Chunk call() throws Exception {
-+            return chunkGenerator.getOrCreateChunk(i, j);
-+        }
++
++		@Override
++		protected Object compute() {
++			return chunkGenerator.getOrCreateChunk(i, j);
++		}
 +        
 +	}
  
  	public Chunk originalGetChunkAt(int i, int j) {
  		Chunk chunk = this.originalGetOrLoadChunkAt(i, j);
-@@ -211,7 +229,10 @@ public class ChunkProviderServer implements IChunkProvider {
+@@ -211,7 +231,11 @@ public class ChunkProviderServer implements IChunkProvider {
  			long k = ChunkCoordIntPair.a(i, j);
  
  			try {
 -				chunk = this.chunkGenerator.getOrCreateChunk(i, j);
 +				// chunk = this.chunkGenerator.getOrCreateChunk(i, j);
-+				SpigotWorldConfig.ChunkTask = ForkJoinTask.adapt(new originalGetChunkAt(i, j));
-+				SpigotWorldConfig.ChunkPool.submit(SpigotWorldConfig.ChunkTask);
-+				chunk = SpigotWorldConfig.ChunkTask.get();
++				// SpigotWorldConfig.ChunkTask = ForkJoinTask.adapt(new originalGetChunkAt(i, j));
++				GetChunkAtTask task = new GetChunkAtTask(i, j);
++				ForkJoinTask<Chunk> result = SpigotWorldConfig.ChunkPool.submit(task);
++				chunk = result.get();
  			} catch (Throwable throwable) {
  				CrashReport crashreport = CrashReport.a(throwable, "Exception generating new chunk");
  				CrashReportSystemDetails crashreportsystemdetails = crashreport.a("Chunk to be generated");
+@@ -223,7 +247,7 @@ public class ChunkProviderServer implements IChunkProvider {
+ 				throw new ReportedException(crashreport);
+ 			}
+ 
+-			synchronized(this) { this.chunks.put(k, chunk); }
++			synchronized(chunks) { this.chunks.put(k, chunk); }
+ 			chunk.addEntities();
+ 
+ 			chunk.loadNearby(this, this.chunkGenerator, true); // CraftBukkit
 diff --git a/src/main/java/net/minecraft/server/ChunkRegionLoader.java b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
 index 8eea856..8bb9759 100644
 --- a/src/main/java/net/minecraft/server/ChunkRegionLoader.java
@@ -1001,7 +1013,7 @@ index 3b113b2..bf2347d 100644
  		this.predefinedBlockData = predefinedBlockData;
  		if (predefinedBlockData == null) { // Paper - Anti-Xray - default constructor
 diff --git a/src/main/java/net/minecraft/server/DedicatedServer.java b/src/main/java/net/minecraft/server/DedicatedServer.java
-index cdd92f4..4ed5a55 100644
+index cdd92f4..2c3bb97 100644
 --- a/src/main/java/net/minecraft/server/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/DedicatedServer.java
 @@ -19,6 +19,7 @@ import org.bukkit.craftbukkit.util.Waitable;
@@ -1012,6 +1024,27 @@ index cdd92f4..4ed5a55 100644
  
  import com.google.common.collect.Lists;
  import com.mojang.authlib.GameProfileRepository;
+@@ -266,10 +267,6 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
+ 				worldtype = WorldType.NORMAL;
+ 			}
+ 
+-			/*
+-			 * this.ax(); // Torch start - fork this.getEnableCommandBlock();
+-			 * this.q(); this.getSnooperEnabled(); this.aF();
+-			 */ // Torch end
+ 			SubTask task_a = new SubTask();
+ 			task_a.fork();
+ 
+@@ -339,8 +336,7 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
+ 	}
+ 
+ 	class SubTask extends RecursiveAction {
+-		SubTask() {
+-		}
++		SubTask() {}
+ 
+ 		@Override
+ 		protected void compute() {
 diff --git a/src/main/java/net/minecraft/server/Entity.java b/src/main/java/net/minecraft/server/Entity.java
 index 0a843fc..eb33765 100644
 --- a/src/main/java/net/minecraft/server/Entity.java
@@ -1087,8 +1120,48 @@ index 0a843fc..eb33765 100644
  			return false;
  		}
  	}
+diff --git a/src/main/java/net/minecraft/server/EntityInsentient.java b/src/main/java/net/minecraft/server/EntityInsentient.java
+index 49e93e7..4434e02 100644
+--- a/src/main/java/net/minecraft/server/EntityInsentient.java
++++ b/src/main/java/net/minecraft/server/EntityInsentient.java
+@@ -19,9 +19,12 @@ import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
+ import org.bukkit.event.entity.EntityUnleashEvent;
+ import org.bukkit.event.entity.EntityUnleashEvent.UnleashReason;
+ // CraftBukkit end
++import org.spigotmc.SpigotWorldConfig;
+ 
+ import com.google.common.collect.Maps;
+ 
++import net.minecraft.server.Entity.U_sub;
++
+ public abstract class EntityInsentient extends EntityLiving {
+ 
+ 	private static final DataWatcherObject<Byte> a = DataWatcher.a(EntityInsentient.class, DataWatcherRegistry.a);
+@@ -685,9 +688,21 @@ public abstract class EntityInsentient extends EntityLiving {
+ 
+ 		}
+ 	}
+-
++	
++	// Torch start
++	class InsentientTickTask extends RecursiveAction {
++		InsentientTickTask() {}
++		@Override protected void compute() { doTick_task(); }
++	}
++	
+ 	@Override
+ 	protected final void doTick() {
++		InsentientTickTask insentientTick_task = new InsentientTickTask();
++		SpigotWorldConfig.TickPool.invoke(insentientTick_task);
++	}
++
++	protected final void doTick_task() {
++		// Torch end
+ 		++this.ticksFarFromPlayer;
+ 
+ 		this.world.methodProfiler.a("checkDespawn");
 diff --git a/src/main/java/net/minecraft/server/EntityLiving.java b/src/main/java/net/minecraft/server/EntityLiving.java
-index 459eda8..9b7e2ff 100644
+index 459eda8..1b6c9a3 100644
 --- a/src/main/java/net/minecraft/server/EntityLiving.java
 +++ b/src/main/java/net/minecraft/server/EntityLiving.java
 @@ -23,6 +23,7 @@ import org.bukkit.event.entity.EntityRegainHealthEvent;
@@ -1099,7 +1172,23 @@ index 459eda8..9b7e2ff 100644
  
  import com.google.common.base.Function;
  import com.google.common.base.Objects;
-@@ -2089,12 +2090,14 @@ public abstract class EntityLiving extends Entity {
+@@ -1310,9 +1311,12 @@ public abstract class EntityLiving extends Entity {
+ 			};
+ 			float absorptionModifier = absorption.apply((double) f).floatValue();
+ 
+-			EntityDamageEvent event = CraftEventFactory.handleLivingEntityDamageEvent(this, damagesource,
+-					originalDamage, hardHatModifier, blockingModifier, armorModifier, resistanceModifier, magicModifier,
+-					absorptionModifier, hardHat, blocking, armor, resistance, magic, absorption);
++			synchronized(this) {
++				EntityDamageEvent event = CraftEventFactory.handleLivingEntityDamageEvent(this, damagesource,
++						originalDamage, hardHatModifier, blockingModifier, armorModifier, resistanceModifier, magicModifier,
++						absorptionModifier, hardHat, blocking, armor, resistance, magic, absorption);
++			}
++			
+ 			if (event.isCancelled()) {
+ 				return false;
+ 			}
+@@ -2089,12 +2093,14 @@ public abstract class EntityLiving extends Entity {
  		// Hose start
  		// this.g(this.be, this.bf);
  		aim_task = new ai_move(this);
@@ -1116,6 +1205,14 @@ index 459eda8..9b7e2ff 100644
  		// Hose end
  		this.world.methodProfiler.b();
  	}
+@@ -2128,7 +2134,6 @@ public abstract class EntityLiving extends Entity {
+ 	protected void doTick() {
+ 	}
+ 
+-	// GE_Pool ge_task; // Hose
+ 	protected void co() {
+ 		List list = this.world.getEntities(this, this.getBoundingBox(), IEntitySelector.a(this));
+ 
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
 index b260010..b26a2dd 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
@@ -1280,7 +1377,7 @@ index f517aed..b54b63e 100644
  		}
  
 diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
-index b256286..6e6abd7 100644
+index b256286..3e772c8 100644
 --- a/src/main/java/net/minecraft/server/World.java
 +++ b/src/main/java/net/minecraft/server/World.java
 @@ -14,6 +14,7 @@ import com.destroystokyo.paper.antixray.BlockPacketController; // Paper - Anti-X
@@ -1299,18 +1396,19 @@ index b256286..6e6abd7 100644
  
  import com.destroystokyo.paper.IOStatCommand;
  import com.destroystokyo.paper.PaperConfig;
-@@ -47,6 +49,10 @@ import com.google.common.collect.Queues;
+@@ -47,6 +49,11 @@ import com.google.common.collect.Queues;
  import com.google.common.collect.Sets;
  import com.mrpowergamerbr.utils.LightRandom;
  
 +import net.minecraft.server.StructureGenerator.structure;
++import net.minecraft.server.WorldServer.SoundsTask;
 +import net.minecraft.server.WorldServer.chunk_tick;
 +import net.minecraft.server.WorldServer.light_tick;
 +
  public abstract class World implements IBlockAccess {
  
  	private int a = 63;
-@@ -363,16 +369,9 @@ public abstract class World implements IBlockAccess {
+@@ -363,16 +370,9 @@ public abstract class World implements IBlockAccess {
  
  	private boolean isAreaLoaded(int i, int j, int k, int l, int i1, int j1, boolean flag) {
  		area_load ar_task = new area_load(this, i, j, k, l, i1, j1, flag);
@@ -1329,7 +1427,7 @@ index b256286..6e6abd7 100644
  	}
  
  	protected abstract boolean isChunkLoaded(int i, int j, boolean flag);
-@@ -1127,7 +1126,8 @@ public abstract class World implements IBlockAccess {
+@@ -1127,7 +1127,8 @@ public abstract class World implements IBlockAccess {
  		// this.a(enumparticle.c(), enumparticle.e(), d0, d1, d2, d3, d4, d5,
  		// aint);
  		addparticle ap_task = new addparticle(enumparticle, d0, d1, d2, d3, d4, d5, aint);
@@ -1339,7 +1437,7 @@ index b256286..6e6abd7 100644
  	}
  
  	private void a(int i, boolean flag, double d0, double d1, double d2, double d3, double d4, double d5, int... aint) {
-@@ -1142,17 +1142,49 @@ public abstract class World implements IBlockAccess {
+@@ -1142,17 +1143,49 @@ public abstract class World implements IBlockAccess {
  		this.j.add(entity);
  		return true;
  	}
@@ -1391,7 +1489,7 @@ index b256286..6e6abd7 100644
  		if (entity == null) {
  			return false;
  		}
-@@ -1595,8 +1627,74 @@ public abstract class World implements IBlockAccess {
+@@ -1595,8 +1628,58 @@ public abstract class World implements IBlockAccess {
  
  	public void b(BlockPosition blockposition, Block block, int i, int j) {
  	}
@@ -1436,7 +1534,8 @@ index b256286..6e6abd7 100644
 +            if (entity.aa && this.isChunkLoaded(j, l, true)) {
 +                this.getChunkAt(j, l).b(entity);
 +            }
-+
+ 
+-	public void tickEntities() {
 +            guardEntityList = false; // Spigot
 +            this.entityList.remove(this.tickPosition--); // CraftBukkit - Use field for loop variable
 +            guardEntityList = true; // Spigot
@@ -1446,27 +1545,11 @@ index b256286..6e6abd7 100644
 +        this.methodProfiler.b();
 +	}
 +	
-+	class entitiesTickTask extends RecursiveAction {
-+
-+		entitiesTickTask() {}
- 
-+		@Override
-+		protected void compute() {
-+			tickEntities_task();
-+		}
-+ 
-+	}
-+	
- 	public void tickEntities() {
-+		entitiesTickTask task = new entitiesTickTask();
-+		SpigotWorldConfig.TickPool.invoke(task);
-+	}
-+
-+	public void tickEntities_task() {
++	public void tickEntities() { // Torch - moved fork staff to worldserver
  		this.methodProfiler.a("entities");
  		this.methodProfiler.a("global");
  
-@@ -1675,55 +1773,14 @@ public abstract class World implements IBlockAccess {
+@@ -1675,55 +1758,14 @@ public abstract class World implements IBlockAccess {
  		// if (tickPosition < 0) tickPosition = 0;
  		for (tickPosition = 0; tickPosition < entityList.size(); tickPosition++) {
  			// Paper end
@@ -1530,7 +1613,7 @@ index b256286..6e6abd7 100644
          }
  		guardEntityList = false; // Spigot
  
-@@ -2206,11 +2263,13 @@ public abstract class World implements IBlockAccess {
+@@ -2206,11 +2248,13 @@ public abstract class World implements IBlockAccess {
  		// explosion.a(true);
  		if (explosion.getSize() < 0.1F) { // First checking size to speedup it
  			IExplosionTask eta_task = new IExplosionTask(explosion);
@@ -1546,7 +1629,39 @@ index b256286..6e6abd7 100644
  			return explosion;
  		}
  
-@@ -2846,8 +2905,9 @@ public abstract class World implements IBlockAccess {
+@@ -2451,9 +2495,19 @@ public abstract class World implements IBlockAccess {
+ 		this.allowMonsters = flag;
+ 		this.allowAnimals = flag1;
+ 	}
+-
+-	// WT_Pool wt_task; // Hose
++	
++	// Torch start
++	class WorldTickTask extends RecursiveAction {
++		WorldTickTask() {}
++		@Override protected void compute() { doTick_task(); }
++	}
++	
+ 	public void doTick() {
++		WorldTickTask worldTick_task = new WorldTickTask();
++		SpigotWorldConfig.TickPool.invoke(worldTick_task);
++	}
++
++	public void doTick_task() {
+ 		// Paper - Start PersistenceCounters
+ 		if (PaperConfig.paperIOStats && System.nanoTime() > nextPersistenceCountersTick) {
+ 			nextPersistenceCountersTick += IOStatCommand.SECOND;
+@@ -2464,8 +2518,7 @@ public abstract class World implements IBlockAccess {
+ 		}
+ 		// Paper - End
+ 		this.t();
+-		// wt_task = new WT_Pool();
+-		// wt_task.fork();
++		// Torch end
+ 	}
+ 
+ 	protected void I() {
+@@ -2846,8 +2899,9 @@ public abstract class World implements IBlockAccess {
  					// this.getChunkAt(i1, j1).a(entity, axisalignedbb,
  					// arraylist, predicate);
  					get_en en_task = new get_en(this, entity, axisalignedbb, predicate, i1, j1, arraylist);
@@ -1558,7 +1673,7 @@ index b256286..6e6abd7 100644
  				}
  			}
  		}
-@@ -2949,7 +3009,7 @@ public abstract class World implements IBlockAccess {
+@@ -2949,7 +3003,7 @@ public abstract class World implements IBlockAccess {
  
  	public int a(Class<?> oclass) {
  		int i = 0;
@@ -1567,7 +1682,7 @@ index b256286..6e6abd7 100644
  
  		while (iterator.hasNext()) {
  			Entity entity = (Entity) iterator.next();
-@@ -3585,6 +3645,20 @@ public abstract class World implements IBlockAccess {
+@@ -3585,6 +3639,20 @@ public abstract class World implements IBlockAccess {
  	public LootTableRegistry ak() {
  		return this.B;
  	}
@@ -1589,7 +1704,7 @@ index b256286..6e6abd7 100644
  	class get_en extends RecursiveAction {
  		World world;
 diff --git a/src/main/java/net/minecraft/server/WorldServer.java b/src/main/java/net/minecraft/server/WorldServer.java
-index 220beb3..0d4b1e3 100644
+index 220beb3..9a684b5 100644
 --- a/src/main/java/net/minecraft/server/WorldServer.java
 +++ b/src/main/java/net/minecraft/server/WorldServer.java
 @@ -9,6 +9,7 @@ import java.util.Map;
@@ -1608,7 +1723,60 @@ index 220beb3..0d4b1e3 100644
  
  import com.google.common.base.Predicate;
  import com.google.common.collect.Lists;
-@@ -442,11 +444,6 @@ public class WorldServer extends World implements IAsyncTaskHandler {
+@@ -284,11 +286,15 @@ public class WorldServer extends World implements IAsyncTaskHandler {
+ 		timings.doChunkUnload.stopTiming(); // Spigot
+ 		this.methodProfiler.c("tickPending");
+ 		timings.scheduledBlocks.startTiming(); // Paper
+-		this.a(false);
++		BlocksTask scheduledBlocks_task = new BlocksTask();
++		SpigotWorldConfig.TickPool.invoke(scheduledBlocks_task);
++		// this.a(false);
+ 		timings.scheduledBlocks.stopTiming(); // Paper
+ 		this.methodProfiler.c("tickBlocks");
+ 		timings.chunkTicks.startTiming(); // Paper
+-		this.j();
++		ChunkTicksTask chunkTicks_task = new ChunkTicksTask();
++		SpigotWorldConfig.TickPool.invoke(chunkTicks_task);
++		// this.j();
+ 		timings.chunkTicks.stopTiming(); // Paper
+ 		this.methodProfiler.c("chunkMap");
+ 		timings.doChunkMap.startTiming(); // Spigot
+@@ -305,13 +311,33 @@ public class WorldServer extends World implements IAsyncTaskHandler {
+ 		timings.doPortalForcer.stopTiming(); // Spigot
+ 		this.methodProfiler.b();
+ 		timings.doSounds.startTiming(); // Spigot
+-		this.ao();
++		SoundsTask doSounds_task = new SoundsTask();
++		SpigotWorldConfig.TickPool.invoke(doSounds_task);
++		// this.ao();
++		// Torch end
+ 		timings.doSounds.stopTiming(); // Spigot
+ 
+ 		timings.doChunkGC.startTiming();// Spigot
+ 		this.getWorld().processChunkGC(); // CraftBukkit
+ 		timings.doChunkGC.stopTiming(); // Spigot
+ 	}
++	
++	// Torch start - ticking staff
++	class SoundsTask extends RecursiveAction {
++		SoundsTask() {}
++		@Override protected void compute() { ao(); }
++	}
++	
++	class ChunkTicksTask extends RecursiveAction {
++		ChunkTicksTask() {}
++		@Override protected void compute() { j(); }
++	}
++	
++	class BlocksTask extends RecursiveAction {
++		BlocksTask() {}
++		@Override protected void compute() { a(false); }
++	}
++	// Torch end
+ 
+ 	@Nullable
+ 	public BiomeBase.BiomeMeta a(EnumCreatureType enumcreaturetype, BlockPosition blockposition) {
+@@ -442,11 +468,6 @@ public class WorldServer extends World implements IAsyncTaskHandler {
  		this.methodProfiler.b();
  	}
  
@@ -1620,7 +1788,7 @@ index 220beb3..0d4b1e3 100644
  	@Override
  	protected void j() {
  		this.i();
-@@ -472,12 +469,14 @@ public class WorldServer extends World implements IAsyncTaskHandler {
+@@ -472,12 +493,14 @@ public class WorldServer extends World implements IAsyncTaskHandler {
  
  				this.methodProfiler.c("checkNextLight");
  				// chunk.n();
@@ -1639,6 +1807,29 @@ index 220beb3..0d4b1e3 100644
  				if (!chunk.areNeighborsLoaded(1)) {
  					continue; // Spigot
  				}
+@@ -713,9 +736,21 @@ public class WorldServer extends World implements IAsyncTaskHandler {
+ 		}
+ 
+ 	}
+-
++	
++	// Torch start
++	class entitiesTickTask extends RecursiveAction {
++		entitiesTickTask() {}
++		@Override protected void compute() { tickEntities_task(); }
++	}
++	
+ 	@Override
+ 	public void tickEntities() {
++		entitiesTickTask task = new entitiesTickTask();
++		SpigotWorldConfig.TickPool.invoke(task);
++	}
++
++	public void tickEntities_task() {
++		// Torch end
+ 		if (false && this.players.isEmpty()) { // CraftBukkit - this prevents
+ 												// entity cleanup, other issues
+ 												// on servers with no players
 diff --git a/src/main/java/org/bukkit/command/defaults/GCCommand.java b/src/main/java/org/bukkit/command/defaults/GCCommand.java
 index d2158d5..14bb853 100644
 --- a/src/main/java/org/bukkit/command/defaults/GCCommand.java
@@ -1880,7 +2071,7 @@ index 0000000..b0057ab
 +
 +}
 diff --git a/src/main/java/org/spigotmc/ActivationRange.java b/src/main/java/org/spigotmc/ActivationRange.java
-index ba2556d..60fc680 100644
+index ba2556d..b0ce04b 100644
 --- a/src/main/java/org/spigotmc/ActivationRange.java
 +++ b/src/main/java/org/spigotmc/ActivationRange.java
 @@ -122,7 +122,8 @@ public class ActivationRange {
@@ -1889,10 +2080,25 @@ index ba2556d..60fc680 100644
  						active_en en_task = new active_en(chunk);
 -						en_task.fork();
 +						SpigotWorldConfig.TickPool.execute(en_task);
-+						//en_task.fork();
++						// en_task.fork();
  					}
  				}
  			}
+diff --git a/src/main/java/org/spigotmc/AsyncCatcher.java b/src/main/java/org/spigotmc/AsyncCatcher.java
+index c2d5def..f1a3a54 100644
+--- a/src/main/java/org/spigotmc/AsyncCatcher.java
++++ b/src/main/java/org/spigotmc/AsyncCatcher.java
+@@ -18,8 +18,8 @@ public class AsyncCatcher {
+ 
+ 	public static void catchOp(String reason) {
+ 		if (enabled && Thread.currentThread() != MinecraftServer.getServer().primaryThread) {
+-			SpigotWorldConfig.TickTask = ForkJoinTask.adapt(Thread.currentThread());
+-			SpigotWorldConfig.TickPool.submit(SpigotWorldConfig.TickTask);
++			// SpigotWorldConfig.TickTask = ForkJoinTask.adapt(Thread.currentThread());
++			// SpigotWorldConfig.TickPool.submit(SpigotWorldConfig.TickTask);
+ 		}
+ 	}
+ 
 diff --git a/src/main/java/org/spigotmc/RestartCommand.java b/src/main/java/org/spigotmc/RestartCommand.java
 index eecffcc..6a68750 100644
 --- a/src/main/java/org/spigotmc/RestartCommand.java
