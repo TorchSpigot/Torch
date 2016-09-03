@@ -1,11 +1,11 @@
-From 9311d4b8bf7577af297175959d671760e896e1a9 Mon Sep 17 00:00:00 2001
+From 94ac1c5abc32ff6e0ffbc17732d5828282a4fff0 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 28 Jun 2016 17:18:45 +0800
 Subject: [PATCH] Show Torch in somewhere and Metrics
 
 
 diff --git a/pom.xml b/pom.xml
-index 927418f..4eb37c8 100644
+index 927418f..1088de0 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -4,9 +4,9 @@

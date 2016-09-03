@@ -1,4 +1,4 @@
-From 715146e0674cf7a5a77b1374248991b4555a7b7e Mon Sep 17 00:00:00 2001
+From d4cc348b962b93dd895f3b8a69ff915148021cff Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 7 Aug 2016 02:27:13 +0800
 Subject: [PATCH] Show plugin version in plugins command.

@@ -1,11 +1,11 @@
-From 7aeb8929a53ad5dc1a2792fc115d9bb5c099772c Mon Sep 17 00:00:00 2001
+From 223f24eac61f6eb66f52a73de15cce601a823925 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 15 Aug 2016 22:44:42 +0800
 Subject: [PATCH] Fix inventory update code that got broken in update
 
 
 diff --git a/pom.xml b/pom.xml
-index 49b692b..56297c66 100644
+index fcd93e6..027fe68 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -91,24 +91,6 @@

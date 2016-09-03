@@ -1,11 +1,11 @@
-From 545dc07326b4dec1fb5b881dbfd0b19709b313ec Mon Sep 17 00:00:00 2001
+From 73bc058e99b939793326ec75b00626b4465b9f8c Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 08:40:36 +0800
 Subject: [PATCH] Fix Torch version
 
 
 diff --git a/pom.xml b/pom.xml
-index 4dccd64..eeca1e5 100644
+index 4dccd64..8f6518c 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -11,7 +11,7 @@

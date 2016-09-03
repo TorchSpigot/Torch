@@ -1,4 +1,4 @@
-From 3ae89bcb7fa9c94a11b8ace5000fd56473bc87a4 Mon Sep 17 00:00:00 2001
+From 4fefbb69f49d079f3a689489e7c2e18560413bef Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 28 Aug 2016 16:24:27 +0800
 Subject: [PATCH] Make getEntity check more specific

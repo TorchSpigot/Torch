@@ -1,4 +1,4 @@
-From 39ef0b6e1ddf71adcb30bcaefd0bff77ad7b1edb Mon Sep 17 00:00:00 2001
+From 8c7198cf46e07c2d3b77dfb759094a2b44c2775d Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 14:04:48 +0800
 Subject: [PATCH] Cancelled cake interact decreases client hunger

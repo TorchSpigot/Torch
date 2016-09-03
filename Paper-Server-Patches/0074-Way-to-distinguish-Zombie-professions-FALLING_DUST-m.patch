@@ -1,4 +1,4 @@
-From 0686c7552b04a5a3da55efa7ee8c3a553d425105 Mon Sep 17 00:00:00 2001
+From d8445c0ccec99805f08d83cccc48a208e7193803 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:53:30 +0800
 Subject: [PATCH] Way to distinguish Zombie professions, FALLING_DUST missing

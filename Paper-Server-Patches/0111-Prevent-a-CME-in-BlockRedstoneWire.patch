@@ -1,4 +1,4 @@
-From 0825f9b74b0194e93e8e140e78149c0bef003801 Mon Sep 17 00:00:00 2001
+From 05d551dee97e014bb4085d29c62a15f9ac1bced5 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 12 Jul 2016 18:31:02 +0800
 Subject: [PATCH] Prevent-a-CME-in-BlockRedstoneWire
