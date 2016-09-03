@@ -1,4 +1,4 @@
-From 0e776cc28c1dc036b1ebd1533d8ace7a578b294c Mon Sep 17 00:00:00 2001
+From 08b6f6ba7bb28f6c427e6aef36d310592262f765 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 12:46:22 +0800
 Subject: [PATCH] Fix chunk generator

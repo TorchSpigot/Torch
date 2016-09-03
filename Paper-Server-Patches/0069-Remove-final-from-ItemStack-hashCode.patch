@@ -1,4 +1,4 @@
-From 5fc576530701e31e107df27ebc1b1c87f6c4f8a8 Mon Sep 17 00:00:00 2001
+From 6aaab367993d8e61f8af6116b0702191467b2035 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:37:40 +0800
 Subject: [PATCH] Remove final from ItemStack hashCode

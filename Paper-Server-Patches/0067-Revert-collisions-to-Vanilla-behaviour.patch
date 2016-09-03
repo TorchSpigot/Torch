@@ -1,4 +1,4 @@
-From a0e705f40c6c3f4d4d5983a84790f00067f3516c Mon Sep 17 00:00:00 2001
+From a3e470e968d6b6185a3b6d6f7d3e38b587a2de45 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:32:54 +0800
 Subject: [PATCH] Revert collisions to Vanilla behaviour

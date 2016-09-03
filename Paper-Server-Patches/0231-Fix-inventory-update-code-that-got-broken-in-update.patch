@@ -1,4 +1,4 @@
-From f39034f8ca0881950894f869eef159b13c9ae3f9 Mon Sep 17 00:00:00 2001
+From 7aeb8929a53ad5dc1a2792fc115d9bb5c099772c Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 15 Aug 2016 22:44:42 +0800
 Subject: [PATCH] Fix inventory update code that got broken in update

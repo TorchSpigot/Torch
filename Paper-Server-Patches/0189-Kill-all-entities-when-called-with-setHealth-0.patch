@@ -1,4 +1,4 @@
-From 839a35eeb307524d69bd3106fe21bf4da31da483 Mon Sep 17 00:00:00 2001
+From 96ad50b5ec0dbabc95a1106a2c5fe6f4972b1d4a Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 30 Jul 2016 15:45:17 +0800
 Subject: [PATCH] Kill all entities when called with setHealth(0)

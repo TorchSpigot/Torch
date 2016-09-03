@@ -1,4 +1,4 @@
-From 0bb86108ec05f27676d85d47c0ca7d32b6ae9ae4 Mon Sep 17 00:00:00 2001
+From cfd287167354c99e7ce812ae80a6d6ddc26a5a04 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 12:23:26 +0800
 Subject: [PATCH] Threaded ChunkMap
