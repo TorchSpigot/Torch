@@ -55,4 +55,4 @@ Have an idea for an optimization, or found a bug?
 ![Result](http://i1.piimg.com/1949/d617db7d55cd75ab.png) 
 
 ####Donate/Support
-*[Link](http://mc.50zf.com/spay/56)*  :)
+*[Link](https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=caowenkang1@qq.com&currency_code=USD&amount=1&return=www.torchmc.org&item_name=Donate_Torch&undefined_quantity=1&no_note=0)*  :)
