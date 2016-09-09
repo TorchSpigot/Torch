@@ -1,4 +1,4 @@
-From c2b6d160eacbe1276734bf2e90c851b5241fdc47 Mon Sep 17 00:00:00 2001
+From 6f9b75714f33ad97f2873bb0e36511292de373d1 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 9 Aug 2016 18:05:40 +0800
 Subject: [PATCH] Branchless NibbleArray

@@ -1,4 +1,4 @@
-From 5171b87ca77d9245beb899ce864d58f64d5dbee8 Mon Sep 17 00:00:00 2001
+From 6e02317d9399a0a59add30b0c7cac0228b89442c Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 28 Aug 2016 09:32:37 +0800
 Subject: [PATCH] Better thread safety for plugin class loading

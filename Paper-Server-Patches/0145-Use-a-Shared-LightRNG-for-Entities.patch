@@ -1,4 +1,4 @@
-From 16b8547b6cfe6f224a7a99d8974223b3e345591f Mon Sep 17 00:00:00 2001
+From d12e6fd41b10d2e81a05aa44eb6d938ab620af77 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 16 Jul 2016 09:17:06 +0800
 Subject: [PATCH] Use a Shared LightRNG for Entities

@@ -1,4 +1,4 @@
-From b4256d70c3e7b19401e77a13ad100239b40ce46b Mon Sep 17 00:00:00 2001
+From 399cbd1563b3c03af7b6e4109271b545e236e5ec Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 22 Jul 2016 17:00:40 +0800
 Subject: [PATCH] Fall back to name if skull has no uuid when getting player,
