@@ -1,0 +1,499 @@
+From 6e29c67f2629888397e541789b347778a95adcbc Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Fri, 9 Sep 2016 14:37:39 +0800
+Subject: [PATCH] Better align combustion with vanilla behaviour
+
+
+diff --git a/src/main/java/net/minecraft/server/Entity.java b/src/main/java/net/minecraft/server/Entity.java
+index a96db1a..2c4e1a4 100644
+--- a/src/main/java/net/minecraft/server/Entity.java
++++ b/src/main/java/net/minecraft/server/Entity.java
+@@ -588,344 +588,6 @@ public abstract class Entity implements ICommandListener, org.spigotmc.Optimized
+ 		return this.world.getCubes(this, axisalignedbb).isEmpty() && !this.world.containsLiquid(axisalignedbb);
+ 	}
+ 
+-	public void move_hose(double d0, double d1, double d2) { // Hose
+-		if (this.noclip) {
+-			this.a(this.getBoundingBox().c(d0, d1, d2));
+-			this.recalcPosition();
+-		} else {
+-			// CraftBukkit start - Don't do anything if we aren't moving
+-			// We need to do this regardless of whether or not we are moving
+-			// thanks to portals
+-			try {
+-				this.checkBlockCollisions();
+-			} catch (Throwable throwable) {
+-				CrashReport crashreport = CrashReport.a(throwable, "Checking entity block collision");
+-				CrashReportSystemDetails crashreportsystemdetails = crashreport.a("Entity being checked for collision");
+-
+-				this.appendEntityCrashDetails(crashreportsystemdetails);
+-				throw new ReportedException(crashreport);
+-			}
+-			// Check if we're moving
+-			if (d0 == 0 && d1 == 0 && d2 == 0 && this.isVehicle() && this.isPassenger()) {
+-				return;
+-			}
+-			// CraftBukkit end
+-			this.world.methodProfiler.a("move");
+-			double d3 = this.locX;
+-			double d4 = this.locY;
+-			double d5 = this.locZ;
+-
+-			if (this.E) {
+-				this.E = false;
+-				d0 *= 0.25D;
+-				d1 *= 0.05000000074505806D;
+-				d2 *= 0.25D;
+-				this.motX = 0.0D;
+-				this.motY = 0.0D;
+-				this.motZ = 0.0D;
+-			}
+-
+-			double d6 = d0;
+-			double d7 = d1;
+-			double d8 = d2;
+-			boolean flag = this.onGround && this.isSneaking() && this instanceof EntityHuman;
+-
+-			if (flag) {
+-				double d9;
+-
+-				for (d9 = 0.05D; d0 != 0.0D
+-						&& this.world.getCubes(this, this.getBoundingBox().c(d0, -1.0D, 0.0D)).isEmpty(); d6 = d0) {
+-					if (d0 < d9 && d0 >= -d9) {
+-						d0 = 0.0D;
+-					} else if (d0 > 0.0D) {
+-						d0 -= d9;
+-					} else {
+-						d0 += d9;
+-					}
+-				}
+-
+-				for (; d2 != 0.0D
+-						&& this.world.getCubes(this, this.getBoundingBox().c(0.0D, -1.0D, d2)).isEmpty(); d8 = d2) {
+-					if (d2 < d9 && d2 >= -d9) {
+-						d2 = 0.0D;
+-					} else if (d2 > 0.0D) {
+-						d2 -= d9;
+-					} else {
+-						d2 += d9;
+-					}
+-				}
+-
+-				for (; d0 != 0.0D && d2 != 0.0D
+-						&& this.world.getCubes(this, this.getBoundingBox().c(d0, -1.0D, d2)).isEmpty(); d8 = d2) {
+-					if (d0 < d9 && d0 >= -d9) {
+-						d0 = 0.0D;
+-					} else if (d0 > 0.0D) {
+-						d0 -= d9;
+-					} else {
+-						d0 += d9;
+-					}
+-
+-					d6 = d0;
+-					if (d2 < d9 && d2 >= -d9) {
+-						d2 = 0.0D;
+-					} else if (d2 > 0.0D) {
+-						d2 -= d9;
+-					} else {
+-						d2 += d9;
+-					}
+-				}
+-			}
+-
+-			List list = this.world.getCubes(this, this.getBoundingBox().a(d0, d1, d2));
+-			AxisAlignedBB axisalignedbb = this.getBoundingBox();
+-
+-			int j;
+-
+-			for (Object ab : list) {
+-				d1 = ((AxisAlignedBB) ab).b(this.getBoundingBox(), d1);
+-			}
+-
+-			this.a(this.getBoundingBox().c(0.0D, d1, 0.0D));
+-			boolean flag1 = this.onGround || d7 != d1 && d7 < 0.0D;
+-
+-			j = 0;
+-
+-			int k;
+-
+-			for (Object ab : list) {
+-				d0 = ((AxisAlignedBB) ab).a(this.getBoundingBox(), d0);
+-			}
+-
+-			this.a(this.getBoundingBox().c(d0, 0.0D, 0.0D));
+-			j = 0;
+-
+-			for (Object ab : list) {
+-				d2 = ((AxisAlignedBB) ab).c(this.getBoundingBox(), d2);
+-			}
+-
+-			this.a(this.getBoundingBox().c(0.0D, 0.0D, d2));
+-			double d10;
+-
+-			if (this.P > 0.0F && flag1 && (d6 != d0 || d8 != d2)) {
+-				double d11 = d0;
+-				double d12 = d1;
+-				double d13 = d2;
+-				AxisAlignedBB axisalignedbb1 = this.getBoundingBox();
+-
+-				this.a(axisalignedbb);
+-				d1 = this.P;
+-				List list1 = this.world.getCubes(this, this.getBoundingBox().a(d6, d1, d8));
+-				AxisAlignedBB axisalignedbb2 = this.getBoundingBox();
+-				AxisAlignedBB axisalignedbb3 = axisalignedbb2.a(d6, 0.0D, d8);
+-
+-				d10 = d1;
+-				for (Object ab : list1) {
+-					d10 = ((AxisAlignedBB) ab).b(axisalignedbb3, d10);
+-				}
+-
+-				axisalignedbb2 = axisalignedbb2.c(0.0D, d10, 0.0D);
+-				double d14 = d6;
+-				for (Object ab : list1) {
+-					d14 = ((AxisAlignedBB) ab).a(axisalignedbb2, d14);
+-				}
+-
+-				axisalignedbb2 = axisalignedbb2.c(d14, 0.0D, 0.0D);
+-				double d15 = d8;
+-				for (Object ab : list1) {
+-					d15 = ((AxisAlignedBB) ab).c(axisalignedbb2, d15);
+-				}
+-
+-				axisalignedbb2 = axisalignedbb2.c(0.0D, 0.0D, d15);
+-				AxisAlignedBB axisalignedbb4 = this.getBoundingBox();
+-				double d16 = d1;
+-				for (Object ab : list1) {
+-					d16 = ((AxisAlignedBB) ab).b(axisalignedbb4, d16);
+-				}
+-
+-				axisalignedbb4 = axisalignedbb4.c(0.0D, d16, 0.0D);
+-				double d17 = d6;
+-				for (Object ab : list1) {
+-					d17 = ((AxisAlignedBB) ab).a(axisalignedbb4, d17);
+-				}
+-
+-				axisalignedbb4 = axisalignedbb4.c(d17, 0.0D, 0.0D);
+-				double d18 = d8;
+-				for (Object ab : list1) {
+-					d18 = ((AxisAlignedBB) ab).c(axisalignedbb4, d18);
+-				}
+-
+-				axisalignedbb4 = axisalignedbb4.c(0.0D, 0.0D, d18);
+-				double d19 = d14 * d14 + d15 * d15;
+-				double d20 = d17 * d17 + d18 * d18;
+-
+-				if (d19 > d20) {
+-					d0 = d14;
+-					d2 = d15;
+-					d1 = -d10;
+-					this.a(axisalignedbb2);
+-				} else {
+-					d0 = d17;
+-					d2 = d18;
+-					d1 = -d16;
+-					this.a(axisalignedbb4);
+-				}
+-
+-				for (Object ab : list1) {
+-					d1 = ((AxisAlignedBB) ab).b(this.getBoundingBox(), d1);
+-				}
+-
+-				this.a(this.getBoundingBox().c(0.0D, d1, 0.0D));
+-				if (d11 * d11 + d13 * d13 >= d0 * d0 + d2 * d2) {
+-					d0 = d11;
+-					d1 = d12;
+-					d2 = d13;
+-					this.a(axisalignedbb1);
+-				}
+-			}
+-
+-			this.world.methodProfiler.b();
+-			this.world.methodProfiler.a("rest");
+-			this.recalcPosition();
+-			this.positionChanged = d6 != d0 || d8 != d2;
+-			this.B = d7 != d1;
+-			this.onGround = this.B && d7 < 0.0D;
+-			this.C = this.positionChanged || this.B;
+-			j = MathHelper.floor(this.locX);
+-			k = MathHelper.floor(this.locY - 0.20000000298023224D);
+-			int j4 = MathHelper.floor(this.locZ);
+-			BlockPosition blockposition = new BlockPosition(j, k, j4);
+-			IBlockData iblockdata = this.world.getType(blockposition);
+-
+-			if (iblockdata.getMaterial() == Material.AIR) {
+-				BlockPosition blockposition1 = blockposition.down();
+-				IBlockData iblockdata1 = this.world.getType(blockposition1);
+-				Block block = iblockdata1.getBlock();
+-
+-				if (block instanceof BlockFence || block instanceof BlockCobbleWall
+-						|| block instanceof BlockFenceGate) {
+-					iblockdata = iblockdata1;
+-					blockposition = blockposition1;
+-				}
+-			}
+-
+-			this.a(d1, this.onGround, iblockdata, blockposition);
+-			if (d6 != d0) {
+-				this.motX = 0.0D;
+-			}
+-
+-			if (d8 != d2) {
+-				this.motZ = 0.0D;
+-			}
+-
+-			Block block1 = iblockdata.getBlock();
+-
+-			if (d7 != d1) {
+-				block1.a(this.world, this);
+-			}
+-
+-			// CraftBukkit start
+-			if (positionChanged && getBukkitEntity() instanceof Vehicle) {
+-				Vehicle vehicle = (Vehicle) this.getBukkitEntity();
+-				org.bukkit.block.Block bl = this.world.getWorld().getBlockAt(MathHelper.floor(this.locX),
+-						MathHelper.floor(this.locY), MathHelper.floor(this.locZ));
+-
+-				if (d6 > d0) {
+-					bl = bl.getRelative(BlockFace.EAST);
+-				} else if (d6 < d0) {
+-					bl = bl.getRelative(BlockFace.WEST);
+-				} else if (d8 > d2) {
+-					bl = bl.getRelative(BlockFace.SOUTH);
+-				} else if (d8 < d2) {
+-					bl = bl.getRelative(BlockFace.NORTH);
+-				}
+-
+-				VehicleBlockCollisionEvent event = new VehicleBlockCollisionEvent(vehicle, bl);
+-				world.getServer().getPluginManager().callEvent(event);
+-			}
+-			// CraftBukkit end
+-
+-			if (this.playStepSound() && !flag && !this.isPassenger()) {
+-				double d21 = this.locX - d3;
+-				double d22 = this.locY - d4;
+-
+-				d10 = this.locZ - d5;
+-				if (block1 != Blocks.LADDER) {
+-					d22 = 0.0D;
+-				}
+-
+-				if (block1 != null && this.onGround) {
+-					// block1.stepOn(this.world, blockposition, this); //
+-					// CraftBukkit moved down
+-				}
+-
+-				this.J = (float) (this.J + MathHelper.sqrt(d21 * d21 + d10 * d10) * 0.6D);
+-				this.K = (float) (this.K + MathHelper.sqrt(d21 * d21 + d22 * d22 + d10 * d10) * 0.6D);
+-				if (this.K > this.aw && iblockdata.getMaterial() != Material.AIR) {
+-					this.aw = (int) this.K + 1;
+-					if (this.isInWater()) {
+-						float f = MathHelper.sqrt(this.motX * this.motX * 0.20000000298023224D + this.motY * this.motY
+-								+ this.motZ * this.motZ * 0.20000000298023224D) * 0.35F;
+-
+-						if (f > 1.0F) {
+-							f = 1.0F;
+-						}
+-
+-						this.a(this.aa(), f, 1.0F + (this.random.nextFloat() - this.random.nextFloat()) * 0.4F);
+-					}
+-
+-					this.a(blockposition, block1);
+-					block1.stepOn(this.world, blockposition, this); // CraftBukkit
+-																	// moved
+-																	// from
+-																	// above
+-				}
+-			}
+-
+-			// Hose start
+-			boolean flag2 = this.ah(); // Torch - fix method name
+-
+-			if (this.world.f(this.getBoundingBox().shrink(0.001D))) {
+-				this.burn(1);
+-				if (!flag2) {
+-					++this.fireTicks;
+-					// CraftBukkit start - Not on fire yet
+-					if (this.fireTicks <= 0 && !this.isInWater()) { // Only
+-																	// throw
+-																	// events on
+-																	// the first
+-																	// combust,
+-																	// otherwise
+-																	// it spams
+-																	// // Torch
+-																	// - do not
+-																	// fire
+-																	// entity if
+-																	// it is in
+-																	// water
+-						EntityCombustEvent event = new org.bukkit.event.entity.EntityCombustByBlockEvent(null,
+-								getBukkitEntity(), 8);
+-						world.getServer().getPluginManager().callEvent(event);
+-
+-						if (!event.isCancelled()) {
+-							this.setOnFire(event.getDuration());
+-						}
+-					} else {
+-						// CraftBukkit end
+-						this.setOnFire(8);
+-					}
+-				}
+-			} else if (this.fireTicks <= 0) {
+-				this.fireTicks = -this.maxFireTicks;
+-			}
+-
+-			if (flag2 && this.fireTicks > 0) {
+-				this.a(SoundEffects.bG, 0.7F, 1.6F + (this.random.nextFloat() - this.random.nextFloat()) * 0.4F);
+-				this.fireTicks = -this.maxFireTicks;
+-			}
+-
+-			this.world.methodProfiler.b();
+-		}
+-	}
+ 
+ 	public void move(double d0, double d1, double d2) {
+ 		if (this.noclip) {
+@@ -1228,22 +890,9 @@ public abstract class Entity implements ICommandListener, org.spigotmc.Optimized
+ 				this.burn(1);
+ 				if (!flag2) {
+ 					++this.fireTicks;
+-					// CraftBukkit start - Not on fire yet
+-					if (this.fireTicks <= 0 && !this.isInWater()) { // Only
+-																	// throw
+-																	// events on
+-																	// the first
+-																	// combust,
+-																	// otherwise
+-																	// it spams
+-																	// // Torch
+-																	// - do not
+-																	// fire
+-																	// entity if
+-																	// it is in
+-																	// water
+-						EntityCombustEvent event = new org.bukkit.event.entity.EntityCombustByBlockEvent(null,
+-								getBukkitEntity(), 8); // Torch - SPIGOT-2405
++					if (this.fireTicks == 0 && !this.isInWater()) { // Only throw events on the first combust, otherwise it spams // Torch
++						// CraftBukkit start
++						EntityCombustEvent event = new org.bukkit.event.entity.EntityCombustByBlockEvent(null, getBukkitEntity(), 8); // Torch - SPIGOT-2405
+ 						world.getServer().getPluginManager().callEvent(event);
+ 
+ 						if (!event.isCancelled()) {
+@@ -3275,7 +2924,7 @@ public abstract class Entity implements ICommandListener, org.spigotmc.Optimized
+ 
+ 		@Override
+ 		protected void compute() {
+-			move_hose(d0, d1, d2);
++			move(d0, d1, d2);
+ 		}
+ 
+ 	}
+diff --git a/src/main/java/org/bukkit/craftbukkit/util/LazyHashSet.java b/src/main/java/org/bukkit/craftbukkit/util/LazyHashSet.java
+index e2a9643..8bb7c9f 100644
+--- a/src/main/java/org/bukkit/craftbukkit/util/LazyHashSet.java
++++ b/src/main/java/org/bukkit/craftbukkit/util/LazyHashSet.java
+@@ -1,10 +1,10 @@
+-package org.bukkit.craftbukkit.util;
+-
+-import java.util.Collection;
+-import java.util.Iterator;
+-import java.util.Set;
+-
+-public abstract class LazyHashSet<E> implements Set<E> {
++package org.bukkit.craftbukkit.util;
++
++import java.util.Collection;
++import java.util.Iterator;
++import java.util.Set;
++
++public abstract class LazyHashSet<E> implements Set<E> {
+ 	Set<E> reference = null;
+ 
+ 	@Override
+@@ -107,4 +107,4 @@ public abstract class LazyHashSet<E> implements Set<E> {
+ 	public String toString() {
+ 		return getReference().toString();
+ 	}
+-}
++}
+diff --git a/src/main/java/org/bukkit/craftbukkit/util/permissions/CommandPermissions.java b/src/main/java/org/bukkit/craftbukkit/util/permissions/CommandPermissions.java
+index 1d1a790..7bda02e 100644
+--- a/src/main/java/org/bukkit/craftbukkit/util/permissions/CommandPermissions.java
++++ b/src/main/java/org/bukkit/craftbukkit/util/permissions/CommandPermissions.java
+@@ -1,20 +1,20 @@
+-package org.bukkit.craftbukkit.util.permissions;
+-
+-import org.bukkit.permissions.Permission;
+-import org.bukkit.permissions.PermissionDefault;
+-import org.bukkit.util.permissions.DefaultPermissions;
+-
+-public final class CommandPermissions {
++package org.bukkit.craftbukkit.util.permissions;
++
++import org.bukkit.permissions.Permission;
++import org.bukkit.permissions.PermissionDefault;
++import org.bukkit.util.permissions.DefaultPermissions;
++
++public final class CommandPermissions {
+ 	private static final String ROOT = "minecraft.command";
+ 	private static final String PREFIX = ROOT + ".";
+-
++
+ 	private CommandPermissions() {
+ 	}
+-
++
+ 	public static Permission registerPermissions(Permission parent) {
+ 		Permission commands = DefaultPermissions.registerPermission(ROOT,
+ 				"Gives the user the ability to use all vanilla minecraft commands", parent);
+-
++
+ 		DefaultPermissions.registerPermission(PREFIX + "kill", "Allows the user to commit suicide",
+ 				PermissionDefault.OP, commands);
+ 		DefaultPermissions.registerPermission(PREFIX + "me", "Allows the user to perform a chat action",
+@@ -50,8 +50,8 @@ public final class CommandPermissions {
+ 				commands);
+ 		DefaultPermissions.registerPermission(PREFIX + "trigger", "Allows the use of the trigger command",
+ 				PermissionDefault.TRUE, commands);
+-
++
+ 		commands.recalculatePermissibles();
+ 		return commands;
+ 	}
+-}
++}
+diff --git a/src/main/java/org/bukkit/craftbukkit/util/permissions/CraftDefaultPermissions.java b/src/main/java/org/bukkit/craftbukkit/util/permissions/CraftDefaultPermissions.java
+index f4645c2..fec145d 100644
+--- a/src/main/java/org/bukkit/craftbukkit/util/permissions/CraftDefaultPermissions.java
++++ b/src/main/java/org/bukkit/craftbukkit/util/permissions/CraftDefaultPermissions.java
+@@ -1,18 +1,18 @@
+-package org.bukkit.craftbukkit.util.permissions;
+-
+-import org.bukkit.permissions.Permission;
+-import org.bukkit.util.permissions.DefaultPermissions;
+-
+-public final class CraftDefaultPermissions {
++package org.bukkit.craftbukkit.util.permissions;
++
++import org.bukkit.permissions.Permission;
++import org.bukkit.util.permissions.DefaultPermissions;
++
++public final class CraftDefaultPermissions {
+ 	private static final String ROOT = "minecraft";
+-
++
+ 	private CraftDefaultPermissions() {
+ 	}
+-
++
+ 	public static void registerCorePermissions() {
+ 		Permission parent = DefaultPermissions.registerPermission(ROOT,
+ 				"Gives the user the ability to use all vanilla utilities and commands");
+ 		CommandPermissions.registerPermissions(parent);
+ 		parent.recalculatePermissibles();
+ 	}
+-}
++}
+-- 
+2.8.2.windows.1
+
