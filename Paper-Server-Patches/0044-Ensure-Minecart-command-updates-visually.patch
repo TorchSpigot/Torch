@@ -1,4 +1,4 @@
-From 35c102f2345f7be4d9f3a6874f4deccedb1c65b1 Mon Sep 17 00:00:00 2001
+From cbe4fffaf355e94e594f72713d8516c824967fd9 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 13:57:22 +0800
 Subject: [PATCH] Ensure Minecart command updates visually

@@ -1,4 +1,4 @@
-From 0be937653d7c6f0f8ac5b8e4e4295aae8664631b Mon Sep 17 00:00:00 2001
+From 34bd658fe1aa42555dc32d8c707cf163d69ff255 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 09:33:19 +0800
 Subject: [PATCH] Use die() to set entity remove status

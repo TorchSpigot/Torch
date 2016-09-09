@@ -1,4 +1,4 @@
-From e2612d3b7fd25a641f5df7ad136fec44090180f7 Mon Sep 17 00:00:00 2001
+From 63c32335ac4cc1dc68a9e93b223198d7acfe1d23 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:58:00 +0800
 Subject: [PATCH] Improve DoubleChest semantics

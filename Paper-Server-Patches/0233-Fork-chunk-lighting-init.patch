@@ -1,4 +1,4 @@
-From 71b0e833a5752f1edc3b2fcf2ccd0e9d09c5cc8d Mon Sep 17 00:00:00 2001
+From aab37cd49aa2eecac0adc57dbf073986e95d6e42 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 21 Aug 2016 08:06:36 +0800
 Subject: [PATCH] Fork chunk lighting init

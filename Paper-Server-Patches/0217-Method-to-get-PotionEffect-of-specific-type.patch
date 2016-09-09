@@ -1,4 +1,4 @@
-From 4418f1975248a1a634a5feaebdf65dc9b712ec48 Mon Sep 17 00:00:00 2001
+From b6cbec927423ba1e444baf8b55e13c91e53371e3 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 7 Aug 2016 15:24:49 +0800
 Subject: [PATCH] Method to get PotionEffect of specific type.

@@ -1,4 +1,4 @@
-From fdb5a8a14917bf97dac7fc146793fc09fd1e0e72 Mon Sep 17 00:00:00 2001
+From 96ee912e197be5f932cf3e713b991e3b6129d9d4 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 9 Sep 2016 14:37:39 +0800
 Subject: [PATCH] Better align combustion with vanilla behaviour

@@ -1,4 +1,4 @@
-From b05db3c474062334155f86fd8814242ab8280c9c Mon Sep 17 00:00:00 2001
+From 49b85ef3ccbb7714de92c12c9e83de5443123fce Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:19:03 +0800
 Subject: [PATCH] Fix decompilation errors

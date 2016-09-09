@@ -1,4 +1,4 @@
-From ce230b0acb69fd02401adec56bca66b5c26c0bca Mon Sep 17 00:00:00 2001
+From 6ecee2a5aa645a93582a0b57e2507d7efb5e6656 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 19:31:34 +0800
 Subject: [PATCH] Optimize DataPalleteBlock and getType

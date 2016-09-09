@@ -1,4 +1,4 @@
-From 2997602f3d7b6782b6336b1ed632f17fd61d37e0 Mon Sep 17 00:00:00 2001
+From 2673e09204e77b0e7904ac797597fe4429adfaf5 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 9 Sep 2016 14:06:52 +0800
 Subject: [PATCH] Fix an AIOOBE in inventory handling
