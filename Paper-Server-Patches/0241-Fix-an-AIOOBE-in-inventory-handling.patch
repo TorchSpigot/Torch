@@ -1,9 +1,27 @@
-From e173230b6ddd99cf34a7ab39bd194b2ea87afda6 Mon Sep 17 00:00:00 2001
+From 64a7a8106ed7361752f5ad9cf259b04502274ea9 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 9 Sep 2016 14:06:52 +0800
 Subject: [PATCH] Fix an AIOOBE in inventory handling
 
 
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index b26a2dd..7557aef 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -387,6 +387,13 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+ 		this.v.setPlayerFileData(this.worldServer);
+ 		this.a(this.getDifficulty());
+ 		this.l();
++		
++        // Paper start - Handle collideRule team for player collision toggle
++        if (!com.destroystokyo.paper.PaperConfig.enablePlayerCollisions) {
++            this.getPlayerList().collideRuleTeamName = org.apache.commons.lang3.StringUtils.left("collideRule_" + this.getWorld().random.nextInt(), 16);
++            this.getWorld().getScoreboard().createTeam(this.getPlayerList().collideRuleTeamName);
++        }
++        // Paper end
+ 	}
+ 
+ 	protected void l() {
 diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
 index 9eb4638..1836478 100644
 --- a/src/main/java/net/minecraft/server/PlayerConnection.java
@@ -17,6 +35,75 @@ index 9eb4638..1836478 100644
  							action = InventoryAction.NOTHING;
  						} else {
  							Slot slot = this.player.activeContainer.getSlot(packetplayinwindowclick.b());
+diff --git a/src/main/java/net/minecraft/server/PlayerList.java b/src/main/java/net/minecraft/server/PlayerList.java
+index bcfe644..bbe2513 100644
+--- a/src/main/java/net/minecraft/server/PlayerList.java
++++ b/src/main/java/net/minecraft/server/PlayerList.java
+@@ -50,13 +50,7 @@ public abstract class PlayerList {
+ 	private static final Logger f = LogManager.getLogger();
+ 	private static final SimpleDateFormat g = new SimpleDateFormat("yyyy-MM-dd \'at\' HH:mm:ss z");
+ 	private final MinecraftServer server;
+-	public final List<EntityPlayer> players = new org.torch.util.ConcurrentIterableArrayList(); // CraftBukkit
+-																								// -
+-																								// ArrayList
+-																								// ->
+-																								// CopyOnWriteArrayList:
+-																								// Iterator
+-																								// safety
++	public final List<EntityPlayer> players = new org.torch.util.ConcurrentIterableArrayList(); // Torch - CopyOnWriteArrayList -> ConcurrentIterableArrayList
+ 	private final Map<UUID, EntityPlayer> j = Maps.newHashMap();
+ 	// private final Map<UUID, EntityPlayer> j = new ConcurrentHashMap();
+ 	private final GameProfileBanList k;
+@@ -75,6 +69,7 @@ public abstract class PlayerList {
+ 	// CraftBukkit start
+ 	private CraftServer cserver;
+ 	private final Map<String, EntityPlayer> playersByName = new org.spigotmc.CaseInsensitiveMap<EntityPlayer>();
++	@Nullable String collideRuleTeamName; // Paper - Team name used for collideRule
+ 
+ 	public PlayerList(MinecraftServer minecraftserver) {
+ 		this.cserver = minecraftserver.server = new CraftServer(minecraftserver, this);
+@@ -280,6 +275,11 @@ public abstract class PlayerList {
+ 		}
+ 
+ 		entityplayer.syncInventory();
++        // Paper start - Add to collideRule team if needed
++        if (this.collideRuleTeamName != null) {
++            this.server.getWorld().getScoreboard().addPlayerToTeam(entityplayer.getName(), collideRuleTeamName);
++        }
++        // Paper end
+ 		// CraftBukkit - Moved from above, added world
+ 		PlayerList.f.info(entityplayer.getName() + "[" + s1 + "] logged in with entity id " + entityplayer.getId()
+ 				+ " at ([" + entityplayer.world.worldData.getName() + "] " + String.format("%.1f", entityplayer.locX)
+@@ -481,6 +481,14 @@ public abstract class PlayerList {
+ 		// CraftBukkit end
+ 
+ 		entityplayer.k_();// SPIGOT-924 // PAIL: rename - playerTick
++		
++        // Paper start - Remove from collideRule team if needed
++        if (this.collideRuleTeamName != null) {
++            Scoreboard scoreBoard = this.server.getWorld().getScoreboard();
++            ScoreboardTeam team = scoreBoard.getTeam(this.collideRuleTeamName);
++            if (team != null) scoreBoard.removePlayerFromTeam(entityplayer.getName(), team);
++        }
++        // Paper end
+ 
+ 		this.savePlayerFile(entityplayer);
+ 		if (entityplayer.isPassenger()) {
+@@ -1435,6 +1443,14 @@ public abstract class PlayerList {
+ 			player.playerConnection.disconnect(this.server.server.getShutdownMessage()); // CraftBukkit - add custom shutdown message
+ 		}
+ 		// Paper end
++		
++        // Paper start - Remove collideRule team if it exists
++        if (this.collideRuleTeamName != null) {
++            Scoreboard scoreboard = this.getServer().getWorld().getScoreboard();
++            ScoreboardTeam team = scoreboard.getTeam(this.collideRuleTeamName);
++            if (team != null) scoreboard.removeTeam(team);
++        }
++        // Paper end
+ 	}
+ 
+ 	// CraftBukkit start
 -- 
 2.8.2.windows.1
 
