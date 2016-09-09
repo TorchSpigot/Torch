@@ -1,0 +1,134 @@
+From 60a53ec8ae2cfe21092293a73b4dd6ddc54747a4 Mon Sep 17 00:00:00 2001
+From: SotrForgotten <i@omc.hk>
+Date: Fri, 9 Sep 2016 14:24:24 +0800
+Subject: [PATCH] Added source to PlayerExpChangeEvent
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityExperienceOrb.java b/src/main/java/net/minecraft/server/EntityExperienceOrb.java
+index 8bdc131..cdbb07d 100644
+--- a/src/main/java/net/minecraft/server/EntityExperienceOrb.java
++++ b/src/main/java/net/minecraft/server/EntityExperienceOrb.java
+@@ -202,7 +202,7 @@ public class EntityExperienceOrb extends Entity {
+ 				}
+ 
+ 				if (this.value > 0) {
+-					 	entityhuman.giveExp(CraftEventFactory.callPlayerExpChangeEvent(entityhuman, this.value).getAmount()); // CraftBukkit - this.value -> event.getAmount()
++					entityhuman.giveExp(CraftEventFactory.callPlayerExpChangeEvent(entityhuman, this).getAmount()); // CraftBukkit - this.value -> event.getAmount() // Paper - supply experience orb object
+ 				}
+ 					 
+ 				this.die();
+diff --git a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
+index cfa302d..be20864 100644
+--- a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
++++ b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
+@@ -30,6 +30,7 @@ import org.bukkit.entity.AreaEffectCloud;
+ import org.bukkit.entity.Arrow;
+ import org.bukkit.entity.Creeper;
+ import org.bukkit.entity.EntityType;
++import org.bukkit.entity.ExperienceOrb;
+ import org.bukkit.entity.Firework;
+ import org.bukkit.entity.Horse;
+ import org.bukkit.entity.LightningStrike;
+@@ -121,6 +122,7 @@ import net.minecraft.server.EntityDamageSource;
+ import net.minecraft.server.EntityDamageSourceIndirect;
+ import net.minecraft.server.EntityEnderCrystal;
+ import net.minecraft.server.EntityEnderDragon;
++import net.minecraft.server.EntityExperienceOrb;
+ import net.minecraft.server.EntityFireworks;
+ import net.minecraft.server.EntityHuman;
+ import net.minecraft.server.EntityInsentient;
+@@ -755,12 +757,16 @@ public class CraftEventFactory {
+ 		return event;
+ 	}
+ 
+-	public static PlayerExpChangeEvent callPlayerExpChangeEvent(EntityHuman entity, int expAmount) {
++	// Paper start
++	public static PlayerExpChangeEvent callPlayerExpChangeEvent(EntityHuman entity, EntityExperienceOrb entityOrb) {
+ 		Player player = (Player) entity.getBukkitEntity();
+-		PlayerExpChangeEvent event = new PlayerExpChangeEvent(player, expAmount);
++		ExperienceOrb source = (ExperienceOrb) entityOrb.getBukkitEntity();
++		int expAmount = source.getExperience();
++		PlayerExpChangeEvent event = new PlayerExpChangeEvent(player, source, expAmount);
+ 		Bukkit.getPluginManager().callEvent(event);
+ 		return event;
+ 	}
++	// Paper end
+ 
+ 	public static boolean handleBlockGrowEvent(World world, int x, int y, int z, net.minecraft.server.Block type,
+ 			int data) {
+diff --git a/src/main/java/org/bukkit/event/player/PlayerExpChangeEvent.java b/src/main/java/org/bukkit/event/player/PlayerExpChangeEvent.java
+new file mode 100644
+index 0000000..500f19a
+--- /dev/null
++++ b/src/main/java/org/bukkit/event/player/PlayerExpChangeEvent.java
+@@ -0,0 +1,67 @@
++package org.bukkit.event.player;
++
++import org.bukkit.entity.Entity; // Paper
++import org.bukkit.entity.Player;
++import org.bukkit.event.HandlerList;
++
++/**
++ * Called when a players experience changes naturally
++ */
++public class PlayerExpChangeEvent extends PlayerEvent {
++    private static final HandlerList handlers = new HandlerList();
++    // Paper start
++    private Entity source;
++    private int exp;
++
++    public PlayerExpChangeEvent(final Player player, final int expAmount) {
++    	this(player, null, expAmount);
++    }
++
++	public PlayerExpChangeEvent(final Player player, final Entity sourceEntity, final int expAmount) {
++         super(player);
++         source = sourceEntity;
++         exp = expAmount;
++    }
++	
++	/**
++     * Get the source that provided the experience.
++     *
++     * Be aware that this may be null depending on
++     * how the event was constructed, so it is
++     * advised to check if this is null before
++     * doing anything with it.
++     *
++     * @return The source of the experience
++     */
++	public Entity getSource() {
++        return source;
++	}
++	// Paper end
++
++    /**
++     * Get the amount of experience the player will receive
++     *
++     * @return The amount of experience
++     */
++    public int getAmount() {
++        return exp;
++    }
++
++    /**
++     * Set the amount of experience the player will receive
++     *
++     * @param amount The amount of experience to set
++     */
++    public void setAmount(int amount) {
++        exp = amount;
++    }
++
++    @Override
++    public HandlerList getHandlers() {
++        return handlers;
++    }
++
++    public static HandlerList getHandlerList() {
++        return handlers;
++    }
++}
+-- 
+2.8.2.windows.1
+
