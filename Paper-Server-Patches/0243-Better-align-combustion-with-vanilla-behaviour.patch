@@ -1,4 +1,4 @@
-From b845a07956afc2f18b8e88c6c8689f24396305f1 Mon Sep 17 00:00:00 2001
+From fdb5a8a14917bf97dac7fc146793fc09fd1e0e72 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 9 Sep 2016 14:37:39 +0800
 Subject: [PATCH] Better align combustion with vanilla behaviour
@@ -17,6 +17,26 @@ index 027fe68..31c3915 100644
              <scope>test</scope>
          </dependency>
      </dependencies>
+diff --git a/src/main/java/de/minetick/MigotConfig.java b/src/main/java/de/minetick/MigotConfig.java
+index 5a76adc..cb0d64d 100644
+--- a/src/main/java/de/minetick/MigotConfig.java
++++ b/src/main/java/de/minetick/MigotConfig.java
+@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
+ import org.bukkit.configuration.InvalidConfigurationException;
+ import org.bukkit.configuration.file.FileConfiguration;
+ import org.bukkit.configuration.file.YamlConfiguration;
++import org.spigotmc.SpigotWorldConfig;
+ 
+ import com.google.common.base.Charsets;
+ 
+@@ -51,6 +52,7 @@ public class MigotConfig {
+ 		bungeeForwardingCompatible = configuration.getBoolean("settings.bungee-redirect-compatible", false);
+ 		deleteCorruptChunk = configuration.getBoolean("settings.delete-corrupt-chunk", false);
+ 		enableVelocityWarning = configuration.getBoolean("settings.enable-velocity-warn", true);
++		SpigotWorldConfig.worldtickentitypool_core_multiple = configuration.getInt("settings.wetp-core-multiple", 2); // Hose
+ 		// World settings
+ 		disableSleepChecking = configuration.getBoolean("world-settings.disable-sleep-checking", false);
+ 		disableSpawnerModify = configuration.getBoolean("world-settings.disable-mob-spanwer-modify", false);
 diff --git a/src/main/java/net/minecraft/server/Entity.java b/src/main/java/net/minecraft/server/Entity.java
 index a96db1a..2c4e1a4 100644
 --- a/src/main/java/net/minecraft/server/Entity.java
@@ -1137,6 +1157,36 @@ index f4645c2..fec145d 100644
  	}
 -}
 +}
+diff --git a/src/main/java/org/spigotmc/SpigotWorldConfig.java b/src/main/java/org/spigotmc/SpigotWorldConfig.java
+index 4de93ce..f8694b9 100644
+--- a/src/main/java/org/spigotmc/SpigotWorldConfig.java
++++ b/src/main/java/org/spigotmc/SpigotWorldConfig.java
+@@ -52,11 +52,11 @@ public class SpigotWorldConfig {
+     };
+     
+     public static int getthreadnumber() {
+-        return cpu_core*worldtickentitypool_core_multiple;
++        return cpu_core * worldtickentitypool_core_multiple;
+     }
+     
+     private void wetp_core_multiple() {
+-        worldtickentitypool_core_multiple = getInt("wetp-core-multiple", 2);
++        // worldtickentitypool_core_multiple = getInt("wetp-core-multiple", 2);
+         
+         TickPool = new ForkJoinPool(getthreadnumber(), ftp, null, false);
+         ChunkPool = new ForkJoinPool(getthreadnumber(), fcp, null, false);
+diff --git a/src/main/resources/configurations/migot.yml b/src/main/resources/configurations/migot.yml
+index 6ed9e33..8969bd9 100644
+--- a/src/main/resources/configurations/migot.yml
++++ b/src/main/resources/configurations/migot.yml
+@@ -4,6 +4,7 @@
+ # ( GH: https://github.com/Poweruser/Migot )
+ 
+ settings:
++  wetp-core-multiple: 2
+   auto-save: false
+   fork-ping: false
+   bungee-redirect-compatible: false
 -- 
 2.8.2.windows.1
 
