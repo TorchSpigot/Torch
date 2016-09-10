@@ -1,4 +1,4 @@
-From 5bdb3b7de7fc7951f038241189680fe28ed50f74 Mon Sep 17 00:00:00 2001
+From 6388e72541f0c7d9c380fba5a97bf98744048b9d Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 7 Aug 2016 03:03:06 +0800
 Subject: [PATCH] Add new FishSpecies. Fixes BUKKIT-5097

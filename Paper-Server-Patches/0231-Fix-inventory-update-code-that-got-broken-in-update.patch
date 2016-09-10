@@ -1,4 +1,4 @@
-From 835532ea00c2d6c84a0d7945cbf837bea3d098c9 Mon Sep 17 00:00:00 2001
+From cb6e613f414a4d56fbe81a255707ab60a85a9529 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 15 Aug 2016 22:44:42 +0800
 Subject: [PATCH] Fix inventory update code that got broken in update
@@ -939,7 +939,7 @@ index 6abee8f..55d401d 100644
  	// CraftBukkit end
  
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 7fd311c..d6638b6 100644
+index 7fd311c..2f9888f 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
 @@ -123,7 +123,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs

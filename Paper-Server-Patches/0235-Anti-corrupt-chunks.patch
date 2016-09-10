@@ -1,11 +1,11 @@
-From f0447129486c80b0324bff6907335931bc51167a Mon Sep 17 00:00:00 2001
+From 0184d8e6dac1fe19cbf2621c15cf403a3f43a677 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Wed, 24 Aug 2016 13:15:14 +0800
 Subject: [PATCH] Anti corrupt chunks
 
 
 diff --git a/src/main/java/com/destroystokyo/paper/PaperWorldConfig.java b/src/main/java/com/destroystokyo/paper/PaperWorldConfig.java
-index 6713f74..c9bc5ab 100644
+index 131f3b6..cfda2e2 100644
 --- a/src/main/java/com/destroystokyo/paper/PaperWorldConfig.java
 +++ b/src/main/java/com/destroystokyo/paper/PaperWorldConfig.java
 @@ -452,41 +452,26 @@ public class PaperWorldConfig {
@@ -47,7 +47,7 @@ index 6713f74..c9bc5ab 100644
 -				+ ")");
 -		antiXrayInstance = new AntiXray(this);
 -	}
-+    public boolean asynchronous = false;
++    public boolean asynchronous;
 +    public int engineMode;
 +    public int neighborsMode;
 +    public int maxChunkY;
@@ -55,7 +55,7 @@ index 6713f74..c9bc5ab 100644
 +    public List<Object> replaceBlocks;
 +    private void antiXray() {
 +        antiXray = getBoolean("anti-xray.enabled", false);
-+        // asynchronous = getBoolean("anti-xray.asynchronous", false);
++        asynchronous = getBoolean("anti-xray.asynchronous", false);
 +        engineMode = getInt("anti-xray.engine-mode", 3);
 +        neighborsMode = getInt("anti-xray.neighbors-mode", 1);
 +        maxChunkY = getInt("anti-xray.max-chunk-y", 3);

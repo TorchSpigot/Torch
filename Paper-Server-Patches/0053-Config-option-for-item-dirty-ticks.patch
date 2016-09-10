@@ -1,4 +1,4 @@
-From e59de51495ecf4de04ff772be0284b8052d714c1 Mon Sep 17 00:00:00 2001
+From 814bb20db01dc7b4a1feddf08b33677686d3265b Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 18:10:53 +0800
 Subject: [PATCH] Config option for item dirty ticks

@@ -1,4 +1,4 @@
-From fe21318aa09a7e30ad3a15730e41a12e0df3eccf Mon Sep 17 00:00:00 2001
+From a2a68a792a9754503c22d65519fa17ef760ad64a Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:35:17 +0800
 Subject: [PATCH] Update inventory if required on PlayerItemDamageEvent

@@ -1,4 +1,4 @@
-From d866b6ce34b0ff90e771aa83cfec34efde8e9c25 Mon Sep 17 00:00:00 2001
+From f2ad724158f4b9991c52ee778fd8e4ae3dd57265 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 13:54:26 +0800
 Subject: [PATCH] Allow teleporting disconnected players

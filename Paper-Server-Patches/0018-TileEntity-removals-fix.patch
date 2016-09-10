@@ -1,4 +1,4 @@
-From c3f27970a0490fe79bc99e437c819dca14b4117c Mon Sep 17 00:00:00 2001
+From 78acf348c1ce7b63a86034aa6be36f1f469c1daa Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 1 Jul 2016 15:28:00 +0800
 Subject: [PATCH] TileEntity removals fix

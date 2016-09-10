@@ -1,4 +1,4 @@
-From 98b91848a50aae0078335dc71ad4b3a2f6ac780d Mon Sep 17 00:00:00 2001
+From f564c247d5171d21e434b2bbc796e4b4daecab8a Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 26 Aug 2016 11:57:45 +0800
 Subject: [PATCH] Better thread safety
@@ -30,7 +30,7 @@ index 4b06fef..49e93e7 100644
  		this.world.methodProfiler.a("mob tick");
  		this.M();
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index d6638b6..4352e0e 100644
+index 2f9888f..b706aad 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
 @@ -1051,10 +1051,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs

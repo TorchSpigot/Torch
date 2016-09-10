@@ -1,4 +1,4 @@
-From 6d78992a00fab42021ac7c8b9fd73a957fb54677 Mon Sep 17 00:00:00 2001
+From fe09b941971110fc191e528baf663cf8148046de Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:28:10 +0800
 Subject: [PATCH] Remove period from default quit message

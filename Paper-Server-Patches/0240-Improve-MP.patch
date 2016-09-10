@@ -1,11 +1,11 @@
-From 1140447469652878b2a22fcb7e98c022581cce4d Mon Sep 17 00:00:00 2001
+From 05c544085ed15b89de6bbf501402c872af9cf3f0 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 2 Sep 2016 21:08:04 +0800
 Subject: [PATCH] Improve MP
 
 
 diff --git a/src/main/java/com/destroystokyo/paper/PaperWorldConfig.java b/src/main/java/com/destroystokyo/paper/PaperWorldConfig.java
-index c9bc5ab..9882a8f 100644
+index cfda2e2..5c63e6d 100644
 --- a/src/main/java/com/destroystokyo/paper/PaperWorldConfig.java
 +++ b/src/main/java/com/destroystokyo/paper/PaperWorldConfig.java
 @@ -7,8 +7,6 @@ import org.bukkit.Bukkit;
@@ -1470,7 +1470,7 @@ index c3ec7fe..16326a3 100644
  import java.util.Set;
  
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index b260010..b26a2dd 100644
+index 3415362..c6bd62d 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
 @@ -1045,7 +1045,8 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs

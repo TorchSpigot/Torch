@@ -1,11 +1,11 @@
-From 2673e09204e77b0e7904ac797597fe4429adfaf5 Mon Sep 17 00:00:00 2001
+From e354035ca67c2eab9685edc9403961bc9a304f13 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 9 Sep 2016 14:06:52 +0800
 Subject: [PATCH] Fix an AIOOBE in inventory handling
 
 
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index b26a2dd..7557aef 100644
+index c6bd62d..18ea2ed 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
 @@ -387,6 +387,13 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs

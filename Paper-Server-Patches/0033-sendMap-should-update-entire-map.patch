@@ -1,4 +1,4 @@
-From 3fa5ebf0b84a3d330f3be70ad36e28c2e513aa9c Mon Sep 17 00:00:00 2001
+From cf5aadb056c2c74161ece7d0a096607d9533590e Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 08:07:24 +0800
 Subject: [PATCH] sendMap should update entire map

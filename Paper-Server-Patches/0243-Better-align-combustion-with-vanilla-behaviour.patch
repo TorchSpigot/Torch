@@ -1,4 +1,4 @@
-From 96ee912e197be5f932cf3e713b991e3b6129d9d4 Mon Sep 17 00:00:00 2001
+From 67add599debdf09ee6d958bdb127f6c298bd6973 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 9 Sep 2016 14:37:39 +0800
 Subject: [PATCH] Better align combustion with vanilla behaviour
@@ -37,6 +37,28 @@ index 5a76adc..cb0d64d 100644
  		// World settings
  		disableSleepChecking = configuration.getBoolean("world-settings.disable-sleep-checking", false);
  		disableSpawnerModify = configuration.getBoolean("world-settings.disable-mob-spanwer-modify", false);
+diff --git a/src/main/java/net/minecraft/server/ChunkProviderServer.java b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+index 9708474..9c3b34d 100644
+--- a/src/main/java/net/minecraft/server/ChunkProviderServer.java
++++ b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+@@ -228,7 +228,7 @@ public class ChunkProviderServer implements IChunkProvider {
+ 				throw new ReportedException(crashreport);
+ 			}
+ 
+-			synchronized(chunks) { this.chunks.put(k, chunk); }
++			this.chunks.put(k, chunk);
+ 			chunk.addEntities();
+ 
+ 			chunk.loadNearby(this, this.chunkGenerator, true); // CraftBukkit
+@@ -388,7 +388,7 @@ public class ChunkProviderServer implements IChunkProvider {
+ 			this.saveChunk(chunk);
+ 			this.saveChunkNOP(chunk);
+ 		}
+-		synchronized(this) { this.chunks.remove(chunk.chunkKey); }
++		this.chunks.remove(chunk.chunkKey);
+ 		return true;
+ 	}
+ 	// CraftBukkit end
 diff --git a/src/main/java/net/minecraft/server/Entity.java b/src/main/java/net/minecraft/server/Entity.java
 index a96db1a..2c4e1a4 100644
 --- a/src/main/java/net/minecraft/server/Entity.java
@@ -421,6 +443,197 @@ index a96db1a..2c4e1a4 100644
  		}
  
  	}
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index 0abab0d..7348c87 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -1618,56 +1618,6 @@ public abstract class World implements IBlockAccess {
+ 	public void b(BlockPosition blockposition, Block block, int i, int j) {
+ 	}
+ 	
+-	public void tick_task(Entity entity) {
+-        // CraftBukkit end
+-        Entity entity1 = entity.bz();
+-
+-        if (entity1 != null) {
+-            if (!entity1.dead && entity1.w(entity)) {
+-            	return;
+-            }
+-
+-            entity.stopRiding();
+-        }
+-
+-        this.methodProfiler.a("tick");
+-        if (!entity.dead && !(entity instanceof EntityPlayer)) {
+-            try {
+-                entity.tickTimer.startTiming(); // Paper
+-                this.g(entity);
+-                entity.tickTimer.stopTiming(); // Paper
+-            } catch (Throwable throwable1) {
+-                entity.tickTimer.stopTiming();
+-                // Paper start - Prevent tile entity and entity crashes
+-                String msg = "Entity threw exception at " + entity.world.getWorld().getName() + ":" + entity.locX + "," + entity.locY + "," + entity.locZ;
+-                System.err.println(msg);
+-                throwable1.printStackTrace();
+-                getServer().getPluginManager().callEvent(new ServerExceptionEvent(new ServerInternalException(msg, throwable1)));
+-                entity.dead = true;
+-                return;
+-                // Paper end
+-            }
+-        }
+-
+-        this.methodProfiler.b();
+-        this.methodProfiler.a("remove");
+-        if (entity.dead) {
+-            int j = entity.ab;
+-            int l = entity.ad;
+-
+-            if (entity.aa && this.isChunkLoaded(j, l, true)) {
+-                this.getChunkAt(j, l).b(entity);
+-            }
+-
+-            guardEntityList = false; // Spigot
+-            this.entityList.remove(this.tickPosition--); // CraftBukkit - Use field for loop variable
+-            guardEntityList = true; // Spigot
+-            this.c(entity);
+-        }
+-
+-        this.methodProfiler.b();
+-	}
+-	
+ 	// Torch start
+ 	class tickEntitiesTask extends RecursiveAction {
+ 		tickEntitiesTask() {}
+@@ -1750,26 +1700,68 @@ public abstract class World implements IBlockAccess {
+ 		this.methodProfiler.c("regular");
+ 
+ 		org.spigotmc.ActivationRange.activateEntities(this); // Spigot
+-		timings.entityTick.startTiming(); // Spigot
+-		guardEntityList = true; // Spigot
+-		// CraftBukkit start - Use field for loop variable
+-		co.aikar.timings.TimingHistory.entityTicks += this.entityList.size(); // Paper
+-		// Paper start - Disable tick limiters
+-		// if (tickPosition < 0) tickPosition = 0;
+-		for (tickPosition = 0; tickPosition < entityList.size(); tickPosition++) {
+-			// Paper end
+-			tickPosition = (tickPosition < entityList.size()) ? tickPosition : 0;
+-			// Torch start
+-	        entity = (Entity) this.entityList.get(this.tickPosition);
+-	        Tick_task task = new Tick_task(entity);
+-	        SpigotWorldConfig.EntityPool.invoke(task);
+-	        // tick_task(entity);
+-	        // Torch end
+-	        // CraftBukkit end
++        timings.entityTick.startTiming(); // Spigot
++        guardEntityList = true; // Spigot
++        // CraftBukkit start - Use field for loop variable
++        co.aikar.timings.TimingHistory.entityTicks += this.entityList.size(); // Paper
++        int entitiesThisCycle = 0;
++        // Paper start - Disable tick limiters
++        //if (tickPosition < 0) tickPosition = 0;
++        for (tickPosition = 0; tickPosition < entityList.size(); tickPosition++) {
++            // Paper end
++            tickPosition = (tickPosition < entityList.size()) ? tickPosition : 0;
++            entity = (Entity) this.entityList.get(this.tickPosition);
++            // CraftBukkit end
++            Entity entity1 = entity.bz();
++
++            if (entity1 != null) {
++                if (!entity1.dead && entity1.w(entity)) {
++                    continue;
++                }
++
++                entity.stopRiding();
++            }
++
++            this.methodProfiler.a("tick");
++            if (!entity.dead && !(entity instanceof EntityPlayer)) {
++                try {
++                    entity.tickTimer.startTiming(); // Paper
++                    this.g(entity);
++                    entity.tickTimer.stopTiming(); // Paper
++                } catch (Throwable throwable1) {
++                    entity.tickTimer.stopTiming();
++                    // Paper start - Prevent tile entity and entity crashes
++                    String msg = "Entity threw exception at " + entity.world.getWorld().getName() + ":" + entity.locX + "," + entity.locY + "," + entity.locZ;
++                    System.err.println(msg);
++                    throwable1.printStackTrace();
++                    getServer().getPluginManager().callEvent(new ServerExceptionEvent(new ServerInternalException(msg, throwable1)));
++                    entity.dead = true;
++                    continue;
++                    // Paper end
++                }
++            }
++
++            this.methodProfiler.b();
++            this.methodProfiler.a("remove");
++            if (entity.dead) {
++                j = entity.ab;
++                int l = entity.ad;
++
++                if (entity.aa && this.isChunkLoaded(j, l, true)) {
++                    this.getChunkAt(j, l).b(entity);
++                }
++
++                guardEntityList = false; // Spigot
++                this.entityList.remove(this.tickPosition--); // CraftBukkit - Use field for loop variable
++                guardEntityList = true; // Spigot
++                this.c(entity);
++            }
++
++            this.methodProfiler.b();
+         }
+-		guardEntityList = false; // Spigot
++        guardEntityList = false; // Spigot
+ 
+-		timings.entityTick.stopTiming(); // Spigot
++        timings.entityTick.stopTiming(); // Spigot
+ 		this.methodProfiler.c("blockEntities");
+ 		this.M = true;
+ 		// CraftBukkit start - From below, clean up tile entities before ticking
+@@ -3639,20 +3631,6 @@ public abstract class World implements IBlockAccess {
+ 	public LootTableRegistry ak() {
+ 		return this.B;
+ 	}
+-	
+-	class Tick_task extends RecursiveAction {
+-		Entity entity;
+-		
+-		Tick_task(Entity entity) {
+-			this.entity = entity;
+-		}
+-
+-		@Override
+-		protected void compute() {
+-			tick_task(entity);
+-		}
+-
+-	}
+ 
+ 	class get_en extends RecursiveAction {
+ 		World world;
+diff --git a/src/main/java/net/minecraft/server/WorldServer.java b/src/main/java/net/minecraft/server/WorldServer.java
+index 50a42b3..b021fcb 100644
+--- a/src/main/java/net/minecraft/server/WorldServer.java
++++ b/src/main/java/net/minecraft/server/WorldServer.java
+@@ -492,15 +492,9 @@ public class WorldServer extends World implements IAsyncTaskHandler {
+ 				int k = chunk.locZ * 16;
+ 
+ 				this.methodProfiler.c("checkNextLight");
+-				// chunk.n();
+-				light_tick l_task = new light_tick(chunk);
+-				SpigotWorldConfig.TickPool.invoke(l_task);
+-				// l_task.fork();
++				chunk.n();
+ 				this.methodProfiler.c("tickChunk");
+-				// chunk.b(false);
+-				chunk_tick c_task = new chunk_tick(chunk);
+-				SpigotWorldConfig.TickPool.invoke(c_task);
+-				// c_tick.fork();
++				chunk.b(false);
+ 				if (!chunk.areNeighborsLoaded(1)) {
+ 					continue; // Spigot
+ 				}
 diff --git a/src/main/java/org/bukkit/command/defaults/VersionCommand.java b/src/main/java/org/bukkit/command/defaults/VersionCommand.java
 index 46c08bf..56b4b5c 100644
 --- a/src/main/java/org/bukkit/command/defaults/VersionCommand.java

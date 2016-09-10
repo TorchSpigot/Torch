@@ -1,4 +1,4 @@
-From 580766f78c3327a0ac5af0f38dcb31fda0eae52f Mon Sep 17 00:00:00 2001
+From 2eeec887a1520ca1c3907bae1c58ba38a3e65ebe Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Mon, 11 Jul 2016 17:39:21 +0800
 Subject: [PATCH] Implement EnchantmentTarget.BREAKABLE for Bukkit

@@ -1,4 +1,4 @@
-From d18f20772bdbf982218c77b232199f1308d0ce30 Mon Sep 17 00:00:00 2001
+From 0346f7fbbd92cbc567966c6cb2e6f9a2bfc846f2 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 13:55:29 +0800
 Subject: [PATCH] Fix spawning leash hitch without adjacent block

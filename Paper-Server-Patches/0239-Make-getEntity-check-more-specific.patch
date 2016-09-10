@@ -1,4 +1,4 @@
-From 9e9d4804269d873aff463a80dac5ba1e46f4cf9b Mon Sep 17 00:00:00 2001
+From c96939b3763caea56b9c955ee71817709f6eab0b Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sun, 28 Aug 2016 16:24:27 +0800
 Subject: [PATCH] Make getEntity check more specific
@@ -112,7 +112,7 @@ index df8fe70..459eda8 100644
  
  		return f;
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 4352e0e..b260010 100644
+index b706aad..3415362 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
 @@ -1634,7 +1634,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs

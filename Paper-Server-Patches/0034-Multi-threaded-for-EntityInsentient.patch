@@ -1,4 +1,4 @@
-From 247a0c58828a48ec7f79a453671cc25b1fb8a1be Mon Sep 17 00:00:00 2001
+From 9797c986f3b1efd2c696c6f86774d97a23e3d79e Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 08:23:02 +0800
 Subject: [PATCH] Multi threaded for EntityInsentient
