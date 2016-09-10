@@ -956,7 +956,7 @@ index 7fd311c..d6638b6 100644
  
  	// CraftBukkit start
 -	public List<WorldServer> worlds = new ArrayList<WorldServer>();
-+	public List<WorldServer> worlds = new org.torch.util.ConcurrentIterableArrayList<WorldServer>();
++	public List<WorldServer> worlds = new java.util.concurrent.CopyOnWriteArrayList<WorldServer>();
  	// public List<WorldServer> worlds = Collections.synchronizedList(new
  	// ArrayList<WorldServer>());
  	public org.bukkit.craftbukkit.CraftServer server;
