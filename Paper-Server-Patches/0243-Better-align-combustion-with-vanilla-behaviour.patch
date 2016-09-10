@@ -1,4 +1,4 @@
-From 67add599debdf09ee6d958bdb127f6c298bd6973 Mon Sep 17 00:00:00 2001
+From a8bbecdb06c4dccc3013ac6fe7248238363b02ad Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Fri, 9 Sep 2016 14:37:39 +0800
 Subject: [PATCH] Better align combustion with vanilla behaviour
@@ -38,9 +38,18 @@ index 5a76adc..cb0d64d 100644
  		disableSleepChecking = configuration.getBoolean("world-settings.disable-sleep-checking", false);
  		disableSpawnerModify = configuration.getBoolean("world-settings.disable-mob-spanwer-modify", false);
 diff --git a/src/main/java/net/minecraft/server/ChunkProviderServer.java b/src/main/java/net/minecraft/server/ChunkProviderServer.java
-index 9708474..9c3b34d 100644
+index 9708474..3a05a93 100644
 --- a/src/main/java/net/minecraft/server/ChunkProviderServer.java
 +++ b/src/main/java/net/minecraft/server/ChunkProviderServer.java
+@@ -159,7 +159,7 @@ public class ChunkProviderServer implements IChunkProvider {
+ 		if (chunk == null) {
+ 			chunk = this.loadChunk(i, j);
+ 			if (chunk != null) {
+-				synchronized(this) { this.chunks.put(ChunkCoordIntPair.a(i, j), chunk); }
++				this.chunks.put(ChunkCoordIntPair.a(i, j), chunk);
+ 				chunk.addEntities();
+ 				chunk.loadNearby(this, this.chunkGenerator, false); // CraftBukkit
+ 			}
 @@ -228,7 +228,7 @@ public class ChunkProviderServer implements IChunkProvider {
  				throw new ReportedException(crashreport);
  			}
@@ -444,10 +453,65 @@ index a96db1a..2c4e1a4 100644
  
  	}
 diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
-index 0abab0d..7348c87 100644
+index 0abab0d..2e1968b 100644
 --- a/src/main/java/net/minecraft/server/World.java
 +++ b/src/main/java/net/minecraft/server/World.java
-@@ -1618,56 +1618,6 @@ public abstract class World implements IBlockAccess {
+@@ -10,6 +10,7 @@ import java.util.Queue;
+ import java.util.Random;
+ // Paper start
+ import java.util.Set;
++import java.util.Collections;
+ import com.destroystokyo.paper.antixray.BlockPacketController; // Paper - Anti-Xray - Default singleton implementation for vanilla
+ import com.destroystokyo.paper.antixray.BlockPacketControllerObfuscate; // Paper - Anti-Xray - Anti-Xray implementation
+ import com.destroystokyo.paper.antixray.IBlockPacketController; // Paper - Anti-Xray - Interface with methods used to control which and how blocks are sent
+@@ -20,6 +21,7 @@ import java.util.concurrent.ForkJoinTask;
+ // Paper end
+ import java.util.concurrent.RecursiveAction;
+ import java.util.concurrent.RecursiveTask;
++import java.util.concurrent.atomic.AtomicInteger;
+ 
+ import javax.annotation.Nullable;
+ 
+@@ -63,7 +65,8 @@ public abstract class World implements IBlockAccess {
+ 	// Spigot start - guard entity list from removals
+ 	protected boolean cancelHeavyCalculations = false;
+ 
+-	public final List<Entity> entityList = new java.util.concurrent.CopyOnWriteArrayList();
++	// public final List<Entity> entityList = new java.util.concurrent.CopyOnWriteArrayList();
++	public final List<Entity> entityList = Collections.synchronizedList(new java.util.ArrayList());
+ 	// Spigot end
+ 	protected final Queue<Entity> f = Queues.newConcurrentLinkedQueue();
+ 	// public final List<TileEntity> tileEntityList = Lists.newArrayList(); //
+@@ -129,7 +132,7 @@ public abstract class World implements IBlockAccess {
+ 	public long ticksPerAnimalSpawns;
+ 	public long ticksPerMonsterSpawns;
+ 	public boolean populating;
+-	private int tickPosition;
++	private AtomicInteger tickPosition;
+ 	public final org.spigotmc.SpigotWorldConfig spigotConfig; // Spigot
+ 
+ 	public final com.destroystokyo.paper.PaperWorldConfig paperConfig; // Paper
+@@ -252,6 +255,7 @@ public abstract class World implements IBlockAccess {
+ 		this.keepSpawnInMemory = this.paperConfig.keepSpawnInMemory; // Paper
+ 		this.entityLimiter = new org.spigotmc.TickLimiter(spigotConfig.entityMaxTickTime);
+ 		this.tileLimiter = new org.spigotmc.TickLimiter(spigotConfig.tileMaxTickTime);
++		this.tickPosition = new AtomicInteger();
+ 	}
+ 
+ 	public World b() {
+@@ -1363,8 +1367,9 @@ public abstract class World implements IBlockAccess {
+ 			// already ticked this entity
+ 			int index = this.entityList.indexOf(entity);
+ 			if (index != -1) {
+-				if (index <= this.tickPosition) {
+-					this.tickPosition--;
++				if (index <= this.tickPosition.get()) {
++					// this.tickPosition--;
++					this.tickPosition.getAndDecrement();
+ 				}
+ 				this.entityList.remove(index);
+ 			}
+@@ -1618,56 +1623,6 @@ public abstract class World implements IBlockAccess {
  	public void b(BlockPosition blockposition, Block block, int i, int j) {
  	}
  	
@@ -504,7 +568,7 @@ index 0abab0d..7348c87 100644
  	// Torch start
  	class tickEntitiesTask extends RecursiveAction {
  		tickEntitiesTask() {}
-@@ -1750,26 +1700,68 @@ public abstract class World implements IBlockAccess {
+@@ -1750,26 +1705,71 @@ public abstract class World implements IBlockAccess {
  		this.methodProfiler.c("regular");
  
  		org.spigotmc.ActivationRange.activateEntities(this); // Spigot
@@ -531,10 +595,13 @@ index 0abab0d..7348c87 100644
 +        int entitiesThisCycle = 0;
 +        // Paper start - Disable tick limiters
 +        //if (tickPosition < 0) tickPosition = 0;
-+        for (tickPosition = 0; tickPosition < entityList.size(); tickPosition++) {
++        for (tickPosition.set(0); tickPosition.get() < entityList.size(); tickPosition.getAndIncrement()) {
 +            // Paper end
-+            tickPosition = (tickPosition < entityList.size()) ? tickPosition : 0;
-+            entity = (Entity) this.entityList.get(this.tickPosition);
++        	if (!(tickPosition.get() < entityList.size())) {
++        		tickPosition.set(0);
++        	}
++            // tickPosition = (tickPosition < entityList.size()) ? tickPosition : 0;
++            entity = (Entity) this.entityList.get(this.tickPosition.get());
 +            // CraftBukkit end
 +            Entity entity1 = entity.bz();
 +
@@ -576,7 +643,7 @@ index 0abab0d..7348c87 100644
 +                }
 +
 +                guardEntityList = false; // Spigot
-+                this.entityList.remove(this.tickPosition--); // CraftBukkit - Use field for loop variable
++                this.entityList.remove(this.tickPosition.getAndDecrement()); // CraftBukkit - Use field for loop variable
 +                guardEntityList = true; // Spigot
 +                this.c(entity);
 +            }
@@ -591,7 +658,33 @@ index 0abab0d..7348c87 100644
  		this.methodProfiler.c("blockEntities");
  		this.M = true;
  		// CraftBukkit start - From below, clean up tile entities before ticking
-@@ -3639,20 +3631,6 @@ public abstract class World implements IBlockAccess {
+@@ -1908,8 +1908,25 @@ public abstract class World implements IBlockAccess {
+ 	public void g(Entity entity) {
+ 		this.entityJoinedWorld(entity, true);
+ 	}
++	
++	class entityJoinedTask extends RecursiveAction {
++		Entity entity; boolean flag;
++		public entityJoinedTask(Entity entity, boolean flag) {
++			this.entity = entity; this.flag = flag;
++		}
++
++		@Override
++		protected void compute() {
++			entityJoinedWorld_task(entity, flag);
++		}
++	}
+ 
+ 	public void entityJoinedWorld(Entity entity, boolean flag) {
++		entityJoinedTask task = new entityJoinedTask(entity, flag);
++		SpigotWorldConfig.EntityPool.invoke(task);
++	}
++
++	public void entityJoinedWorld_task(Entity entity, boolean flag) {
+ 		MathHelper.floor(entity.locX);
+ 		MathHelper.floor(entity.locZ);
+ 		// Spigot start
+@@ -3639,20 +3656,6 @@ public abstract class World implements IBlockAccess {
  	public LootTableRegistry ak() {
  		return this.B;
  	}
