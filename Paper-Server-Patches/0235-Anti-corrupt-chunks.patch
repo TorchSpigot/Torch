@@ -47,7 +47,7 @@ index 6713f74..c9bc5ab 100644
 -				+ ")");
 -		antiXrayInstance = new AntiXray(this);
 -	}
-+    public boolean asynchronous;
++    public boolean asynchronous = false;
 +    public int engineMode;
 +    public int neighborsMode;
 +    public int maxChunkY;
@@ -55,7 +55,7 @@ index 6713f74..c9bc5ab 100644
 +    public List<Object> replaceBlocks;
 +    private void antiXray() {
 +        antiXray = getBoolean("anti-xray.enabled", false);
-+        asynchronous = getBoolean("anti-xray.asynchronous", false);
++        // asynchronous = getBoolean("anti-xray.asynchronous", false);
 +        engineMode = getInt("anti-xray.engine-mode", 3);
 +        neighborsMode = getInt("anti-xray.neighbors-mode", 1);
 +        maxChunkY = getInt("anti-xray.max-chunk-y", 3);
