@@ -1,11 +1,11 @@
-From 8441fca866036d6e0326b99a9b2c0560ad2ed3d1 Mon Sep 17 00:00:00 2001
+From a274d68d9dc644792759c5f43ca72c4f260bc2f0 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Tue, 28 Jun 2016 17:18:45 +0800
 Subject: [PATCH] Show Torch in somewhere and Metrics
 
 
 diff --git a/pom.xml b/pom.xml
-index 927418f..1088de0 100644
+index 927418f..a3c61bb 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -4,9 +4,9 @@
@@ -15,14 +15,14 @@ index 927418f..1088de0 100644
 -    <version>1.9.4-R0.1</version>
 -    <name>TacoSpigot</name>
 -    <url>https://github.com/TacoSpigot/TacoSpigot</url>
-+    <version>1.9.4-R1.9</version>
++    <version>1.9.4-R2.0</version>
 +    <name>Torch</name>
 +    <url>https://github.com/TorchSpigot/Torch</url>
  
      <properties>
          <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 diff --git a/src/main/java/net/minecraft/server/EULA.java b/src/main/java/net/minecraft/server/EULA.java
-index fac5f88..e34ca53 100644
+index fac5f88..7fc2f9a 100644
 --- a/src/main/java/net/minecraft/server/EULA.java
 +++ b/src/main/java/net/minecraft/server/EULA.java
 @@ -21,14 +21,14 @@ public class EULA {
@@ -30,7 +30,7 @@ index fac5f88..e34ca53 100644
      private boolean a(File file) {
          FileInputStream fileinputstream = null;
 -        boolean flag = false;
-+        boolean flag = true; // Torch - EULA - auto agreement
++        boolean flag = true;
  
          try {
              Properties properties = new Properties();
@@ -38,7 +38,7 @@ index fac5f88..e34ca53 100644
              fileinputstream = new FileInputStream(file);
              properties.load(fileinputstream);
 -            flag = Boolean.parseBoolean(properties.getProperty("eula", "false"));
-+            flag = Boolean.parseBoolean(properties.getProperty("eula", "true")); // Torch - auto
++            flag = Boolean.parseBoolean(properties.getProperty("eula", "true"));
          } catch (Exception exception) {
              EULA.a.warn("Failed to load " + file);
              this.b();
@@ -47,7 +47,7 @@ index fac5f88..e34ca53 100644
  
              fileoutputstream = new FileOutputStream(this.b);
 -            properties.setProperty("eula", "false");
-+            properties.setProperty("eula", "true"); // Torch - auto
++            properties.setProperty("eula", "true");
              properties.store(fileoutputstream, "By changing the setting below to TRUE you are indicating your agreement to our EULA (https://account.mojang.com/documents/minecraft_eula)." +
                      "\nand also agreeing that tacos are tasty.");  // Paper - fix lag
          } catch (Exception exception) {
@@ -65,7 +65,7 @@ index 15cabf2..f065dae 100644
  
      public CrashReport b(CrashReport crashreport) {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 44acbea..dc3598e 100644
+index 44acbea..f5c018e 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -126,7 +126,7 @@ import net.md_5.bungee.api.chat.BaseComponent;
@@ -73,12 +73,12 @@ index 44acbea..dc3598e 100644
  public final class CraftServer implements Server {
      private static final Player[] EMPTY_PLAYER_ARRAY = new Player[0];
 -    private final String serverName = "Paper";
-+    private final String serverName = "Torch"; // Torch
++    private final String serverName = "Torch";
      private final String serverVersion;
      private final String bukkitVersion = Versioning.getBukkitVersion();
      private final Logger logger = Logger.getLogger("Minecraft");
 diff --git a/src/main/java/org/spigotmc/Metrics.java b/src/main/java/org/spigotmc/Metrics.java
-index f0b24dc..2ccdcf8 100644
+index f0b24dc..ec19603 100644
 --- a/src/main/java/org/spigotmc/Metrics.java
 +++ b/src/main/java/org/spigotmc/Metrics.java
 @@ -344,7 +344,7 @@ public class Metrics {
@@ -86,12 +86,12 @@ index f0b24dc..2ccdcf8 100644
      private void postPlugin(final boolean isPing) throws IOException {
          // Server software specific section
 -        String pluginName = "TacoSpigot"; // Paper - Keep old name for legacy data // TacoSpigot - Its *my* usage data
-+        String pluginName = "TorchSpigot"; // Paper - Keep old name for legacy data // TacoSpigot - Its *my* usage data // Torch - mod name
++        String pluginName = "TorchSpigot"; // Paper - Keep old name for legacy data // TacoSpigot - Its *my* usage data
          boolean onlineMode = Bukkit.getServer().getOnlineMode(); // TRUE if online mode is enabled
          String pluginVersion = (Metrics.class.getPackage().getImplementationVersion() != null) ? Metrics.class.getPackage().getImplementationVersion() : "unknown";
          String serverVersion = Bukkit.getVersion();
 diff --git a/src/main/java/org/spigotmc/WatchdogThread.java b/src/main/java/org/spigotmc/WatchdogThread.java
-index fb57e0d..6f05ac4 100644
+index fb57e0d..e4f166d 100644
 --- a/src/main/java/org/spigotmc/WatchdogThread.java
 +++ b/src/main/java/org/spigotmc/WatchdogThread.java
 @@ -19,7 +19,7 @@ public class WatchdogThread extends Thread
@@ -99,7 +99,7 @@ index fb57e0d..6f05ac4 100644
      private WatchdogThread(long timeoutTime, boolean restart)
      {
 -        super( "Paper Watchdog Thread" );
-+        super( "Torch Watchdog Thread" ); // Torch
++        super( "Torch Watchdog Thread" );
          this.timeoutTime = timeoutTime;
          this.restart = restart;
      }
@@ -108,10 +108,10 @@ index fb57e0d..6f05ac4 100644
                  Logger log = Bukkit.getServer().getLogger();
                  log.log( Level.SEVERE, "The server has stopped responding!" );
 -                log.log( Level.SEVERE, "Please report this to https://aquifermc.org/" );
-+                log.log( Level.SEVERE, "Please report this to https://github.com/TorchSpigot/Torch/issues" ); // Torch
++                log.log( Level.SEVERE, "Please report this to https://github.com/TorchSpigot/Torch/issues" );
                  log.log( Level.SEVERE, "Be sure to include ALL relevant console errors and Minecraft crash reports" );
 -                log.log( Level.SEVERE, "Paper version: " + Bukkit.getServer().getVersion() );
-+                log.log( Level.SEVERE, "Torch version: " + Bukkit.getServer().getVersion() ); // Torch
++                log.log( Level.SEVERE, "Torch version: " + Bukkit.getServer().getVersion() );
                  //
                  if(net.minecraft.server.World.haveWeSilencedAPhysicsCrash)
                  {
@@ -120,7 +120,7 @@ index fb57e0d..6f05ac4 100644
                  //
                  log.log( Level.SEVERE, "------------------------------" );
 -                log.log( Level.SEVERE, "Server thread dump (Look for plugins here before reporting to Paper!):" );
-+                log.log( Level.SEVERE, "Server thread dump (Look for plugins here before reporting to TorchSpigot!):" ); // Torch
++                log.log( Level.SEVERE, "Server thread dump (Look for plugins here before reporting to TorchSpigot!):" );
                  dumpThread( ManagementFactory.getThreadMXBean().getThreadInfo( MinecraftServer.getServer().primaryThread.getId(), Integer.MAX_VALUE ), log );
                  log.log( Level.SEVERE, "------------------------------" );
                  //

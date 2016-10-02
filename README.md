@@ -1,31 +1,10 @@
-Torch 
+Torch (light)
 ===========
 ![Torch](https://i.imgur.com/cJWj0we.png) 
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg?style=flat)](http://pan.baidu.com/s/1hsBEdxU/) [![Minecraft](https://img.shields.io/badge/Minecraft-1.9.4-green.svg?style=flat)](https://www.minecraft.net/) [![Java](https://img.shields.io/badge/Java_JDK-v1.8-blue.svg?style=flat)](https://www.java.com/) [![Team](https://img.shields.io/badge/Powered_by-iMinecraft-green.svg?style=flat)](https://github.com/TorchSpigot) [![MCStats](https://img.shields.io/badge/MCStats-TorchSpigot-blue.svg?style=flat)](http://mcstats.org/plugin/TorchSpigot) 
 
-
-The main repository of TorchSpigot
-
-A powerful high performance TacoSpigot server fork with backported and more, 
-that aims to fix gameplay and inconsistencies, optimizations and multi-threaded computing included, based on TacoSpigot basically.
-
-Torch aims to be stable and fast.
-* Current developing version:  1.9.4
-* Recommanded(stable) version: R1.9.1-RELEASE
-
-For Minecraft **1.8**, *[Click Here](https://github.com/TorchSpigot/Torch-1.8)*
-
-(If you're running a previous Beta, upgrading is highly recommended.)
-
-####Advantages
-* All features of TacoSpigot/Paper/Spigot are included.
-* Backported latest changes from CB/Paper/SportBukkit and more.
-* Implement new chunk system for better performance and experience.
-* The asynchronous Anti-Xray inbult.
-* Multithreading computing, enjoy the server with multi-core CPU.
-* Added via protocol support for Minecraft 1.9 to 1.9.2
-* The enhanced API and more!
+Light version of Torch with backports and optimizations for Minecraft 1.9.4 Server.
 
 ####Download/How To (Server Admins)
 To use Torch, you need **Java 8**(or above).
@@ -48,11 +27,4 @@ or
 Have an idea for an optimization, or found a bug?
 
 * Let me know what you've tested / what may need further testing
-* Also see **Contributing.md**
 * Feel free to open a PR or issue.
-
-####Entity performance test
-![Result](http://i1.piimg.com/1949/d617db7d55cd75ab.png) 
-
-####Donate/Support
-*[Link](https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=caowenkang1@qq.com&currency_code=USD&amount=1&return=www.torchmc.org&item_name=Donate_Torch&undefined_quantity=1&no_note=0)*  :)
