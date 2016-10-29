@@ -1,16 +1,15 @@
-Torch (light)
+Torch (R2.0 branch)
 ===========
 ![Torch](https://i.imgur.com/cJWj0we.png) 
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg?style=flat)](http://pan.baidu.com/s/1hsBEdxU/) [![Minecraft](https://img.shields.io/badge/Minecraft-1.9.4-green.svg?style=flat)](https://www.minecraft.net/) [![Java](https://img.shields.io/badge/Java_JDK-v1.8-blue.svg?style=flat)](https://www.java.com/) [![Team](https://img.shields.io/badge/Powered_by-iMinecraft-green.svg?style=flat)](https://github.com/TorchSpigot) [![MCStats](https://img.shields.io/badge/MCStats-TorchSpigot-blue.svg?style=flat)](http://mcstats.org/plugin/TorchSpigot) 
 
-Light version of Torch with backports and optimizations for Minecraft 1.9.4 Server.
+A powered server software with parallel computing and backport / optimizations for Minecraft 1.9.4 Server.
 
 ####Download/How To (Server Admins)
 To use Torch, you need **Java 8**(or above).
 
-* Download the binary file: *[Click Here](http://t.im/torch)*, and use *Torch-1.9.4-R1.x.jar*, to start server directly.
-* Just enjoy Torch! :)
+* The R2.0 version is not ready for production environment at this point :(
 
 ####How To (Compiling From Source)
 To compile Torch, you need JDK8(or above), git, bash, maven, and an internet connection.
