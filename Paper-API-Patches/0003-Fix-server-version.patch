@@ -1,4 +1,4 @@
-From bb9c3bc90f33c1c5ca7bf16c0c735a082b1a7f2d Mon Sep 17 00:00:00 2001
+From 1c9a336f9843a30d2b96fccde9d662e5f7e03998 Mon Sep 17 00:00:00 2001
 From: SotrForgotten <i@omc.hk>
 Date: Sat, 2 Jul 2016 08:40:36 +0800
 Subject: [PATCH] Fix server version
