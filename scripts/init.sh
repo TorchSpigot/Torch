@@ -18,8 +18,8 @@ fi
 echo "Building Torch..."
 (
 	echo "Replacing sources..."
-	cp -r "$basedir/sources/src" "$paperbasedir/Paper-Server"
-	cp -f "$basedir/sources/pom.xml" "$paperbasedir/Paper-Server/pom.xml"
+	yes|cp -rf "$basedir/sources/src" "$paperbasedir/Paper-Server/"
+	yes|cp -rf "$basedir/sources/pom.xml" "$paperbasedir/Paper-Server/"
 	
 	cd "$paperbasedir"
 	mvn clean install
