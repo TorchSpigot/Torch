@@ -7,13 +7,6 @@
 nbproject/
 nbactions.xml
 
-# we use maven!
-build.xml
-
-# maven
-target/
-dependency-reduced-pom.xml
-
 # vim
 .*.sw[a-p]
 
@@ -22,6 +15,8 @@ build/
 bin/
 dist/
 manifest.mf
+
+work/Paper
 
 # Mac filesystem dust
 .DS_Store/
@@ -36,15 +31,6 @@ manifest.mf
 *~
 
 # other stuff
-TacoSpigot-API
-TacoSpigot-Server
-Spigot-API
-Spigot-Server
-Paper-Server
-Paper-API
-PaperSpigot-Server
-PaperSpigot-API
-CraftBukkit
 
-#Build System
-build
+Paper-API
+Torchpowered-*.jar
