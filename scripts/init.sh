@@ -11,7 +11,8 @@ if [ "$2" == "--init" ]; then
 	echo "Initial Paper..."
 	(
 		cd "$paperbasedir"
-		scripts/build.sh "$basedir" "--jar"
+		scripts/build.sh "$basedir"
+		cp -r "$basedir/Paper-API" "$paperbasedir"
 	)
 fi
 
