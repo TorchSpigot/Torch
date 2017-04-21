@@ -13,6 +13,7 @@ nbactions.xml
 
 # various other potential build files
 build/
+target/
 bin/
 dist/
 manifest.mf

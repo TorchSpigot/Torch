@@ -11,6 +11,7 @@ import co.aikar.timings.MinecraftTimings;
 import io.netty.buffer.Unpooled;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.SocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -103,11 +104,11 @@ public class TorchPlayerList implements TorchReactor {
     /**
      * If the server setting to white-list mode
      */
-    @Setter private boolean isWhitelistMode;
+    private boolean isWhitelistMode;
     /**
      * The max number of players that can be connected at a time
      */
-    protected int maxPlayers;
+    @Setter protected int maxPlayers;
     /**
      * A map containing the key-value pairs for player UUID and its EntityPlayer object
      */
@@ -167,11 +168,40 @@ public class TorchPlayerList implements TorchReactor {
         playerStatFiles = HashObjObjMaps.newMutableMap();
         minecraftServer = server;
         
+    	this.setViewDistance(this.server.getIntProperty("view-distance", 10));
+    	this.setMaxPlayers(this.server.getIntProperty("max-players", 20));
+    	this.setWhitelistMode(this.server.getBooleanProperty("white-list", false));
+        
+    	this.refreshJsonLists();
+        
         // Sets whether we are a LAN server
         bannedPlayers.a(false);
         bannedIPs.a(false);
         
         maxPlayers = 9; // baka
+    }
+    
+    /**
+     * Load banned players, whitelist and Ops
+     */
+    public void refreshJsonLists() {
+    	if (!this.server.isSinglePlayer()) {
+            this.bannedPlayers.a(true);
+            this.bannedIPs.a(true);
+        }
+    	
+    	this.loadPlayerBanList();
+    	this.savePlayerBanList();
+        this.loadIPBanList();
+        this.saveIPBanList();
+        this.loadIPBanList();
+        this.readWhiteList();
+        this.saveOpsList();
+        
+        // Save the whitelist file if doesn exist
+        if (!this.getWhitelist().c().exists()) {
+        	this.saveWhiteList();
+        }
     }
     
     public void sendScoreboard(ScoreboardServer scoreboard, EntityPlayer player) {
@@ -296,7 +326,7 @@ public class TorchPlayerList implements TorchReactor {
     @SuppressWarnings("deprecation")
 	public boolean isOp(GameProfile gameprofile) {
     	// isOP || (isSinglePlayer && isCommandAllowed && isServerOwner) || isChestMode 
-        return this.operators.contains(gameprofile) || this.server.isSinglePlayer() && this.server.worlds.get(0).getWorldData().u() && this.server.getServerOwner().equalsIgnoreCase(gameprofile.getName()) || this.allowedCommands;
+        return this.operators.contains(gameprofile) /*|| this.server.isSinglePlayer() && this.server.worlds.get(0).getWorldData().u() && this.server.getServerOwner().equalsIgnoreCase(gameprofile.getName())*/ || this.allowedCommands;
     }
     
     public void addOp(GameProfile gameprofile) {
@@ -308,6 +338,8 @@ public class TorchPlayerList implements TorchReactor {
         // Handle Bukkit permissions
         Player player = server.craftServer.getPlayer(gameprofile.getId());
         if (player != null) player.recalculatePermissions();
+        
+        this.saveOpsList();
     }
 
     public void removeOp(GameProfile gameprofile) {
@@ -317,6 +349,8 @@ public class TorchPlayerList implements TorchReactor {
         // Handle Bukkit permissions
         Player player = server.craftServer.getPlayer(gameprofile.getId());
         if (player != null) player.recalculatePermissions();
+        
+        this.saveOpsList();
     }
     
     public void initializeConnectionToPlayer(NetworkManager networkmanager, EntityPlayer entityplayer) {
@@ -1082,22 +1116,16 @@ public class TorchPlayerList implements TorchReactor {
     
     public void addWhitelist(GameProfile gameprofile) {
         this.whitelist.add(new WhiteListEntry(gameprofile));
+        this.saveWhiteList();
     }
 
     public void removeWhitelist(GameProfile gameprofile) {
         this.whitelist.remove(gameprofile);
-    }
-    
-    public WhiteList getWhitelist() {
-        return this.whitelist;
+        this.saveWhiteList();
     }
 
     public String[] getWhitelistedPlayerNames() {
         return this.whitelist.getEntries();
-    }
-
-    public OpList getOPs() {
-        return this.operators;
     }
 
     public String[] getOppedPlayerNames() {
@@ -1351,12 +1379,82 @@ public class TorchPlayerList implements TorchReactor {
     }
     
     public boolean bypassesPlayerLimit(GameProfile gameprofile) {
-        return false;
+    	// Bypass limit for the player
+    	return this.getOperators().b(gameprofile);
+    }
+    
+    public void saveIPBanList() {
+        try {
+            this.bannedIPs.save();
+        } catch (IOException io) {
+        	logger.warn("Failed to save ip banlist: ", io);
+        }
+    }
+    
+    public void loadIPBanList() {
+        try {
+            this.bannedIPs.load();
+        } catch (IOException io) {
+        	logger.warn("Failed to load ip banlist: ", io);
+        }
+    }
+
+    public void savePlayerBanList() {
+        try {
+            this.bannedPlayers.save();
+        } catch (IOException io) {
+        	logger.warn("Failed to save user banlist: ", io);
+        }
+    }
+
+    public void loadPlayerBanList() {
+        try {
+            this.bannedPlayers.load();
+        } catch (IOException io) {
+        	logger.warn("Failed to load user banlist: ", io);
+        }
+    }
+    
+    public void saveOpsList() {
+        try {
+            this.operators.save();
+        } catch (Throwable t) {
+        	logger.warn("Failed to save operators list: ", t);
+        }
+    }
+
+    public void loadOpsList() {
+        try {
+            this.operators.load();
+        } catch (Throwable t) {
+        	logger.warn("Failed to load operators list: ", t);
+        }
+    }
+
+    public void saveWhiteList() {
+        try {
+            this.whitelist.save();
+        } catch (Throwable t) {
+            logger.warn("Failed to save white-list: ", t);
+        }
+    }
+
+    public void readWhiteList() {
+        try {
+            this.whitelist.load();
+        } catch (Throwable t) {
+        	logger.warn("Failed to load white-list: ", t);
+        }
+    }
+    
+    public void setWhitelistMode(boolean flag) {
+        this.isWhitelistMode = flag;
+        this.getServer().setProperty("white-list", Boolean.valueOf(flag));
+        this.getServer().saveProperties();
     }
     
 	@Override
-	public TorchServant getServant() {
+	public PlayerList getServant() {
 		return servant;
 	}
-
 }

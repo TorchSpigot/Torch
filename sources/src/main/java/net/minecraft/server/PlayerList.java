@@ -338,14 +338,16 @@ public abstract class PlayerList implements org.torch.api.TorchServant {
     }
 
     public OpList getOPs() {
-        return reactor.getOPs();
+        return reactor.getOperators();
     }
 
     public String[] n() {
         return reactor.getOppedPlayerNames();
     }
 
-    @Deprecated public void reloadWhitelist() {}
+    public void reloadWhitelist() {
+    	reactor.readWhiteList();
+    }
 
     public void b(EntityPlayer entityplayer, WorldServer worldserver) {
         reactor.updateTimeAndWeatherForPlayer(entityplayer, worldserver);
@@ -434,7 +436,7 @@ public abstract class PlayerList implements org.torch.api.TorchServant {
     }
     
     @Override
-	public TorchReactor getReactor() {
+	public TorchPlayerList getReactor() {
 		return reactor;
 	}
 }

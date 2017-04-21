@@ -862,7 +862,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
     
     @Override
-	public TorchReactor getReactor() {
+	public TorchServer getReactor() {
     	return reactor;
     }
 }

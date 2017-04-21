@@ -860,7 +860,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             int j = MathHelper.nextInt(this.random, 0, this.getCurrentPlayerCount() - agameprofile.length);
 
             for (int k = 0; k < agameprofile.length; ++k) {
-                agameprofile[k] = this.playerList.v().get(j + k).getProfile();
+                agameprofile[k] = this.playerList.getReactor().players.get(j + k).getProfile();
             }
             
             Collections.shuffle(Arrays.asList(agameprofile));
@@ -2179,7 +2179,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
     }
     
 	@Override
-	public TorchServant getServant() {
+	public MinecraftServer getServant() {
 		return MinecraftServer.getServer();
 	}
 }

@@ -42,7 +42,7 @@ class Metrics {
     public static final int B_STATS_VERSION = 1;
 
     // The url to which the data is sent
-    private static final String URL = "https://bStats.org/submitData/server-implementation";
+    private static final String URL = "https://bStats.org/submitData/bukkit";
 
     // Should failed requests be logged?
     private static boolean logFailedRequests;
@@ -131,7 +131,7 @@ class Metrics {
     public JSONObject getPluginData() {
         JSONObject data = new JSONObject();
 
-        String pluginVersion = "powered";//(Metrics.class.getPackage().getImplementationVersion() != null) ? Metrics.class.getPackage().getImplementationVersion() : "unknown";
+        String pluginVersion = (Metrics.class.getPackage().getImplementationVersion() != null) ? Metrics.class.getPackage().getImplementationVersion() : "powered";
 
         data.put("pluginName", name); // Append the name of the plugin
         data.put("pluginVersion", pluginVersion); // Append the version of the plugin

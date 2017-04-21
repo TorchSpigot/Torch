@@ -194,7 +194,7 @@ public final class CraftServer implements Server {
                 return player.getBukkitEntity();
             }
         }));
-        this.serverVersion = "powered";//CraftServer.class.getPackage().getImplementationVersion();
+        this.serverVersion = CraftServer.class.getPackage().getImplementationVersion();
         online.value = console.getPropertyManager().getBoolean("online-mode", true);
 
         Bukkit.setServer(this);
@@ -254,8 +254,8 @@ public final class CraftServer implements Server {
         animalSpawn = configuration.getInt("spawn-limits.animals");
         waterAnimalSpawn = configuration.getInt("spawn-limits.water-animals");
         ambientSpawn = configuration.getInt("spawn-limits.ambient");
-        ((org.torch.server.TorchServer) console.getReactor()).autosavePeriod = configuration.getInt("ticks-per.autosave");
-        console.autosavePeriod = ((org.torch.server.TorchServer) console.getReactor()).autosavePeriod;
+        console.getReactor().autosavePeriod = configuration.getInt("ticks-per.autosave");
+        console.autosavePeriod = console.getReactor().autosavePeriod;
         warningState = WarningState.value(configuration.getString("settings.deprecated-verbose"));
         chunkGCPeriod = configuration.getInt("chunk-gc.period-in-ticks");
         chunkGCLoadThresh = configuration.getInt("chunk-gc.load-threshold");
@@ -272,7 +272,7 @@ public final class CraftServer implements Server {
      * The internal create of CraftServer has been changed to the above constructor, don't care for NPE
      */
     public CraftServer(MinecraftServer console, PlayerList playerList) {
-        this(console, (TorchPlayerList) playerList.getReactor());
+        this(console, playerList.getReactor());
     }
 
     public boolean getCommandBlockOverride(String command) {

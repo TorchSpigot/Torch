@@ -82,7 +82,7 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
         // Setup instance for org.torch.api.TorchReactor
     	servant = this;
     	// Setup instance for org.torch.api.TorchServant
-    	reactor = (TorchServer) super.getReactor();
+    	reactor = super.getReactor();
     	
     	/**
     	 * NORMAL FIELDS

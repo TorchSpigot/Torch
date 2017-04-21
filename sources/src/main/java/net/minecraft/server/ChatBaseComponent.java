@@ -14,21 +14,25 @@ public abstract class ChatBaseComponent implements IChatBaseComponent {
 
     public ChatBaseComponent() {}
 
-    public IChatBaseComponent addSibling(IChatBaseComponent ichatbasecomponent) {
+    @Override
+	public IChatBaseComponent addSibling(IChatBaseComponent ichatbasecomponent) {
         ichatbasecomponent.getChatModifier().setChatModifier(this.getChatModifier());
         this.a.add(ichatbasecomponent);
         return this;
     }
 
-    public List<IChatBaseComponent> a() {
+    @Override
+	public List<IChatBaseComponent> a() {
         return this.a;
     }
 
-    public IChatBaseComponent a(String s) {
+    @Override
+	public IChatBaseComponent a(String s) {
         return this.addSibling(new ChatComponentText(s));
     }
 
-    public IChatBaseComponent setChatModifier(ChatModifier chatmodifier) {
+    @Override
+	public IChatBaseComponent setChatModifier(ChatModifier chatmodifier) {
         this.b = chatmodifier;
         Iterator iterator = this.a.iterator();
 
@@ -41,7 +45,8 @@ public abstract class ChatBaseComponent implements IChatBaseComponent {
         return this;
     }
 
-    public ChatModifier getChatModifier() {
+    @Override
+	public ChatModifier getChatModifier() {
         if (this.b == null) {
             this.b = new ChatModifier();
             Iterator iterator = this.a.iterator();
@@ -56,11 +61,13 @@ public abstract class ChatBaseComponent implements IChatBaseComponent {
         return this.b;
     }
 
-    public Iterator<IChatBaseComponent> iterator() {
-        return Iterators.concat(Iterators.forArray(new ChatBaseComponent[] { this}), a((Iterable) this.a));
+    @Override
+	public Iterator<IChatBaseComponent> iterator() {
+        return Iterators.concat(Iterators.forArray(new ChatBaseComponent[] { this }), a(this.a));
     }
 
-    public final String toPlainText() {
+    @Override
+	public final String toPlainText() {
         StringBuilder stringbuilder = new StringBuilder();
         Iterator iterator = this.iterator();
 
@@ -79,7 +86,8 @@ public abstract class ChatBaseComponent implements IChatBaseComponent {
                 return ichatbasecomponent.iterator();
             }
 
-            public Object apply(@Nullable Object object) {
+            @Override
+			public Object apply(@Nullable Object object) {
                 return this.a((IChatBaseComponent) object);
             }
         }));
@@ -92,14 +100,16 @@ public abstract class ChatBaseComponent implements IChatBaseComponent {
                 return ichatbasecomponent1;
             }
 
-            public Object apply(@Nullable Object object) {
+            @Override
+			public Object apply(@Nullable Object object) {
                 return this.a((IChatBaseComponent) object);
             }
         });
         return iterator;
     }
 
-    public boolean equals(Object object) {
+    @Override
+	public boolean equals(Object object) {
         if (this == object) {
             return true;
         } else if (!(object instanceof ChatBaseComponent)) {
@@ -111,11 +121,13 @@ public abstract class ChatBaseComponent implements IChatBaseComponent {
         }
     }
 
-    public int hashCode() {
+    @Override
+	public int hashCode() {
         return 31 * this.getChatModifier().hashCode() + this.a.hashCode(); // CraftBukkit - fix null pointer
     }
 
-    public String toString() {
+    @Override
+	public String toString() {
         return "BaseComponent{style=" + this.b + ", siblings=" + this.a + '}';
     }
 }
