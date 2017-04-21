@@ -2,6 +2,7 @@
 .classpath
 .project
 .settings/
+.externalToolBuilders/
 
 # netbeans
 nbproject/
@@ -31,6 +32,5 @@ work/Paper
 *~
 
 # other stuff
-
 Paper-API
 Torchpowered-*.jar

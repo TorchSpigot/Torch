@@ -1,4 +1,4 @@
-sudo: true
+sudo: required
 
 language: java
 
@@ -17,4 +17,3 @@ script: ./scripts/build.sh --init
 cache:
   directories:
     - '$HOME/.m2/repository'
-    - 'work/Paper/work'
