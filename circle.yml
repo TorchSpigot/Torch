@@ -1,6 +1,10 @@
 machine:
   java:
     version: oraclejdk8
+  notify:
+    branches:
+      only:
+        - master
 
 test:
   override:
