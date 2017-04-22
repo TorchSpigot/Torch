@@ -714,7 +714,8 @@ public class TorchPlayerList implements TorchReactor {
     
     @SuppressWarnings("deprecation")
 	public EntityPlayer recreatePlayerEntity(EntityPlayer oldPlayerEntity, int dimension, boolean conqueredEnd, Location location, boolean avoidSuffocation) {
-        // x() = getWorldServer()
+    	oldPlayerEntity.stopRiding();
+    	// x() = getWorldServer()
     	oldPlayerEntity.x().getTracker().untrackPlayer(oldPlayerEntity);
         oldPlayerEntity.x().getPlayerChunkMap().removePlayer(oldPlayerEntity);
         this.players.remove(oldPlayerEntity);
