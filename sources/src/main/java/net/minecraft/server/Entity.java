@@ -173,6 +173,9 @@ public abstract class Entity implements ICommandListener {
     protected int numCollisions = 0; // Paper
     public void inactiveTick() { }
     // Spigot end
+    
+    private boolean isInLava;
+    private int lastLavaCheck = MinecraftServer.currentTick;
 
     public Entity(World world) {
         this.id = Entity.entityCount++;
@@ -1200,8 +1203,14 @@ public abstract class Entity implements ICommandListener {
         }
     }
 
+    public boolean isInLava() { return this.ao(); } // OBFHELPER
     public boolean ao() {
-        return this.world.a(this.getBoundingBox().grow(-0.10000000149011612D, -0.4000000059604645D, -0.10000000149011612D), Material.LAVA);
+    	// Only check for lava once per tick
+        if (this.lastLavaCheck != MinecraftServer.currentTick) {
+        	this.lastLavaCheck = MinecraftServer.currentTick;
+        	this.isInLava = this.world.a(this.getBoundingBox().grow(-0.10000000149011612D, -0.4000000059604645D, -0.10000000149011612D), Material.LAVA);
+        }
+        return this.isInLava;
     }
 
     public void a(float f, float f1, float f2) {
