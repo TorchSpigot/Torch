@@ -15,7 +15,7 @@ before_script:
 script: ./scripts/build.sh --init
 
 branches:
-  only: 'ver/1.11.2'
+  only: 'master'
 
 cache:
   directories:
