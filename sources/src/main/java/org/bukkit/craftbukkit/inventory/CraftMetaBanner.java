@@ -12,6 +12,7 @@ import org.bukkit.Material;
 import org.bukkit.block.banner.Pattern;
 import org.bukkit.block.banner.PatternType;
 import org.bukkit.configuration.serialization.DelegateDeserialization;
+import org.bukkit.craftbukkit.util.CraftMagicNumbers;
 import org.bukkit.inventory.meta.BannerMeta;
 
 @DelegateDeserialization(CraftMetaItem.SerializableMeta.class)
@@ -49,7 +50,7 @@ public class CraftMetaBanner extends CraftMetaItem implements BannerMeta {
         base = entityTag.hasKey(BASE.NBT) ? DyeColor.getByDyeData((byte) entityTag.getInt(BASE.NBT)) : null;
 
         if (entityTag.hasKey(PATTERNS.NBT)) {
-            NBTTagList patterns = entityTag.getList(PATTERNS.NBT, 10);
+            NBTTagList patterns = entityTag.getList(PATTERNS.NBT, CraftMagicNumbers.NBT.TAG_COMPOUND);
             for (int i = 0; i < Math.min(patterns.size(), 20); i++) {
                 NBTTagCompound p = patterns.get(i);
                 this.patterns.add(new Pattern(DyeColor.getByDyeData((byte) p.getInt(COLOR.NBT)), PatternType.getByIdentifier(p.getString(PATTERN.NBT))));

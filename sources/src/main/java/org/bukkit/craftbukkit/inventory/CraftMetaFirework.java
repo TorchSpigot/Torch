@@ -17,6 +17,7 @@ import org.bukkit.configuration.serialization.DelegateDeserialization;
 import org.bukkit.craftbukkit.inventory.CraftMetaItem.ItemMetaKey.Specific;
 import org.bukkit.craftbukkit.inventory.CraftMetaItem.ItemMetaKey.Specific.To;
 import org.bukkit.craftbukkit.inventory.CraftMetaItem.SerializableMeta;
+import org.bukkit.craftbukkit.util.CraftMagicNumbers;
 import org.bukkit.inventory.meta.FireworkMeta;
 
 import com.google.common.collect.ImmutableList;
@@ -88,11 +89,11 @@ class CraftMetaFirework extends CraftMetaItem implements FireworkMeta {
             return;
         }
 
-        NBTTagList fireworkEffects = fireworks.getList(EXPLOSIONS.NBT, 10);
+        NBTTagList fireworkEffects = fireworks.getList(EXPLOSIONS.NBT, CraftMagicNumbers.NBT.TAG_COMPOUND);
         List<FireworkEffect> effects = this.effects = new ArrayList<FireworkEffect>(fireworkEffects.size());
 
         for (int i = 0; i < fireworkEffects.size(); i++) {
-            effects.add(getEffect((NBTTagCompound) fireworkEffects.get(i)));
+            effects.add(getEffect(fireworkEffects.get(i)));
         }
     }
 
@@ -178,7 +179,8 @@ class CraftMetaFirework extends CraftMetaItem implements FireworkMeta {
         safelyAddEffects(effects);
     }
 
-    public boolean hasEffects() {
+    @Override
+	public boolean hasEffects() {
         return !(effects == null || effects.isEmpty());
     }
 
@@ -324,7 +326,8 @@ class CraftMetaFirework extends CraftMetaItem implements FireworkMeta {
         return meta;
     }
 
-    public void addEffect(FireworkEffect effect) {
+    @Override
+	public void addEffect(FireworkEffect effect) {
         Validate.notNull(effect, "Effect cannot be null");
         if (this.effects == null) {
             this.effects = new ArrayList<FireworkEffect>();
@@ -332,7 +335,8 @@ class CraftMetaFirework extends CraftMetaItem implements FireworkMeta {
         this.effects.add(effect);
     }
 
-    public void addEffects(FireworkEffect...effects) {
+    @Override
+	public void addEffects(FireworkEffect...effects) {
         Validate.notNull(effects, "Effects cannot be null");
         if (effects.length == 0) {
             return;
@@ -349,20 +353,24 @@ class CraftMetaFirework extends CraftMetaItem implements FireworkMeta {
         }
     }
 
-    public void addEffects(Iterable<FireworkEffect> effects) {
+    @Override
+	public void addEffects(Iterable<FireworkEffect> effects) {
         Validate.notNull(effects, "Effects cannot be null");
         safelyAddEffects(effects);
     }
 
-    public List<FireworkEffect> getEffects() {
+    @Override
+	public List<FireworkEffect> getEffects() {
         return this.effects == null ? ImmutableList.<FireworkEffect>of() : ImmutableList.copyOf(this.effects);
     }
 
-    public int getEffectsSize() {
+    @Override
+	public int getEffectsSize() {
         return this.effects == null ? 0 : this.effects.size();
     }
 
-    public void removeEffect(int index) {
+    @Override
+	public void removeEffect(int index) {
         if (this.effects == null) {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: 0");
         } else {
@@ -370,15 +378,18 @@ class CraftMetaFirework extends CraftMetaItem implements FireworkMeta {
         }
     }
 
-    public void clearEffects() {
+    @Override
+	public void clearEffects() {
         this.effects = null;
     }
 
-    public int getPower() {
+    @Override
+	public int getPower() {
         return this.power;
     }
 
-    public void setPower(int power) {
+    @Override
+	public void setPower(int power) {
         Validate.isTrue(power >= 0, "Power cannot be less than zero: ", power);
         Validate.isTrue(power < 0x80, "Power cannot be more than 127: ", power);
         this.power = power;

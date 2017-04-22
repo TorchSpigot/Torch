@@ -20,6 +20,7 @@ import org.bukkit.configuration.serialization.DelegateDeserialization;
 import org.bukkit.configuration.serialization.SerializableAs;
 import org.bukkit.craftbukkit.Overridden;
 import org.bukkit.craftbukkit.inventory.CraftMetaItem.ItemMetaKey.Specific;
+import org.bukkit.craftbukkit.util.CraftMagicNumbers;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -280,7 +281,7 @@ class CraftMetaItem implements ItemMeta, Repairable {
             }
 
             if (display.hasKey(LORE.NBT)) {
-                NBTTagList list = display.getList(LORE.NBT, 8);
+            	NBTTagList list = display.getList(LORE.NBT, CraftMagicNumbers.NBT.TAG_STRING);
                 lore = new ArrayList<String>(list.size());
 
                 for (int index = 0; index < list.size(); index++) {
@@ -305,7 +306,7 @@ class CraftMetaItem implements ItemMeta, Repairable {
 
         if (tag.get(ATTRIBUTES.NBT) instanceof NBTTagList) {
             NBTTagList save = null;
-            NBTTagList nbttaglist = tag.getList(ATTRIBUTES.NBT, 10);
+            NBTTagList nbttaglist = tag.getList(ATTRIBUTES.NBT, CraftMagicNumbers.NBT.TAG_COMPOUND);
 
             // Spigot start
             gnu.trove.map.hash.TObjectDoubleHashMap<String> attributeTracker = new gnu.trove.map.hash.TObjectDoubleHashMap<String>();
@@ -333,11 +334,11 @@ class CraftMetaItem implements ItemMeta, Repairable {
                 NBTTagCompound nbttagcompound = oldList.get( i );
                 if ( nbttagcompound == null ) continue;
 
-                if ( !nbttagcompound.hasKeyOfType(ATTRIBUTES_UUID_HIGH.NBT, 99) )
+                if ( !nbttagcompound.hasKeyOfType(ATTRIBUTES_UUID_HIGH.NBT, CraftMagicNumbers.NBT.TAG_ANY_NUMBER) )
                 {
                     continue;
                 }
-                if ( !nbttagcompound.hasKeyOfType(ATTRIBUTES_UUID_LOW.NBT, 99)  )
+                if ( !nbttagcompound.hasKeyOfType(ATTRIBUTES_UUID_LOW.NBT, CraftMagicNumbers.NBT.TAG_ANY_NUMBER)  )
                 {
                     continue;
                 }
@@ -349,11 +350,11 @@ class CraftMetaItem implements ItemMeta, Repairable {
                 {
                     continue;
                 }
-                if ( !nbttagcompound.hasKeyOfType(ATTRIBUTES_VALUE.NBT, 99) )
+                if ( !nbttagcompound.hasKeyOfType(ATTRIBUTES_VALUE.NBT, CraftMagicNumbers.NBT.TAG_ANY_NUMBER) )
                 {
                     continue;
                 }
-                if ( !nbttagcompound.hasKeyOfType(ATTRIBUTES_TYPE.NBT, 99) || nbttagcompound.getInt( ATTRIBUTES_TYPE.NBT ) < 0 || nbttagcompound.getInt( ATTRIBUTES_TYPE.NBT ) > 2 )
+                if ( !nbttagcompound.hasKeyOfType(ATTRIBUTES_TYPE.NBT, CraftMagicNumbers.NBT.TAG_ANY_NUMBER) || nbttagcompound.getInt( ATTRIBUTES_TYPE.NBT ) < 0 || nbttagcompound.getInt( ATTRIBUTES_TYPE.NBT ) > 2 )
                 {
                     continue;
                 }
@@ -479,7 +480,7 @@ class CraftMetaItem implements ItemMeta, Repairable {
             return null;
         }
 
-        NBTTagList ench = tag.getList(key.NBT, 10);
+        NBTTagList ench = tag.getList(key.NBT, CraftMagicNumbers.NBT.TAG_COMPOUND);
         EnchantmentMap enchantments = new EnchantmentMap(); // Paper
 
         for (int i = 0; i < ench.size(); i++) {

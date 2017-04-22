@@ -97,13 +97,13 @@ public final class CraftMagicNumbers implements UnsafeValues {
 
     @Override
     public Material getMaterialFromInternalName(String name) {
-        return getMaterial((Item) Item.REGISTRY.get(new MinecraftKey(name)));
+        return getMaterial(Item.REGISTRY.get(new MinecraftKey(name)));
     }
 
     @Override
     public List<String> tabCompleteInternalMaterialName(String token, List<String> completions) {
         ArrayList<String> results = Lists.newArrayList();
-        for (MinecraftKey key : (Set<MinecraftKey>)Item.REGISTRY.keySet()) {
+        for (MinecraftKey key : Item.REGISTRY.keySet()) {
             results.add(key.toString());
         }
         return StringUtil.copyPartialMatches(token, results, completions);
@@ -114,7 +114,7 @@ public final class CraftMagicNumbers implements UnsafeValues {
         net.minecraft.server.ItemStack nmsStack = CraftItemStack.asNMSCopy(stack);
 
         try {
-            nmsStack.setTag((NBTTagCompound) MojangsonParser.parse(arguments));
+            nmsStack.setTag(MojangsonParser.parse(arguments));
         } catch (MojangsonParseException ex) {
             Logger.getLogger(CraftMagicNumbers.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -145,5 +145,27 @@ public final class CraftMagicNumbers implements UnsafeValues {
             }
         }
         return matches;
+    }
+    
+    /**
+     * This helper class represents the different NBT Tags.
+     * <p>
+     * These should match NBTBase#getTypeId
+     */
+    public static class NBT {
+
+        public static final int TAG_END = 0;
+        public static final int TAG_BYTE = 1;
+        public static final int TAG_SHORT = 2;
+        public static final int TAG_INT = 3;
+        public static final int TAG_LONG = 4;
+        public static final int TAG_FLOAT = 5;
+        public static final int TAG_DOUBLE = 6;
+        public static final int TAG_BYTE_ARRAY = 7;
+        public static final int TAG_STRING = 8;
+        public static final int TAG_LIST = 9;
+        public static final int TAG_COMPOUND = 10;
+        public static final int TAG_INT_ARRAY = 11;
+        public static final int TAG_ANY_NUMBER = 99;
     }
 }
