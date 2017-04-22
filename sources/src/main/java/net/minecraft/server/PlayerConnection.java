@@ -117,6 +117,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
     private int lastTick = MinecraftServer.currentTick;
     private int allowedPlayerTicks = 1;
     private int lastDropTick = MinecraftServer.currentTick;
+    private int lastBookTick  = MinecraftServer.currentTick;
     private int dropCount = 0;
     private static final int SURVIVAL_PLACE_DISTANCE_SQUARED = 6 * 6;
     private static final int CREATIVE_PLACE_DISTANCE_SQUARED = 7 * 7;
@@ -2249,6 +2250,13 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
         ItemStack itemstack1;
 
         if ("MC|BEdit".equals(s)) {
+        	// CraftBukkit start
+        	if (this.lastBookTick + 20 > MinecraftServer.currentTick) {
+        		this.disconnect("Book edited too quickly!");
+        		return;
+        	}
+        	this.lastBookTick = MinecraftServer.currentTick;
+        	// CraftBukkit end
             packetdataserializer = packetplayincustompayload.b();
 
             try {
@@ -2278,6 +2286,13 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
             String s1;
 
             if ("MC|BSign".equals(s)) {
+            	// CraftBukkit start
+            	if (this.lastBookTick + 20 > MinecraftServer.currentTick) {
+            		this.disconnect("Book edited too quickly!");
+            		return;
+            	}
+            	this.lastBookTick = MinecraftServer.currentTick;
+            	// CraftBukkit end
                 packetdataserializer = packetplayincustompayload.b();
 
                 try {

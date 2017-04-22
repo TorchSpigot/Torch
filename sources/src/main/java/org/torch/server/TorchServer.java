@@ -1299,7 +1299,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      * Tab complete via Bukkit
      */
     public List<String> tabCompleteCommand(ICommandListener icommandlistener, String s, @Nullable BlockPosition blockposition, boolean flag) {
-        return craftServer.tabComplete(icommandlistener, s, blockposition);
+        return craftServer.tabComplete(icommandlistener, s, blockposition, true);
     }
     
     /**

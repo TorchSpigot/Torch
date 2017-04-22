@@ -1,6 +1,5 @@
 package net.minecraft.server;
 
-import com.google.common.collect.Maps;
 import com.koloboke.collect.map.hash.HashObjObjMaps;
 import com.koloboke.collect.map.hash.HashObjFloatMaps;
 
@@ -86,6 +85,7 @@ public class RecipesFurnace {
     // CraftBukkit start - add method
     public void registerRecipe(ItemStack itemstack, ItemStack itemstack1, float f) {
         this.customRecipes.put(itemstack, itemstack1);
+        this.customExperience.put(itemstack, f);
     }
     // CraftBukkit end
 

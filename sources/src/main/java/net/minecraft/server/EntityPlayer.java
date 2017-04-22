@@ -1,16 +1,12 @@
 package net.minecraft.server;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.koloboke.collect.set.hash.HashObjSets;
 import com.mojang.authlib.GameProfile;
 import io.netty.buffer.Unpooled;
 import java.util.ArrayDeque; // Paper
 import java.util.Collection;
 import java.util.Deque; // Paper
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -509,6 +505,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
             entityliving.b(this, this.bb);
         }
 
+        this.stopRiding(); // Paper - stop riding entities on death, preventing the entity from adjusting our location or duping the ridden entity
         this.b(StatisticList.A);
         this.a(StatisticList.h);
         this.extinguish();

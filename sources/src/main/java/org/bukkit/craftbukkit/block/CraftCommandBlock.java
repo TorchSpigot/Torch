@@ -27,24 +27,29 @@ public class CraftCommandBlock extends CraftBlockState implements CommandBlock {
         name = commandBlock.getCommandBlock().getName();
     }
 
-    public String getCommand() {
+    @Override
+	public String getCommand() {
         return command;
     }
 
-    public void setCommand(String command) {
+    @Override
+	public void setCommand(String command) {
         this.command = command != null ? command : "";
     }
 
-    public String getName() {
+    @Override
+	public String getName() {
         return name;
     }
 
-    public void setName(String name) {
+    @Override
+	public void setName(String name) {
         this.name = name != null ? name : "@";
     }
 
-    public boolean update(boolean force, boolean applyPhysics) {
-        boolean result = (isPlaced()) ? super.update(force, applyPhysics) : true;
+    @Override
+	public boolean update(boolean force, boolean applyPhysics) {
+    	boolean result = super.update(force, applyPhysics);
 
         if (result) {
             commandBlock.getCommandBlock().setCommand(command);

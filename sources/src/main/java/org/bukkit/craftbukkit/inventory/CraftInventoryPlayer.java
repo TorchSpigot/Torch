@@ -25,7 +25,7 @@ public class CraftInventoryPlayer extends CraftInventory implements org.bukkit.i
 
     @Override
     public ItemStack[] getStorageContents() {
-        return Arrays.copyOfRange(getContents(), 0, getInventory().items.size());
+    	 return asCraftMirror(getInventory().items);
     }
 
 
@@ -105,51 +105,61 @@ public class CraftInventoryPlayer extends CraftInventory implements org.bukkit.i
         player.playerConnection.sendPacket(new PacketPlayOutSetSlot(player.defaultContainer.windowId, index, CraftItemStack.asNMSCopy(item)));
     }
 
-    public int getHeldItemSlot() {
+    @Override
+	public int getHeldItemSlot() {
         return getInventory().itemInHandIndex;
     }
 
-    public void setHeldItemSlot(int slot) {
+    @Override
+	public void setHeldItemSlot(int slot) {
         Validate.isTrue(slot >= 0 && slot < PlayerInventory.getHotbarSize(), "Slot is not between 0 and 8 inclusive");
         this.getInventory().itemInHandIndex = slot;
         ((CraftPlayer) this.getHolder()).getHandle().playerConnection.sendPacket(new PacketPlayOutHeldItemSlot(slot));
     }
 
-    public ItemStack getHelmet() {
+    @Override
+	public ItemStack getHelmet() {
         return getItem(getSize() - 2);
     }
 
-    public ItemStack getChestplate() {
+    @Override
+	public ItemStack getChestplate() {
         return getItem(getSize() - 3);
     }
 
-    public ItemStack getLeggings() {
+    @Override
+	public ItemStack getLeggings() {
         return getItem(getSize() - 4);
     }
 
-    public ItemStack getBoots() {
+    @Override
+	public ItemStack getBoots() {
         return getItem(getSize() - 5);
     }
 
-    public void setHelmet(ItemStack helmet) {
+    @Override
+	public void setHelmet(ItemStack helmet) {
         setItem(getSize() - 2, helmet);
     }
 
-    public void setChestplate(ItemStack chestplate) {
+    @Override
+	public void setChestplate(ItemStack chestplate) {
         setItem(getSize() - 3, chestplate);
     }
 
-    public void setLeggings(ItemStack leggings) {
+    @Override
+	public void setLeggings(ItemStack leggings) {
         setItem(getSize() - 4, leggings);
     }
 
-    public void setBoots(ItemStack boots) {
+    @Override
+	public void setBoots(ItemStack boots) {
         setItem(getSize() - 5, boots);
     }
 
-    public ItemStack[] getArmorContents() {
-        int start = getInventory().items.size();
-        return Arrays.copyOfRange(getContents(), start, start + getInventory().armor.size());
+    @Override
+	public ItemStack[] getArmorContents() {
+    	return asCraftMirror(getInventory().armor);
     }
 
     private void setSlots(ItemStack[] items, int baseSlot, int length) {
@@ -179,8 +189,7 @@ public class CraftInventoryPlayer extends CraftInventory implements org.bukkit.i
 
     @Override
     public ItemStack[] getExtraContents() {
-        int start = getInventory().items.size() + getInventory().armor.size();
-        return Arrays.copyOfRange(getContents(), start, start + getInventory().extraSlots.size());
+    	return asCraftMirror(getInventory().extraSlots);
     }
 
     @Override
@@ -188,7 +197,8 @@ public class CraftInventoryPlayer extends CraftInventory implements org.bukkit.i
         setSlots(items, getInventory().items.size() + getInventory().armor.size(), getInventory().extraSlots.size());
     }
 
-    public int clear(int id, int data) {
+    @Override
+	public int clear(int id, int data) {
         int count = 0;
         ItemStack[] items = getContents();
 
@@ -240,35 +250,43 @@ public class CraftInventoryPlayer extends CraftInventory implements org.bukkit.i
         throw new UnsupportedOperationException();
     }
 
-    public float getHelmetDropChance() {
+    @Override
+	public float getHelmetDropChance() {
         return 1;
     }
 
-    public void setHelmetDropChance(float chance) {
+    @Override
+	public void setHelmetDropChance(float chance) {
         throw new UnsupportedOperationException();
     }
 
-    public float getChestplateDropChance() {
+    @Override
+	public float getChestplateDropChance() {
         return 1;
     }
 
-    public void setChestplateDropChance(float chance) {
+    @Override
+	public void setChestplateDropChance(float chance) {
         throw new UnsupportedOperationException();
     }
 
-    public float getLeggingsDropChance() {
+    @Override
+	public float getLeggingsDropChance() {
         return 1;
     }
 
-    public void setLeggingsDropChance(float chance) {
+    @Override
+	public void setLeggingsDropChance(float chance) {
         throw new UnsupportedOperationException();
     }
 
-    public float getBootsDropChance() {
+    @Override
+	public float getBootsDropChance() {
         return 1;
     }
 
-    public void setBootsDropChance(float chance) {
+    @Override
+	public void setBootsDropChance(float chance) {
         throw new UnsupportedOperationException();
     }
 

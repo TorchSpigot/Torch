@@ -33,8 +33,9 @@ public class CraftMetaBook extends CraftMetaItem implements BookMeta {
     static final ItemMetaKey BOOK_PAGES = new ItemMetaKey("pages");
     static final ItemMetaKey RESOLVED = new ItemMetaKey("resolved");
     static final ItemMetaKey GENERATION = new ItemMetaKey("generation");
-    static final int MAX_PAGE_LENGTH = Short.MAX_VALUE; // TODO: Check me
-    static final int MAX_TITLE_LENGTH = 0xffff;
+    static final int MAX_PAGES = 50;
+    static final int MAX_PAGE_LENGTH = 256;
+    static final int MAX_TITLE_LENGTH = 16;
 
     protected String title;
     protected String author;
@@ -167,27 +168,33 @@ public class CraftMetaBook extends CraftMetaItem implements BookMeta {
         }
     }
 
-    public boolean hasAuthor() {
+    @Override
+	public boolean hasAuthor() {
         return !Strings.isNullOrEmpty(author);
     }
 
-    public boolean hasTitle() {
+    @Override
+	public boolean hasTitle() {
         return !Strings.isNullOrEmpty(title);
     }
 
-    public boolean hasPages() {
+    @Override
+	public boolean hasPages() {
         return !pages.isEmpty();
     }
 
-    public boolean hasGeneration() {
+    @Override
+	public boolean hasGeneration() {
         return generation != null;
     }
 
-    public String getTitle() {
+    @Override
+	public String getTitle() {
         return this.title;
     }
 
-    public boolean setTitle(final String title) {
+    @Override
+	public boolean setTitle(final String title) {
         if (title == null) {
             this.title = null;
             return true;
@@ -199,11 +206,13 @@ public class CraftMetaBook extends CraftMetaItem implements BookMeta {
         return true;
     }
 
-    public String getAuthor() {
+    @Override
+	public String getAuthor() {
         return this.author;
     }
 
-    public void setAuthor(final String author) {
+    @Override
+	public void setAuthor(final String author) {
         this.author = author;
     }
 
@@ -217,12 +226,14 @@ public class CraftMetaBook extends CraftMetaItem implements BookMeta {
         this.generation = (generation == null) ? null : generation.ordinal();
     }
 
-    public String getPage(final int page) {
+    @Override
+	public String getPage(final int page) {
         Validate.isTrue(isValidPage(page), "Invalid page number");
         return CraftChatMessage.fromComponent(pages.get(page - 1));
     }
 
-    public void setPage(final int page, final String text) {
+    @Override
+	public void setPage(final int page, final String text) {
         if (!isValidPage(page)) {
             throw new IllegalArgumentException("Invalid page number " + page + "/" + pages.size());
         }
@@ -231,14 +242,20 @@ public class CraftMetaBook extends CraftMetaItem implements BookMeta {
         pages.set(page - 1, CraftChatMessage.fromString(newText, true)[0]);
     }
 
-    public void setPages(final String... pages) {
+    @Override
+	public void setPages(final String... pages) {
         this.pages.clear();
 
         addPage(pages);
     }
 
-    public void addPage(final String... pages) {
+    @Override
+	public void addPage(final String... pages) {
         for (String page : pages) {
+        	if (this.pages.size() >= MAX_PAGES) {
+                return;
+            }
+        	
             if (page == null) {
                 page = "";
             } else if (page.length() > MAX_PAGE_LENGTH) {
@@ -249,11 +266,13 @@ public class CraftMetaBook extends CraftMetaItem implements BookMeta {
         }
     }
 
-    public int getPageCount() {
+    @Override
+	public int getPageCount() {
         return pages.size();
     }
 
-    public List<String> getPages() {
+    @Override
+	public List<String> getPages() {
         final List<IChatBaseComponent> copy = ImmutableList.copyOf(pages);
         return new AbstractList<String>() {
 
@@ -269,7 +288,8 @@ public class CraftMetaBook extends CraftMetaItem implements BookMeta {
         };
     }
 
-    public void setPages(List<String> pages) {
+    @Override
+	public void setPages(List<String> pages) {
         this.pages.clear();
         for (String page : pages) {
             addPage(page);
