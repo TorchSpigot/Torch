@@ -154,6 +154,7 @@ public class TorchPlayerList implements TorchReactor {
     	// Setup instance for org.torch.api.TorchReactor
     	servant = legacy;
     	this.server = TorchServer.getServer();
+        minecraftServer = server;
     	
     	TorchServer.getServer().craftServer = server.server = craftServer = new CraftServer(server, this);
     	TorchServer.getServer().console = server.console = org.bukkit.craftbukkit.command.ColouredConsoleSender.getInstance();
@@ -166,7 +167,6 @@ public class TorchPlayerList implements TorchReactor {
         operators = new OpList(OPS_FILE);
         whitelist = new WhiteList(WHITELIST_FILE);
         playerStatFiles = HashObjObjMaps.newMutableMap();
-        minecraftServer = server;
         
     	this.setViewDistance(this.server.getIntProperty("view-distance", 10));
     	this.setMaxPlayers(this.server.getIntProperty("max-players", 20));
@@ -196,6 +196,7 @@ public class TorchPlayerList implements TorchReactor {
         this.saveIPBanList();
         this.loadIPBanList();
         this.readWhiteList();
+        this.loadOpsList();
         this.saveOpsList();
         
         // Save the whitelist file if doesn exist
@@ -444,7 +445,9 @@ public class TorchPlayerList implements TorchReactor {
             entityplayer.setResourcePack(this.server.getResourcePackUrl(), this.server.getResourcePackHash());
         }
         
-        for (MobEffect effect : entityplayer.getEffects()) playerconnection.sendPacket(new PacketPlayOutEntityEffect(entityplayer.getId(), effect));
+        Regulator.post(() -> {
+        	for (MobEffect effect : entityplayer.getEffects()) playerconnection.sendPacket(new PacketPlayOutEntityEffect(entityplayer.getId(), effect));
+        });
         
         if (nbttagcompound != null && nbttagcompound.hasKeyOfType("RootVehicle", 10)) {
             NBTTagCompound rootVehicle = nbttagcompound.getCompound("RootVehicle");
@@ -815,9 +818,11 @@ public class TorchPlayerList implements TorchReactor {
         syncPlayerInventoryHealth(newPlayerEntity); // TODO: check
         newPlayerEntity.updateAbilities(); // TODO: check
         
-        for (MobEffect effect : oldPlayerEntity.getEffects()) {
-            newPlayerEntity.playerConnection.sendPacket(new PacketPlayOutEntityEffect(oldPlayerEntity.getId(), effect));
-        }
+        Regulator.post(() -> {
+        	for (MobEffect effect : oldPlayerEntity.getEffects()) {
+                newPlayerEntity.playerConnection.sendPacket(new PacketPlayOutEntityEffect(newPlayerEntity.getId(), effect));
+            }
+        });
         
         // Don't fire on respawn
         if (fromWorld != location.getWorld()) {
@@ -880,7 +885,7 @@ public class TorchPlayerList implements TorchReactor {
 
         Vector velocity = entityplayer.getBukkitEntity().getVelocity();
         exitWorld.getTravelAgent().adjustExit(entityplayer, exit, velocity);
-
+        
         // Set teleport invulnerability only if player changing worlds
         entityplayer.worldChangeInvuln = true;
         // Vanilla doesn't check for suffocation when handling portals, so neither should we
@@ -915,9 +920,11 @@ public class TorchPlayerList implements TorchReactor {
         this.updateTimeAndWeatherForPlayer(player, targetWorld);
         this.syncPlayerInventoryHealth(player);
         
-        for (MobEffect mobeffect : player.getEffects()) {
-        	player.playerConnection.sendPacket(new PacketPlayOutEntityEffect(player.getId(), mobeffect));
-        }
+        Regulator.post(() -> {
+        	for (MobEffect mobeffect : player.getEffects()) {
+            	player.playerConnection.sendPacket(new PacketPlayOutEntityEffect(player.getId(), mobeffect));
+            }
+        });
     }
     
     /**

@@ -1,7 +1,6 @@
 package net.minecraft.server;
 
 import org.apache.logging.log4j.Logger;
-import org.torch.server.TorchPlayerList;
 import org.torch.server.TorchServer;
 
 public class DedicatedPlayerList extends PlayerList {
