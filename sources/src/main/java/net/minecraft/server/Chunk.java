@@ -110,7 +110,7 @@ public class Chunk {
         Arrays.fill(this.g, (byte) -1);
         // CraftBukkit start
         this.bukkitChunk = new org.bukkit.craftbukkit.CraftChunk(this);
-        this.chunkKey = ChunkCoordIntPair.a(this.locX, this.locZ);
+        this.chunkKey = ChunkCoordIntPair.chunkXZ2Int(this.locX, this.locZ);
     }
 
     public org.bukkit.Chunk bukkitChunk;

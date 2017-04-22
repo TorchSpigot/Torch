@@ -33,7 +33,7 @@ public class PortalTravelAgent {
             int k = MathHelper.floor(entity.locZ);
             // CraftBukkit start - Modularize end portal creation
             BlockPosition created = this.createEndPortal(entity.locX, entity.locY, entity.locZ);
-            entity.setPositionRotation((double) created.getX(), (double) created.getY(), (double) created.getZ(), entity.yaw, 0.0F);
+            entity.setPositionRotation(created.getX(), created.getY(), created.getZ(), entity.yaw, 0.0F);
             entity.motX = entity.motY = entity.motZ = 0.0D;
         }
     }
@@ -119,10 +119,10 @@ public class PortalTravelAgent {
         // CraftBukkit end
         boolean flag1 = true;
         Object object = BlockPosition.ZERO;
-        long k = ChunkCoordIntPair.a(i, j);
+        long k = ChunkCoordIntPair.chunkXZ2Int(i, j);
 
         if (this.c.containsKey(k)) {
-            PortalTravelAgent.ChunkCoordinatesPortal portaltravelagent_chunkcoordinatesportal = (PortalTravelAgent.ChunkCoordinatesPortal) this.c.get(k);
+            PortalTravelAgent.ChunkCoordinatesPortal portaltravelagent_chunkcoordinatesportal = this.c.get(k);
 
             d0 = 0.0D;
             object = portaltravelagent_chunkcoordinatesportal;
@@ -182,21 +182,21 @@ public class PortalTravelAgent {
         } else {
             // CraftBukkit end
 
-            double d2 = (double) ((BlockPosition) object).getX() + 0.5D;
-            double d3 = (double) ((BlockPosition) object).getZ() + 0.5D;
-            ShapeDetector.ShapeDetectorCollection shapedetector_shapedetectorcollection = Blocks.PORTAL.c(this.world, (BlockPosition) object);
+            double d2 = object.getX() + 0.5D;
+            double d3 = object.getZ() + 0.5D;
+            ShapeDetector.ShapeDetectorCollection shapedetector_shapedetectorcollection = Blocks.PORTAL.c(this.world, object);
             boolean flag2 = shapedetector_shapedetectorcollection.getFacing().e().c() == EnumDirection.EnumAxisDirection.NEGATIVE;
             double d4 = shapedetector_shapedetectorcollection.getFacing().k() == EnumDirection.EnumAxis.X ? (double) shapedetector_shapedetectorcollection.a().getZ() : (double) shapedetector_shapedetectorcollection.a().getX();
-            double d5 = (double) (shapedetector_shapedetectorcollection.a().getY() + 1) - entity.getPortalOffset().y * (double) shapedetector_shapedetectorcollection.e();
+            double d5 = shapedetector_shapedetectorcollection.a().getY() + 1 - entity.getPortalOffset().y * shapedetector_shapedetectorcollection.e();
 
             if (flag2) {
                 ++d4;
             }
 
             if (shapedetector_shapedetectorcollection.getFacing().k() == EnumDirection.EnumAxis.X) {
-                d3 = d4 + (1.0D - entity.getPortalOffset().x) * (double) shapedetector_shapedetectorcollection.d() * (double) shapedetector_shapedetectorcollection.getFacing().e().c().a();
+                d3 = d4 + (1.0D - entity.getPortalOffset().x) * shapedetector_shapedetectorcollection.d() * shapedetector_shapedetectorcollection.getFacing().e().c().a();
             } else {
-                d2 = d4 + (1.0D - entity.getPortalOffset().x) * (double) shapedetector_shapedetectorcollection.d() * (double) shapedetector_shapedetectorcollection.getFacing().e().c().a();
+                d2 = d4 + (1.0D - entity.getPortalOffset().x) * shapedetector_shapedetectorcollection.d() * shapedetector_shapedetectorcollection.getFacing().e().c().a();
             }
 
             float f1 = 0.0F;
@@ -224,9 +224,9 @@ public class PortalTravelAgent {
             // CraftBukkit end
 
             // CraftBukkit start - Adjust position and velocity instances instead of entity
-            velocity.setX(d6 * (double) f1 + d7 * (double) f4);
-            velocity.setZ(d6 * (double) f3 + d7 * (double) f2);
-            f = f - (float) (entity.getPortalDirection().opposite().get2DRotationValue() * 90) + (float) (shapedetector_shapedetectorcollection.getFacing().get2DRotationValue() * 90);
+            velocity.setX(d6 * f1 + d7 * f4);
+            velocity.setZ(d6 * f3 + d7 * f2);
+            f = f - entity.getPortalDirection().opposite().get2DRotationValue() * 90 + shapedetector_shapedetectorcollection.getFacing().get2DRotationValue() * 90;
             // entity.setPositionRotation(d2, d5, d3, entity.yaw, entity.pitch);
             position.setX(d2);
             position.setY(d5);
@@ -295,10 +295,10 @@ public class PortalTravelAgent {
         double d4;
 
         for (i2 = i - 16; i2 <= i + 16; ++i2) {
-            d1 = (double) i2 + 0.5D - x; // CraftBukkit
+            d1 = i2 + 0.5D - x; // CraftBukkit
 
             for (j2 = k - 16; j2 <= k + 16; ++j2) {
-                d2 = (double) j2 + 0.5D - z; // CraftBukkit
+                d2 = j2 + 0.5D - z; // CraftBukkit
 
                 label271:
                 for (k2 = this.world.Z() - 1; k2 >= 0; --k2) {
@@ -330,7 +330,7 @@ public class PortalTravelAgent {
                                 }
                             }
 
-                            d3 = (double) k2 + 0.5D - y; // CraftBukkit
+                            d3 = k2 + 0.5D - y; // CraftBukkit
                             d4 = d1 * d1 + d3 * d3 + d2 * d2;
                             if (d0 < 0.0D || d4 < d0) {
                                 d0 = d4;
@@ -347,10 +347,10 @@ public class PortalTravelAgent {
 
         if (d0 < 0.0D) {
             for (i2 = i - 16; i2 <= i + 16; ++i2) {
-                d1 = (double) i2 + 0.5D - x; // CraftBukkit
+                d1 = i2 + 0.5D - x; // CraftBukkit
 
                 for (j2 = k - 16; j2 <= k + 16; ++j2) {
-                    d2 = (double) j2 + 0.5D - z; // CraftBukkit
+                    d2 = j2 + 0.5D - z; // CraftBukkit
 
                     label219:
                     for (k2 = this.world.Z() - 1; k2 >= 0; --k2) {
@@ -375,7 +375,7 @@ public class PortalTravelAgent {
                                     }
                                 }
 
-                                d3 = (double) k2 + 0.5D - y; // CraftBukkit
+                                d3 = k2 + 0.5D - y; // CraftBukkit
                                 d4 = d1 * d1 + d3 * d3 + d2 * d2;
                                 if (d0 < 0.0D || d4 < d0) {
                                     d0 = d4;

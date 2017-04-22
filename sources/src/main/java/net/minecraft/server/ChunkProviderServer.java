@@ -68,7 +68,7 @@ public class ChunkProviderServer implements IChunkProvider {
 
     public void unload(Chunk chunk) {
         if (this.world.worldProvider.c(chunk.locX, chunk.locZ)) {
-            this.unloadQueue.add(Long.valueOf(ChunkCoordIntPair.a(chunk.locX, chunk.locZ)));
+            this.unloadQueue.add(Long.valueOf(ChunkCoordIntPair.chunkXZ2Int(chunk.locX, chunk.locZ)));
             chunk.d = true;
         }
 
@@ -85,10 +85,11 @@ public class ChunkProviderServer implements IChunkProvider {
 
     }
 
-    @Nullable
+    @Override
+	@Nullable
     public Chunk getLoadedChunkAt(int i, int j) {
-        long k = ChunkCoordIntPair.a(i, j);
-        Chunk chunk = (Chunk) this.chunks.get(k);
+        long k = ChunkCoordIntPair.chunkXZ2Int(i, j);
+        Chunk chunk = this.chunks.get(k);
 
         if (chunk != null) {
             chunk.d = false;
@@ -124,7 +125,7 @@ public class ChunkProviderServer implements IChunkProvider {
         if (chunk == null) {
             chunk = this.loadChunk(i, j);
             if (chunk != null) {
-                this.chunks.put(ChunkCoordIntPair.a(i, j), chunk);
+                this.chunks.put(ChunkCoordIntPair.chunkXZ2Int(i, j), chunk);
                 chunk.addEntities();
                 chunk.loadNearby(this, this.chunkGenerator, false); // CraftBukkit
             }
@@ -135,11 +136,12 @@ public class ChunkProviderServer implements IChunkProvider {
 
     // CraftBukkit start
     public Chunk getChunkIfLoaded(int x, int z) {
-        return chunks.get(ChunkCoordIntPair.a(x, z));
+        return chunks.get(ChunkCoordIntPair.chunkXZ2Int(x, z));
     }
     // CraftBukkit end
 
-    public Chunk getChunkAt(int i, int j) {
+    @Override
+	public Chunk getChunkAt(int i, int j) {
         return getChunkAt(i, j, null);
     }
 
@@ -181,7 +183,7 @@ public class ChunkProviderServer implements IChunkProvider {
 
         if (chunk == null) {
             world.timings.syncChunkLoadTimer.startTiming(); // Spigot
-            long k = ChunkCoordIntPair.a(i, j);
+            long k = ChunkCoordIntPair.chunkXZ2Int(i, j);
 
             try {
                 chunk = this.chunkGenerator.getOrCreateChunk(i, j);
@@ -189,9 +191,9 @@ public class ChunkProviderServer implements IChunkProvider {
                 CrashReport crashreport = CrashReport.a(throwable, "Exception generating new chunk");
                 CrashReportSystemDetails crashreportsystemdetails = crashreport.a("Chunk to be generated");
 
-                crashreportsystemdetails.a("Location", (Object) String.format("%d,%d", new Object[] { Integer.valueOf(i), Integer.valueOf(j)}));
-                crashreportsystemdetails.a("Position hash", (Object) Long.valueOf(k));
-                crashreportsystemdetails.a("Generator", (Object) this.chunkGenerator);
+                crashreportsystemdetails.a("Location", String.format("%d,%d", new Object[] { Integer.valueOf(i), Integer.valueOf(j)}));
+                crashreportsystemdetails.a("Position hash", Long.valueOf(k));
+                crashreportsystemdetails.a("Generator", this.chunkGenerator);
                 throw new ReportedException(crashreport);
             }
 
@@ -319,7 +321,8 @@ public class ChunkProviderServer implements IChunkProvider {
 
     private static final double UNLOAD_QUEUE_RESIZE_FACTOR = 0.96;
 
-    public boolean unloadChunks() {
+    @Override
+	public boolean unloadChunks() {
         if (!this.world.savingDisabled) {
             if (!this.unloadQueue.isEmpty()) {
                 // Spigot start
@@ -333,7 +336,7 @@ public class ChunkProviderServer implements IChunkProvider {
                 while (iterator.hasNext()) { // Spigot
                     Long olong = (Long) iterator.next();
                     iterator.remove(); // Spigot
-                    Chunk chunk = (Chunk) this.chunks.get(olong);
+                    Chunk chunk = this.chunks.get(olong);
 
                     if (chunk != null && chunk.d) {
                         // CraftBukkit start - move unload logic to own method
@@ -412,7 +415,8 @@ public class ChunkProviderServer implements IChunkProvider {
         return !this.world.savingDisabled;
     }
 
-    public String getName() {
+    @Override
+	public String getName() {
         return "ServerChunkCache: " + this.chunks.size() + " Drop: " + this.unloadQueue.size();
     }
 
@@ -430,10 +434,11 @@ public class ChunkProviderServer implements IChunkProvider {
     }
 
     public boolean isLoaded(int i, int j) {
-        return this.chunks.containsKey(ChunkCoordIntPair.a(i, j));
+        return this.chunks.containsKey(ChunkCoordIntPair.chunkXZ2Int(i, j));
     }
 
-    public boolean e(int i, int j) {
-        return this.chunks.containsKey(ChunkCoordIntPair.a(i, j)) || this.chunkLoader.a(i, j);
+    @Override
+	public boolean e(int i, int j) {
+        return this.chunks.containsKey(ChunkCoordIntPair.chunkXZ2Int(i, j)) || this.chunkLoader.a(i, j);
     }
 }

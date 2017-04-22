@@ -11,4 +11,4 @@ test:
     - chmod +x scripts/build.sh
     - ./scripts/build.sh --init
   post:
-    - yes|cp -rf ./TorchPowered-*.jar $CIRCLE_ARTIFACTS
+    - yes|cp -rf ./Torchpowered-1.11.2.jar $CIRCLE_ARTIFACTS
