@@ -26,7 +26,7 @@ echo "Building Torch..."
 	
 	minecraftversion=$(cat "$paperworkdir/BuildData/info.json"  | grep minecraftVersion | cut -d '"' -f 4)
 	rawjar="$paperbasedir/Paper-Server/target/paper-$minecraftversion.jar"
-	cp "$rawjar" "$basedir/Torchpowered-$minecraftversion.jar"
+	yes|cp -rf "$rawjar" "$basedir/Torchpowered-$minecraftversion.jar"
 	
 	echo ""
 	echo "Torch Build success!"

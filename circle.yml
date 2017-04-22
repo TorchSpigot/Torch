@@ -1,0 +1,10 @@
+machine:
+  java:
+    version: oraclejdk8
+
+test:
+  override:
+    - chmod +x scripts/build.sh
+    - ./scripts/build.sh --init
+  post:
+    - yes|cp -rf ./TorchPowered-*.jar $CIRCLE_ARTIFACTS

@@ -1,6 +1,6 @@
 # Torch (火苣)
 
-[![Build Status](https://travis-ci.org/TorchSpigot/Torch.svg?branch=ver%2F1.11.2)](https://travis-ci.org/TorchSpigot/Torch) [![Minecraft](https://img.shields.io/badge/Minecraft-1.11.2-green.svg?style=flat)](https://www.minecraft.net/) [![Java](https://img.shields.io/badge/Java_JDK-v1.8-green.svg?style=flat)](https://www.java.com/) [![bStats](https://img.shields.io/badge/bStats-Torch-blue.svg?style=flat)](https://bstats.org/plugin/bukkit/Torch)
+[![Build Status](https://travis-ci.org/TorchSpigot/Torch.svg?branch=master)](https://travis-ci.org/TorchSpigot/Torch) [![Minecraft](https://img.shields.io/badge/Minecraft-1.11.2-green.svg?style=flat)](https://www.minecraft.net/) [![Java](https://img.shields.io/badge/Java_JDK-v1.8-green.svg?style=flat)](https://www.java.com/) [![bStats](https://img.shields.io/badge/bStats-Torch-blue.svg?style=flat)](https://bstats.org/plugin/bukkit/Torch)
 
 
 ### Introduction
