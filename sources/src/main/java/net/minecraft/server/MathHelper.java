@@ -4,8 +4,6 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.torch.util.random.LightRandom;
-
 public class MathHelper {
 
     public static final float a = c(2.0F);
@@ -32,16 +30,22 @@ public class MathHelper {
         return (float) Math.sqrt(d0);
     }
 
-    public static int d(float f) {
-        int i = (int) f;
-
-        return f < i ? i - 1 : i;
+    /**
+     * Returns the greatest integer less than or equal to the float argument
+     */
+    public static int d(float value) { // Torch - fast floor
+        //int i = (int) f;
+        //return f < i ? i - 1 : i;
+    	return (int)(value + 1024.0D) - 1024;
     }
 
-    public static int floor(double d0) {
-        int i = (int) d0;
-
-        return d0 < i ? i - 1 : i;
+    /**
+     * Returns the greatest integer less than or equal to the double argument
+     */
+    public static int floor(double value) { // Torch - fast floor
+        //int i = (int) d0;
+        //return d0 < i ? i - 1 : i;
+    	return (int)(value + 1024.0D) - 1024;
     }
 
     public static long d(double d0) {

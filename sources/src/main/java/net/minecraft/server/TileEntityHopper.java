@@ -23,23 +23,28 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
     public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
     private int maxStack = MAX_STACK;
 
-    public List<ItemStack> getContents() {
+    @Override
+	public List<ItemStack> getContents() {
         return this.items;
     }
 
-    public void onOpen(CraftHumanEntity who) {
+    @Override
+	public void onOpen(CraftHumanEntity who) {
         transaction.add(who);
     }
 
-    public void onClose(CraftHumanEntity who) {
+    @Override
+	public void onClose(CraftHumanEntity who) {
         transaction.remove(who);
     }
 
-    public List<HumanEntity> getViewers() {
+    @Override
+	public List<HumanEntity> getViewers() {
         return transaction;
     }
 
-    public void setMaxStackSize(int size) {
+    @Override
+	public void setMaxStackSize(int size) {
         maxStack = size;
     }
     // CraftBukkit end
@@ -50,10 +55,11 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
     }
 
     public static void a(DataConverterManager dataconvertermanager) {
-        dataconvertermanager.a(DataConverterTypes.BLOCK_ENTITY, (DataInspector) (new DataInspectorItemList(TileEntityHopper.class, new String[] { "Items"})));
+        dataconvertermanager.a(DataConverterTypes.BLOCK_ENTITY, (new DataInspectorItemList(TileEntityHopper.class, new String[] { "Items"})));
     }
 
-    public void a(NBTTagCompound nbttagcompound) {
+    @Override
+	public void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
         this.items = NonNullList.a(this.getSize(), ItemStack.a);
         if (!this.c(nbttagcompound)) {
@@ -67,7 +73,8 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
         this.f = nbttagcompound.getInt("TransferCooldown");
     }
 
-    public NBTTagCompound save(NBTTagCompound nbttagcompound) {
+    @Override
+	public NBTTagCompound save(NBTTagCompound nbttagcompound) {
         super.save(nbttagcompound);
         if (!this.d(nbttagcompound)) {
             ContainerUtil.a(nbttagcompound, this.items);
@@ -81,18 +88,21 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
         return nbttagcompound;
     }
 
-    public int getSize() {
+    @Override
+	public int getSize() {
         return this.items.size();
     }
 
-    public ItemStack splitStack(int i, int j) {
+    @Override
+	public ItemStack splitStack(int i, int j) {
         this.d((EntityHuman) null);
         ItemStack itemstack = ContainerUtil.a(this.q(), i, j);
 
         return itemstack;
     }
 
-    public void setItem(int i, ItemStack itemstack) {
+    @Override
+	public void setItem(int i, ItemStack itemstack) {
         this.d((EntityHuman) null);
         this.q().set(i, itemstack);
         if (itemstack.getCount() > this.getMaxStackSize()) {
@@ -101,15 +111,18 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
 
     }
 
-    public String getName() {
+    @Override
+	public String getName() {
         return this.hasCustomName() ? this.o : "container.hopper";
     }
 
-    public int getMaxStackSize() {
+    @Override
+	public int getMaxStackSize() {
         return maxStack; // CraftBukkit
     }
 
-    public void F_() {
+    @Override
+	public void F_() {
         if (this.world != null && !this.world.isClientSide) {
             --this.f;
             this.g = this.world.getTime();
@@ -137,7 +150,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
 
                 if (!this.r()) {
                     mayAcceptItems = true; // Paper - flag this hopper to be able to accept items
-                    flag = a((IHopper) this) || flag;
+                    flag = a(this) || flag;
                 }
 
                 if (flag) {
@@ -176,7 +189,8 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
         return false;
     }
 
-    public boolean w_() {
+    @Override
+	public boolean w_() {
         return this.p();
     }
 
@@ -526,7 +540,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
 
         // Paper start - don't search for entities in push mode
         World world = getWorld();
-        return getInventory(world, this.E() + (double) enumdirection.getAdjacentX(), this.F() + (double) enumdirection.getAdjacentY(), this.G() + (double) enumdirection.getAdjacentZ(), !world.paperConfig.isHopperPushBased);
+        return getInventory(world, this.E() + enumdirection.getAdjacentX(), this.F() + enumdirection.getAdjacentY(), this.G() + enumdirection.getAdjacentZ(), !world.paperConfig.isHopperPushBased);
         // Paper end
     }
 
@@ -574,7 +588,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
             TileEntity tileentity = world.getTileEntity(blockposition);
 
             if (tileentity instanceof IInventory) {
-                object = (IInventory) tileentity;
+                object = tileentity;
                 if (object instanceof TileEntityChest && block instanceof BlockChest) {
                     object = ((BlockChest) block).a(world, blockposition, true);
                 }
@@ -585,7 +599,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
             List list = world.getEntities((Entity) null, new AxisAlignedBB(d0 - 0.5D, d1 - 0.5D, d2 - 0.5D, d0 + 0.5D, d1 + 0.5D, d2 + 0.5D), IEntitySelector.c);
 
             if (!list.isEmpty()) {
-                object = (IInventory) list.get(world.random.nextInt(list.size()));
+                object = list.get(world.random.nextInt(list.size()));
             }
         }
 
@@ -596,16 +610,19 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
         return itemstack.getItem() != itemstack1.getItem() ? false : (itemstack.getData() != itemstack1.getData() ? false : (itemstack.getCount() > itemstack.getMaxStackSize() ? false : ItemStack.equals(itemstack, itemstack1)));
     }
 
-    public double E() {
-        return (double) this.position.getX() + 0.5D;
+    @Override
+	public double E() {
+        return this.position.getX() + 0.5D;
     }
 
-    public double F() {
-        return (double) this.position.getY() + 0.5D;
+    @Override
+	public double F() {
+        return this.position.getY() + 0.5D;
     }
 
-    public double G() {
-        return (double) this.position.getZ() + 0.5D;
+    @Override
+	public double G() {
+        return this.position.getZ() + 0.5D;
     }
 
     private void setCooldown(int i) {
@@ -621,16 +638,19 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
         return this.f > 8;
     }
 
-    public String getContainerName() {
+    @Override
+	public String getContainerName() {
         return "minecraft:hopper";
     }
 
-    public Container createContainer(PlayerInventory playerinventory, EntityHuman entityhuman) {
+    @Override
+	public Container createContainer(PlayerInventory playerinventory, EntityHuman entityhuman) {
         this.d(entityhuman);
         return new ContainerHopper(playerinventory, this, entityhuman);
     }
 
-    protected NonNullList<ItemStack> q() {
+    @Override
+	protected NonNullList<ItemStack> q() {
         return this.items;
     }
 }
