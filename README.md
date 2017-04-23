@@ -18,7 +18,7 @@ Features:
 + Maven
 
 
-### Installation/Download
+### Download
 + [![Build Status](https://circleci.com/gh/TorchSpigot/Torch/tree/master.svg?style=svg) **CircleCI**](https://circleci.com/gh/TorchSpigot/Torch/tree/master) - Checkout the "Artifacts" tab of the latest build (**login required**)
 
 You can also build from source by yourself if the latest building is failed, but passing via Travis-CI :/

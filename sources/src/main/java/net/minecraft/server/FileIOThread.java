@@ -9,12 +9,13 @@ public class FileIOThread implements Runnable {
     // private final List<IAsyncChunkSaver> b;
     // private volatile long c;
     // private volatile long d;
-    // private volatile boolean e;
+    private volatile boolean e; public void setIsWaitingFinish(boolean flag) { this.e = flag; } // OBFHELPER
 
     private FileIOThread() {
     	TorchIOThread.getInstance();
     }
 
+    public static FileIOThread getInstance() { return a(); } // OBFHELPER
     public static FileIOThread a() {
         return FileIOThread.a;
     }

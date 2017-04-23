@@ -73,6 +73,7 @@ public class TorchIOThread implements Runnable {
     }
     
     public void waitForFinish() throws InterruptedException {
+        FileIOThread.getInstance().setIsWaitingFinish(this.isWaitingFinish = true);
         this.isWaitingFinish = true;
         
         while (!chunkSaverQueue.isEmpty()) {
@@ -80,6 +81,6 @@ public class TorchIOThread implements Runnable {
             Thread.sleep(10L);
         }
         
-        this.isWaitingFinish = false;
+        FileIOThread.getInstance().setIsWaitingFinish(this.isWaitingFinish = false);
     }
 }
