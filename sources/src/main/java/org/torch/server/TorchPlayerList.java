@@ -43,8 +43,6 @@ import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.util.Vector;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 import org.torch.api.TorchReactor;
-import org.torch.api.TorchServant;
-
 import net.minecraft.server.*;
 
 import static org.torch.server.TorchServer.logger;
