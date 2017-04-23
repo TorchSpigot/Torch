@@ -1,6 +1,6 @@
 machine:
   java:
-    version: openjdk8
+    version: oraclejdk8
   dependencies:
     cache-directories:
       - "./work/Paper/work/1.11.2/net"
