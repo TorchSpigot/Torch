@@ -21,8 +21,10 @@ public class TorchBiomeCache implements TorchReactor {
 	private final static long EXPIRE_THRESHOLD = TimeUnit.MILLISECONDS.convert(30, TimeUnit.SECONDS);
 	
     private final WorldChunkManager chunkManager;
+    /** Used to remove all expired caches, refresh before check. */
+	private final CacheExpirer oldEntriesRemover = new CacheExpirer();
     /** The last time this BiomeCache was cleaned, in milliseconds. */
-    private long lastCleanupTime;
+    private long lastCleanupTime = System.currentTimeMillis();
     /**
 	 * The map of keys to BiomeCacheBlocks. Keys are based on the chunk x, z coordinates as (x | z << 32).
 	 */
@@ -32,7 +34,6 @@ public class TorchBiomeCache implements TorchReactor {
     	servant = legacy;
     	
         chunkManager = worldChunkManager;
-        lastCleanupTime = System.currentTimeMillis();
     }
     
     /**
@@ -67,14 +68,15 @@ public class TorchBiomeCache implements TorchReactor {
         long currentMillis = System.currentTimeMillis();
 		if ((currentMillis - this.lastCleanupTime) > CLEAN_INTERVAL) {
 			this.lastCleanupTime = currentMillis;
-			this.cacheMap.removeIf(new RemoveOldEntries(currentMillis));
+			this.cacheMap.removeIf(this.oldEntriesRemover.refresh(currentMillis));
 		}
     }
     
-    private static class RemoveOldEntries implements LongObjPredicate<Block> {
-		private final long timeMark;
-		public RemoveOldEntries(final long mark) {
-			this.timeMark = mark;
+    private static class CacheExpirer implements LongObjPredicate<Block> {
+		private long timeMark;
+		public CacheExpirer refresh(final long currentTime) {
+			this.timeMark = currentTime;
+			return this;
 		}
 		// Return true to cause a removal of the entry in the map
 		@Override

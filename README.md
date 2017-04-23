@@ -37,6 +37,6 @@ git checkout ver/1.11.2
 
 
 ### Contributing
-The sources is easy to modify, checkout `sources` folder
+The sources are easy to modify, checkout `sources` folder
 
 + Feel free to open a PR or issue.
