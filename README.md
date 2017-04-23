@@ -18,7 +18,10 @@ Features:
 + Maven
 
 
-### Installation/Building
+### Installation/Download
++ [![CircleCI](https://circleci.com/gh/TorchSpigot/Torch/tree/master.svg?style=svg)](https://circleci.com/gh/TorchSpigot/Torch/tree/master) - Checkout the "Artifacts" tab of the latest build (Login required)
+
+### Building/Compile
 
 #### Setup
 ```sh
