@@ -19,7 +19,7 @@ Features:
 
 
 ### Installation/Download
-+ [![CircleCI](https://circleci.com/gh/TorchSpigot/Torch/tree/master.svg?style=svg)](https://circleci.com/gh/TorchSpigot/Torch/tree/master) - Checkout the "Artifacts" tab of the latest build (Login required)
++ [![Build Status](https://circleci.com/gh/TorchSpigot/Torch/tree/master.svg?style=svg) **CircleCI**](https://circleci.com/gh/TorchSpigot/Torch/tree/master) - Checkout the "Artifacts" tab of the latest build (Login required)
 
 ### Building/Compile
 
