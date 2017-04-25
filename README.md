@@ -21,7 +21,7 @@ Features:
 ### Download
 + [![Build Status](https://circleci.com/gh/TorchSpigot/Torch/tree/master.svg?style=svg) **CircleCI**](https://circleci.com/gh/TorchSpigot/Torch/tree/master) - Checkout the "Artifacts" tab of the latest build (**login required**)
 
-You can also build from source by yourself if the latest building is failed, but passing via Travis-CI :/
+You can also build from source by yourself if the latest building was failed, but passing via Travis-CI :/
 
 ### Building/Compile
 
@@ -29,7 +29,7 @@ You can also build from source by yourself if the latest building is failed, but
 ```sh
 git clone https://github.com/TorchSpigot/Torch
 cd Torch
-git checkout ver/1.11.2
+git checkout master
 ```
 
 #### Build
@@ -39,6 +39,6 @@ git checkout ver/1.11.2
 
 
 ### Contributing
-The sources are easy to modify, checkout `sources` folder
+The source is easy to modify, checkout `sources` folder
 
 + Feel free to open a PR or issue.
