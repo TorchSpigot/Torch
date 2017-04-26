@@ -15,7 +15,6 @@ public class FileIOThread implements Runnable {
     	TorchIOThread.getInstance();
     }
 
-    public static FileIOThread getInstance() { return a(); } // OBFHELPER
     public static FileIOThread a() {
         return FileIOThread.a;
     }

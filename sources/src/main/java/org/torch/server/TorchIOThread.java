@@ -8,8 +8,10 @@ import net.minecraft.server.*;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.torch.api.TorchReactor;
+
 @Getter
-public final class TorchIOThread implements Runnable {
+public final class TorchIOThread implements Runnable, TorchReactor {
     /** The chunks need to save. */
     private final LinkedBlockingQueue<IAsyncChunkSaver> chunkSaverQueue = Queues.newLinkedBlockingQueue();
     // private volatile long writeQueuedCounter;
@@ -73,7 +75,7 @@ public final class TorchIOThread implements Runnable {
     }
     
     public void waitForFinish() throws InterruptedException {
-        FileIOThread.getInstance().setIsWaitingFinish(this.isWaitingFinish = true);
+    	this.getServant().setIsWaitingFinish(this.isWaitingFinish = true);
         this.isWaitingFinish = true;
         
         while (!chunkSaverQueue.isEmpty()) {
@@ -81,6 +83,11 @@ public final class TorchIOThread implements Runnable {
             // Thread.sleep(10L);
         }
         
-        FileIOThread.getInstance().setIsWaitingFinish(this.isWaitingFinish = false);
+        this.getServant().setIsWaitingFinish(this.isWaitingFinish = false);
     }
+
+	@Override
+	public FileIOThread getServant() {
+		return FileIOThread.a();
+	}
 }
