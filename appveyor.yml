@@ -1,0 +1,6 @@
+version: '{build}'
+
+install:
+  - ps: chmod +x scripts/build.sh
+  - cd scripts
+  - ps: build.sh --init
