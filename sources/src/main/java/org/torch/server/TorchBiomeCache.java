@@ -26,7 +26,7 @@ public final class TorchBiomeCache implements TorchReactor {
     /** The last time this BiomeCache was cleaned, in milliseconds. */
     private long lastCleanupTime = System.currentTimeMillis();
     /**
-	 * The map of keys to BiomeCacheBlocks. Keys are based on the chunk x, z coordinates as (x | z << 32).
+	 * The map of keys to TorchBiomeCache. Keys are based on the chunk x, z coordinates as (x | z << 32).
 	 */
     private final HashLongObjMap<TorchBiomeCache.Block> cacheMap = HashLongObjMaps.newMutableMap(4096);
     

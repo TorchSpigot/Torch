@@ -22,30 +22,22 @@ public class MathHelper {
         return MathHelper.b[(int) (f * 10430.378F + 16384.0F) & '\uffff'];
     }
 
-    public static float c(float f) {
-        return (float) Math.sqrt(f);
+    /** sqrt (float ver) */
+    public static float c(float value) {
+        return (float) Math.sqrt(value);
     }
 
-    public static float sqrt(double d0) {
-        return (float) Math.sqrt(d0);
+    public static float sqrt(double value) {
+        return (float) Math.sqrt(value);
     }
 
-    /**
-     * Returns the greatest integer less than or equal to the float argument
-     */
-    public static int d(float value) { // Torch - fast floor
-        //int i = (int) f;
-        //return f < i ? i - 1 : i;
-    	return (int)(value + 1024.0D) - 1024;
+    /** floor (float ver) */
+    public static int d(float value) {
+    	return value > 0 ? (int) value : (int) value - 1;
     }
 
-    /**
-     * Returns the greatest integer less than or equal to the double argument
-     */
-    public static int floor(double value) { // Torch - fast floor
-        //int i = (int) d0;
-        //return d0 < i ? i - 1 : i;
-    	return (int)(value + 1024.0D) - 1024;
+    public static int floor(double value) {
+        return value > 0 ? (int) value : (int) value - 1;
     }
 
     public static long d(double d0) {

@@ -31,7 +31,7 @@ public final class TorchIOThread implements Runnable, TorchReactor {
     }
 
     /**
-     * Retrieves an instance of the threadedFileIOBase.
+     * Retrieves an instance of the TorchIOThread.
      */
     public static TorchIOThread getInstance() {
         return TorchIOThread.LazyInstance.instance;
