@@ -1,17 +1,18 @@
 machine:
   java:
     version: oraclejdk8
-  dependencies:
-    cache-directories:
-      - "./work/Paper/work/1.11.2/net"
   notify:
     branches:
       only:
         - master
 
-test:
+dependencies:
+  cache-directories:
+    - "work/Paper/work/1.11.2"
   override:
     - chmod +x scripts/build.sh
     - ./scripts/build.sh --init
+
+test:
   post:
     - yes|cp -rf ./Torchpowered-1.11.2.jar $CIRCLE_ARTIFACTS
