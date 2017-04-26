@@ -10,7 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 @Getter
 public class TorchIOThread implements Runnable {
-	/** The chunks need to save. */
+    /** The chunks need to save. */
     private final LinkedBlockingQueue<IAsyncChunkSaver> chunkSaverQueue = Queues.newLinkedBlockingQueue();
     // private volatile long writeQueuedCounter;
     // private volatile long savedChunkCounter;
@@ -18,8 +18,8 @@ public class TorchIOThread implements Runnable {
     private volatile boolean isWaitingFinish;
     
     private static final class LazyInstance {
-		private static TorchIOThread instance = new TorchIOThread();
-	}
+	private static TorchIOThread instance = new TorchIOThread();
+    }
 
     private TorchIOThread() {
         Thread thread = new Thread(this, "File IO Thread");
@@ -36,7 +36,7 @@ public class TorchIOThread implements Runnable {
     }
     
     @Override
-	public void run() {
+    public void run() {
     	this.processQueuedChunks();
     }
     
@@ -45,7 +45,7 @@ public class TorchIOThread implements Runnable {
      */
     public void processQueuedChunks() {
     	try {
-    		while (true) this.tryWriteChunk(chunkSaverQueue.take());
+    	while (true) this.tryWriteChunk(chunkSaverQueue.take());
         } catch (Throwable t) {
             t.printStackTrace();
             TorchServer.getServer().safeShutdown();
@@ -77,8 +77,8 @@ public class TorchIOThread implements Runnable {
         this.isWaitingFinish = true;
         
         while (!chunkSaverQueue.isEmpty()) {
-        	this.tryWriteChunk(chunkSaverQueue.take());
-            Thread.sleep(10L);
+            this.tryWriteChunk(chunkSaverQueue.take());
+            // Thread.sleep(10L);
         }
         
         FileIOThread.getInstance().setIsWaitingFinish(this.isWaitingFinish = false);
