@@ -38,7 +38,7 @@ public class Chunk {
     private boolean m;
     public final Map<BlockPosition, TileEntity> tileEntities;
     public final List<Entity>[] entitySlices; // Spigot
-    final PaperLightingQueue.LightingQueue lightingQueue = new PaperLightingQueue.LightingQueue(this); // Paper
+    public final PaperLightingQueue.LightingQueue lightingQueue = new PaperLightingQueue.LightingQueue(this); // Paper
     private boolean done;
     private boolean lit;
     private boolean r;
@@ -1012,10 +1012,10 @@ public class Chunk {
         // CraftBukkit end
         world.timings.syncChunkLoadPostTimer.stopTiming(); // Paper
         world.timings.syncChunkLoadPopulateNeighbors.startTiming(); // Paper
-        Chunk chunk = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.locX, this.locZ - 1); // Paper
-        Chunk chunk1 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.locX + 1, this.locZ); // Paper
-        Chunk chunk2 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.locX, this.locZ + 1); // Paper
-        Chunk chunk3 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.locX - 1, this.locZ); // Paper
+        Chunk chunk = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider, this.locX, this.locZ - 1); // Paper
+        Chunk chunk1 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider, this.locX + 1, this.locZ); // Paper
+        Chunk chunk2 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider, this.locX, this.locZ + 1); // Paper
+        Chunk chunk3 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider, this.locX - 1, this.locZ); // Paper
 
         if (chunk1 != null && chunk2 != null && MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.locX + 1, this.locZ + 1) != null) { // Paper
             this.a(chunkgenerator);

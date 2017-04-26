@@ -185,7 +185,7 @@ public final class MCUtil {
      */
     @Nullable
     public static Chunk getLoadedChunkWithoutMarkingActive(IChunkProvider provider, int x, int z) {
-        return ((ChunkProviderServer)provider).chunks.get(ChunkCoordIntPair.chunkXZ2Int(x, z));
+        return ((ChunkProviderServer) provider).chunks.get(ChunkCoordIntPair.chunkXZ2Int(x, z));
     }
 
     /**

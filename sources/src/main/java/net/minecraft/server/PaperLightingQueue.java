@@ -31,7 +31,7 @@ public class PaperLightingQueue {
         }
     }
 
-    static class LightingQueue extends ArrayDeque<Runnable> {
+    public static class LightingQueue extends ArrayDeque<Runnable> {
         final private Chunk chunk;
 
         LightingQueue(Chunk chunk) {
@@ -77,7 +77,7 @@ public class PaperLightingQueue {
         /**
          * Flushes lighting updates to unload the chunk
          */
-        void processUnload() {
+        public void processUnload() {
             if (!chunk.world.paperConfig.queueLightUpdates) {
                 return;
             }
