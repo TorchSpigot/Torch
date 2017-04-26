@@ -481,7 +481,7 @@ public final class ItemStack {
         if (itemstack.isEmpty() && itemstack1.isEmpty()) {
             return true;
         }
-        if (!itemstack.isEmpty() && !itemstack.isEmpty()) {
+        if (!itemstack.isEmpty() && !itemstack1.isEmpty()) {
             return itemstack.count == itemstack1.count && itemstack.item == itemstack1.item && itemstack.damage == itemstack1.damage;
         }
         return false;

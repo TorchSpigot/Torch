@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -200,9 +199,9 @@ public class Main {
                     deadline.add(Calendar.DAY_OF_YEAR, -14);
                     if (buildDate.before(deadline.getTime())) {
                         System.err.println("*** Error, this build is outdated ***");
-                        System.err.println("*** Please download a new build as per instructions from https://paperci.emc.gs/ ***"); // Paper
-                        System.err.println("*** Server will start in 15 seconds ***");
-                        Thread.sleep(TimeUnit.SECONDS.toMillis(15));
+                        System.err.println("*** Please checkout from https://github.com/TorchSpigot/Torch ***"); // Paper // Torch
+                        System.err.println("*** Server will start in 9 seconds ***");
+                        Thread.sleep(TimeUnit.SECONDS.toMillis(9));
                     }
                 }
 

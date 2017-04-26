@@ -32,7 +32,6 @@ public class TorchBiomeCache implements TorchReactor {
     
     public TorchBiomeCache(WorldChunkManager worldChunkManager, BiomeCache legacy) {
     	servant = legacy;
-    	
         chunkManager = worldChunkManager;
     }
     
@@ -52,7 +51,7 @@ public class TorchBiomeCache implements TorchReactor {
         
         return cachedBlock;
     }
-
+    
 	/**
 	 * Returns the BiomeBase related to the x, z position from the cache
 	 */

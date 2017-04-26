@@ -9,7 +9,7 @@ import net.minecraft.server.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
 @Getter
-public final class TorchIOThread implements Runnable {
+public final class TorchChunkProvider implements Runnable {
     /** The chunks need to save. */
     private final LinkedBlockingQueue<IAsyncChunkSaver> chunkSaverQueue = Queues.newLinkedBlockingQueue();
     // private volatile long writeQueuedCounter;
@@ -18,10 +18,10 @@ public final class TorchIOThread implements Runnable {
     private volatile boolean isWaitingFinish;
     
     private static final class LazyInstance {
-    	private static TorchIOThread instance = new TorchIOThread();
+    	private static TorchChunkProvider instance = new TorchChunkProvider();
     }
 
-    private TorchIOThread() {
+    private TorchChunkProvider() {
         Thread thread = new Thread(this, "File IO Thread");
         
         thread.setPriority(1);
@@ -31,8 +31,8 @@ public final class TorchIOThread implements Runnable {
     /**
      * Retrieves an instance of the threadedFileIOBase.
      */
-    public static TorchIOThread getInstance() {
-        return TorchIOThread.LazyInstance.instance;
+    public static TorchChunkProvider getInstance() {
+        return TorchChunkProvider.LazyInstance.instance;
     }
     
     @Override

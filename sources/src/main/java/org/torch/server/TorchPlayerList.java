@@ -212,7 +212,7 @@ public class TorchPlayerList implements TorchReactor {
         
         for (int i = 0; i < 19; ++i) {
             ScoreboardObjective objective = scoreboard.getObjectiveForSlot(i);
-
+            
             if (objective != null && !set.contains(objective)) {
                 List<Packet<?>> list = scoreboard.getScoreboardScorePacketsForObjective(objective);
 
@@ -388,7 +388,7 @@ public class TorchPlayerList implements TorchReactor {
         if (networkmanager.getSocketAddress() != null) {
         	socketAddress = networkmanager.getSocketAddress().toString();
         }
-
+        
         // Spawn location event
         Player bukkitPlayer = entityplayer.getBukkitEntity();
         PlayerSpawnLocationEvent ev = new PlayerSpawnLocationEvent(bukkitPlayer, bukkitPlayer.getLocation());
