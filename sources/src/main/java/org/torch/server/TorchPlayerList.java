@@ -48,7 +48,7 @@ import net.minecraft.server.*;
 import static org.torch.server.TorchServer.logger;
 
 @Getter
-public class TorchPlayerList implements TorchReactor {
+public final class TorchPlayerList implements TorchReactor {
 	/**
 	 * Legacy player list instance
 	 */

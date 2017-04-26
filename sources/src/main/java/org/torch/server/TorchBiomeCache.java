@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 import org.torch.api.TorchReactor;
 
 @Getter
-public class TorchBiomeCache implements TorchReactor {
+public final class TorchBiomeCache implements TorchReactor {
 	/** The legacy */
 	private final BiomeCache servant;
 	
