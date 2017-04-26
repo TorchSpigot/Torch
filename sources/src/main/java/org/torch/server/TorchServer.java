@@ -38,8 +38,6 @@ import org.bukkit.event.server.RemoteServerCommandEvent;
 import org.bukkit.event.server.ServerCommandEvent;
 import org.spigotmc.SlackActivityAccountant;
 import org.torch.api.Anaphase;
-import org.torch.api.TorchServant;
-
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;

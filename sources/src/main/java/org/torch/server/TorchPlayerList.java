@@ -182,7 +182,8 @@ public final class TorchPlayerList implements TorchReactor {
     /**
      * Load banned players, whitelist and Ops
      */
-    public void refreshJsonLists() {
+    @SuppressWarnings("deprecation")
+	public void refreshJsonLists() {
     	if (!this.server.isSinglePlayer()) {
             this.bannedPlayers.a(true);
             this.bannedIPs.a(true);
@@ -322,7 +323,6 @@ public final class TorchPlayerList implements TorchReactor {
         return !this.isWhitelistMode || this.operators.contains(gameprofile) || this.whitelist.contains(gameprofile);
     }
     
-    @SuppressWarnings("deprecation")
 	public boolean isOp(GameProfile gameprofile) {
     	// isOP || (isSinglePlayer && isCommandAllowed && isServerOwner) || isChestMode 
         return this.operators.contains(gameprofile) /*|| this.server.isSinglePlayer() && this.server.worlds.get(0).getWorldData().u() && this.server.getServerOwner().equalsIgnoreCase(gameprofile.getName())*/ || this.allowedCommands;
