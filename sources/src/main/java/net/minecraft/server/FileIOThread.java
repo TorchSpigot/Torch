@@ -5,11 +5,10 @@ import org.torch.server.TorchIOThread;
 public class FileIOThread implements Runnable, org.torch.api.TorchServant {
 
     private static final FileIOThread a = new FileIOThread();
-    // These field are unsafe to port
-    // private final List<IAsyncChunkSaver> b;
-    // private volatile long c;
-    // private volatile long d;
-    private volatile boolean e; public void setIsWaitingFinish(boolean flag) { this.e = flag; } // OBFHELPER
+    // private final List<IAsyncChunkSaver> b; // Unsafe to port
+    private volatile long c; public void incrementWriteQueuedCounter() { this.c++; }
+    private volatile long d; public void incrementSavedChunkCounter() { this.d++; }
+    private volatile boolean e; public void toggleWaitingFinish() { this.e = !this.e; }
 
     private FileIOThread() {
     	TorchIOThread.getInstance();

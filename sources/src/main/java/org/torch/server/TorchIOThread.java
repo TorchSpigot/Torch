@@ -14,8 +14,6 @@ import org.torch.api.TorchReactor;
 public final class TorchIOThread implements Runnable, TorchReactor {
     /** The chunks need to save. */
     private final LinkedBlockingQueue<IAsyncChunkSaver> chunkSaverQueue = Queues.newLinkedBlockingQueue();
-    // private volatile long writeQueuedCounter;
-    // private volatile long savedChunkCounter;
     /** If is waiting to saving all chunks. */
     private volatile boolean isWaitingFinish;
     
@@ -58,8 +56,8 @@ public final class TorchIOThread implements Runnable, TorchReactor {
      * Process a chunk, re-add to the queue if unsuccessful
      */
     private void tryWriteChunk(IAsyncChunkSaver chunkSaver) throws InterruptedException {
-    	if (!chunkSaver.c()) { // c() -> WriteNextIO() -> Returns if the write was unsuccessful
-        	// this.savedChunkCounter++;
+    	if (!chunkSaver.c()) { // PAIL: WriteNextIO() -> Returns if the write was unsuccessful
+    		getServant().incrementSavedChunkCounter();
         	
         	if (PaperConfig.enableFileIOThreadSleep) Thread.sleep(this.isWaitingFinish ? 0L : 2L); // Paper - Add toggle
         } else {
@@ -69,21 +67,20 @@ public final class TorchIOThread implements Runnable, TorchReactor {
     
     public void queueChunkToSaving(IAsyncChunkSaver chunkSsaver) {
         if (!this.chunkSaverQueue.contains(chunkSsaver)) {
-            // ++this.writeQueuedCounter;
+        	getServant().incrementWriteQueuedCounter();
             this.chunkSaverQueue.add(chunkSsaver);
         }
     }
     
     public void waitForFinish() throws InterruptedException {
-    	this.getServant().setIsWaitingFinish(this.isWaitingFinish = true);
-        this.isWaitingFinish = true;
+    	getServant().toggleWaitingFinish(); this.isWaitingFinish = true;
         
         while (!chunkSaverQueue.isEmpty()) {
             this.tryWriteChunk(chunkSaverQueue.take());
             // Thread.sleep(10L);
         }
         
-        this.getServant().setIsWaitingFinish(this.isWaitingFinish = false);
+        getServant().toggleWaitingFinish(); this.isWaitingFinish = false;
     }
 
 	@Override
