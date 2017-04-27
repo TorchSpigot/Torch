@@ -2,7 +2,7 @@ package net.minecraft.server;
 
 import org.torch.server.TorchIOThread;
 
-public class FileIOThread implements Runnable {
+public class FileIOThread implements Runnable, org.torch.api.TorchServant {
 
     private static final FileIOThread a = new FileIOThread();
     // These field are unsafe to port
@@ -35,4 +35,9 @@ public class FileIOThread implements Runnable {
     public void b() throws InterruptedException {
     	TorchIOThread.getInstance().waitForFinish();
     }
+
+	@Override
+	public TorchIOThread getReactor() {
+		return TorchIOThread.getInstance();
+	}
 }
