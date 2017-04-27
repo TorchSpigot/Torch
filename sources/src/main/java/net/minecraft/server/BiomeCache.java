@@ -50,8 +50,8 @@ public class BiomeCache implements org.torch.api.TorchServant {
         public a(int i, int j) {
         	reactor.super(i, j);
         	
-            this.b = super.xPos;
-            this.c = super.zPos;
+            this.b = super.blockX;
+            this.c = super.blockZ;
             this.d = super.lastAccessTime;
             this.a = super.biomes;
         }

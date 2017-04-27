@@ -15,7 +15,8 @@ public class ChunkCoordIntPair {
         this.z = blockposition.getZ() >> 4;
     }
 
-    public static long chunkXZ2Int(int blockX, int blockZ) { return a(blockX, blockZ); } // OBFHELPER
+    /** Returns given chunk hash */
+    public static long chunkXZ2Int(int chunkX, int chunkZ) { return a(chunkX, chunkZ); } // OBFHELPER
     public static long a(int i, int j) {
         return i & 4294967295L | (j & 4294967295L) << 32;
     }

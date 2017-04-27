@@ -39,14 +39,16 @@ public final class TorchBiomeCache implements TorchReactor {
      * Returns a biome cache block at location specified
      */
     public TorchBiomeCache.Block getBiomeCacheBlock(int blockX, int blockZ) {
+    	// Convert to chunk x, z
     	blockX >>= 4;
     	blockZ >>= 4;
-        long index = ChunkCoordIntPair.chunkXZ2Int(blockX, blockZ);
-        TorchBiomeCache.Block cachedBlock = this.cacheMap.get(index);
+    	
+        long hash = ChunkCoordIntPair.chunkXZ2Int(blockX, blockZ);
+        TorchBiomeCache.Block cachedBlock = this.cacheMap.get(hash);
 
         if (cachedBlock == null) {
         	cachedBlock = new TorchBiomeCache.Block(blockX, blockZ);
-            this.cacheMap.put(index, cachedBlock);
+            this.cacheMap.put(hash, cachedBlock);
         }
         
         return cachedBlock;
@@ -55,8 +57,8 @@ public final class TorchBiomeCache implements TorchReactor {
 	/**
 	 * Returns the BiomeBase related to the x, z position from the cache
 	 */
-    public BiomeBase getBiome(int x, int z, BiomeBase defaultValue) {
-        BiomeBase cachedBiome = this.getBiomeCacheBlock(x, z).getBiome(x, z);
+    public BiomeBase getBiome(int blockX, int blockZ, BiomeBase defaultValue) {
+        BiomeBase cachedBiome = this.getBiomeCacheBlock(blockX, blockZ).getBiome(blockX, blockZ);
         return cachedBiome != null ? cachedBiome : defaultValue;
     }
     
@@ -95,23 +97,23 @@ public final class TorchBiomeCache implements TorchReactor {
     	/** The array of biome types stored in this BiomeCacheBlock. */
         public BiomeBase[] biomes = new BiomeBase[256];
         /** The x coordinate of the BiomeCacheBlock. */
-        public int xPos;
+        public int blockX;
         /** The z coordinate of the BiomeCacheBlock. */
-        public int zPos;
+        public int blockZ;
         /** The last time this BiomeCacheBlock was accessed, in milliseconds. */
         public long lastAccessTime = System.currentTimeMillis();
         
-        public Block(int x, int z) {
-            this.xPos = x;
-            this.zPos = z;
-            TorchBiomeCache.this.chunkManager.a(this.biomes, x << 4, z << 4, 16, 16, false); // Get biome gen at
+        public Block(int blockX, int blockZ) {
+            this.blockX = blockX;
+            this.blockZ = blockZ;
+            TorchBiomeCache.this.chunkManager.a(this.biomes, blockX << 4, blockZ << 4, 16, 16, false); // Get biome gen at
         }
         
         /**
          * Returns the BiomeGenBase related to the x, z position from the cache block.
          */
-        public BiomeBase getBiome(int x, int z) {
-            return this.biomes[x & 15 | (z & 15) << 4];
+        public BiomeBase getBiome(int blockX, int blockZ) {
+            return this.biomes[blockX & 15 | (blockZ & 15) << 4];
         }
         
         public BiomeCache.a toLegacy() {

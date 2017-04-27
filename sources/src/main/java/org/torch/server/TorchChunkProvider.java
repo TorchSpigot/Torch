@@ -93,7 +93,7 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
     public void postChunkToUnload(Chunk chunk) {
         if (this.world.worldProvider.c(chunk.locX, chunk.locZ)) {
             this.unloadQueue.add(Long.valueOf(ChunkCoordIntPair.chunkXZ2Int(chunk.locX, chunk.locZ)));
-            chunk.d = true;
+            chunk.d = true; // PAIL: unloaded
         }
     }
     
@@ -106,15 +106,15 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
     }
     
     @Nullable
-    public Chunk getChunkIfLoaded(int x, int z, boolean markUnloaded) {
-        return markUnloaded ? getLoadedChunkAt(x, z) : chunks.get(ChunkCoordIntPair.chunkXZ2Int(x, z));
+    public Chunk getChunkIfLoaded(int chunkX, int chunkZ, boolean markUnloaded) {
+        return markUnloaded ? getLoadedChunkAt(chunkX, chunkZ) : chunks.get(ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ));
     }
     
     @Override @Nullable
-    public Chunk getLoadedChunkAt(int x, int z) {
-        Chunk chunk = this.chunks.get(ChunkCoordIntPair.chunkXZ2Int(x, z));
+    public Chunk getLoadedChunkAt(int chunkX, int chunkZ) {
+        Chunk chunk = this.chunks.get(ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ));
         
-        if (chunk != null) chunk.d = false; // Mark as unloaded
+        if (chunk != null) chunk.d = false; // PAIL: unloaded
         return chunk;
     }
     
@@ -137,13 +137,13 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
     }
     
     @Nullable
-    public Chunk originalGetOrLoadChunkAt(int i, int j) {
-        Chunk chunk = this.getLoadedChunkAt(i, j);
+    public Chunk originalGetOrLoadChunkAt(int chunkX, int chunkZ) {
+        Chunk chunk = this.getLoadedChunkAt(chunkX, chunkZ);
         
         if (chunk == null) {
-            chunk = this.loadChunkFromFile(i, j);
+            chunk = this.loadChunkFromFile(chunkX, chunkZ);
             if (chunk != null) {
-                this.chunks.put(ChunkCoordIntPair.chunkXZ2Int(i, j), chunk);
+                this.chunks.put(ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ), chunk);
                 chunk.addEntities();
                 chunk.loadNearby(servant, this.chunkGenerator, false);
             }
@@ -187,20 +187,20 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
         return chunk;
     }
     
-    public Chunk originalGetChunkAt(int x, int z) {
-        Chunk chunk = this.originalGetOrLoadChunkAt(x, z);
+    public Chunk originalGetChunkAt(int chunkX, int chunkZ) {
+        Chunk chunk = this.originalGetOrLoadChunkAt(chunkX, chunkZ);
         
         if (chunk == null) {
             world.timings.syncChunkLoadTimer.startTiming();
-            long chunkPos = ChunkCoordIntPair.chunkXZ2Int(x, z);
+            long chunkPos = ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ);
             
             try {
-                chunk = this.chunkGenerator.getOrCreateChunk(x, z);
-            } catch (Throwable throwable) {
-                CrashReport crashReport = CrashReport.a(throwable, "Exception generating new chunk");
+                chunk = this.chunkGenerator.getOrCreateChunk(chunkX, chunkZ);
+            } catch (Throwable t) {
+                CrashReport crashReport = CrashReport.a(t, "Exception generating new chunk");
                 CrashReportSystemDetails systemDetails = crashReport.a("Chunk to be generated");
 
-                systemDetails.a("Location", String.format("%d,%d", new Object[] { Integer.valueOf(x), Integer.valueOf(z)}));
+                systemDetails.a("Location", String.format("%d,%d", new Object[] { Integer.valueOf(chunkX), Integer.valueOf(chunkZ)}));
                 systemDetails.a("Position hash", Long.valueOf(chunkPos));
                 systemDetails.a("Generator", this.chunkGenerator);
                 throw new ReportedException(crashReport);
@@ -226,12 +226,9 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
             }
             
             return chunk;
-        } catch (Exception exception) {
-            // Paper start
-            String msg = "Couldn\'t load chunk";
-            logger.error(msg, exception);
-            ServerInternalException.reportInternalException(exception);
-            // Paper end
+        } catch (Throwable t) {
+            logger.error("Couldn\'t load chunk", t);
+            ServerInternalException.reportInternalException(t);
             return null;
         }
     }
@@ -424,13 +421,13 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
     /**
      * Checks to see if a chunk exists at x, z
      */
-    public boolean isLoaded(int x, int z) {
-        return this.chunks.containsKey(ChunkCoordIntPair.chunkXZ2Int(x, z));
+    public boolean isLoaded(int chunkX, int chunkZ) {
+        return this.chunks.containsKey(ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ));
     }
     
-    @Override public boolean e(int x, int z) { return this.isChunkGeneratedAt(x, z); } // Implement from net.minecraft.IChunkProvider
-	@Override public boolean isChunkGeneratedAt(int x, int z) {
-        return this.chunks.containsKey(ChunkCoordIntPair.chunkXZ2Int(x, z)) || this.chunkLoader.a(x, z); // PAIL: isChunkGeneratedAt(x, z)
+    @Override @Deprecated public boolean e(int x, int z) { return this.isChunkGeneratedAt(x, z); } // Implement from net.minecraft.IChunkProvider
+	@Override public boolean isChunkGeneratedAt(int chunkX, int chunkZ) {
+        return this.chunks.containsKey(ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ)) || this.chunkLoader.a(chunkX, chunkZ); // PAIL: isChunkGeneratedAt(x, z)
     }
 	
 	@Override

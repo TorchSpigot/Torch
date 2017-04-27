@@ -167,8 +167,8 @@ public final class MCUtil {
     /**
      * Gets a chunk without changing its boolean for should unload
      * @param world
-     * @param x
-     * @param z
+     * @param x chunkX
+     * @param z chunkZ
      * @return
      */
     @Nullable
@@ -179,8 +179,8 @@ public final class MCUtil {
     /**
      * Gets a chunk without changing its boolean for should unload
      * @param provider
-     * @param x
-     * @param z
+     * @param x chunkX
+     * @param z chunkZ
      * @return
      */
     @Nullable
