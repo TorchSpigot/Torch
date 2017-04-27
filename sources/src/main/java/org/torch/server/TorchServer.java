@@ -108,7 +108,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
     /**
      * The mojang usage snooper using via our implementation
      */
-    private final MojangStatisticsGenerator usageSnooper = new MojangStatisticsGenerator("server", this.getMinecraftServer(), System.currentTimeMillis());
+    private final MojangStatisticsGenerator usageSnooper = new MojangStatisticsGenerator("server", getMinecraftServer(), System.currentTimeMillis());
     /**
      * Pending command queue
      */
@@ -429,7 +429,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         // Initial the console reader
         setReader(getMinecraftServer().reader);
         
-        Runtime.getRuntime().addShutdownHook(new org.bukkit.craftbukkit.util.ServerShutdownThread(this.getMinecraftServer()));
+        Runtime.getRuntime().addShutdownHook(new org.bukkit.craftbukkit.util.ServerShutdownThread(getMinecraftServer()));
         serverThread = new Thread(this, "Server thread");
         // Bump the main thread priority
         Thread.currentThread().setPriority(9);
@@ -717,7 +717,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         this.convertMapIfNeeded(worldName);
         this.setUserMessage("menu.loadingLevel");
         
-        this.getMinecraftServer().worldServer = new WorldServer[3];
+        getMinecraftServer().worldServer = new WorldServer[3];
         int worldCount = 3;
 
         for (int j = 0; j < worldCount; ++j) {
@@ -756,13 +756,13 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
                 // Migration did not rewrite the level.dat; This forces 1.8 to take the last loaded world as respawn (in this case the end)
                 worlddata.checkName(worldName);
                 if (this.isDemoMode()) {
-                    world = (WorldServer) (new DemoWorldServer(this.getMinecraftServer(), idatamanager, worlddata, dimension, this.methodProfiler)).b();
+                    world = (WorldServer) (new DemoWorldServer(getMinecraftServer(), idatamanager, worlddata, dimension, this.methodProfiler)).b();
                 } else {
-                    world = (WorldServer) (new WorldServer(this.getMinecraftServer(), idatamanager, worlddata, dimension, this.methodProfiler, org.bukkit.World.Environment.getEnvironment(dimension), gen)).b();
+                    world = (WorldServer) (new WorldServer(getMinecraftServer(), idatamanager, worlddata, dimension, this.methodProfiler, org.bukkit.World.Environment.getEnvironment(dimension), gen)).b();
                 }
 
                 world.a(worldsettings);
-                this.craftServer.scoreboardManager = new org.bukkit.craftbukkit.scoreboard.CraftScoreboardManager(this.getMinecraftServer(), world.getScoreboard());
+                this.craftServer.scoreboardManager = new org.bukkit.craftbukkit.scoreboard.CraftScoreboardManager(getMinecraftServer(), world.getScoreboard());
             } else {
                 String dim = "DIM" + dimension;
 
@@ -806,12 +806,12 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
                     worlddata = new WorldData(worldsettings, name);
                 }
                 worlddata.checkName(name); // CraftBukkit - Migration did not rewrite the level.dat; This forces 1.8 to take the last loaded world as respawn (in this case the end)
-                world = (WorldServer) new SecondaryWorldServer(this.getMinecraftServer(), idatamanager, dimension, this.worlds.get(0), this.methodProfiler, worlddata, org.bukkit.World.Environment.getEnvironment(dimension), gen).b();
+                world = (WorldServer) new SecondaryWorldServer(getMinecraftServer(), idatamanager, dimension, this.worlds.get(0), this.methodProfiler, worlddata, org.bukkit.World.Environment.getEnvironment(dimension), gen).b();
             }
 
             this.craftServer.getPluginManager().callEvent(new org.bukkit.event.world.WorldInitEvent(world.getWorld()));
 
-            world.addIWorldAccess(new WorldManager(this.getMinecraftServer(), world));
+            world.addIWorldAccess(new WorldManager(getMinecraftServer(), world));
             if (!this.isSinglePlayer()) world.getWorldData().setGameType(this.getGameMode());
 
             worlds.add(world);
@@ -1093,7 +1093,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      * Returns the world instances
      */
     public WorldServer[] getWorldServers() {
-    	return this.getMinecraftServer().worldServer;
+    	return getMinecraftServer().worldServer;
     }
     
     /**
@@ -1207,7 +1207,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      * Returns the server connection, initial if doesn't exist
      */
     public ServerConnection handleServerConnection() {
-        return this.serverConnection == null ? this.serverConnection = new ServerConnection(this.getMinecraftServer()) : this.serverConnection;
+        return this.serverConnection == null ? this.serverConnection = new ServerConnection(getMinecraftServer()) : this.serverConnection;
     }
     
     /**
@@ -1448,7 +1448,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      * Create a new command dispatcher
      */
     public CommandDispatcher createCommandDispatcher() {
-        return new CommandDispatcher(this.getMinecraftServer());
+        return new CommandDispatcher(getMinecraftServer());
     }
     
     /**
@@ -1526,7 +1526,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
                 this.sleepFiveSeconds();
             }
 
-            convertedUserBanlist = NameReferencingFileConverter.a(this.getMinecraftServer());
+            convertedUserBanlist = NameReferencingFileConverter.a(getMinecraftServer());
             if (convertedUserBanlist) convertedAny = true;
         }
         
@@ -1537,7 +1537,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
                 this.sleepFiveSeconds();
             }
             
-            convertedIPBanlist = NameReferencingFileConverter.b(this.getMinecraftServer());
+            convertedIPBanlist = NameReferencingFileConverter.b(getMinecraftServer());
             if (convertedIPBanlist) convertedAny = true;
         }
         
@@ -1548,7 +1548,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
                 this.sleepFiveSeconds();
             }
 
-            convertedOPlist = NameReferencingFileConverter.c(this.getMinecraftServer());
+            convertedOPlist = NameReferencingFileConverter.c(getMinecraftServer());
             if (convertedOPlist) convertedAny = true;
         }
         
@@ -1559,7 +1559,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
                 this.sleepFiveSeconds();
             }
 
-            convertedWhitelist = NameReferencingFileConverter.d(this.getMinecraftServer());
+            convertedWhitelist = NameReferencingFileConverter.d(getMinecraftServer());
             if (convertedWhitelist) convertedAny = true;
         }
         
@@ -1782,7 +1782,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
 	/**
 	 * Returns the internal minecraft server instance
 	 */
-	public MinecraftServer getMinecraftServer() {
+	public static MinecraftServer getMinecraftServer() {
 		return MinecraftServer.getServer();
 	}
 	

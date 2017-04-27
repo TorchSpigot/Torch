@@ -152,13 +152,13 @@ public final class TorchPlayerList implements TorchReactor {
     	// Setup instance for org.torch.api.TorchReactor
     	servant = legacy;
     	this.server = TorchServer.getServer();
-        minecraftServer = server;
     	
     	TorchServer.getServer().craftServer = server.server = craftServer = new CraftServer(server, this);
     	TorchServer.getServer().console = server.console = org.bukkit.craftbukkit.command.ColouredConsoleSender.getInstance();
     	TorchServer.getServer().reader.addCompleter(new org.bukkit.craftbukkit.command.ConsoleCommandCompleter(server.server));
     	// Port the reader for compatibility
     	server.reader = TorchServer.getServer().reader;
+    	minecraftServer = server;
     	
         bannedPlayers = new GameProfileBanList(PLAYER_BANS_FILE);
         bannedIPs = new IpBanList(IP_BANS_FILE);
@@ -166,17 +166,19 @@ public final class TorchPlayerList implements TorchReactor {
         whitelist = new WhiteList(WHITELIST_FILE);
         playerStatFiles = HashObjObjMaps.newMutableMap();
         
+        // Sets whether we are a LAN server
+        bannedPlayers.a(false);
+        bannedIPs.a(false);
+        // maxPlayers = 9; // baka
+        
+        /**
+         * Dedicated PlayerList
+         */
     	this.setViewDistance(this.server.getIntProperty("view-distance", 10));
     	this.setMaxPlayers(this.server.getIntProperty("max-players", 20));
     	this.setWhitelistMode(this.server.getBooleanProperty("white-list", false));
         
     	this.refreshJsonLists();
-        
-        // Sets whether we are a LAN server
-        bannedPlayers.a(false);
-        bannedIPs.a(false);
-        
-        maxPlayers = 9; // baka
     }
     
     /**
