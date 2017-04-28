@@ -106,7 +106,7 @@ public final class TorchBiomeCache implements TorchReactor {
         public Block(int blockX, int blockZ) {
             this.blockX = blockX;
             this.blockZ = blockZ;
-            TorchBiomeCache.this.chunkManager.a(this.biomes, blockX << 4, blockZ << 4, 16, 16, false); // Get biome gen at
+            chunkManager.a(this.biomes, blockX << 4, blockZ << 4, 16, 16, false); // Get biome gen at
         }
         
         /**
