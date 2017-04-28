@@ -2,6 +2,7 @@ package org.spigotmc;
 
 import com.google.common.base.Throwables;
 import com.koloboke.collect.map.hash.HashObjObjMaps;
+import com.koloboke.collect.set.hash.HashObjSets;
 
 import java.io.File;
 import java.io.IOException;
@@ -323,7 +324,7 @@ public class SpigotConfig
             set( "commands.replace-commands", config.getStringList( "replace-commands" ) );
             config.set( "replace-commands", null );
         }
-        replaceCommands = new HashSet<String>( getList( "commands.replace-commands",
+        replaceCommands = HashObjSets.newMutableSet( getList( "commands.replace-commands",
                 Arrays.asList( "setblock", "summon", "testforblock", "tellraw" ) ) );
     }
 

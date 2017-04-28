@@ -1,19 +1,18 @@
 package org.bukkit.craftbukkit.util;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.koloboke.collect.set.hash.HashObjSets;
+
 public class HashTreeSet<V> implements Set<V> {
 
-    private HashSet<V> hash = new HashSet<V>();
+    private Set<V> hash = HashObjSets.newMutableSet();
     private TreeSet<V> tree = new TreeSet<V>();
 
-    public HashTreeSet() {
-
-    }
+    public HashTreeSet() {}
 
     @Override
     public int size() {

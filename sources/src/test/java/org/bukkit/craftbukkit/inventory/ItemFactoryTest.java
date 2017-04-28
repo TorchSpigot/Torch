@@ -16,12 +16,14 @@ import net.minecraft.server.IAttribute;
 import org.bukkit.support.AbstractTestingBase;
 import org.junit.Test;
 
+import com.koloboke.collect.set.hash.HashObjSets;
+
 public class ItemFactoryTest extends AbstractTestingBase {
 
     @Test
     public void testKnownAttributes() throws Throwable {
         final ZipInputStream nmsZipStream = new ZipInputStream(net.minecraft.server.HttpUtilities.class/* Magic class that isn't imported! */.getProtectionDomain().getCodeSource().getLocation().openStream()); // Paper
-        final Collection<String> names = new HashSet<String>();
+        final Collection<String> names = HashObjSets.newMutableSet();
         for (ZipEntry clazzEntry; (clazzEntry = nmsZipStream.getNextEntry()) != null; ) {
             final String entryName = clazzEntry.getName();
             if (!(entryName.endsWith(".class") && entryName.startsWith("net/minecraft/server/"))) {

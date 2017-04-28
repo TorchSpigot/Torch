@@ -33,6 +33,7 @@ import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.koloboke.collect.map.hash.HashObjObjMaps;
 
 @RunWith(Parameterized.class)
 public class ItemStackTest extends AbstractTestingBase {
@@ -127,7 +128,8 @@ public class ItemStackTest extends AbstractTestingBase {
             this.operators = operators;
         }
 
-        public ItemStack operate(ItemStack cleanStack) {
+        @Override
+		public ItemStack operate(ItemStack cleanStack) {
             for (Operator operator : operators) {
                 operator.operate(cleanStack);
             }
@@ -180,7 +182,8 @@ public class ItemStackTest extends AbstractTestingBase {
                                 final Operator op1 = (Operator) toOut[i];
                                 final Operator op2 = (Operator) singleton[i];
                                 toOut[i] = new Operator() {
-                                    public ItemStack operate(final ItemStack cleanStack) {
+                                    @Override
+									public ItemStack operate(final ItemStack cleanStack) {
                                         return op2.operate(op1.operate(cleanStack));
                                     }
                                 };
@@ -260,7 +263,8 @@ public class ItemStackTest extends AbstractTestingBase {
             this.provider = provider;
         }
 
-        public ItemStack stack() {
+        @Override
+		public ItemStack stack() {
             return provider.craft();
         }
 
@@ -277,7 +281,8 @@ public class ItemStackTest extends AbstractTestingBase {
             this.provider = provider;
         }
 
-        public ItemStack stack() {
+        @Override
+		public ItemStack stack() {
             return provider.bukkit();
         }
 
@@ -317,7 +322,7 @@ public class ItemStackTest extends AbstractTestingBase {
     static final int NAME_PARAMETER = 2;
     static {
         final ItemFactory factory = CraftItemFactory.instance();
-        final Map<Class<? extends ItemMeta>, Material> possibleMaterials = new HashMap<Class<? extends ItemMeta>, Material>();
+        final Map<Class<? extends ItemMeta>, Material> possibleMaterials = HashObjObjMaps.newMutableMap();
         ItemMeta meta;
         for (final Material material : Material.values()) {
             meta = factory.getItemMeta(material);

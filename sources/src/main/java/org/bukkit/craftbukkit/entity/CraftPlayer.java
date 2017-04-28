@@ -17,7 +17,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -51,7 +50,6 @@ import org.bukkit.craftbukkit.util.CraftChatMessage;
 import org.bukkit.craftbukkit.util.CraftMagicNumbers;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerRegisterChannelEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerUnregisterChannelEvent;
@@ -69,8 +67,8 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     private long lastPlayed = 0;
     private boolean hasPlayedBefore = false;
     private final ConversationTracker conversationTracker = new ConversationTracker();
-    private final Set<String> channels = new HashSet<String>();
-    private final Set<UUID> hiddenPlayers = new HashSet<UUID>();
+    private final Set<String> channels = HashObjSets.newMutableSet();
+    private final Set<UUID> hiddenPlayers = HashObjSets.newMutableSet();
     private int hash = 0;
     private double health = 20;
     private boolean scaledHealth = false;
@@ -1715,7 +1713,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
         @Override
         public Set<Player> getHiddenPlayers()
         {
-            Set<Player> ret = new HashSet<Player>();
+            Set<Player> ret = HashObjSets.newMutableSet();
             for ( UUID u : hiddenPlayers )
             {
                 ret.add( getServer().getPlayer( u ) );

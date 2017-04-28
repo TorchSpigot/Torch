@@ -4,6 +4,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
 import com.koloboke.collect.map.hash.HashObjObjMaps;
+import com.koloboke.collect.set.hash.HashObjSets;
 
 import org.bukkit.command.*;
 import org.bukkit.command.defaults.BukkitCommand;
@@ -104,7 +105,7 @@ public class SimpleHelpMap implements HelpMap {
      */
     public synchronized void initializeCommands() {
         // ** Load topics from highest to lowest priority order **
-        Set<String> ignoredPlugins = new HashSet<String>(yaml.getIgnoredPlugins());
+        Set<String> ignoredPlugins = HashObjSets.newMutableSet(yaml.getIgnoredPlugins());
 
         // Don't load any automatic help topics if All is ignored
         if (ignoredPlugins.contains("All")) {

@@ -3,7 +3,7 @@ package org.bukkit.support;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
@@ -11,17 +11,20 @@ import org.bukkit.Server;
 import org.bukkit.craftbukkit.inventory.CraftItemFactory;
 import org.bukkit.craftbukkit.util.Versioning;
 
+import com.koloboke.collect.map.hash.HashObjObjMaps;
+
 public class DummyServer implements InvocationHandler {
     private static interface MethodHandler {
         Object handle(DummyServer server, Object[] args);
     }
-    private static final HashMap<Method, MethodHandler> methods = new HashMap<Method, MethodHandler>();
+    private static final Map<Method, MethodHandler> methods = HashObjObjMaps.newMutableMap();
     static {
         try {
             methods.put(
                     Server.class.getMethod("getItemFactory"),
                     new MethodHandler() {
-                        public Object handle(DummyServer server, Object[] args) {
+                        @Override
+						public Object handle(DummyServer server, Object[] args) {
                             return CraftItemFactory.instance();
                         }
                     }
@@ -29,7 +32,8 @@ public class DummyServer implements InvocationHandler {
             methods.put(
                     Server.class.getMethod("getName"),
                     new MethodHandler() {
-                        public Object handle(DummyServer server, Object[] args) {
+                        @Override
+						public Object handle(DummyServer server, Object[] args) {
                             return DummyServer.class.getName();
                         }
                     }
@@ -37,7 +41,8 @@ public class DummyServer implements InvocationHandler {
             methods.put(
                     Server.class.getMethod("getVersion"),
                     new MethodHandler() {
-                        public Object handle(DummyServer server, Object[] args) {
+                        @Override
+						public Object handle(DummyServer server, Object[] args) {
                             return DummyServer.class.getPackage().getImplementationVersion();
                         }
                     }
@@ -45,7 +50,8 @@ public class DummyServer implements InvocationHandler {
             methods.put(
                     Server.class.getMethod("getBukkitVersion"),
                     new MethodHandler() {
-                        public Object handle(DummyServer server, Object[] args) {
+                        @Override
+						public Object handle(DummyServer server, Object[] args) {
                             return Versioning.getBukkitVersion();
                         }
                     }
@@ -54,7 +60,8 @@ public class DummyServer implements InvocationHandler {
                     Server.class.getMethod("getLogger"),
                     new MethodHandler() {
                         final Logger logger = Logger.getLogger(DummyServer.class.getCanonicalName());
-                        public Object handle(DummyServer server, Object[] args) {
+                        @Override
+						public Object handle(DummyServer server, Object[] args) {
                             return logger;
                         }
                     }
@@ -69,7 +76,8 @@ public class DummyServer implements InvocationHandler {
 
     private DummyServer() {};
 
-    public Object invoke(Object proxy, Method method, Object[] args) {
+    @Override
+	public Object invoke(Object proxy, Method method, Object[] args) {
         MethodHandler handler = methods.get(method);
         if (handler != null) {
             return handler.handle(this, args);

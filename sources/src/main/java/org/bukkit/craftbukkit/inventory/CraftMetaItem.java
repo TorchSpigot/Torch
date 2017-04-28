@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.koloboke.collect.map.hash.HashObjObjMaps;
+import com.koloboke.collect.set.hash.HashObjSets;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -40,7 +41,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -930,7 +930,7 @@ class CraftMetaItem implements ItemMeta, Repairable {
             builder.put(REPAIR.BUKKIT, repairCost);
         }
 
-        Set<String> hideFlags = new HashSet<String>();
+        Set<String> hideFlags = HashObjSets.newMutableSet();
         for (ItemFlag hideFlagEnum : getItemFlags()) {
             hideFlags.add(hideFlagEnum.name());
         }

@@ -1,6 +1,8 @@
 package org.bukkit.craftbukkit;
 
 import com.google.common.base.Preconditions;
+import com.koloboke.collect.set.hash.HashObjSets;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -79,10 +81,12 @@ public class CraftWorld implements World {
     private int chunkGCTickCount;
 
     // Paper start - Provide fast information methods
-    public int getEntityCount() {
+    @Override
+	public int getEntityCount() {
         return world.entityList.size();
     }
-    public int getTileEntityCount() {
+    @Override
+	public int getTileEntityCount() {
         // We don't use the full world tile entity list, so we must iterate chunks
         int size = 0;
         for (net.minecraft.server.Chunk chunk : ((ChunkProviderServer) world.getChunkProvider()).chunks.values()) {
@@ -90,13 +94,16 @@ public class CraftWorld implements World {
         }
         return size;
     }
-    public int getTickableTileEntityCount() {
+    @Override
+	public int getTickableTileEntityCount() {
         return world.tileEntityListTick.size();
     }
-    public int getChunkCount() {
+    @Override
+	public int getChunkCount() {
         return world.getChunkProviderServer().chunks.size();
     }
-    public int getPlayerCount() {
+    @Override
+	public int getPlayerCount() {
         return world.players.size();
     }
     // Paper end
@@ -114,15 +121,18 @@ public class CraftWorld implements World {
         }
     }
 
-    public Block getBlockAt(int x, int y, int z) {
+    @Override
+	public Block getBlockAt(int x, int y, int z) {
         return getChunkAt(x >> 4, z >> 4).getBlock(x & 0xF, y, z & 0xF);
     }
 
-    public int getBlockTypeIdAt(int x, int y, int z) {
+    @Override
+	public int getBlockTypeIdAt(int x, int y, int z) {
         return CraftMagicNumbers.getId(world.getType(new BlockPosition(x, y, z)).getBlock());
     }
 
-    public int getHighestBlockYAt(int x, int z) {
+    @Override
+	public int getHighestBlockYAt(int x, int z) {
         if (!isChunkLoaded(x >> 4, z >> 4)) {
             loadChunk(x >> 4, z >> 4);
         }
@@ -130,12 +140,14 @@ public class CraftWorld implements World {
         return world.getHighestBlockYAt(new BlockPosition(x, 0, z)).getY();
     }
 
-    public Location getSpawnLocation() {
+    @Override
+	public Location getSpawnLocation() {
         BlockPosition spawn = world.getSpawn();
         return new Location(this, spawn.getX(), spawn.getY(), spawn.getZ());
     }
 
-    public boolean setSpawnLocation(int x, int y, int z) {
+    @Override
+	public boolean setSpawnLocation(int x, int y, int z) {
         try {
             Location previousLocation = getSpawnLocation();
             world.worldData.setSpawn(new BlockPosition(x, y, z));
@@ -151,7 +163,8 @@ public class CraftWorld implements World {
     }
 
     // Paper start - Async chunk load API
-    public void getChunkAtAsync(final int x, final int z, final ChunkLoadCallback callback) {
+    @Override
+	public void getChunkAtAsync(final int x, final int z, final ChunkLoadCallback callback) {
         final ChunkProviderServer cps = this.world.getChunkProviderServer();
         cps.getChunkAt(x, z, new Runnable() {
             @Override
@@ -161,28 +174,34 @@ public class CraftWorld implements World {
         });
     }
 
-    public void getChunkAtAsync(Block block, ChunkLoadCallback callback) {
+    @Override
+	public void getChunkAtAsync(Block block, ChunkLoadCallback callback) {
         getChunkAtAsync(block.getX() >> 4, block.getZ() >> 4, callback);
     }
 
-    public void getChunkAtAsync(Location location, ChunkLoadCallback callback) {
+    @Override
+	public void getChunkAtAsync(Location location, ChunkLoadCallback callback) {
         getChunkAtAsync(location.getBlockX() >> 4, location.getBlockZ() >> 4, callback);
     }
     // Paper end
 
-    public Chunk getChunkAt(int x, int z) {
+    @Override
+	public Chunk getChunkAt(int x, int z) {
         return this.world.getChunkProviderServer().getChunkAt(x, z).bukkitChunk;
     }
 
-    public Chunk getChunkAt(Block block) {
+    @Override
+	public Chunk getChunkAt(Block block) {
         return getChunkAt(block.getX() >> 4, block.getZ() >> 4);
     }
 
-    public boolean isChunkLoaded(int x, int z) {
+    @Override
+	public boolean isChunkLoaded(int x, int z) {
         return world.getChunkProviderServer().isLoaded(x, z);
     }
 
-    public Chunk[] getLoadedChunks() {
+    @Override
+	public Chunk[] getLoadedChunks() {
         Object[] chunks = world.getChunkProviderServer().chunks.values().toArray();
         org.bukkit.Chunk[] craftChunks = new CraftChunk[chunks.length];
 
@@ -194,27 +213,33 @@ public class CraftWorld implements World {
         return craftChunks;
     }
 
-    public void loadChunk(int x, int z) {
+    @Override
+	public void loadChunk(int x, int z) {
         loadChunk(x, z, true);
     }
 
-    public boolean unloadChunk(Chunk chunk) {
+    @Override
+	public boolean unloadChunk(Chunk chunk) {
         return unloadChunk(chunk.getX(), chunk.getZ());
     }
 
-    public boolean unloadChunk(int x, int z) {
+    @Override
+	public boolean unloadChunk(int x, int z) {
         return unloadChunk(x, z, true);
     }
 
-    public boolean unloadChunk(int x, int z, boolean save) {
+    @Override
+	public boolean unloadChunk(int x, int z, boolean save) {
         return unloadChunk(x, z, save, false);
     }
 
-    public boolean unloadChunkRequest(int x, int z) {
+    @Override
+	public boolean unloadChunkRequest(int x, int z) {
         return unloadChunkRequest(x, z, true);
     }
 
-    public boolean unloadChunkRequest(int x, int z, boolean safe) {
+    @Override
+	public boolean unloadChunkRequest(int x, int z, boolean safe) {
         org.spigotmc.AsyncCatcher.catchOp( "chunk unload"); // Spigot
         if (safe && isChunkInUse(x, z)) {
             return false;
@@ -228,7 +253,8 @@ public class CraftWorld implements World {
         return true;
     }
 
-    public boolean unloadChunk(int x, int z, boolean save, boolean safe) {
+    @Override
+	public boolean unloadChunk(int x, int z, boolean save, boolean safe) {
         org.spigotmc.AsyncCatcher.catchOp( "chunk unload"); // Spigot
         if (isChunkInUse(x, z)) {
             return false;
@@ -249,7 +275,8 @@ public class CraftWorld implements World {
         }); return result != null ? result : false; // Paper - Ensure never async
     }
 
-    public boolean regenerateChunk(int x, int z) {
+    @Override
+	public boolean regenerateChunk(int x, int z) {
         if (!unloadChunk0(x, z, false)) {
             return false;
         }
@@ -277,7 +304,8 @@ public class CraftWorld implements World {
         return chunk != null;
     }
 
-    public boolean refreshChunk(int x, int z) {
+    @Override
+	public boolean refreshChunk(int x, int z) {
         if (!isChunkLoaded(x, z)) {
             return false;
         }
@@ -297,11 +325,13 @@ public class CraftWorld implements World {
         return true;
     }
 
-    public boolean isChunkInUse(int x, int z) {
+    @Override
+	public boolean isChunkInUse(int x, int z) {
         return world.getPlayerChunkMap().isChunkInUse(x, z);
     }
 
-    public boolean loadChunk(int x, int z, boolean generate) {
+    @Override
+	public boolean loadChunk(int x, int z, boolean generate) {
         org.spigotmc.AsyncCatcher.catchOp( "chunk load"); // Spigot
         chunkLoadCount++;
         if (generate) {
@@ -312,11 +342,13 @@ public class CraftWorld implements World {
         return world.getChunkProviderServer().getOrLoadChunkAt(x, z) != null;
     }
 
-    public boolean isChunkLoaded(Chunk chunk) {
+    @Override
+	public boolean isChunkLoaded(Chunk chunk) {
         return isChunkLoaded(chunk.getX(), chunk.getZ());
     }
 
-    public void loadChunk(Chunk chunk) {
+    @Override
+	public void loadChunk(Chunk chunk) {
         loadChunk(chunk.getX(), chunk.getZ());
         ((CraftChunk) getChunkAt(chunk.getX(), chunk.getZ())).getHandle().bukkitChunk = chunk;
     }
@@ -325,7 +357,8 @@ public class CraftWorld implements World {
         return world;
     }
 
-    public org.bukkit.entity.Item dropItem(Location loc, ItemStack item) {
+    @Override
+	public org.bukkit.entity.Item dropItem(Location loc, ItemStack item) {
         Validate.notNull(item, "Cannot drop a Null item.");
         Validate.isTrue(item.getTypeId() != 0, "Cannot drop AIR.");
         EntityItem entity = new EntityItem(world, loc.getX(), loc.getY(), loc.getZ(), CraftItemStack.asNMSCopy(item));
@@ -361,7 +394,8 @@ public class CraftWorld implements World {
         }
     }
 
-    public org.bukkit.entity.Item dropItemNaturally(Location loc, ItemStack item) {
+    @Override
+	public org.bukkit.entity.Item dropItemNaturally(Location loc, ItemStack item) {
         double xs = world.random.nextFloat() * 0.7F - 0.35D;
         double ys = world.random.nextFloat() * 0.7F - 0.35D;
         double zs = world.random.nextFloat() * 0.7F - 0.35D;
@@ -372,11 +406,13 @@ public class CraftWorld implements World {
         return dropItem(loc, item);
     }
 
-    public Arrow spawnArrow(Location loc, Vector velocity, float speed, float spread) {
+    @Override
+	public Arrow spawnArrow(Location loc, Vector velocity, float speed, float spread) {
         return spawnArrow(loc, velocity, speed, spread, Arrow.class);
     }
 
-    public <T extends Arrow> T spawnArrow(Location loc, Vector velocity, float speed, float spread, Class<T> clazz) {
+    @Override
+	public <T extends Arrow> T spawnArrow(Location loc, Vector velocity, float speed, float spread, Class<T> clazz) {
         Validate.notNull(loc, "Can not spawn arrow with a null location");
         Validate.notNull(velocity, "Can not spawn arrow with a null velocity");
         Validate.notNull(clazz, "Can not spawn an arrow with no class");
@@ -397,23 +433,27 @@ public class CraftWorld implements World {
         return (T) arrow.getBukkitEntity();
     }
 
-    public Entity spawnEntity(Location loc, EntityType entityType) {
+    @Override
+	public Entity spawnEntity(Location loc, EntityType entityType) {
         return spawn(loc, entityType.getEntityClass());
     }
 
-    public LightningStrike strikeLightning(Location loc) {
+    @Override
+	public LightningStrike strikeLightning(Location loc) {
         EntityLightning lightning = new EntityLightning(world, loc.getX(), loc.getY(), loc.getZ(), false);
         world.strikeLightning(lightning);
         return new CraftLightningStrike(server, lightning);
     }
 
-    public LightningStrike strikeLightningEffect(Location loc) {
+    @Override
+	public LightningStrike strikeLightningEffect(Location loc) {
         EntityLightning lightning = new EntityLightning(world, loc.getX(), loc.getY(), loc.getZ(), true);
         world.strikeLightning(lightning);
         return new CraftLightningStrike(server, lightning);
     }
 
-    public boolean generateTree(Location loc, TreeType type) {
+    @Override
+	public boolean generateTree(Location loc, TreeType type) {
         BlockPosition pos = new BlockPosition(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
 
         net.minecraft.server.WorldGenerator gen;
@@ -483,7 +523,8 @@ public class CraftWorld implements World {
         return gen.generate(world, rand, pos);
     }
 
-    public boolean generateTree(Location loc, TreeType type, BlockChangeDelegate delegate) {
+    @Override
+	public boolean generateTree(Location loc, TreeType type, BlockChangeDelegate delegate) {
         world.captureTreeGeneration = true;
         world.captureBlockStates = true;
         boolean grownTree = generateTree(loc, type);
@@ -515,7 +556,8 @@ public class CraftWorld implements World {
         return world.getTileEntity(new BlockPosition(x, y, z));
     }
 
-    public String getName() {
+    @Override
+	public String getName() {
         return world.worldData.getName();
     }
 
@@ -524,7 +566,8 @@ public class CraftWorld implements World {
         return world.worldData.getSeed();
     }
 
-    public UUID getUID() {
+    @Override
+	public UUID getUID() {
         return world.getDataManager().getUUID();
     }
 
@@ -533,23 +576,27 @@ public class CraftWorld implements World {
         return "CraftWorld{name=" + getName() + '}';
     }
 
-    public long getTime() {
+    @Override
+	public long getTime() {
         long time = getFullTime() % 24000;
         if (time < 0) time += 24000;
         return time;
     }
 
-    public void setTime(long time) {
+    @Override
+	public void setTime(long time) {
         long margin = (time - getFullTime()) % 24000;
         if (margin < 0) margin += 24000;
         setFullTime(getFullTime() + margin);
     }
 
-    public long getFullTime() {
+    @Override
+	public long getFullTime() {
         return world.getDayTime();
     }
 
-    public void setFullTime(long time) {
+    @Override
+	public void setFullTime(long time) {
         world.setDayTime(time);
 
         // Forces the client to update to the new time immediately
@@ -561,27 +608,33 @@ public class CraftWorld implements World {
         }
     }
 
-    public boolean createExplosion(double x, double y, double z, float power) {
+    @Override
+	public boolean createExplosion(double x, double y, double z, float power) {
         return createExplosion(x, y, z, power, false, true);
     }
 
-    public boolean createExplosion(double x, double y, double z, float power, boolean setFire) {
+    @Override
+	public boolean createExplosion(double x, double y, double z, float power, boolean setFire) {
         return createExplosion(x, y, z, power, setFire, true);
     }
 
-    public boolean createExplosion(double x, double y, double z, float power, boolean setFire, boolean breakBlocks) {
+    @Override
+	public boolean createExplosion(double x, double y, double z, float power, boolean setFire, boolean breakBlocks) {
         return !world.createExplosion(null, x, y, z, power, setFire, breakBlocks).wasCanceled;
     }
 
-    public boolean createExplosion(Location loc, float power) {
+    @Override
+	public boolean createExplosion(Location loc, float power) {
         return createExplosion(loc, power, false);
     }
 
-    public boolean createExplosion(Location loc, float power, boolean setFire) {
+    @Override
+	public boolean createExplosion(Location loc, float power, boolean setFire) {
         return createExplosion(loc.getX(), loc.getY(), loc.getZ(), power, setFire);
     }
 
-    public Environment getEnvironment() {
+    @Override
+	public Environment getEnvironment() {
         return environment;
     }
 
@@ -602,43 +655,53 @@ public class CraftWorld implements World {
         }
     }
 
-    public Block getBlockAt(Location location) {
+    @Override
+	public Block getBlockAt(Location location) {
         return getBlockAt(location.getBlockX(), location.getBlockY(), location.getBlockZ());
     }
 
-    public int getBlockTypeIdAt(Location location) {
+    @Override
+	public int getBlockTypeIdAt(Location location) {
         return getBlockTypeIdAt(location.getBlockX(), location.getBlockY(), location.getBlockZ());
     }
 
-    public int getHighestBlockYAt(Location location) {
+    @Override
+	public int getHighestBlockYAt(Location location) {
         return getHighestBlockYAt(location.getBlockX(), location.getBlockZ());
     }
 
-    public Chunk getChunkAt(Location location) {
+    @Override
+	public Chunk getChunkAt(Location location) {
         return getChunkAt(location.getBlockX() >> 4, location.getBlockZ() >> 4);
     }
 
-    public ChunkGenerator getGenerator() {
+    @Override
+	public ChunkGenerator getGenerator() {
         return generator;
     }
 
-    public List<BlockPopulator> getPopulators() {
+    @Override
+	public List<BlockPopulator> getPopulators() {
         return populators;
     }
 
-    public Block getHighestBlockAt(int x, int z) {
+    @Override
+	public Block getHighestBlockAt(int x, int z) {
         return getBlockAt(x, getHighestBlockYAt(x, z), z);
     }
 
-    public Block getHighestBlockAt(Location location) {
+    @Override
+	public Block getHighestBlockAt(Location location) {
         return getHighestBlockAt(location.getBlockX(), location.getBlockZ());
     }
 
-    public Biome getBiome(int x, int z) {
+    @Override
+	public Biome getBiome(int x, int z) {
         return CraftBlock.biomeBaseToBiome(this.world.getBiome(new BlockPosition(x, 0, z)));
     }
 
-    public void setBiome(int x, int z, Biome bio) {
+    @Override
+	public void setBiome(int x, int z, Biome bio) {
         BiomeBase bb = CraftBlock.biomeToBiomeBase(bio);
         if (this.world.isLoaded(new BlockPosition(x, 0, z))) {
             net.minecraft.server.Chunk chunk = this.world.getChunkAtWorldCoords(new BlockPosition(x, 0, z));
@@ -652,15 +715,18 @@ public class CraftWorld implements World {
         }
     }
 
-    public double getTemperature(int x, int z) {
+    @Override
+	public double getTemperature(int x, int z) {
         return this.world.getBiome(new BlockPosition(x, 0, z)).getTemperature();
     }
 
-    public double getHumidity(int x, int z) {
+    @Override
+	public double getHumidity(int x, int z) {
         return this.world.getBiome(new BlockPosition(x, 0, z)).getHumidity();
     }
 
-    public List<Entity> getEntities() {
+    @Override
+	public List<Entity> getEntities() {
         List<Entity> list = new ArrayList<Entity>();
 
         for (Object o : world.entityList) {
@@ -678,7 +744,8 @@ public class CraftWorld implements World {
         return list;
     }
 
-    public List<LivingEntity> getLivingEntities() {
+    @Override
+	public List<LivingEntity> getLivingEntities() {
         List<LivingEntity> list = new ArrayList<LivingEntity>();
 
         for (Object o : world.entityList) {
@@ -696,13 +763,15 @@ public class CraftWorld implements World {
         return list;
     }
 
-    @SuppressWarnings("unchecked")
+    @Override
+	@SuppressWarnings("unchecked")
     @Deprecated
     public <T extends Entity> Collection<T> getEntitiesByClass(Class<T>... classes) {
         return (Collection<T>)getEntitiesByClasses(classes);
     }
 
-    @SuppressWarnings("unchecked")
+    @Override
+	@SuppressWarnings("unchecked")
     public <T extends Entity> Collection<T> getEntitiesByClass(Class<T> clazz) {
         Collection<T> list = new ArrayList<T>();
 
@@ -725,7 +794,8 @@ public class CraftWorld implements World {
         return list;
     }
 
-    public Collection<Entity> getEntitiesByClasses(Class<?>... classes) {
+    @Override
+	public Collection<Entity> getEntitiesByClasses(Class<?>... classes) {
         Collection<Entity> list = new ArrayList<Entity>();
 
         for (Object entity: world.entityList) {
@@ -765,7 +835,8 @@ public class CraftWorld implements World {
         return bukkitEntityList;
     }
 
-    public List<Player> getPlayers() {
+    @Override
+	public List<Player> getPlayers() {
         List<Player> list = new ArrayList<Player>(world.players.size());
 
         for (EntityHuman human : world.players) {
@@ -779,7 +850,8 @@ public class CraftWorld implements World {
         return list;
     }
 
-    public void save() {
+    @Override
+	public void save() {
     // Spigot start
         save(true);
     }
@@ -798,19 +870,23 @@ public class CraftWorld implements World {
         }
     }
 
-    public boolean isAutoSave() {
+    @Override
+	public boolean isAutoSave() {
         return !world.savingDisabled;
     }
 
-    public void setAutoSave(boolean value) {
+    @Override
+	public void setAutoSave(boolean value) {
         world.savingDisabled = !value;
     }
 
-    public void setDifficulty(Difficulty difficulty) {
+    @Override
+	public void setDifficulty(Difficulty difficulty) {
         this.getHandle().worldData.setDifficulty(EnumDifficulty.getById(difficulty.getValue()));
     }
 
-    public Difficulty getDifficulty() {
+    @Override
+	public Difficulty getDifficulty() {
         return Difficulty.getByValue(this.getHandle().getDifficulty().ordinal());
     }
 
@@ -818,47 +894,58 @@ public class CraftWorld implements World {
         return blockMetadata;
     }
 
-    public boolean hasStorm() {
+    @Override
+	public boolean hasStorm() {
         return world.worldData.hasStorm();
     }
 
-    public void setStorm(boolean hasStorm) {
+    @Override
+	public void setStorm(boolean hasStorm) {
         world.worldData.setStorm(hasStorm);
     }
 
-    public int getWeatherDuration() {
+    @Override
+	public int getWeatherDuration() {
         return world.worldData.getWeatherDuration();
     }
 
-    public void setWeatherDuration(int duration) {
+    @Override
+	public void setWeatherDuration(int duration) {
         world.worldData.setWeatherDuration(duration);
     }
 
-    public boolean isThundering() {
+    @Override
+	public boolean isThundering() {
         return world.worldData.isThundering();
     }
 
-    public void setThundering(boolean thundering) {
+    @Override
+	public void setThundering(boolean thundering) {
         world.worldData.setThundering(thundering);
     }
 
-    public int getThunderDuration() {
+    @Override
+	public int getThunderDuration() {
         return world.worldData.getThunderDuration();
     }
 
-    public void setThunderDuration(int duration) {
+    @Override
+	public void setThunderDuration(int duration) {
         world.worldData.setThunderDuration(duration);
     }
 
-    public long getSeed() {
+    @Override
+	public long getSeed() {
         return world.worldData.getSeed();
     }
 
-    public boolean getPVP() {
+    @Override
+	public boolean getPVP() {
         return world.pvpMode;
     }
 
-    public void setPVP(boolean pvp) {
+    @Override
+	public void setPVP(boolean pvp) {
         world.pvpMode = pvp;
     }
 
@@ -866,15 +953,18 @@ public class CraftWorld implements World {
         playEffect(player.getLocation(), effect, data, 0);
     }
 
-    public void playEffect(Location location, Effect effect, int data) {
+    @Override
+	public void playEffect(Location location, Effect effect, int data) {
         playEffect(location, effect, data, 64);
     }
 
-    public <T> void playEffect(Location loc, Effect effect, T data) {
+    @Override
+	public <T> void playEffect(Location loc, Effect effect, T data) {
         playEffect(loc, effect, data, 64);
     }
 
-    public <T> void playEffect(Location loc, Effect effect, T data, int radius) {
+    @Override
+	public <T> void playEffect(Location loc, Effect effect, T data, int radius) {
         if (data != null) {
             Validate.isTrue(effect.getData() != null && effect.getData().isAssignableFrom(data.getClass()), "Wrong kind of data for this effect!");
         } else {
@@ -891,11 +981,13 @@ public class CraftWorld implements World {
         }
     }
 
-    public void playEffect(Location location, Effect effect, int data, int radius) {
+    @Override
+	public void playEffect(Location location, Effect effect, int data, int radius) {
         spigot().playEffect( location, effect, data, 0, 0, 0, 0, 1, 1, radius );
     }
 
-    public <T extends Entity> T spawn(Location location, Class<T> clazz) throws IllegalArgumentException {
+    @Override
+	public <T extends Entity> T spawn(Location location, Class<T> clazz) throws IllegalArgumentException {
         return spawn(location, clazz, null, SpawnReason.CUSTOM);
     }
 
@@ -910,7 +1002,8 @@ public class CraftWorld implements World {
         return spawnFallingBlock(location, data.getItemType(), data.getData());
     }
 
-    public FallingBlock spawnFallingBlock(Location location, org.bukkit.Material material, byte data) throws IllegalArgumentException {
+    @Override
+	public FallingBlock spawnFallingBlock(Location location, org.bukkit.Material material, byte data) throws IllegalArgumentException {
         Validate.notNull(location, "Location cannot be null");
         Validate.notNull(material, "Material cannot be null");
         Validate.isTrue(material.isBlock(), "Material must be a block");
@@ -922,7 +1015,8 @@ public class CraftWorld implements World {
         return (FallingBlock) entity.getBukkitEntity();
     }
 
-    public FallingBlock spawnFallingBlock(Location location, int blockId, byte blockData) throws IllegalArgumentException {
+    @Override
+	public FallingBlock spawnFallingBlock(Location location, int blockId, byte blockData) throws IllegalArgumentException {
         return spawnFallingBlock(location, org.bukkit.Material.getMaterial(blockId), blockData);
     }
 
@@ -1164,7 +1258,7 @@ public class CraftWorld implements World {
                 if (nmsBlock.getBlockData().getMaterial().isBuildable() || BlockDiodeAbstract.isDiode(nmsBlock.getBlockData())) {
                     boolean taken = false;
                     AxisAlignedBB bb = EntityHanging.calculateBoundingBox(null, pos, CraftBlock.blockFaceToNotch(dir).opposite(), width, height);
-                    List<net.minecraft.server.Entity> list = (List<net.minecraft.server.Entity>) world.getEntities(null, bb);
+                    List<net.minecraft.server.Entity> list = world.getEntities(null, bb);
                     for (Iterator<net.minecraft.server.Entity> it = list.iterator(); !taken && it.hasNext();) {
                         net.minecraft.server.Entity e = it.next();
                         if (e instanceof EntityHanging) {
@@ -1255,35 +1349,43 @@ public class CraftWorld implements World {
         return addEntity(entity, reason, function);
     }
 
-    public ChunkSnapshot getEmptyChunkSnapshot(int x, int z, boolean includeBiome, boolean includeBiomeTempRain) {
+    @Override
+	public ChunkSnapshot getEmptyChunkSnapshot(int x, int z, boolean includeBiome, boolean includeBiomeTempRain) {
         return CraftChunk.getEmptyChunkSnapshot(x, z, this, includeBiome, includeBiomeTempRain);
     }
 
-    public void setSpawnFlags(boolean allowMonsters, boolean allowAnimals) {
+    @Override
+	public void setSpawnFlags(boolean allowMonsters, boolean allowAnimals) {
         world.setSpawnFlags(allowMonsters, allowAnimals);
     }
 
-    public boolean getAllowAnimals() {
+    @Override
+	public boolean getAllowAnimals() {
         return world.allowAnimals;
     }
 
-    public boolean getAllowMonsters() {
+    @Override
+	public boolean getAllowMonsters() {
         return world.allowMonsters;
     }
 
-    public int getMaxHeight() {
+    @Override
+	public int getMaxHeight() {
         return world.getHeight();
     }
 
-    public int getSeaLevel() {
+    @Override
+	public int getSeaLevel() {
         return world.K(); // PAIL: rename
     }
 
-    public boolean getKeepSpawnInMemory() {
+    @Override
+	public boolean getKeepSpawnInMemory() {
         return world.keepSpawnInMemory;
     }
 
-    public void setKeepSpawnInMemory(boolean keepLoaded) {
+    @Override
+	public void setKeepSpawnInMemory(boolean keepLoaded) {
         world.keepSpawnInMemory = keepLoaded;
         // Grab the worlds spawn chunk
         BlockPosition chunkcoordinates = this.world.getSpawn();
@@ -1323,11 +1425,13 @@ public class CraftWorld implements World {
         return this.getUID() == other.getUID();
     }
 
-    public File getWorldFolder() {
+    @Override
+	public File getWorldFolder() {
         return ((WorldNBTStorage) world.getDataManager()).getDirectory();
     }
 
-    public void sendPluginMessage(Plugin source, String channel, byte[] message) {
+    @Override
+	public void sendPluginMessage(Plugin source, String channel, byte[] message) {
         StandardMessenger.validatePluginMessage(server.getMessenger(), source, channel, message);
 
         for (Player player : getPlayers()) {
@@ -1335,8 +1439,9 @@ public class CraftWorld implements World {
         }
     }
 
-    public Set<String> getListeningPluginChannels() {
-        Set<String> result = new HashSet<String>();
+    @Override
+	public Set<String> getListeningPluginChannels() {
+        Set<String> result = HashObjSets.newMutableSet();
 
         for (Player player : getPlayers()) {
             result.addAll(player.getListeningPluginChannels());
@@ -1345,47 +1450,58 @@ public class CraftWorld implements World {
         return result;
     }
 
-    public org.bukkit.WorldType getWorldType() {
+    @Override
+	public org.bukkit.WorldType getWorldType() {
         return org.bukkit.WorldType.getByName(world.getWorldData().getType().name());
     }
 
-    public boolean canGenerateStructures() {
+    @Override
+	public boolean canGenerateStructures() {
         return world.getWorldData().shouldGenerateMapFeatures();
     }
 
-    public long getTicksPerAnimalSpawns() {
+    @Override
+	public long getTicksPerAnimalSpawns() {
         return world.ticksPerAnimalSpawns;
     }
 
-    public void setTicksPerAnimalSpawns(int ticksPerAnimalSpawns) {
+    @Override
+	public void setTicksPerAnimalSpawns(int ticksPerAnimalSpawns) {
         world.ticksPerAnimalSpawns = ticksPerAnimalSpawns;
     }
 
-    public long getTicksPerMonsterSpawns() {
+    @Override
+	public long getTicksPerMonsterSpawns() {
         return world.ticksPerMonsterSpawns;
     }
 
-    public void setTicksPerMonsterSpawns(int ticksPerMonsterSpawns) {
+    @Override
+	public void setTicksPerMonsterSpawns(int ticksPerMonsterSpawns) {
         world.ticksPerMonsterSpawns = ticksPerMonsterSpawns;
     }
 
-    public void setMetadata(String metadataKey, MetadataValue newMetadataValue) {
+    @Override
+	public void setMetadata(String metadataKey, MetadataValue newMetadataValue) {
         server.getWorldMetadata().setMetadata(this, metadataKey, newMetadataValue);
     }
 
-    public List<MetadataValue> getMetadata(String metadataKey) {
+    @Override
+	public List<MetadataValue> getMetadata(String metadataKey) {
         return server.getWorldMetadata().getMetadata(this, metadataKey);
     }
 
-    public boolean hasMetadata(String metadataKey) {
+    @Override
+	public boolean hasMetadata(String metadataKey) {
         return server.getWorldMetadata().hasMetadata(this, metadataKey);
     }
 
-    public void removeMetadata(String metadataKey, Plugin owningPlugin) {
+    @Override
+	public void removeMetadata(String metadataKey, Plugin owningPlugin) {
         server.getWorldMetadata().removeMetadata(this, metadataKey, owningPlugin);
     }
 
-    public int getMonsterSpawnLimit() {
+    @Override
+	public int getMonsterSpawnLimit() {
         if (monsterSpawn < 0) {
             return server.getMonsterSpawnLimit();
         }
@@ -1393,11 +1509,13 @@ public class CraftWorld implements World {
         return monsterSpawn;
     }
 
-    public void setMonsterSpawnLimit(int limit) {
+    @Override
+	public void setMonsterSpawnLimit(int limit) {
         monsterSpawn = limit;
     }
 
-    public int getAnimalSpawnLimit() {
+    @Override
+	public int getAnimalSpawnLimit() {
         if (animalSpawn < 0) {
             return server.getAnimalSpawnLimit();
         }
@@ -1405,11 +1523,13 @@ public class CraftWorld implements World {
         return animalSpawn;
     }
 
-    public void setAnimalSpawnLimit(int limit) {
+    @Override
+	public void setAnimalSpawnLimit(int limit) {
         animalSpawn = limit;
     }
 
-    public int getWaterAnimalSpawnLimit() {
+    @Override
+	public int getWaterAnimalSpawnLimit() {
         if (waterAnimalSpawn < 0) {
             return server.getWaterAnimalSpawnLimit();
         }
@@ -1417,11 +1537,13 @@ public class CraftWorld implements World {
         return waterAnimalSpawn;
     }
 
-    public void setWaterAnimalSpawnLimit(int limit) {
+    @Override
+	public void setWaterAnimalSpawnLimit(int limit) {
         waterAnimalSpawn = limit;
     }
 
-    public int getAmbientSpawnLimit() {
+    @Override
+	public int getAmbientSpawnLimit() {
         if (ambientSpawn < 0) {
             return server.getAmbientSpawnLimit();
         }
@@ -1429,15 +1551,18 @@ public class CraftWorld implements World {
         return ambientSpawn;
     }
 
-    public void setAmbientSpawnLimit(int limit) {
+    @Override
+	public void setAmbientSpawnLimit(int limit) {
         ambientSpawn = limit;
     }
 
-    public void playSound(Location loc, Sound sound, float volume, float pitch) {
+    @Override
+	public void playSound(Location loc, Sound sound, float volume, float pitch) {
         playSound(loc, sound, org.bukkit.SoundCategory.MASTER, volume, pitch);
     }
 
-    public void playSound(Location loc, String sound, float volume, float pitch) {
+    @Override
+	public void playSound(Location loc, String sound, float volume, float pitch) {
         playSound(loc, sound, org.bukkit.SoundCategory.MASTER, volume, pitch);
     }
 
@@ -1464,11 +1589,13 @@ public class CraftWorld implements World {
         world.getMinecraftServer().getPlayerList().sendPacketNearby(null, x, y, z, volume > 1.0F ? 16.0F * volume : 16.0D, this.world.dimension, packet);
     }
 
-    public String getGameRuleValue(String rule) {
+    @Override
+	public String getGameRuleValue(String rule) {
         return getHandle().getGameRules().get(rule);
     }
 
-    public boolean setGameRuleValue(String rule, String value) {
+    @Override
+	public boolean setGameRuleValue(String rule, String value) {
         // No null values allowed
         if (rule == null || value == null) return false;
 
@@ -1478,11 +1605,13 @@ public class CraftWorld implements World {
         return true;
     }
 
-    public String[] getGameRules() {
+    @Override
+	public String[] getGameRules() {
         return getHandle().getGameRules().getGameRules();
     }
 
-    public boolean isGameRule(String rule) {
+    @Override
+	public boolean isGameRule(String rule) {
         return getHandle().getGameRules().contains(rule);
     }
 
@@ -1681,7 +1810,8 @@ public class CraftWorld implements World {
         }
     };
 
-    public Spigot spigot()
+    @Override
+	public Spigot spigot()
     {
         return spigot;
     }

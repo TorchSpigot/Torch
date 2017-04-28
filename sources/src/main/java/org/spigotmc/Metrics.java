@@ -27,6 +27,7 @@
  */
 package org.spigotmc;
 
+import com.google.common.collect.Sets;
 import com.koloboke.collect.set.hash.HashObjSets;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -88,7 +89,7 @@ public class Metrics {
     /**
      * All of the custom graphs to submit to metrics
      */
-    private final Set<Graph> graphs = Collections.synchronizedSet(new HashSet<Graph>());
+    private final Set<Graph> graphs = Sets.newConcurrentHashSet(); // Torch
     /**
      * The default graph, used for addCustomData when you don't want a specific graph
      */
@@ -386,7 +387,7 @@ public class Metrics {
 
         // Acquire a lock on the graphs, which lets us make the assumption we also lock everything
         // inside of the graph (e.g plotters)
-        synchronized (graphs) {
+        //synchronized (graphs) {
             final Iterator<Graph> iter = graphs.iterator();
 
             while (iter.hasNext()) {
@@ -406,7 +407,7 @@ public class Metrics {
                     encodeDataPair(data, key, value);
                 }
             }
-        }
+        //}
 
         // Create the url
         URL url = new URL(BASE_URL + String.format(REPORT_URL, encode(pluginName)));
@@ -442,17 +443,17 @@ public class Metrics {
         } else {
             // Is this the first update this hour?
             if (response.contains("OK This is your first update this hour")) {
-                synchronized (graphs) {
-                    final Iterator<Graph> iter = graphs.iterator();
+                //synchronized (graphs) {
+                    final Iterator<Graph> iterator = graphs.iterator();
 
-                    while (iter.hasNext()) {
-                        final Graph graph = iter.next();
+                    while (iterator.hasNext()) {
+                        final Graph graph = iterator.next();
 
                         for (Plotter plotter : graph.getPlotters()) {
                             plotter.reset();
                         }
                     }
-                }
+                //}
             }
         }
     }

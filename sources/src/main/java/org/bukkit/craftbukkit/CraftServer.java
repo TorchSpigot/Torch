@@ -124,6 +124,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
+import com.koloboke.collect.set.hash.HashObjSets;
 import com.mojang.authlib.GameProfile;
 
 import io.netty.buffer.ByteBuf;
@@ -1394,9 +1395,8 @@ public final class CraftServer implements Server {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Set<String> getIPBans() {
-        return new HashSet<String>(Arrays.asList(playerList.getIPBans().getEntries()));
+        return HashObjSets.newMutableSet(Arrays.asList(playerList.getIPBans().getEntries()));
     }
 
     @Override
@@ -1415,7 +1415,7 @@ public final class CraftServer implements Server {
 
     @Override
     public Set<OfflinePlayer> getBannedPlayers() {
-        Set<OfflinePlayer> result = new HashSet<OfflinePlayer>();
+        Set<OfflinePlayer> result = HashObjSets.newMutableSet();
 
         for (JsonListEntry entry : playerList.getProfileBans().getValues()) {
             result.add(getOfflinePlayer((GameProfile) entry.getKey()));
@@ -1456,7 +1456,7 @@ public final class CraftServer implements Server {
 
     @Override
     public Set<OfflinePlayer> getOperators() {
-        Set<OfflinePlayer> result = new HashSet<OfflinePlayer>();
+        Set<OfflinePlayer> result = HashObjSets.newMutableSet();
 
         for (JsonListEntry entry : playerList.getOPs().getValues()) {
             result.add(getOfflinePlayer((GameProfile) entry.getKey()));
@@ -1518,7 +1518,7 @@ public final class CraftServer implements Server {
     public OfflinePlayer[] getOfflinePlayers() {
         WorldNBTStorage storage = (WorldNBTStorage) console.worlds.get(0).getDataManager();
         String[] files = storage.getPlayerDir().list(new DatFileFilter());
-        Set<OfflinePlayer> players = new HashSet<OfflinePlayer>();
+        Set<OfflinePlayer> players = HashObjSets.newMutableSet();
 
         for (String file : files) {
             try {
@@ -1549,7 +1549,7 @@ public final class CraftServer implements Server {
 
     @Override
     public Set<String> getListeningPluginChannels() {
-        Set<String> result = new HashSet<String>();
+        Set<String> result = HashObjSets.newMutableSet();
 
         for (Player player : getOnlinePlayers()) {
             result.addAll(player.getListeningPluginChannels());

@@ -854,15 +854,15 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             this.nanoTimeSinceStatusRefresh = startTime;
             this.serverPing.setPlayerSample(new ServerPing.ServerPingPlayerSample(this.getMaxPlayers(), this.getCurrentPlayerCount()));
             
-            GameProfile[] agameprofile = new GameProfile[Math.min(this.getCurrentPlayerCount(), 12)];
-            int j = MathHelper.nextInt(this.random, 0, this.getCurrentPlayerCount() - agameprofile.length);
+            GameProfile[] samplePlayers = new GameProfile[Math.min(this.getCurrentPlayerCount(), 12)];
+            int random = MathHelper.nextInt(this.random, 0, this.getCurrentPlayerCount() - samplePlayers.length);
 
-            for (int k = 0; k < agameprofile.length; ++k) {
-                agameprofile[k] = this.playerList.getReactor().players.get(j + k).getProfile();
+            for (int k = 0; k < samplePlayers.length; ++k) {
+            	samplePlayers[k] = this.playerList.getReactor().players.get(random + k).getProfile();
             }
             
-            Collections.shuffle(Arrays.asList(agameprofile));
-            this.serverPing.b().a(agameprofile);
+            Collections.shuffle(Arrays.asList(samplePlayers));
+            this.serverPing.b().a(samplePlayers); // PAIL: Apply sample players
         }
 
         serverAutoSave = (autosavePeriod > 0 && MinecraftServer.currentTick % autosavePeriod == 0);
