@@ -28,9 +28,11 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import static org.torch.server.TorchServer.logger;
+
 public class JsonList<K, V extends JsonListEntry<K>> {
 
-    protected static final Logger a = LogManager.getLogger();
+    protected static final Logger a = logger;
     protected final Gson b;
     private final File c;
     private final Map<String, V> d = HashObjObjMaps.newMutableMap();
@@ -51,6 +53,12 @@ public class JsonList<K, V extends JsonListEntry<K>> {
             return null;
         }
     };
+    
+    // Torch start
+    /** Only used to reduce entries overread */
+    protected boolean modified = false;
+    protected String[] lastEntries;
+    // Torch end
 
     public JsonList(File file) {
         this.c = file;
@@ -73,14 +81,14 @@ public class JsonList<K, V extends JsonListEntry<K>> {
     }
 
     public void add(V v0) {
+    	modified = true; // Torch
         this.d.put(this.a(v0.getKey()), v0);
 
         try {
             this.save();
         } catch (IOException ioexception) {
-            JsonList.a.warn("Could not save the list after adding a user.", ioexception);
+        	logger.warn("Could not save the list after adding a user.", ioexception);
         }
-
     }
 
     public V get(K k0) {
@@ -89,14 +97,14 @@ public class JsonList<K, V extends JsonListEntry<K>> {
     }
 
     public void remove(K k0) {
+    	modified = true; // Torch
         this.d.remove(this.a(k0));
 
         try {
             this.save();
         } catch (IOException ioexception) {
-            JsonList.a.warn("Could not save the list after removing a user.", ioexception);
+        	logger.warn("Could not save the list after removing a user.", ioexception);
         }
-
     }
 
     public String[] getEntries() {
@@ -122,7 +130,7 @@ public class JsonList<K, V extends JsonListEntry<K>> {
         return this.d.containsKey(this.a(k0));
     }
 
-    private void h() {
+    private void h() { // Torch - slight optimization
         Iterator<V> iterator = this.d.values().iterator();
         while (iterator.hasNext()) if (iterator.next().hasExpired()) iterator.remove();
     }
@@ -131,6 +139,7 @@ public class JsonList<K, V extends JsonListEntry<K>> {
         return new JsonListEntry((Object) null, jsonobject);
     }
 
+    public Map<String, V> getMap() { return this.e(); } // OBFHELPER
     protected Map<String, V> e() {
         return this.d;
     }
@@ -146,10 +155,10 @@ public class JsonList<K, V extends JsonListEntry<K>> {
         } finally {
             IOUtils.closeQuietly(bufferedwriter);
         }
-
     }
 
     public void load() throws FileNotFoundException {
+    	modified = true; // Torch
         Collection collection = null;
         BufferedReader bufferedreader = null;
 

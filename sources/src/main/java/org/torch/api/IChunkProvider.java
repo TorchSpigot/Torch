@@ -5,13 +5,13 @@ import javax.annotation.Nullable;
 import net.minecraft.server.Chunk;
 
 public interface IChunkProvider {
-    @Nullable Chunk getLoadedChunkAt(int x, int z);
+    abstract @Nullable Chunk getLoadedChunkAt(int x, int z);
     
-    Chunk getChunkAt(int x, int j);
+    abstract Chunk getChunkAt(int x, int j);
     
-    boolean isChunkGeneratedAt(int x, int z);
+    abstract boolean isChunkGeneratedAt(int x, int z);
     
-    boolean unloadChunks();
+    abstract boolean unloadChunks();
     
-    String getName();
+    abstract String getName();
 }

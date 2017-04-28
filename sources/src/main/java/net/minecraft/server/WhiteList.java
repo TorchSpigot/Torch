@@ -4,7 +4,11 @@ import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
 import java.io.File;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.bukkit.Bukkit;
+import org.torch.server.TorchServer;
 
 public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
 
@@ -17,7 +21,7 @@ public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
         return new WhiteListEntry(jsonobject);
     }
 
-    public boolean isWhitelisted(GameProfile profile) {
+    public boolean isWhitelisted(GameProfile profile) { // Torch - skip UUID check for offline servers
         if (Bukkit.getOnlineMode()) {
         	return this.contains(profile);
         } else {
@@ -27,19 +31,16 @@ public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
         }
 		return false;
     }
-
+    
     @Override
-	public String[] getEntries() {
-        String[] astring = new String[this.e().size()];
-        int i = 0;
-
-        WhiteListEntry whitelistentry;
-
-        for (Iterator iterator = this.e().values().iterator(); iterator.hasNext(); astring[i++] = whitelistentry.getKey().getName()) {
-            whitelistentry = (WhiteListEntry) iterator.next();
-        }
-
-        return astring;
+    public String[] getEntries() {
+    	if (!modified) return lastEntries; // Returns cached entries directly if un-modified
+    	
+        String[] values = new String[this.getMap().size()]; int index = 0;
+		for (WhiteListEntry entry : this.getMap().values()) values[index++] = entry.getKey().getName();
+    	
+		modified = false; // Mark as un-modified, skip next time
+    	return lastEntries = values;
     }
 
     protected String b(GameProfile gameprofile) {
