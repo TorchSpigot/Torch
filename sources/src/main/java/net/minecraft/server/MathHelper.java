@@ -4,15 +4,13 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.bukkit.craftbukkit.TrigMath;
-
 public class MathHelper {
 
     public static final float a = c(2.0F);
     private static final float[] b = new float[65536];
     private static final Random c = ThreadLocalRandom.current();
     private static final int[] d;
-    // private static final double e;
+    private static final double e;
     private static final double[] f;
     private static final double[] g;
     
@@ -27,7 +25,7 @@ public class MathHelper {
         }
         
         d = new int[] { 0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9};
-        // e = Double.longBitsToDouble(4805340802404319232L);
+        e = Double.longBitsToDouble(4805340802404319232L);
         f = new double[257];
         g = new double[257];
 
@@ -59,16 +57,16 @@ public class MathHelper {
 
     /** floor (float ver) */
     public static int d(float value) {
-    	return (int) (value + BIG_ENOUGH_FLOOR) - BIG_ENOUGH_INT;
+        return (int) (value + BIG_ENOUGH_FLOOR) - BIG_ENOUGH_INT;
     }
 
     public static int floor(double value) {
-    	return (int) (value + BIG_ENOUGH_FLOOR) - BIG_ENOUGH_INT;
+        return (int) (value + BIG_ENOUGH_FLOOR) - BIG_ENOUGH_INT;
     }
     
     /** floor (long ver) */
     public static long d(double value) {
-    	return (long) (value + BIG_ENOUGH_FLOOR) - BIG_ENOUGH_INT;
+        return (long) (value + BIG_ENOUGH_FLOOR) - BIG_ENOUGH_INT;
     }
 
     public static float e(float f) {
@@ -268,9 +266,59 @@ public class MathHelper {
         return (d0 - d1) / (d2 - d1);
     }
 
-    /** atan2 */
-    public static double c(double arg1, double arg2) {
-        return TrigMath.atan2(arg1, arg2);
+    public static double c(double d0, double d1) {
+        double d2 = d1 * d1 + d0 * d0;
+
+        if (Double.isNaN(d2)) {
+            return Double.NaN;
+        } else {
+            boolean flag = d0 < 0.0D;
+
+            if (flag) {
+                d0 = -d0;
+            }
+
+            boolean flag1 = d1 < 0.0D;
+
+            if (flag1) {
+                d1 = -d1;
+            }
+
+            boolean flag2 = d0 > d1;
+            double d3;
+
+            if (flag2) {
+                d3 = d1;
+                d1 = d0;
+                d0 = d3;
+            }
+
+            d3 = i(d2);
+            d1 *= d3;
+            d0 *= d3;
+            double d4 = MathHelper.e + d0;
+            int i = (int) Double.doubleToRawLongBits(d4);
+            double d5 = MathHelper.f[i];
+            double d6 = MathHelper.g[i];
+            double d7 = d4 - MathHelper.e;
+            double d8 = d0 * d6 - d1 * d7;
+            double d9 = (6.0D + d8 * d8) * d8 * 0.16666666666666666D;
+            double d10 = d5 + d9;
+
+            if (flag2) {
+                d10 = 1.5707963267948966D - d10;
+            }
+
+            if (flag1) {
+                d10 = 3.141592653589793D - d10;
+            }
+
+            if (flag) {
+                d10 = -d10;
+            }
+
+            return d10;
+        }
     }
 
     public static double i(double d0) {

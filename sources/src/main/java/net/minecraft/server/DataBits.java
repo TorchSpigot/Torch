@@ -1,7 +1,5 @@
 package net.minecraft.server;
 
-import org.apache.commons.lang3.Validate;
-
 public class DataBits {
 
     private final long[] a;
@@ -25,12 +23,12 @@ public class DataBits {
         int i1 = ((i + 1) * this.b - 1) / 64;
         int j1 = k % 64;
 
-        this.a[l] = this.a[l] & ~(this.c << j1) | ((long) j & this.c) << j1;
+        this.a[l] = this.a[l] & ~(this.c << j1) | (j & this.c) << j1;
         if (l != i1) {
             int k1 = 64 - j1;
             int l1 = this.b - k1;
 
-            this.a[i1] = this.a[i1] >>> l1 << l1 | ((long) j & this.c) >> k1;
+            this.a[i1] = this.a[i1] >>> l1 << l1 | (j & this.c) >> k1;
         }
 
     }
