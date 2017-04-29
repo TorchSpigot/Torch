@@ -152,7 +152,7 @@ public final class TorchPlayerList implements TorchReactor {
     	servant = legacy;
     	this.server = TorchServer.getServer();
     	
-    	TorchServer.getServer().craftServer = server.server = craftServer = new CraftServer(server, this);
+    	TorchServer.getServer().craftServer = server.server = craftServer = new CraftServer(this.server, this);
     	TorchServer.getServer().console = server.console = org.bukkit.craftbukkit.command.ColouredConsoleSender.getInstance();
     	TorchServer.getServer().reader.addCompleter(new org.bukkit.craftbukkit.command.ConsoleCommandCompleter(server.server));
     	// Port the reader for compatibility
