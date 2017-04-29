@@ -82,6 +82,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
     public boolean keepLevel = false;
     public double maxHealthCache;
     public boolean joining = true;
+    public boolean sentListPacket = false;
     // CraftBukkit end
 
     public EntityPlayer(MinecraftServer minecraftserver, WorldServer worldserver, GameProfile gameprofile, PlayerInteractManager playerinteractmanager) {

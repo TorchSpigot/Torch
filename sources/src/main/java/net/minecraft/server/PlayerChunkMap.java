@@ -59,7 +59,7 @@ public class PlayerChunkMap {
 
     public PlayerChunkMap(WorldServer worldserver, int viewDistance /* Spigot */) {
         this.world = worldserver;
-        this.a(viewDistance); // Spigot
+        this.a(worldserver.spigotConfig.viewDistance); // Spigot
     }
 
     public WorldServer getWorld() {

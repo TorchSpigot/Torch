@@ -1,7 +1,6 @@
 package net.minecraft.server;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.koloboke.collect.set.hash.HashObjSets;
 
 import java.util.ArrayList;
@@ -15,12 +14,12 @@ public class EntityTracker {
     private static final Logger a = LogManager.getLogger();
     private final WorldServer world;
     private final Set<EntityTrackerEntry> c = HashObjSets.newMutableSet();
-    public final IntHashMap<EntityTrackerEntry> trackedEntities = new IntHashMap();
+    public final IntHashMap<EntityTrackerEntry> trackedEntities = new IntHashMap<EntityTrackerEntry>();
     private int e;
 
     public EntityTracker(WorldServer worldserver) {
         this.world = worldserver;
-        this.e = worldserver.getMinecraftServer().getPlayerList().d();
+        this.e = PlayerChunkMap.getFurthestViewableBlock(worldserver.spigotConfig.viewDistance); // Spigot
     }
 
     public static long a(double d0) {

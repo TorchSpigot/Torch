@@ -24,7 +24,7 @@ public class RegionFileCache {
         // Paper end
         File file1 = new File(file, "region");
         File file2 = new File(file1, "r." + (i >> 5) + "." + (j >> 5) + ".mca");
-        RegionFile regionfile = (RegionFile) RegionFileCache.a.get(file2);
+        RegionFile regionfile = RegionFileCache.a.get(file2);
 
         if (regionfile != null) {
             return regionfile;
@@ -48,7 +48,7 @@ public class RegionFileCache {
     public static synchronized RegionFile b(File file, int i, int j) {
         File file1 = new File(file, "region");
         File file2 = new File(file1, "r." + (i >> 5) + "." + (j >> 5) + ".mca");
-        RegionFile regionfile = (RegionFile) RegionFileCache.a.get(file2);
+        RegionFile regionfile = RegionFileCache.a.get(file2);
 
         if (regionfile != null) {
             return regionfile;
@@ -123,7 +123,8 @@ public class RegionFileCache {
     }
     // CraftBukkit end
 
-    public static boolean f(File file, int i, int j) {
+    public static boolean chunkExists(File file, int x, int z) { return f(file, x, z); } // OBFHELPER
+    public static synchronized boolean f(File file, int i, int j) { // CraftBukkit
         RegionFile regionfile = b(file, i, j);
 
         return regionfile != null ? regionfile.c(i & 31, j & 31) : false;

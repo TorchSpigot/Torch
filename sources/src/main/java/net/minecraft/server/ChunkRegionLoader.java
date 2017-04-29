@@ -41,25 +41,10 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
     public long getQueuedSaves() { return queuedSaves; }
     public long getProcessedSaves() { return processedSaves.longValue(); }
     // Paper end
-    public boolean chunkExists(World world, int i, int j) {
-        ChunkCoordIntPair chunkcoordintpair = new ChunkCoordIntPair(i, j);
-
-        //if (this.c.contains(chunkcoordintpair)) { // Paper - Chunk queue improvements
-            if (this.b.containsKey(chunkcoordintpair)) {
-                return true;
-            }
-        //} // Paper - Chunk queue improvements
-
-        // Paper start - Don't create region files when checking that they exist
-        final RegionFile region = RegionFileCache.a(this.d, i, j, false);
-        return region != null && region.chunkExists(i & 31, j & 31);
-        // Paper end
-    }
     // CraftBukkit end
 
     // CraftBukkit start - Add async variant, provide compatibility
-    @Override
-	@Nullable
+    @Override @Nullable
     public Chunk a(World world, int i, int j) throws IOException {
         world.timings.syncChunkLoadDataTimer.startTiming(); // Spigot
         Object[] data = loadChunk(world, i, j);
@@ -94,8 +79,8 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
         return this.a(world, i, j, nbttagcompound);
     }
 
-    @Override
-	public boolean a(int i, int j) {
+    public boolean chunkExists(int x, int z) { return this.a(x, z); } // OBFHELPER (also in IChunkLoader)
+    @Override public boolean a(int i, int j) {
         ChunkCoordIntPair chunkcoordintpair = new ChunkCoordIntPair(i, j);
         NBTTagCompound nbttagcompound = this.b.get(chunkcoordintpair);
 

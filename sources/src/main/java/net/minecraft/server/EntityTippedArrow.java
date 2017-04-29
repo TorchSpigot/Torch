@@ -1,9 +1,7 @@
 package net.minecraft.server;
 
-import com.google.common.collect.Sets;
 import com.koloboke.collect.set.hash.HashObjSets;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -139,10 +137,12 @@ public class EntityTippedArrow extends EntityArrow {
     }
     // CraftBukkit end
 
+    public int getColor() { return this.o(); } // OBFHELPER
     public int o() {
         return this.datawatcher.get(EntityTippedArrow.f).intValue();
     }
 
+    public void setColor(int colorId) { this.d(colorId); } // OBFHELPER
     private void d(int i) {
         this.at = true;
         this.datawatcher.set(EntityTippedArrow.f, Integer.valueOf(i));

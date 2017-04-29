@@ -128,7 +128,7 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
             if (this.chunkLoader instanceof ChunkRegionLoader) {
                 loader = (ChunkRegionLoader) this.chunkLoader;
             }
-            if (loader != null && loader.chunkExists(world, x, z)) {
+            if (loader != null && loader.chunkExists(x, z)) {
                 chunk = ChunkIOExecutor.syncChunkLoad(world, loader, servant, x, z);
             }
         }
@@ -170,7 +170,7 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
         }
         
         // We can only use the queue for already generated chunks
-        if (chunk == null && loader != null && loader.chunkExists(world, i, j)) {
+        if (chunk == null && loader != null && loader.chunkExists(i, j)) {
             if (runnable != null) {
                 ChunkIOExecutor.queueChunkLoad(world, loader, servant, i, j, runnable);
                 return null;

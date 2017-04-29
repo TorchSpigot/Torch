@@ -564,6 +564,7 @@ public final class TorchPlayerList implements TorchReactor {
                 }
             }
         });
+        entityplayer.sentListPacket = true;
         
         // Only add if the player wasn't moved in the event
         if (entityplayer.world == worldserver && !worldserver.players.contains(entityplayer)) {
@@ -720,7 +721,7 @@ public final class TorchPlayerList implements TorchReactor {
     @SuppressWarnings("deprecation")
 	public EntityPlayer recreatePlayerEntity(EntityPlayer oldPlayerEntity, int dimension, boolean conqueredEnd, Location location, boolean avoidSuffocation) {
     	oldPlayerEntity.stopRiding();
-    	// x() = getWorldServer()
+    	// PAIL: x() = getWorldServer()
     	oldPlayerEntity.x().getTracker().untrackPlayer(oldPlayerEntity);
         oldPlayerEntity.x().getPlayerChunkMap().removePlayer(oldPlayerEntity);
         this.players.remove(oldPlayerEntity);
