@@ -1346,8 +1346,7 @@ public final class TorchPlayerList implements TorchReactor {
             }
 
             statManager = new ServerStatisticManager(this.minecraftServer, playerStatFile);
-            // Read the stat files
-            statManager.a();
+            statManager.a(); // PAIL: Read the stat files
             this.playerStatFiles.put(uuid, statManager);
         }
 
@@ -1364,10 +1363,8 @@ public final class TorchPlayerList implements TorchReactor {
                 WorldServer worldserver = server.worlds.get(index); // TODO: CraftBukkit only world(0), but all world in original NMS
                 
                 if (worldserver != null) {
-                	// Set world player view radius
-                    worldserver.getPlayerChunkMap().a(distance);
-                    // Set world view distance
-                    worldserver.getTracker().a(distance);
+                    worldserver.getPlayerChunkMap().a(distance); // PAIL: Set world player view radius
+                    worldserver.getTracker().a(distance); // PAIL: Set world view distance
                 }
             }
         }
@@ -1381,8 +1378,7 @@ public final class TorchPlayerList implements TorchReactor {
     }
     
     public boolean bypassesPlayerLimit(GameProfile gameprofile) {
-    	// Bypass limit for the player
-    	return this.getOperators().b(gameprofile);
+    	return this.getOperators().b(gameprofile); // PAIL: Bypass limit for the player
     }
     
     public void saveIPBanList() {

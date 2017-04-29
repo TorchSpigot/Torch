@@ -2,7 +2,6 @@ package net.minecraft.server;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.koloboke.collect.map.hash.HashObjObjMaps;
 

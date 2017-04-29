@@ -25,7 +25,7 @@ public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
         if (Bukkit.getOnlineMode()) {
         	return this.contains(profile);
         } else {
-        	for (WhiteListEntry entry : this.e().values()) {
+        	for (WhiteListEntry entry : this.getMap().values()) {
         		if (entry.getKey().getName().equalsIgnoreCase(profile.getName())) return true;
         	}
         }
