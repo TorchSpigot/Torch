@@ -21,7 +21,6 @@ Features:
 ### Download
 + [![Build Status](https://circleci.com/gh/TorchSpigot/Torch/tree/master.svg?style=svg) **CircleCI**](https://circleci.com/gh/TorchSpigot/Torch/tree/master) - Checkout the "Artifacts" tab of the latest build (**login required**)
 
-You can also build from source by yourself if the latest building was failed, but passing via Travis-CI :/
 
 ### Building/Compile
 
