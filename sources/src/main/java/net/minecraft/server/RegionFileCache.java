@@ -1,7 +1,6 @@
 package net.minecraft.server;
 
 import com.destroystokyo.paper.exception.ServerInternalException;
-import com.google.common.collect.Maps;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -13,15 +12,9 @@ import java.util.LinkedHashMap; // Paper
 
 public class RegionFileCache {
 
-    public static final Map<File, RegionFile> a = new LinkedHashMap(PaperConfig.regionFileCacheSize, 0.75f, true); // Spigot - private -> public, Paper - HashMap -> LinkedHashMap
+    public static final Map<File, RegionFile> a = new LinkedHashMap<File, RegionFile>(PaperConfig.regionFileCacheSize, 0.75f, true); // Spigot - private -> public, Paper - HashMap -> LinkedHashMap
 
-    // Paper start
     public static synchronized RegionFile a(File file, int i, int j) {
-        return a(file, i, j, true);
-    }
-
-    public static synchronized RegionFile a(File file, int i, int j, boolean create) {
-        // Paper end
         File file1 = new File(file, "region");
         File file2 = new File(file1, "r." + (i >> 5) + "." + (j >> 5) + ".mca");
         RegionFile regionfile = RegionFileCache.a.get(file2);
@@ -29,14 +22,11 @@ public class RegionFileCache {
         if (regionfile != null) {
             return regionfile;
         } else {
-            if (!create && !file2.exists()) { return null; } // Paper
             if (!file1.exists()) {
                 file1.mkdirs();
             }
 
-            if (RegionFileCache.a.size() >= PaperConfig.regionFileCacheSize) { // Paper
-                trimCache(); // Paper
-            }
+            if (RegionFileCache.a.size() >= PaperConfig.regionFileCacheSize) trimCache(); // Paper
 
             RegionFile regionfile1 = new RegionFile(file2);
 
