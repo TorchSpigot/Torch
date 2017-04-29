@@ -110,6 +110,7 @@ import org.bukkit.scheduler.BukkitWorker;
 import org.bukkit.util.StringUtil;
 import org.bukkit.util.permissions.DefaultPermissions;
 import org.torch.server.TorchPlayerList;
+import org.torch.server.TorchServer;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 import org.yaml.snakeyaml.error.MarkedYAMLException;
@@ -147,8 +148,8 @@ public final class CraftServer implements Server {
     private final SimpleHelpMap helpMap = new SimpleHelpMap(this);
     private final StandardMessenger messenger = new StandardMessenger();
     private final PluginManager pluginManager = new SimplePluginManager(this, commandMap);
-    protected final MinecraftServer console;
-    protected final DedicatedPlayerList playerList;
+    protected final TorchServer console; // Torch
+    protected final TorchPlayerList playerList; // Torch
     private final Map<String, World> worlds = new LinkedHashMap<String, World>();
     private YamlConfiguration configuration;
     private YamlConfiguration commandsConfiguration;
@@ -186,9 +187,9 @@ public final class CraftServer implements Server {
         CraftItemFactory.instance();
     }
     
-    public CraftServer(MinecraftServer console, TorchPlayerList playerList) {
+    public CraftServer(TorchServer console, TorchPlayerList playerList) {
         this.console = console;
-        this.playerList = (DedicatedPlayerList) playerList.getServant();
+        this.playerList = playerList;
         this.playerView = Collections.unmodifiableList(Lists.transform(playerList.getPlayers(), new Function<EntityPlayer, CraftPlayer>() {
             @Override
             public CraftPlayer apply(EntityPlayer player) {
@@ -255,8 +256,7 @@ public final class CraftServer implements Server {
         animalSpawn = configuration.getInt("spawn-limits.animals");
         waterAnimalSpawn = configuration.getInt("spawn-limits.water-animals");
         ambientSpawn = configuration.getInt("spawn-limits.ambient");
-        console.getReactor().autosavePeriod = configuration.getInt("ticks-per.autosave");
-        console.autosavePeriod = console.getReactor().autosavePeriod;
+        console.getServant().autosavePeriod = console.autosavePeriod = configuration.getInt("ticks-per.autosave");
         warningState = WarningState.value(configuration.getString("settings.deprecated-verbose"));
         chunkGCPeriod = configuration.getInt("chunk-gc.period-in-ticks");
         chunkGCLoadThresh = configuration.getInt("chunk-gc.load-threshold");
@@ -273,7 +273,7 @@ public final class CraftServer implements Server {
      * The internal create of CraftServer has been changed to the above constructor, don't care for NPE
      */
     public CraftServer(MinecraftServer console, PlayerList playerList) {
-        this(console, playerList.getReactor());
+        this(console.getReactor(), playerList.getReactor());
     }
 
     public boolean getCommandBlockOverride(String command) {
@@ -359,7 +359,7 @@ public final class CraftServer implements Server {
     }
 
     private void setVanillaCommands(boolean first) { // Spigot
-        Map<String, ICommand> commands = new CommandDispatcher(console).getCommands();
+        Map<String, ICommand> commands = console.createCommandDispatcher().getCommands();
         for (ICommand cmd : commands.values()) {
             // Spigot start
             VanillaCommandWrapper wrapper = new VanillaCommandWrapper((CommandAbstract) cmd, LocaleI18n.get(cmd.getUsage(null)));
@@ -399,7 +399,7 @@ public final class CraftServer implements Server {
 
     @Override
     public String getVersion() {
-        return serverVersion + " (MC: " + console.getVersion() + ")";
+        return serverVersion + " (MC: " + console.getMinecraftVersion() + ")";
     }
 
     @Override
@@ -456,7 +456,7 @@ public final class CraftServer implements Server {
 
     @Override
     public Player getPlayer(UUID id) {
-        EntityPlayer player = playerList.a(id);
+        EntityPlayer player = playerList.getPlayerByUUID(id);
 
         if (player != null) {
             return player.getBukkitEntity();
@@ -631,7 +631,7 @@ public final class CraftServer implements Server {
     }
 
     public DedicatedPlayerList getHandle() {
-        return playerList;
+        return (DedicatedPlayerList) playerList.getServant();
     }
 
     // NOTE: Should only be called from DedicatedServer.ah()
@@ -699,16 +699,16 @@ public final class CraftServer implements Server {
         commandsConfiguration = YamlConfiguration.loadConfiguration(getCommandsConfigFile());
         PropertyManager config = new PropertyManager(console.options);
 
-        ((DedicatedServer) console).propertyManager = config;
+        console.propertyManager = config;
 
-        boolean animals = config.getBoolean("spawn-animals", console.getSpawnAnimals());
+        boolean animals = config.getBoolean("spawn-animals", console.isSpawnAnimals());
         boolean monsters = config.getBoolean("spawn-monsters", console.worlds.get(0).getDifficulty() != EnumDifficulty.PEACEFUL);
         EnumDifficulty difficulty = EnumDifficulty.getById(config.getInt("difficulty", console.worlds.get(0).getDifficulty().ordinal()));
 
         online.value = config.getBoolean("online-mode", console.getOnlineMode());
-        console.setSpawnAnimals(config.getBoolean("spawn-animals", console.getSpawnAnimals()));
-        console.setPVP(config.getBoolean("pvp", console.getPVP()));
-        console.setAllowFlight(config.getBoolean("allow-flight", console.getAllowFlight()));
+        console.setSpawnAnimals(config.getBoolean("spawn-animals", console.isSpawnAnimals()));
+        console.setPvpMode(config.getBoolean("pvp", console.isPvpMode()));
+        console.setAllowFlight(config.getBoolean("allow-flight", console.isAllowFlight()));
         console.setMotd(config.getString("motd", console.getMotd()));
         monsterSpawn = configuration.getInt("spawn-limits.monsters");
         animalSpawn = configuration.getInt("spawn-limits.animals");
@@ -722,12 +722,12 @@ public final class CraftServer implements Server {
         loadIcon();
 
         try {
-            playerList.getIPBans().load();
+            playerList.getBannedIPs().load();
         } catch (IOException ex) {
             logger.log(Level.WARNING, "Failed to load banned-ips.json, " + ex.getMessage());
         }
         try {
-            playerList.getProfileBans().load();
+            playerList.getBannedPlayers().load();
         } catch (IOException ex) {
             logger.log(Level.WARNING, "Failed to load banned-players.json, " + ex.getMessage());
         }
@@ -858,7 +858,7 @@ public final class CraftServer implements Server {
 
     @Override
     public String toString() {
-        return "CraftServer{" + "serverName=" + serverName + ",serverVersion=" + serverVersion + ",minecraftVersion=" + console.getVersion() + '}';
+        return "CraftServer{" + "serverName=" + serverName + ",serverVersion=" + serverVersion + ",minecraftVersion=" + console.getMinecraftVersion() + '}';
     }
 
     public World createWorld(String name, World.Environment environment) {
@@ -945,7 +945,7 @@ public final class CraftServer implements Server {
             worlddata = new WorldData(worldSettings, name);
         }
         worlddata.checkName(name); // CraftBukkit - Migration did not rewrite the level.dat; This forces 1.8 to take the last loaded world as respawn (in this case the end)
-        WorldServer internal = (WorldServer) new WorldServer(console, sdm, worlddata, dimension, console.methodProfiler, creator.environment(), generator).b();
+        WorldServer internal = (WorldServer) new WorldServer(console.getServant(), sdm, worlddata, dimension, console.methodProfiler, creator.environment(), generator).b();
 
         if (!(worlds.containsKey(name.toLowerCase(java.util.Locale.ENGLISH)))) {
             return null;
@@ -957,7 +957,7 @@ public final class CraftServer implements Server {
         internal.scoreboard = getScoreboardManager().getMainScoreboard().getHandle();
 
         internal.tracker = new EntityTracker(internal);
-        internal.addIWorldAccess(new WorldManager(console, internal));
+        internal.addIWorldAccess(new WorldManager(console.getServant(), internal));
         internal.worldData.setDifficulty(EnumDifficulty.EASY);
         internal.setSpawnFlags(true, true);
         console.worlds.add(internal);
@@ -1065,7 +1065,7 @@ public final class CraftServer implements Server {
     }
 
     public MinecraftServer getServer() {
-        return console;
+        return console.getServant();
     }
 
     @Override
@@ -1238,7 +1238,7 @@ public final class CraftServer implements Server {
 
     @Override
     public int getSpawnRadius() {
-        return ((DedicatedServer) console).propertyManager.getInt("spawn-protection", 16);
+        return console.getSpawnProtectionSize();
     }
 
     @Override
@@ -1254,7 +1254,7 @@ public final class CraftServer implements Server {
 
     @Override
     public boolean getAllowFlight() {
-        return console.getAllowFlight();
+        return console.isAllowFlight();
     }
 
     @Override
@@ -1396,7 +1396,7 @@ public final class CraftServer implements Server {
 
     @Override
     public Set<String> getIPBans() {
-        return HashObjSets.newMutableSet(Arrays.asList(playerList.getIPBans().getEntries()));
+        return HashObjSets.newMutableSet(Arrays.asList(playerList.getBannedIPs().getEntries()));
     }
 
     @Override
@@ -1417,7 +1417,7 @@ public final class CraftServer implements Server {
     public Set<OfflinePlayer> getBannedPlayers() {
         Set<OfflinePlayer> result = HashObjSets.newMutableSet();
 
-        for (JsonListEntry entry : playerList.getProfileBans().getValues()) {
+        for (JsonListEntry entry : playerList.getBannedPlayers().getValues()) {
             result.add(getOfflinePlayer((GameProfile) entry.getKey()));
         }        
 
@@ -1430,16 +1430,16 @@ public final class CraftServer implements Server {
 
         switch(type){
         case IP:
-            return new CraftIpBanList(playerList.getIPBans());
+            return new CraftIpBanList(playerList.getBannedIPs());
         case NAME:
         default:
-            return new CraftProfileBanList(playerList.getProfileBans());
+            return new CraftProfileBanList(playerList.getBannedPlayers());
         }
     }
 
     @Override
     public void setWhitelist(boolean value) {
-        playerList.setHasWhitelist(value);
+        playerList.setWhitelistMode(value);
         console.getPropertyManager().setProperty("white-list", value);
     }
 
@@ -1458,7 +1458,7 @@ public final class CraftServer implements Server {
     public Set<OfflinePlayer> getOperators() {
         Set<OfflinePlayer> result = HashObjSets.newMutableSet();
 
-        for (JsonListEntry entry : playerList.getOPs().getValues()) {
+        for (JsonListEntry entry : playerList.getOperators().getValues()) {
             result.add(getOfflinePlayer((GameProfile) entry.getKey()));
         }
 
@@ -1467,7 +1467,7 @@ public final class CraftServer implements Server {
 
     @Override
     public void reloadWhitelist() {
-        playerList.reloadWhitelist();
+        playerList.readWhiteList();
     }
 
     @Override
@@ -1618,7 +1618,7 @@ public final class CraftServer implements Server {
 
     @Override
     public boolean isPrimaryThread() {
-        return Thread.currentThread().equals(console.primaryThread);
+        return Thread.currentThread().equals(console.getServerThread());
     }
 
     @Override
@@ -1760,7 +1760,7 @@ public final class CraftServer implements Server {
 
     @Override
     public int getIdleTimeout() {
-        return console.getIdleTimeout();
+        return console.getMaxPlayerIdleMinutes();
     }
 
     @Override
@@ -1776,7 +1776,7 @@ public final class CraftServer implements Server {
     @Override
     public Entity getEntity(UUID uuid) {
         Validate.notNull(uuid, "UUID cannot be null");
-        net.minecraft.server.Entity entity = console.a(uuid); // PAIL: getEntity
+        net.minecraft.server.Entity entity = console.getEntityFromUUID(uuid);
         return entity == null ? null : entity.getBukkitEntity();
     }
 

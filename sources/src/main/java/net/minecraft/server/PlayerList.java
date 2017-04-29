@@ -77,7 +77,7 @@ public abstract class PlayerList implements org.torch.api.TorchServant {
     /** allowedCommands */
     private boolean t;
     /** playerPingIndex */
-    private int u;
+    private int u; public void setPlayerPingIndex(int index) { u = index; } // Setter for port
 
     public PlayerList(MinecraftServer minecraftserver) {
     	// Setup instance for org.torch.api.TorchServant
@@ -90,7 +90,7 @@ public abstract class PlayerList implements org.torch.api.TorchServant {
     	players = reactor.getPlayers();
     	operators = reactor.getOperators();
     	whitelist = reactor.getWhitelist();
-    	playerFileData = reactor.getPlayerFileData();
+    	// playerFileData = reactor.getPlayerFileData(); // Moved to TorchPlayerList
     	hasWhitelist = reactor.isWhitelistMode();
     	maxPlayers = reactor.getMaxPlayers();
     	cserver = reactor.getCraftServer();

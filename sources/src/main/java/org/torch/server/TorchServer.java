@@ -106,7 +106,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      */
     public Convertable anvilFileConverter;
     /**
-     * The mojang usage snooper using via our implementation
+     * The mojang usage snooper
      */
     private final MojangStatisticsGenerator usageSnooper = new MojangStatisticsGenerator("server", getMinecraftServer(), System.currentTimeMillis());
     /**
@@ -184,7 +184,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
     /**
      * The player list for this server
      */
-    @Setter private net.minecraft.server.PlayerList playerList;
+    @Setter private TorchPlayerList playerList;
     /**
      * Indicates whether the server is running or not. Sets to false to initiate a shutdown
      */
@@ -818,7 +818,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             getPlayerList().setPlayerFileData(worlds.toArray(new WorldServer[worlds.size()]));
         }
         
-        this.playerList.setPlayerFileData(getMinecraftServer().worldServer);
+        getPlayerList().setPlayerFileData(getMinecraftServer().worldServer);
         this.setDifficultyForAllWorlds(this.getDifficulty());
         this.initialAllWorldsChunk();
         
@@ -830,8 +830,10 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         }
 
         if (!com.destroystokyo.paper.PaperConfig.enablePlayerCollisions) {
-            this.getPlayerList().setCollideRuleTeamName(org.apache.commons.lang3.StringUtils.left("collideRule_" + this.getWorld().random.nextInt(), 16));
-            ScoreboardTeam collideTeam = scoreboard.createTeam(this.getPlayerList().getCollideRuleTeamName());
+        	// Note: CollideRuleTeamName Marked as @Anaphase
+            playerList.getServant().setCollideRuleTeamName(org.apache.commons.lang3.StringUtils.left("collideRule_" + this.getWorld().random.nextInt(), 16));
+            ScoreboardTeam collideTeam = scoreboard.createTeam(playerList.getServant().getCollideRuleTeamName());
+            
             // Because we want to mimic them not being on a team at all
             collideTeam.setCanSeeFriendlyInvisibles(false);
         }
@@ -858,7 +860,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             int random = MathHelper.nextInt(this.random, 0, this.getCurrentPlayerCount() - samplePlayers.length);
 
             for (int k = 0; k < samplePlayers.length; ++k) {
-            	samplePlayers[k] = this.playerList.getReactor().players.get(random + k).getProfile();
+            	samplePlayers[k] = this.playerList.players.get(random + k).getProfile();
             }
             
             Collections.shuffle(Arrays.asList(samplePlayers));
@@ -1050,10 +1052,8 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
 
         if (this.playerList != null) {
             logger.info("Saving players");
-            // Save all players data
-            this.playerList.savePlayers();
-            // Remove all players
-            this.playerList.u();
+            this.playerList.savePlayers(); // Save all players data
+            this.playerList.disconnectAllPlayers();;
             // SPIGOT-625 - give server at least a chance to send packets
             try { Thread.sleep(100); } catch (InterruptedException ex) {} // TODO: Packet sending
         }
@@ -1214,14 +1214,14 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      * Returns an array of the usernames of all the connected players
      */
     public String[] getOnlinePlayerNames() {
-        return this.playerList.f();
+        return this.playerList.getOnlinePlayerNames();
     }
 
     /**
      * Returns an array of the GameProfiles of all the connected players
      */
     public GameProfile[] getOnlinePlayerProfiles() {
-        return this.playerList.g();
+        return this.playerList.getOnlinePlayerProfiles();
     }
     
     /**
@@ -1285,7 +1285,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             	
                 @Override
                 public String call() throws Exception {
-                	return playerList.getPlayerCount() + " / " + playerList.getMaxPlayers() + "; " + playerList.v();
+                	return playerList.getPlayerCount() + " / " + playerList.getMaxPlayers() + "; " + playerList.getPlayers();
                 }
             });
         }
@@ -1916,7 +1916,8 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         }
         
         // Initial the craft server in player list
-        this.setPlayerList((new DedicatedPlayerList(this.getDedicatedServer())));
+        this.setPlayerList(new DedicatedPlayerList(this.getDedicatedServer()).getReactor());
+        this.getServant().setPlayerList(this.playerList);
         
         org.spigotmc.SpigotConfig.init((File) options.valueOf("spigot-settings"));
         org.spigotmc.SpigotConfig.registerCommands();
@@ -2109,7 +2110,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
     
     @Deprecated
     public net.minecraft.server.DedicatedPlayerList getDedicatedPlayerList() {
-        return (net.minecraft.server.DedicatedPlayerList) this.playerList;
+        return (net.minecraft.server.DedicatedPlayerList) this.playerList.getServant();
     }
     
     /**

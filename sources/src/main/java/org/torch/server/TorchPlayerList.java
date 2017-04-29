@@ -3,7 +3,6 @@ package org.torch.server;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.koloboke.collect.map.hash.HashObjObjMaps;
 import com.koloboke.collect.set.hash.HashObjSets;
 import com.mojang.authlib.GameProfile;
@@ -21,8 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
-
 import lombok.Getter;
 import lombok.Setter;
 
@@ -234,8 +231,7 @@ public final class TorchPlayerList implements TorchReactor {
     	if (world != null) {
     		world.getPlayerChunkMap().removePlayer(player);
     	} else {
-    		// Get the player world
-    		world = player.x();
+    		world = player.x(); // PAIL: x() -> Get the player world
     		if (world != null) world.getPlayerChunkMap().removePlayer(player);
     	}
     	
@@ -262,8 +258,7 @@ public final class TorchPlayerList implements TorchReactor {
         if (player.getName().equals(this.server.getServerOwner()) && nbttagcompoundRaw != null) {
         	// Process the raw NBT data
             nbttagcompound = this.server.getDataConverterManager().a(DataConverterTypes.PLAYER, nbttagcompoundRaw);
-            // Read player from NBT
-            player.f(nbttagcompound);
+            player.f(nbttagcompound); // PAIL: f() -> Read player from NBT
             logger.debug("loading single player");
         } else {
             nbttagcompound = this.playerFileData.load(player);
@@ -278,11 +273,10 @@ public final class TorchPlayerList implements TorchReactor {
     public void savePlayerFile(EntityPlayer player) {
         player.lastSave = MinecraftServer.currentTick;
         this.playerFileData.save(player);
-        ServerStatisticManager serverstatisticmanager = this.playerStatFiles.get(player.getUniqueID());
+        ServerStatisticManager statisticManager = this.playerStatFiles.get(player.getUniqueID());
 
-        if (serverstatisticmanager != null) {
-        	// Save the stat file
-            serverstatisticmanager.b();
+        if (statisticManager != null) {
+        	statisticManager.b(); // PAIL: b() -> Save the stat file
         }
     }
     
@@ -497,7 +491,7 @@ public final class TorchPlayerList implements TorchReactor {
     public void setPlayerFileData(WorldServer[] worlds) {
         if (playerFileData != null) return;
         
-        this.playerFileData = worlds[0].getDataManager().getPlayerFileData();
+        servant.playerFileData = this.playerFileData = worlds[0].getDataManager().getPlayerFileData();
         worlds[0].getWorldBorder().a(new IWorldBorderListener() {
             @Override
 			public void a(WorldBorder worldborder, double d0) {
@@ -577,10 +571,8 @@ public final class TorchPlayerList implements TorchReactor {
      * Returns the quit message
      */
     public String disconnect(EntityPlayer player) {
-    	// Get world instance from player
-        WorldServer world = player.x();
-        // Add stat for player : LEAVE_GAME
-        player.b(StatisticList.f);
+        WorldServer world = player.x(); // PAIL: player.x() -> Get world instance from player
+        player.b(StatisticList.f); // PAIL: Add stat for player : LEAVE_GAME
 
         // Quitting must be before we do final save of data, in case plugins need to modify it
         org.bukkit.craftbukkit.event.CraftEventFactory.handleInventoryCloseEvent(player);
@@ -589,8 +581,7 @@ public final class TorchPlayerList implements TorchReactor {
         craftServer.getPluginManager().callEvent(playerQuitEvent);
         player.getBukkitEntity().disconnect(playerQuitEvent.getQuitMessage());
 
-        // SPIGOT-924
-        player.playerTick();
+        player.playerTick(); // SPIGOT-924
 
         // Remove from collideRule team if needed
         if (servant.getCollideRuleTeamName() != null) {
@@ -914,10 +905,8 @@ public final class TorchPlayerList implements TorchReactor {
         this.changeWorld(player, exitDimension, exitWorld, targetWorld);
         this.preparePlayer(player, exitWorld);
         
-        // Set player location
-        player.playerConnection.a(player.locX, player.locY, player.locZ, player.yaw, player.pitch);
-        // Set world
-        player.playerInteractManager.a(targetWorld);
+        player.playerConnection.a(player.locX, player.locY, player.locZ, player.yaw, player.pitch); // PAIL: Set player location
+        player.playerInteractManager.a(targetWorld); // PAIL: Set world
         player.playerConnection.sendPacket(new PacketPlayOutAbilities(player.abilities));
         
         this.updateTimeAndWeatherForPlayer(player, targetWorld);
@@ -1025,6 +1014,8 @@ public final class TorchPlayerList implements TorchReactor {
             
             this.playerPingIndex = 0;
         }
+        
+        servant.setPlayerPingIndex(this.playerPingIndex); // Port to servant
     }
     
     /**

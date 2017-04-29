@@ -24,6 +24,7 @@ import joptsimple.OptionSet;
 import org.spigotmc.SlackActivityAccountant; // Spigot
 import org.torch.api.Anaphase;
 import org.torch.api.TorchReactor;
+import org.torch.server.TorchPlayerList;
 import org.torch.server.TorchServer;
 
 public abstract class MinecraftServer implements Runnable, ICommandListener, IAsyncTaskHandler, IMojangStatistics, org.torch.api.TorchServant {
@@ -153,7 +154,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     /** serverPort */
     private int u = -1;
     /** playerList */
-    private PlayerList v;
+    private PlayerList v; public void setPlayerList(TorchPlayerList reactor) { this.v = reactor.getServant(); } // Setter for port
     /** serverProxy */
     protected final Proxy e;
     /** currentTask */
@@ -295,7 +296,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     	q = reactor.getServerPing();
     	r = reactor.getRandom();
     	u = reactor.getServerPort();
-    	v = reactor.getPlayerList();
+    	// v = reactor.getPlayerList(); // Moved to Setter
     	e = reactor.getServerProxy();
     	f = reactor.getCurrentTask();
     	g = reactor.getPercentDone();
@@ -683,11 +684,11 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public PlayerList getPlayerList() {
-        return reactor.getPlayerList();
+        return reactor.getPlayerList().getServant();
     }
 
     public void a(PlayerList playerlist) {
-    	reactor.setPlayerList(playerlist);
+    	reactor.setPlayerList(playerlist.getReactor());
     }
 
     public void setGamemode(EnumGamemode enumgamemode) {
