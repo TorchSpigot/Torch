@@ -4,11 +4,8 @@ import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
 import java.io.File;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import org.bukkit.Bukkit;
-import org.torch.server.TorchServer;
+import org.spigotmc.SpigotConfig;
 
 public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
 
@@ -22,7 +19,7 @@ public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
     }
 
     public boolean isWhitelisted(GameProfile profile) { // Torch - skip UUID check for offline servers
-        if (Bukkit.getOnlineMode()) {
+        if (Bukkit.getOnlineMode() || SpigotConfig.bungee) { // TODO: configurable
         	return this.contains(profile);
         } else {
         	for (WhiteListEntry entry : this.getMap().values()) {
