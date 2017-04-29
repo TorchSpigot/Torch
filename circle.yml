@@ -11,7 +11,7 @@ dependencies:
     - "work/Paper/work/1.11.2"
   override:
     - chmod +x scripts/build.sh
-    - ./scripts/build.sh --init
+    - ./scripts/build.sh --init --ci
 
 test:
   post:
