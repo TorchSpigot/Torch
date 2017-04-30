@@ -93,7 +93,7 @@ public class ChunkProviderGenerate implements ChunkGenerator {
                 int j2 = (i1 + j1 + 1) * 33;
 
                 for (int k2 = 0; k2 < 32; ++k2) {
-                    // double d0 = 0.125D;
+                    double d0 = 0.125D;
                     double d1 = this.q[k1 + k2];
                     double d2 = this.q[l1 + k2];
                     double d3 = this.q[i2 + k2];
@@ -111,7 +111,7 @@ public class ChunkProviderGenerate implements ChunkGenerator {
                         double d13 = (d4 - d2) * 0.25D;
 
                         for (int i3 = 0; i3 < 4; ++i3) {
-                            // double d14 = 0.25D;
+                            double d14 = 0.25D;
                             double d15 = (d11 - d10) * 0.25D;
                             double d16 = d10 - d15;
 
@@ -139,7 +139,7 @@ public class ChunkProviderGenerate implements ChunkGenerator {
     }
 
     public void a(int i, int j, ChunkSnapshot chunksnapshot, BiomeBase[] abiomebase) {
-        // double d0 = 0.03125D;
+        double d0 = 0.03125D;
 
         this.u = this.m.a(this.u, i * 16, j * 16, 16, 16, 0.0625D, 0.0625D, 1.0D);
 
@@ -206,7 +206,6 @@ public class ChunkProviderGenerate implements ChunkGenerator {
         return chunk;
     }
 
-    public void generateTerrainDensity(int i, int j, int k) { this.a(i, j, k); } // OBFHELPER
     private void a(int i, int j, int k) {
         this.h = this.c.a(this.h, i, k, 5, 5, this.s.e, this.s.f, this.s.g);
         float f = this.s.a;
@@ -223,7 +222,7 @@ public class ChunkProviderGenerate implements ChunkGenerator {
                 float f2 = 0.0F;
                 float f3 = 0.0F;
                 float f4 = 0.0F;
-                // boolean flag = true;
+                boolean flag = true;
                 BiomeBase biomebase = this.D[j1 + 2 + (k1 + 2) * 10];
 
                 for (int l1 = -2; l1 <= 2; ++l1) {
@@ -236,7 +235,11 @@ public class ChunkProviderGenerate implements ChunkGenerator {
                             f5 = 1.0F + f5 * 2.0F;
                             f6 = 1.0F + f6 * 4.0F;
                         }
-                        if (f5 < -1.8F) f5 = -1.8F; // CraftBukkit - fix MC-54738
+                        // CraftBukkit start - fix MC-54738
+                        if (f5 < -1.8F) {
+                            f5 = -1.8F;
+                        }
+                        // CraftBukkit end
 
                         float f7 = this.r[l1 + 2 + (i2 + 2) * 5] / (f5 + 2.0F);
 
@@ -314,8 +317,8 @@ public class ChunkProviderGenerate implements ChunkGenerator {
     @Override
 	public void recreateStructures(int i, int j) {
         BlockFalling.instaFall = true;
-        int k = i <<= 2;
-        int l = j <<= 2;
+        int k = i * 16;
+        int l = j * 16;
         BlockPosition blockposition = new BlockPosition(k, 0, l);
         BiomeBase biomebase = this.n.getBiome(blockposition.a(16, 0, 16));
 

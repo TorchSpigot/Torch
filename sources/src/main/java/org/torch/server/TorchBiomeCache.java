@@ -28,7 +28,7 @@ public final class TorchBiomeCache implements TorchReactor {
      * Returns a biome cache block at location specified
      */
     public BiomeBase[] requestCache(int blockX, int blockZ) {
-    	long hash = ChunkCoordIntPair.chunkXZ2Int(blockX >> 4, blockZ >> 4); // Convert to chunk x, z
+    	long hash = ChunkCoordIntPair.chunkXZ2Int(blockX >>= 4, blockZ >>= 4); // Convert to chunk x, z
     	BiomeBase[] cachedBiomes = caches.getIfPresent(hash);
         
         if (cachedBiomes == null) {
