@@ -496,7 +496,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
                 currentTime = System.currentTimeMillis();
                 
                 serverPing.setMOTD(new ChatComponentText(motd));
-                serverPing.setServerInfo(new ServerPing.ServerData(GAME_VERSION, getProtocolVersion()));
+                serverPing.setServerInfo(new ServerPing.ServerData(GAME_VERSION, PROTOCOL_VERSION));
                 this.applyServerIconToPing(serverPing);
                 
                 Arrays.fill(getMinecraftServer().recentTps, 20);
@@ -618,13 +618,6 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      */
     @Deprecated
     public void finalTick(CrashReport report) {}
-    
-    /**
-     * Returns protocol version of current Minecraft version
-     */
-    public int getProtocolVersion() {
-    	return PROTOCOL_VERSION;
-    }
     
     /**
      * Apply server ping icon from icon file

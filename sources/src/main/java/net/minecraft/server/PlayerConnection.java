@@ -1097,20 +1097,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
 
     }
     
-    ///////// ASYNC PACKET SEND
     public void sendPacket(final Packet<?> packet) {
-    	this.sendPacketMaybeAsync(packet, false);
-    }
-    
-    public void sendPacketMaybeAsync(final Packet<?> packet, boolean async) {
-    	if (async) {
-    		Regulator.post(() -> sendPacket(packet));
-    	} else {
-    		this.sendPacketRaw(packet);
-    	}
-    }
-    
-    private void sendPacketRaw(final Packet<?> packet) {
     	if (packet == null || this.processedDisconnect) return;
     	
         if (packet instanceof PacketPlayOutChat) {
@@ -1146,7 +1133,6 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
             throw new ReportedException(crashreport);
         }
     }
-    ///////// END
 
     @Override
 	public void a(PacketPlayInHeldItemSlot packetplayinhelditemslot) {
