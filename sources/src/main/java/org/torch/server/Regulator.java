@@ -2,8 +2,11 @@ package org.torch.server;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
+import javax.annotation.concurrent.NotThreadSafe;
+
 import com.google.common.collect.Queues;
 
+@NotThreadSafe
 public class Regulator extends Thread {
 	private static final LinkedBlockingQueue<Runnable> queue = Queues.newLinkedBlockingQueue();
 
@@ -37,14 +40,11 @@ public class Regulator extends Thread {
 	 */
 	@Override
 	public void run() {
-		while(TorchServer.getServer().isRunning()) {
-			try {
-				queue.take().run();
-				//System.out.println("--------- DEBUG --- TASK PROCESS IN REGULATOR ---------");
-			} catch (final Throwable t) {
-				t.printStackTrace();
-				TorchServer.getServer().safeShutdown();
-			}
+		try {
+			while(TorchServer.getServer().isRunning()) queue.take().run();
+		} catch (final Throwable t) {
+			t.printStackTrace();
+			TorchServer.getServer().safeShutdown();
 		}
 	}
 
