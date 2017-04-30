@@ -442,7 +442,9 @@ public final class TorchPlayerList implements TorchReactor {
         }
         
         Regulator.post(() -> {
-        	for (MobEffect effect : entityplayer.getEffects()) playerconnection.sendPacket(new PacketPlayOutEntityEffect(entityplayer.getId(), effect));
+        	for (MobEffect effect : entityplayer.getEffects()) {
+        		if (!playerconnection.isDisconnected()) playerconnection.sendPacket(new PacketPlayOutEntityEffect(entityplayer.getId(), effect));
+        	}
         });
         
         if (nbttagcompound != null && nbttagcompound.hasKeyOfType("RootVehicle", 10)) {
@@ -814,7 +816,9 @@ public final class TorchPlayerList implements TorchReactor {
         
         Regulator.post(() -> {
         	for (MobEffect effect : oldPlayerEntity.getEffects()) {
-                newPlayerEntity.playerConnection.sendPacket(new PacketPlayOutEntityEffect(newPlayerEntity.getId(), effect));
+                if (newPlayerEntity.playerConnection != null) {
+                	if (!newPlayerEntity.playerConnection.isDisconnected()) newPlayerEntity.playerConnection.sendPacket(new PacketPlayOutEntityEffect(newPlayerEntity.getId(), effect));
+                }
             }
         });
         
@@ -914,7 +918,9 @@ public final class TorchPlayerList implements TorchReactor {
         
         Regulator.post(() -> {
         	for (MobEffect mobeffect : player.getEffects()) {
-            	player.playerConnection.sendPacket(new PacketPlayOutEntityEffect(player.getId(), mobeffect));
+            	if (player.playerConnection != null) {
+            		if (!player.playerConnection.isDisconnected()) player.playerConnection.sendPacket(new PacketPlayOutEntityEffect(player.getId(), mobeffect));
+            	}
             }
         });
     }
@@ -1003,12 +1009,12 @@ public final class TorchPlayerList implements TorchReactor {
             	for (int index = 0, size = this.players.size(); index < size; ++index) {
                     final EntityPlayer target = this.players.get(index);
 
-                    new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.UPDATE_LATENCY, Iterables.filter(this.players, new Predicate<EntityPlayer>() {
+                    target.playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.UPDATE_LATENCY, Iterables.filter(this.players, new Predicate<EntityPlayer>() {
                         @Override
                         public boolean apply(EntityPlayer input) {
                             return target.getBukkitEntity().canSee(input.getBukkitEntity());
                         }
-                    }));
+                    })));
                 }
         	});
             
