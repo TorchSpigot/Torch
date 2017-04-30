@@ -1456,9 +1456,4 @@ public final class TorchPlayerList implements TorchReactor {
         this.getServer().setProperty("white-list", Boolean.valueOf(flag));
         this.getServer().saveProperties();
     }
-    
-	@Override
-	public PlayerList getServant() {
-		return servant;
-	}
 }

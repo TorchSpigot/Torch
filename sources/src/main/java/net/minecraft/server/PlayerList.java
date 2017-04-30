@@ -13,7 +13,6 @@ import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.Location;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.torch.api.Anaphase;
-import org.torch.api.TorchReactor;
 import org.torch.server.TorchPlayerList;
 import org.torch.server.TorchServer;
 // CraftBukkit end
@@ -24,7 +23,7 @@ public abstract class PlayerList implements org.torch.api.TorchServant {
 	/**
 	 * Torch PlayerList reactor
 	 */
-	private TorchPlayerList reactor;
+	@Getter private TorchPlayerList reactor;
 	
 	/**
 	 * STATIC FIELDS
@@ -434,9 +433,4 @@ public abstract class PlayerList implements org.torch.api.TorchServant {
     public boolean f(GameProfile gameprofile) {
         return reactor.bypassesPlayerLimit(gameprofile);
     }
-    
-    @Override
-	public TorchPlayerList getReactor() {
-		return reactor;
-	}
 }

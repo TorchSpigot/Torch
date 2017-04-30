@@ -429,9 +429,4 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
 	@Override public boolean isChunkGeneratedAt(int chunkX, int chunkZ) {
         return this.chunks.containsKey(ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ)) || this.chunkLoader.a(chunkX, chunkZ); // PAIL: isChunkGeneratedAt(x, z)
     }
-	
-	@Override
-	public ChunkProviderServer getServant() {
-		return servant;
-	}
 }

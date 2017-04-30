@@ -16,13 +16,9 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
 	 * STATIC FIELDS
 	 */
 	/**
-	 * Torch server instance
-	 */
-	private static TorchServer reactor;
-	/**
 	 * Legacy dedicated server instance
 	 */
-	private static DedicatedServer servant;
+	private static DedicatedServer instance;
 	/**
 	 * Common logger
 	 */
@@ -79,10 +75,7 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
     public DedicatedServer(joptsimple.OptionSet options, DataConverterManager dataconvertermanager, YggdrasilAuthenticationService yggdrasilauthenticationservice, MinecraftSessionService minecraftsessionservice, GameProfileRepository gameprofilerepository, UserCache usercache) {
         super(options, Proxy.NO_PROXY, dataconvertermanager, yggdrasilauthenticationservice, minecraftsessionservice, gameprofilerepository, usercache);
         
-        // Setup instance for org.torch.api.TorchReactor
-    	servant = this;
-    	// Setup instance for org.torch.api.TorchServant
-    	reactor = super.getReactor();
+    	instance = this;
     	
     	/**
     	 * NORMAL FIELDS
@@ -333,6 +326,6 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
     }
     
     public static DedicatedServer getServer() {
-    	return servant;
+    	return instance;
     }
 }

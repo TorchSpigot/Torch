@@ -23,7 +23,6 @@ import joptsimple.OptionSet;
 // CraftBukkit end
 import org.spigotmc.SlackActivityAccountant; // Spigot
 import org.torch.api.Anaphase;
-import org.torch.api.TorchReactor;
 import org.torch.server.TorchPlayerList;
 import org.torch.server.TorchServer;
 
@@ -34,7 +33,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
 	/**
 	 * Torch server instance
 	 */
-	private static TorchServer reactor;
+	protected static TorchServer reactor;
 	/**
 	 * Legacy server instance
 	 */
@@ -864,6 +863,6 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     
     @Override
 	public TorchServer getReactor() {
-    	return reactor;
+        return reactor;
     }
 }

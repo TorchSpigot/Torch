@@ -47,5 +47,4 @@ public class Regulator extends Thread {
 			TorchServer.getServer().safeShutdown();
 		}
 	}
-
 }

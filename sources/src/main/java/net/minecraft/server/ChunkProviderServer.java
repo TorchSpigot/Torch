@@ -1,6 +1,8 @@
 package net.minecraft.server;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import lombok.Getter;
+
 import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -12,7 +14,7 @@ import org.torch.server.TorchChunkProvider;
 import static org.torch.server.TorchServer.logger;
 
 public class ChunkProviderServer implements IChunkProvider, org.torch.api.TorchServant {
-	public final TorchChunkProvider reactor;
+	@Getter public final TorchChunkProvider reactor;
 	
     private static final Logger a = logger;
     private static final double UNLOAD_QUEUE_RESIZE_FACTOR = TorchChunkProvider.UNLOAD_QUEUE_RESIZE_FACTOR;
@@ -154,9 +156,4 @@ public class ChunkProviderServer implements IChunkProvider, org.torch.api.TorchS
 	public boolean e(int i, int j) {
         return reactor.isChunkGeneratedAt(i, j);
     }
-
-	@Override
-	public TorchChunkProvider getReactor() {
-		return reactor;
-	}
 }
