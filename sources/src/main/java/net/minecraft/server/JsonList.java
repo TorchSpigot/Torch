@@ -56,7 +56,9 @@ public class JsonList<K, V extends JsonListEntry<K>> {
     // Torch start
     /** Only used to reduce entries overread */
     protected boolean modified = false;
-    protected String[] lastEntries;
+    protected String[] lastEntries; // TODO: always overread twice
+    /** Only used to reduce list saving */
+    protected boolean needSave = true; // TODO: always save twice
     // Torch end
 
     public JsonList(File file) {
@@ -144,16 +146,30 @@ public class JsonList<K, V extends JsonListEntry<K>> {
     }
 
     public void save() throws IOException {
+    	// Torch start
+    	if (!needSave) {
+    		//System.out.println("DEBUG -> skip this save");
+    		needSave = true; return;
+    	}
+    	// Torch
         Collection collection = this.d.values();
-        String s = this.b.toJson(collection);
-        BufferedWriter bufferedwriter = null;
-
-        try {
-            bufferedwriter = Files.newWriter(this.c, Charsets.UTF_8);
-            bufferedwriter.write(s);
-        } finally {
-            IOUtils.closeQuietly(bufferedwriter);
-        }
+        
+        MCUtil.scheduleAsyncTask(() -> {
+        	String jsonString = this.b.toJson(collection);
+        	BufferedWriter bufferedwriter = null;
+            
+            try {
+                bufferedwriter = Files.newWriter(this.c, Charsets.UTF_8);
+                bufferedwriter.write(jsonString);
+            } catch (IOException io) {
+            	logger.warn("Could not save the list after adding/removing a user.", io);
+			} finally {
+                IOUtils.closeQuietly(bufferedwriter);
+            }
+        });
+        
+        //System.out.println("DEBUG -> list saved");
+        needSave = false; // Torch
     }
 
     public void load() throws FileNotFoundException {
