@@ -4,6 +4,8 @@ import com.destroystokyo.paper.exception.ServerInternalException;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
+import com.koloboke.collect.map.hash.HashObjIntMap;
+import com.koloboke.collect.map.hash.HashObjIntMaps;
 import com.koloboke.collect.map.hash.HashObjObjMaps;
 
 import java.util.Arrays;
@@ -50,7 +52,7 @@ public class Chunk {
     private int x;
     private final ConcurrentLinkedQueue<BlockPosition> y;
     public boolean d; public void setShouldUnload(boolean unload) { this.d = unload; } public boolean isUnloading() { return d; } // Paper - OBFHELPER
-    protected gnu.trove.map.hash.TObjectIntHashMap<Class> entityCount = new gnu.trove.map.hash.TObjectIntHashMap<Class>(); // Spigot
+    public HashObjIntMap<Class> entityCount = HashObjIntMaps.getDefaultFactory().newMutableMap(); // Spigot
 
     // Paper start
     // Track the number of minecarts and items
@@ -665,7 +667,7 @@ public class Chunk {
         {
             if ( creatureType.a().isAssignableFrom( entity.getClass() ) )
             {
-                this.entityCount.adjustOrPutValue( creatureType.a(), 1, 1 );
+                this.entityCount.addValue(creatureType.a(), 1, 1);
             }
         }
         // Spigot end
@@ -704,7 +706,7 @@ public class Chunk {
         {
             if ( creatureType.a().isAssignableFrom( entity.getClass() ) )
             {
-                this.entityCount.adjustValue( creatureType.a(), -1 );
+                this.entityCount.addValue(creatureType.a(), -1);
             }
         }
         // Spigot end

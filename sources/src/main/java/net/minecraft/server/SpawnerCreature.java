@@ -1,10 +1,9 @@
 package net.minecraft.server;
 
-import com.google.common.collect.Sets;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 // CraftBukkit start
 import com.destroystokyo.paper.exception.ServerInternalException;
@@ -29,7 +28,7 @@ public final class SpawnerCreature {
                     .getChunkProviderServer()
                     .chunks.values()
                     .stream()
-                    .collect(java.util.stream.Collectors.summingInt(c -> c.entityCount.get(oClass)));
+                    .collect(Collectors.summingInt(chunk -> chunk.entityCount.getOrDefault(oClass, 0)));
         }
         // Paper end
         int i = 0;

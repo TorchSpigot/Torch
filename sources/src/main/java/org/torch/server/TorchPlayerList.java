@@ -726,7 +726,7 @@ public final class TorchPlayerList implements TorchReactor {
         org.bukkit.World fromWorld = oldPlayerEntity.getBukkitEntity().getWorld();
         oldPlayerEntity.viewingCredits = false;
         
-        newPlayerEntity.playerConnection = oldPlayerEntity.playerConnection;
+        // newPlayerEntity.playerConnection = oldPlayerEntity.playerConnection;
         // Clone the player
         newPlayerEntity.copyTo(oldPlayerEntity, conqueredEnd);
         // Set entity ID

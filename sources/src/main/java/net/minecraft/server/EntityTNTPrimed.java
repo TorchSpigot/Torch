@@ -22,11 +22,11 @@ public class EntityTNTPrimed extends Entity {
     public EntityTNTPrimed(World world, double d0, double d1, double d2, EntityLiving entityliving) {
         this(world);
         this.setPosition(d0, d1, d2);
-        float f = (float) (Math.random() * 6.2831854820251465D);
+        float f = (float) (Math.random() * Math.PI);
 
-        this.motX = (double) (-((float) Math.sin((double) f)) * 0.02F);
+        this.motX = -((float) Math.sin(f)) * 0.02F;
         this.motY = 0.20000000298023224D;
-        this.motZ = (double) (-((float) Math.cos((double) f)) * 0.02F);
+        this.motZ = -((float) Math.cos(f)) * 0.02F;
         this.setFuseTicks(80);
         this.lastX = d0;
         this.lastY = d1;
@@ -35,19 +35,23 @@ public class EntityTNTPrimed extends Entity {
         if (world.paperConfig.oldCannonBehaviors) this.motX = this.motZ = 0.0F; // Paper - Old TNT cannon behaviors
     }
 
-    protected void i() {
+    @Override
+	protected void i() {
         this.datawatcher.register(EntityTNTPrimed.FUSE_TICKS, Integer.valueOf(80));
     }
 
-    protected boolean playStepSound() {
+    @Override
+	protected boolean playStepSound() {
         return false;
     }
 
-    public boolean isInteractable() {
+    @Override
+	public boolean isInteractable() {
         return !this.dead;
     }
 
-    public void A_() {
+    @Override
+	public void A_() {
         if (world.spigotConfig.currentPrimedTnt++ > world.spigotConfig.maxTntTicksPerTick) { return; } // Spigot
         this.lastX = this.locX;
         this.lastY = this.locY;
@@ -98,16 +102,18 @@ public class EntityTNTPrimed extends Entity {
         server.getPluginManager().callEvent(event);
 
         if (!event.isCancelled()) {
-            this.world.createExplosion(this, this.locX, this.locY + (double) (this.length / 16.0F), this.locZ, event.getRadius(), event.getFire(), true);
+            this.world.createExplosion(this, this.locX, this.locY + this.length / 16.0F, this.locZ, event.getRadius(), event.getFire(), true);
         }
         // CraftBukkit end
     }
 
-    protected void b(NBTTagCompound nbttagcompound) {
+    @Override
+	protected void b(NBTTagCompound nbttagcompound) {
         nbttagcompound.setShort("Fuse", (short) this.getFuseTicks());
     }
 
-    protected void a(NBTTagCompound nbttagcompound) {
+    @Override
+	protected void a(NBTTagCompound nbttagcompound) {
         this.setFuseTicks(nbttagcompound.getShort("Fuse"));
         // Paper start - Try and load origin location from the old NBT tags for backwards compatibility
         if (nbttagcompound.hasKey("SourceLoc_x")) {
@@ -124,7 +130,8 @@ public class EntityTNTPrimed extends Entity {
         return this.source;
     }
 
-    public float getHeadHeight() {
+    @Override
+	public float getHeadHeight() {
         return world.paperConfig.oldCannonBehaviors ? this.length / 16F : 0.0F; // Paper - Old TNT cannon behaviors
     }
 
@@ -133,7 +140,8 @@ public class EntityTNTPrimed extends Entity {
         this.c = i;
     }
 
-    public void a(DataWatcherObject<?> datawatcherobject) {
+    @Override
+	public void a(DataWatcherObject<?> datawatcherobject) {
         if (EntityTNTPrimed.FUSE_TICKS.equals(datawatcherobject)) {
             this.c = this.k();
         }
@@ -141,7 +149,7 @@ public class EntityTNTPrimed extends Entity {
     }
 
     public int k() {
-        return ((Integer) this.datawatcher.get(EntityTNTPrimed.FUSE_TICKS)).intValue();
+        return this.datawatcher.get(EntityTNTPrimed.FUSE_TICKS).intValue();
     }
 
     public int getFuseTicks() {
@@ -157,7 +165,7 @@ public class EntityTNTPrimed extends Entity {
         double newY = this.locY + this.getHeadHeight() - d1;
         double newZ = this.locZ - d2;
 
-        return (double) MathHelper.sqrt(newX * newX + newY * newY + newZ * newZ);
+        return MathHelper.sqrt(newX * newX + newY * newY + newZ * newZ);
     }
 
     @Override

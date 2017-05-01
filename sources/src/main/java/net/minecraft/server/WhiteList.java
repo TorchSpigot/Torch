@@ -26,7 +26,7 @@ public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
         		if (entry.getKey().getName().equalsIgnoreCase(profile.getName())) return true;
         	}
         }
-        return false;
+		return false;
     }
     
     @Override

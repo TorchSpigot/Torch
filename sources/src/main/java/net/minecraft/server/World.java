@@ -1731,9 +1731,9 @@ public abstract class World implements IBlockAccess {
     }
 
     public void entityJoinedWorld(Entity entity, boolean flag) {
-        int i = MathHelper.floor(entity.locX);
-        int j = MathHelper.floor(entity.locZ);
-        boolean flag1 = true;
+    	//int i = MathHelper.floor(entity.locX);
+        //int j = MathHelper.floor(entity.locZ);
+    	//boolean flag1 = true;
 
         // Spigot start
         if (flag && !org.spigotmc.ActivationRange.checkIfActive(entity)) {

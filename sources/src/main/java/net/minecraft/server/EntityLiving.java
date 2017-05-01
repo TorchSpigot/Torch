@@ -146,7 +146,7 @@ public abstract class EntityLiving extends Entity {
         this.aM = (float) ((Math.random() + 1.0D) * 0.009999999776482582D);
         this.setPosition(this.locX, this.locY, this.locZ);
         this.aL = (float) Math.random() * 12398.0F;
-        this.yaw = (float) (Math.random() * 6.2831854820251465D);
+        this.yaw = (float) (Math.random() * Math.PI);
         this.aP = this.yaw;
         this.P = 0.6F;
     }

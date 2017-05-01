@@ -36,6 +36,7 @@ import org.bukkit.craftbukkit.Main;
 import org.bukkit.craftbukkit.util.Waitable;
 import org.bukkit.event.server.RemoteServerCommandEvent;
 import org.bukkit.event.server.ServerCommandEvent;
+import org.fusesource.jansi.AnsiConsole;
 import org.spigotmc.SlackActivityAccountant;
 import org.torch.api.Anaphase;
 import com.google.common.base.Charsets;
