@@ -747,6 +747,7 @@ public abstract class EntityInsentient extends EntityLiving {
         return f + f3;
     }
 
+    public boolean isNotColliding() { return this.cM(); } // OBFHELPER
     public boolean cM() {
         IBlockData iblockdata = this.world.getType((new BlockPosition(this)).down());
 

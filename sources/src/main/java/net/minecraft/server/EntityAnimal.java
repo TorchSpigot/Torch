@@ -12,7 +12,8 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimal {
         this.bz = Blocks.GRASS;
     }
 
-    protected void M() {
+    @Override
+	protected void M() {
         if (this.getAge() != 0) {
             this.bw = 0;
         }
@@ -20,7 +21,8 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimal {
         super.M();
     }
 
-    public void n() {
+    @Override
+	public void n() {
         super.n();
         if (this.getAge() != 0) {
             this.bw = 0;
@@ -33,7 +35,7 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimal {
                 double d1 = this.random.nextGaussian() * 0.02D;
                 double d2 = this.random.nextGaussian() * 0.02D;
 
-                this.world.addParticle(EnumParticle.HEART, this.locX + (double) (this.random.nextFloat() * this.width * 2.0F) - (double) this.width, this.locY + 0.5D + (double) (this.random.nextFloat() * this.length), this.locZ + (double) (this.random.nextFloat() * this.width * 2.0F) - (double) this.width, d0, d1, d2, new int[0]);
+                this.world.addParticle(EnumParticle.HEART, this.locX + this.random.nextFloat() * this.width * 2.0F - this.width, this.locY + 0.5D + this.random.nextFloat() * this.length, this.locZ + this.random.nextFloat() * this.width * 2.0F - this.width, d0, d1, d2, new int[0]);
             }
         }
 
@@ -52,25 +54,30 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimal {
     }
     // CraftBukkit end */
 
-    public float a(BlockPosition blockposition) {
+    @Override
+	public float a(BlockPosition blockposition) {
         return this.world.getType(blockposition.down()).getBlock() == this.bz ? 10.0F : this.world.n(blockposition) - 0.5F;
     }
 
-    public void b(NBTTagCompound nbttagcompound) {
+    @Override
+	public void b(NBTTagCompound nbttagcompound) {
         super.b(nbttagcompound);
         nbttagcompound.setInt("InLove", this.bw);
     }
 
-    public double ax() {
+    @Override
+	public double ax() {
         return 0.14D;
     }
 
-    public void a(NBTTagCompound nbttagcompound) {
+    @Override
+	public void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
         this.bw = nbttagcompound.getInt("InLove");
     }
 
-    public boolean cM() {
+    @Override
+	public boolean cM() {
         int i = MathHelper.floor(this.locX);
         int j = MathHelper.floor(this.getBoundingBox().b);
         int k = MathHelper.floor(this.locZ);
@@ -79,15 +86,18 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimal {
         return this.world.getType(blockposition.down()).getBlock() == this.bz && this.world.j(blockposition) > 8 && super.cM();
     }
 
-    public int C() {
+    @Override
+	public int C() {
         return 120;
     }
 
-    protected boolean isTypeNotPersistent() {
+    @Override
+	protected boolean isTypeNotPersistent() {
         return false;
     }
 
-    protected int getExpValue(EntityHuman entityhuman) {
+    @Override
+	protected int getExpValue(EntityHuman entityhuman) {
         return 1 + this.world.random.nextInt(3);
     }
 
@@ -95,7 +105,8 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimal {
         return itemstack.getItem() == Items.WHEAT;
     }
 
-    public boolean a(EntityHuman entityhuman, EnumHand enumhand) {
+    @Override
+	public boolean a(EntityHuman entityhuman, EnumHand enumhand) {
         ItemStack itemstack = entityhuman.b(enumhand);
 
         if (!itemstack.isEmpty()) {
@@ -107,7 +118,7 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimal {
 
             if (this.isBaby() && this.e(itemstack)) {
                 this.a(entityhuman, itemstack);
-                this.setAge((int) ((float) (-this.getAge() / 20) * 0.1F), true);
+                this.setAge((int) (-this.getAge() / 20 * 0.1F), true);
                 return true;
             }
         }

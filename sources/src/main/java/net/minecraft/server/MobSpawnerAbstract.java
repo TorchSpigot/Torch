@@ -40,7 +40,7 @@ public abstract class MobSpawnerAbstract {
     private boolean h() {
         BlockPosition blockposition = this.b();
 
-        return this.a().isPlayerNearby((double) blockposition.getX() + 0.5D, (double) blockposition.getY() + 0.5D, (double) blockposition.getZ() + 0.5D, (double) this.requiredPlayerRange);
+        return this.a().isPlayerNearby(blockposition.getX() + 0.5D, blockposition.getY() + 0.5D, blockposition.getZ() + 0.5D, this.requiredPlayerRange);
     }
 
     public void c() {
@@ -54,9 +54,9 @@ public abstract class MobSpawnerAbstract {
             BlockPosition blockposition = this.b();
 
             if (this.a().isClientSide) {
-                double d0 = (double) ((float) blockposition.getX() + this.a().random.nextFloat());
-                double d1 = (double) ((float) blockposition.getY() + this.a().random.nextFloat());
-                double d2 = (double) ((float) blockposition.getZ() + this.a().random.nextFloat());
+                double d0 = blockposition.getX() + this.a().random.nextFloat();
+                double d1 = blockposition.getY() + this.a().random.nextFloat();
+                double d2 = blockposition.getZ() + this.a().random.nextFloat();
 
                 this.a().addParticle(EnumParticle.SMOKE_NORMAL, d0, d1, d2, 0.0D, 0.0D, 0.0D, new int[0]);
                 this.a().addParticle(EnumParticle.FLAME, d0, d1, d2, 0.0D, 0.0D, 0.0D, new int[0]);
@@ -65,7 +65,7 @@ public abstract class MobSpawnerAbstract {
                 }
 
                 this.e = this.d;
-                this.d = (this.d + (double) (1000.0F / ((float) this.spawnDelay + 200.0F))) % 360.0D;
+                this.d = (this.d + 1000.0F / (this.spawnDelay + 200.0F)) % 360.0D;
             } else {
                 if (this.spawnDelay < -tickDelay) { // Paper
                     this.i();
@@ -83,16 +83,16 @@ public abstract class MobSpawnerAbstract {
                     NBTTagList nbttaglist = nbttagcompound.getList("Pos", 6);
                     World world = this.a();
                     int j = nbttaglist.size();
-                    double d3 = j >= 1 ? nbttaglist.e(0) : (double) blockposition.getX() + (world.random.nextDouble() - world.random.nextDouble()) * (double) this.spawnRange + 0.5D;
+                    double d3 = j >= 1 ? nbttaglist.e(0) : blockposition.getX() + (world.random.nextDouble() - world.random.nextDouble()) * this.spawnRange + 0.5D;
                     double d4 = j >= 2 ? nbttaglist.e(1) : (double) (blockposition.getY() + world.random.nextInt(3) - 1);
-                    double d5 = j >= 3 ? nbttaglist.e(2) : (double) blockposition.getZ() + (world.random.nextDouble() - world.random.nextDouble()) * (double) this.spawnRange + 0.5D;
+                    double d5 = j >= 3 ? nbttaglist.e(2) : blockposition.getZ() + (world.random.nextDouble() - world.random.nextDouble()) * this.spawnRange + 0.5D;
                     Entity entity = ChunkRegionLoader.a(nbttagcompound, world, d3, d4, d5, false);
 
                     if (entity == null) {
                         return;
                     }
 
-                    int k = world.a(entity.getClass(), (new AxisAlignedBB((double) blockposition.getX(), (double) blockposition.getY(), (double) blockposition.getZ(), (double) (blockposition.getX() + 1), (double) (blockposition.getY() + 1), (double) (blockposition.getZ() + 1))).g((double) this.spawnRange)).size();
+                    int k = world.a(entity.getClass(), (new AxisAlignedBB(blockposition.getX(), blockposition.getY(), blockposition.getZ(), blockposition.getX() + 1, blockposition.getY() + 1, blockposition.getZ() + 1)).g(this.spawnRange)).size();
 
                     if (k >= this.maxNearbyEntities) {
                         this.i();
@@ -102,7 +102,7 @@ public abstract class MobSpawnerAbstract {
                     EntityInsentient entityinsentient = entity instanceof EntityInsentient ? (EntityInsentient) entity : null;
 
                     entity.setPositionRotation(entity.locX, entity.locY, entity.locZ, world.random.nextFloat() * 360.0F, 0.0F);
-                    if (entityinsentient == null || entityinsentient.cM() && entityinsentient.canSpawn()) {
+                    if (entityinsentient == null || entityinsentient.isNotColliding() && entityinsentient.canSpawn()) {
                         if (this.spawnData.b().d() == 1 && this.spawnData.b().hasKeyOfType("id", 8) && entity instanceof EntityInsentient) {
                             ((EntityInsentient) entity).prepare(world.D(new BlockPosition(entity)), (GroupDataEntity) null);
                         }
@@ -143,7 +143,7 @@ public abstract class MobSpawnerAbstract {
         }
 
         if (!this.mobs.isEmpty()) {
-            this.a((MobSpawnerData) WeightedRandom.a(this.a().random, this.mobs));
+            this.a(WeightedRandom.a(this.a().random, this.mobs));
         }
 
         this.a(1);
@@ -163,7 +163,7 @@ public abstract class MobSpawnerAbstract {
         if (nbttagcompound.hasKeyOfType("SpawnData", 10)) {
             this.a(new MobSpawnerData(1, nbttagcompound.getCompound("SpawnData")));
         } else if (!this.mobs.isEmpty()) {
-            this.a((MobSpawnerData) WeightedRandom.a(this.a().random, this.mobs));
+            this.a(WeightedRandom.a(this.a().random, this.mobs));
         }
 
         if (nbttagcompound.hasKeyOfType("MinSpawnDelay", 99)) {

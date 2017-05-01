@@ -83,6 +83,7 @@ public class MathHelper {
     }
 
     /** ceil (double ver) */
+    public static int ceil(double value) { return f(value); }
     public static int f(double value) {
     	return BIG_ENOUGH_INT - (int) (BIG_ENOUGH_FLOOR - value);
     }
@@ -228,6 +229,11 @@ public class MathHelper {
         return d(i) - (g(i) ? 0 : 1);
     }
 
+    /**
+     * Rounds the first parameter up to the next interval of the second parameter.
+     * For instance, {@code roundUp(1, 4)} returns 4; {@code roundUp(0, 4)} returns 0; and {@code roundUp(4, 4)} returns 4;
+     */
+    public static int roundUp(int number, int interval) { return c(number, interval); } // OBFHELPER
     public static int c(int i, int j) {
         if (j == 0) {
             return 0;

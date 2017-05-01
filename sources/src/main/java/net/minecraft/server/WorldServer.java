@@ -276,8 +276,8 @@ public class WorldServer extends World implements IAsyncTaskHandler {
         timings.doChunkGC.stopTiming(); // Spigot
     }
 
-    @Nullable
-    public BiomeBase.BiomeMeta a(EnumCreatureType enumcreaturetype, BlockPosition blockposition) {
+    @Nullable public BiomeBase.BiomeMeta getSpawnListEntryForTypeAt(EnumCreatureType creatureType, BlockPosition position) { return this.a(creatureType, position); } // OBFHELPER
+    @Nullable public BiomeBase.BiomeMeta a(EnumCreatureType enumcreaturetype, BlockPosition blockposition) {
         List list = this.getChunkProviderServer().a(enumcreaturetype, blockposition);
 
         return list != null && !list.isEmpty() ? (BiomeBase.BiomeMeta) WeightedRandom.a(this.random, list) : null;

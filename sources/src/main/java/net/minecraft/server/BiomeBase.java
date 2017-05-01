@@ -148,6 +148,7 @@ public abstract class BiomeBase {
         return this.getHumidity() > 0.85F;
     }
 
+    public float getSpawningChance() { return this.f(); }
     public float f() {
         return 0.1F;
     }

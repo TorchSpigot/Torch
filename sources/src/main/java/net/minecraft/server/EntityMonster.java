@@ -9,11 +9,13 @@ public abstract class EntityMonster extends EntityCreature implements IMonster {
         this.b_ = 5;
     }
 
-    public SoundCategory bC() {
+    @Override
+	public SoundCategory bC() {
         return SoundCategory.HOSTILE;
     }
 
-    public void n() {
+    @Override
+	public void n() {
         this.cd();
         float f = this.e(1.0F);
 
@@ -24,7 +26,8 @@ public abstract class EntityMonster extends EntityCreature implements IMonster {
         super.n();
     }
 
-    public void A_() {
+    @Override
+	public void A_() {
         super.A_();
         if (!this.world.isClientSide && this.world.getDifficulty() == EnumDifficulty.PEACEFUL) {
             this.die();
@@ -32,44 +35,51 @@ public abstract class EntityMonster extends EntityCreature implements IMonster {
 
     }
 
-    protected SoundEffect aa() {
+    @Override
+	protected SoundEffect aa() {
         return SoundEffects.cR;
     }
 
-    protected SoundEffect ab() {
+    @Override
+	protected SoundEffect ab() {
         return SoundEffects.cQ;
     }
 
-    public boolean damageEntity(DamageSource damagesource, float f) {
+    @Override
+	public boolean damageEntity(DamageSource damagesource, float f) {
         return this.isInvulnerable(damagesource) ? false : super.damageEntity(damagesource, f);
     }
 
-    protected SoundEffect bW() {
+    @Override
+	protected SoundEffect bW() {
         return SoundEffects.cO;
     }
 
-    protected SoundEffect bX() {
+    @Override
+	protected SoundEffect bX() {
         return SoundEffects.cN;
     }
 
-    protected SoundEffect e(int i) {
+    @Override
+	protected SoundEffect e(int i) {
         return i > 4 ? SoundEffects.cM : SoundEffects.cP;
     }
 
-    public boolean B(Entity entity) {
+    @Override
+	public boolean B(Entity entity) {
         float f = (float) this.getAttributeInstance(GenericAttributes.ATTACK_DAMAGE).getValue();
         int i = 0;
 
         if (entity instanceof EntityLiving) {
             f += EnchantmentManager.a(this.getItemInMainHand(), ((EntityLiving) entity).getMonsterType());
-            i += EnchantmentManager.b((EntityLiving) this);
+            i += EnchantmentManager.b(this);
         }
 
         boolean flag = entity.damageEntity(DamageSource.mobAttack(this), f);
 
         if (flag) {
             if (i > 0 && entity instanceof EntityLiving) {
-                ((EntityLiving) entity).a(this, (float) i * 0.5F, (double) MathHelper.sin(this.yaw * 0.017453292F), (double) (-MathHelper.cos(this.yaw * 0.017453292F)));
+                ((EntityLiving) entity).a(this, i * 0.5F, MathHelper.sin(this.yaw * 0.017453292F), (-MathHelper.cos(this.yaw * 0.017453292F)));
                 this.motX *= 0.6D;
                 this.motZ *= 0.6D;
             }
@@ -93,7 +103,7 @@ public abstract class EntityMonster extends EntityCreature implements IMonster {
                 ItemStack itemstack1 = entityhuman.isHandRaised() ? entityhuman.cB() : ItemStack.a;
 
                 if (!itemstack.isEmpty() && !itemstack1.isEmpty() && itemstack.getItem() instanceof ItemAxe && itemstack1.getItem() == Items.SHIELD) {
-                    float f1 = 0.25F + (float) EnchantmentManager.getDigSpeedEnchantmentLevel(this) * 0.05F;
+                    float f1 = 0.25F + EnchantmentManager.getDigSpeedEnchantmentLevel(this) * 0.05F;
 
                     if (this.random.nextFloat() < f1) {
                         entityhuman.di().a(Items.SHIELD, 100);
@@ -102,13 +112,14 @@ public abstract class EntityMonster extends EntityCreature implements IMonster {
                 }
             }
 
-            this.a((EntityLiving) this, entity);
+            this.a(this, entity);
         }
 
         return flag;
     }
 
-    public float a(BlockPosition blockposition) {
+    @Override
+	public float a(BlockPosition blockposition) {
         return 0.5F - this.world.n(blockposition);
     }
 
@@ -132,16 +143,19 @@ public abstract class EntityMonster extends EntityCreature implements IMonster {
         }
     }
 
-    public boolean cM() {
+    @Override
+	public boolean cM() {
         return this.world.getDifficulty() != EnumDifficulty.PEACEFUL && this.r_() && super.cM();
     }
 
-    protected void initAttributes() {
+    @Override
+	protected void initAttributes() {
         super.initAttributes();
         this.getAttributeMap().b(GenericAttributes.ATTACK_DAMAGE);
     }
 
-    protected boolean isDropExperience() {
+    @Override
+	protected boolean isDropExperience() {
         return true;
     }
 }

@@ -26,7 +26,8 @@ public abstract class EntityCreature extends EntityInsentient {
         return 0.0F;
     }
 
-    public boolean cM() {
+    @Override
+	public boolean cM() {
         return super.cM() && this.a(new BlockPosition(this.locX, this.getBoundingBox().b, this.locZ)) >= 0.0F;
     }
 
@@ -39,12 +40,12 @@ public abstract class EntityCreature extends EntityInsentient {
     }
 
     public boolean f(BlockPosition blockposition) {
-        return this.b == -1.0F ? true : this.a.n(blockposition) < (double) (this.b * this.b);
+        return this.b == -1.0F ? true : this.a.n(blockposition) < this.b * this.b;
     }
 
     public void a(BlockPosition blockposition, int i) {
         this.a = blockposition;
-        this.b = (float) i;
+        this.b = i;
     }
 
     public BlockPosition dc() {
@@ -63,7 +64,8 @@ public abstract class EntityCreature extends EntityInsentient {
         return this.b != -1.0F;
     }
 
-    protected void cV() {
+    @Override
+	protected void cV() {
         super.cV();
         if (this.isLeashed() && this.getLeashHolder() != null && this.getLeashHolder().world == this.world) {
             Entity entity = this.getLeashHolder();
@@ -86,9 +88,9 @@ public abstract class EntityCreature extends EntityInsentient {
                 this.unleash(true, true);
                 this.goalSelector.c(1);
             } else if (f > 6.0F) {
-                double d0 = (entity.locX - this.locX) / (double) f;
-                double d1 = (entity.locY - this.locY) / (double) f;
-                double d2 = (entity.locZ - this.locZ) / (double) f;
+                double d0 = (entity.locX - this.locX) / f;
+                double d1 = (entity.locY - this.locY) / f;
+                double d2 = (entity.locZ - this.locZ) / f;
 
                 this.motX += d0 * Math.abs(d0) * 0.4D;
                 this.motY += d1 * Math.abs(d1) * 0.4D;

@@ -1425,6 +1425,7 @@ public abstract class World implements IBlockAccess {
         return this.getChunkAtWorldCoords(blockposition).f(blockposition);
     }
 
+    public BlockPosition getTopSolidOrLiquidBlock(BlockPosition position) { return this.q(position); } // OBFHELPER
     public BlockPosition q(BlockPosition blockposition) {
         Chunk chunk = this.getChunkAtWorldCoords(blockposition);
 
