@@ -22,14 +22,14 @@ public class Regulator extends Thread {
 	}
 
 	/**
-	 * Starting the regulator or return the instance
+	 * Starting the regulator thread or return the instance
 	 */
 	public static Regulator getInstance() {
 		return LazyInstance.instance;
 	}
 	
 	/**
-	 * Returns the instance of the gegulator
+	 * Post a task
 	 */
 	public static void post(Runnable runnable) {
 		queue.add(runnable);
