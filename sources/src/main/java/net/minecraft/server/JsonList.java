@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Logger;
+import org.torch.api.Async;
+
 import static org.torch.server.TorchServer.logger;
 
 public class JsonList<K, V extends JsonListEntry<K>> {
@@ -131,7 +133,7 @@ public class JsonList<K, V extends JsonListEntry<K>> {
         return this.d;
     }
 
-    public void save() {
+    @Async public void save() {
         Collection<V> values = this.d.values();
         
         MCUtil.scheduleAsyncTask(() -> {
