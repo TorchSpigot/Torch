@@ -37,35 +37,35 @@ import javax.annotation.Nullable;
 
 @Getter
 public final class TorchChunkProvider implements net.minecraft.server.IChunkProvider, org.torch.api.IChunkProvider, TorchReactor {
-	private final ChunkProviderServer servant;
-	
+    private final ChunkProviderServer servant;
+
     public static final double UNLOAD_QUEUE_RESIZE_FACTOR = 0.96;
-	
-	public final it.unimi.dsi.fastutil.longs.LongSet unloadQueue = new it.unimi.dsi.fastutil.longs.LongArraySet();
-	public final ChunkGenerator chunkGenerator;
+
+    public final it.unimi.dsi.fastutil.longs.LongSet unloadQueue = new it.unimi.dsi.fastutil.longs.LongArraySet();
+    public final ChunkGenerator chunkGenerator;
     private final IChunkLoader chunkLoader;
-    
+
     // Paper - Chunk save stats
     private long lastQueuedSaves = 0L; 
     private long lastProcessedSaves = 0L;
     private long lastSaveStatPrinted = System.currentTimeMillis();
-    
+
     protected Chunk lastChunkByPos = null;
-    
+
     public final WorldServer world;
-    
+
     /** Map of chunk Id's to Chunk instances */
     public Long2ObjectOpenHashMap<Chunk> chunks = new Long2ObjectOpenHashMap<Chunk>(8192) {
-		private static final long serialVersionUID = -1L;
-		
-		@Override
+        private static final long serialVersionUID = -1L;
+
+        @Override
         public Chunk get(long key) {
             if (lastChunkByPos != null && key == lastChunkByPos.chunkKey) {
                 return lastChunkByPos;
             }
             return lastChunkByPos = super.get(key);
         }
-		
+
         @Override
         public Chunk remove(long key) {
             if (lastChunkByPos != null && key == lastChunkByPos.chunkKey) {
@@ -74,15 +74,15 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
             return super.remove(key);
         }
     };
-    
+
     public TorchChunkProvider(WorldServer world, IChunkLoader loader, ChunkGenerator generator, ChunkProviderServer servant) {
-    	this.servant = servant;
-    	
+        this.servant = servant;
+
         this.world = world;
         this.chunkLoader = loader;
         this.chunkGenerator = generator;
     }
-    
+
     public Collection<Chunk> getLoadedChunks() {
         return this.chunks.values();
     }
@@ -96,7 +96,7 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
             chunk.d = true; // PAIL: unloaded
         }
     }
-    
+
     /**
      * Marks all chunks for unload, ignoring those near the spawn
      */
@@ -104,27 +104,27 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
         ObjectIterator<Chunk> it = this.chunks.values().iterator();
         while (it.hasNext()) this.postChunkToUnload(it.next());
     }
-    
+
     @Nullable
     public Chunk getChunkIfLoaded(int chunkX, int chunkZ, boolean markUnloaded) {
         return markUnloaded ? getLoadedChunkAt(chunkX, chunkZ) : chunks.get(ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ));
     }
-    
+
     @Override @Nullable
     public Chunk getLoadedChunkAt(int chunkX, int chunkZ) {
         Chunk chunk = this.chunks.get(ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ));
-        
+
         if (chunk != null) chunk.d = false; // PAIL: unloaded
         return chunk;
     }
-    
+
     @Nullable
     public Chunk getOrLoadChunkAt(int x, int z) {
         Chunk chunk = this.getLoadedChunkAt(x, z);
-        
+
         if (chunk == null) {
             ChunkRegionLoader loader = null;
-            
+
             if (this.chunkLoader instanceof ChunkRegionLoader) {
                 loader = (ChunkRegionLoader) this.chunkLoader;
             }
@@ -132,14 +132,14 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
                 chunk = ChunkIOExecutor.syncChunkLoad(world, loader, servant, x, z);
             }
         }
-        
+
         return chunk;
     }
-    
+
     @Nullable
     public Chunk originalGetOrLoadChunkAt(int chunkX, int chunkZ) {
         Chunk chunk = this.getLoadedChunkAt(chunkX, chunkZ);
-        
+
         if (chunk == null) {
             chunk = this.loadChunkFromFile(chunkX, chunkZ);
             if (chunk != null) {
@@ -148,12 +148,12 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
                 chunk.loadNearby(servant, this.chunkGenerator, false);
             }
         }
-        
+
         return chunk;
     }
-    
+
     @Override
-	public Chunk getChunkAt(int i, int j) {
+    public Chunk getChunkAt(int i, int j) {
         return getChunkAt(i, j, null);
     }
 
@@ -168,7 +168,7 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
         if (this.chunkLoader instanceof ChunkRegionLoader) {
             loader = (ChunkRegionLoader) this.chunkLoader;
         }
-        
+
         // We can only use the queue for already generated chunks
         if (chunk == null && loader != null && loader.chunkExists(i, j)) {
             if (runnable != null) {
@@ -186,14 +186,14 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
 
         return chunk;
     }
-    
+
     public Chunk originalGetChunkAt(int chunkX, int chunkZ) {
         Chunk chunk = this.originalGetOrLoadChunkAt(chunkX, chunkZ);
-        
+
         if (chunk == null) {
             world.timings.syncChunkLoadTimer.startTiming();
             long chunkPos = ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ);
-            
+
             try {
                 chunk = this.chunkGenerator.getOrCreateChunk(chunkX, chunkZ);
             } catch (Throwable t) {
@@ -205,26 +205,26 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
                 systemDetails.a("Generator", this.chunkGenerator);
                 throw new ReportedException(crashReport);
             }
-            
+
             this.chunks.put(chunkPos, chunk);
             chunk.addEntities();
             chunk.loadNearby(servant, this.chunkGenerator, true);
             world.timings.syncChunkLoadTimer.stopTiming();
         }
-        
+
         return chunk;
     }
-    
+
     @Nullable
     public Chunk loadChunkFromFile(int i, int j) {
         try {
             Chunk chunk = this.chunkLoader.a(this.world, i, j);
-            
+
             if (chunk != null) {
                 chunk.setLastSaved(this.world.getTime());
                 this.chunkGenerator.recreateStructures(chunk, i, j);
             }
-            
+
             return chunk;
         } catch (Throwable t) {
             logger.error("Couldn\'t load chunk", t);
@@ -254,96 +254,96 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
             ServerInternalException.reportInternalException(conflict);
         }
     }
-    
+
     public boolean saveChunks(boolean saveExtraData) {
         final ChunkRegionLoader chunkLoader = (ChunkRegionLoader) world.getChunkProviderServer().chunkLoader;
         final int queueSize = chunkLoader.getQueueSize();
         final long now = System.currentTimeMillis();
         final long timeSince = (now - lastSaveStatPrinted) / 1000;
         final Integer printRateSecs = Integer.getInteger("printSaveStats");
-        
+
         if (printRateSecs != null && timeSince >= printRateSecs) {
             final String timeStr = "/" + timeSince  +"s";
             final long queuedSaves = chunkLoader.getQueuedSaves();
             long queuedDiff = queuedSaves - lastQueuedSaves;
             lastQueuedSaves = queuedSaves;
-            
+
             final long processedSaves = chunkLoader.getProcessedSaves();
             long processedDiff = processedSaves - lastProcessedSaves;
             lastProcessedSaves = processedSaves;
             lastSaveStatPrinted = now;
-            
+
             if (processedDiff > 0 || queueSize > 0 || queuedDiff > 0) {
-            	logger.info("[Chunk Save Stats] " + world.worldData.getName() +
-                    " - Current: " + queueSize +
-                    " - Queued: " + queuedDiff + timeStr +
-                    " - Processed: " +processedDiff + timeStr
-                );
+                logger.info("[Chunk Save Stats] " + world.worldData.getName() +
+                        " - Current: " + queueSize +
+                        " - Queued: " + queuedDiff + timeStr +
+                        " - Processed: " +processedDiff + timeStr
+                        );
             }
         }
-        
+
         if (queueSize > world.paperConfig.queueSizeAutoSaveThreshold) return false;
-    	int savedChunkCount = 0;
-    	
+        int savedChunkCount = 0;
+
         for (Chunk chunk : this.chunks.values()) {
-        	if (saveExtraData) this.saveChunkExtraData(chunk);
-        	
+            if (saveExtraData) this.saveChunkExtraData(chunk);
+
             if (chunk.a(saveExtraData)) { // If the chunk needs saving
                 this.saveChunkData(chunk);
                 chunk.f(false); // PAIL: setModified(false)
                 savedChunkCount++;
-                
+
                 // Paper - Incremental Auto Save - cap max per tick
                 if (!saveExtraData && savedChunkCount >= world.paperConfig.maxAutoSaveChunksPerTick) return false;
             }
         }
-        
+
         return true;
     }
-    
+
     /**
      * Save extra data not associated with any Chunk.
      * Not saved during autosave, only during world unload. Currently unimplemented.
      */
     public void saveExtraData() {
-    	this.chunkLoader.b(); // PAIL: saveExtraData()
+        this.chunkLoader.b(); // PAIL: saveExtraData()
     }
-    
+
     /**
      * Unloads chunks that are marked to be unloaded. This is not guaranteed to unload every such chunk.
      */
     @SuppressWarnings("deprecation")
-	@Override
-	public boolean unloadChunks() {
-    	if (this.world.savingDisabled) return false;
-    	
-    	if (!this.unloadQueue.isEmpty()) {
+    @Override
+    public boolean unloadChunks() {
+        if (this.world.savingDisabled) return false;
+
+        if (!this.unloadQueue.isEmpty()) {
             SlackActivityAccountant activityAccountant = this.world.getMinecraftServer().slackActivityAccountant;
             activityAccountant.startActivity(0.5);
-            
+
             // Paper - Make more aggressive
             int targetSize = Math.min(this.unloadQueue.size() - 100,  (int) (this.unloadQueue.size() * UNLOAD_QUEUE_RESIZE_FACTOR));
-            
+
             for (Long chunkPos : this.unloadQueue) {
-            	this.unloadQueue.remove(chunkPos);
-            	Chunk chunk = this.chunks.get(chunkPos);
-            	
-            	if (chunk != null && chunk.d) { // PAIL: chunk.unloaded
-            		chunk.setShouldUnload(false);
-            		
-            		if (!unloadChunk(chunk, true)) continue;
-            		
-            		if (this.unloadQueue.size() <= targetSize && activityAccountant.activityTimeIsExhausted()) break;
-            	}
+                this.unloadQueue.remove(chunkPos);
+                Chunk chunk = this.chunks.get(chunkPos);
+
+                if (chunk != null && chunk.d) { // PAIL: chunk.unloaded
+                    chunk.setShouldUnload(false);
+
+                    if (!unloadChunk(chunk, true)) continue;
+
+                    if (this.unloadQueue.size() <= targetSize && activityAccountant.activityTimeIsExhausted()) break;
+                }
             }
-            
+
             activityAccountant.endActivity(); // Spigot
         }
-    	
+
         // Paper - delayed chunk unloads
         long now = System.currentTimeMillis();
         long unloadAfter = world.paperConfig.delayChunkUnloadsBy;
-        
+
         if (unloadAfter > 0) {
             for (Chunk chunk : chunks.values()) { // TODO: Convert2streamapi
                 if (chunk.scheduledForUnload != null && now - chunk.scheduledForUnload > unloadAfter) {
@@ -352,25 +352,25 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
                 }
             }
         }
-        
+
         this.chunkLoader.a(); // PAIL: chunkTick()
-        
-		return false;
+
+        return false;
     }
-    
+
     public boolean unloadChunk(Chunk chunk, boolean save) {
         ChunkUnloadEvent event = new ChunkUnloadEvent(chunk.bukkitChunk, save);
         this.world.getServer().getPluginManager().callEvent(event);
         if (event.isCancelled()) return false;
         save = event.isSaveChunk();
-        
+
         chunk.lightingQueue.processUnload();
-        
+
         // Update neighbor counts
         for (int x = -2; x < 3; x++) {
             for (int z = -2; z < 3; z++) {
                 if (x == 0 && z == 0) continue;
-                
+
                 Chunk neighbor = this.getChunkIfLoaded(chunk.locX + x, chunk.locZ + z, false);
                 if (neighbor != null) {
                     neighbor.setNeighborUnloaded(-x, -z);
@@ -378,33 +378,33 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
                 }
             }
         }
-        
+
         chunk.removeEntities();
-        
+
         if (save) {
             this.saveChunkData(chunk);
             this.saveChunkExtraData(chunk);
         }
-        
+
         this.chunks.remove(chunk.chunkKey);
         return true;
     }
-    
+
     /**
      * Returns if the world supports saving
      */
     public boolean canSave() {
         return !this.world.savingDisabled;
     }
-    
+
     /**
      * Converts the instance data to a readable string
      */
     @Override
-	public String getName() {
+    public String getName() {
         return "ServerChunkCache: " + this.chunks.size() + " Drop: " + this.unloadQueue.size();
     }
-    
+
     public List<BiomeBase.BiomeMeta> getPossibleCreatures(EnumCreatureType creatureType, BlockPosition position) {
         return this.chunkGenerator.getMobsFor(creatureType, position);
     }
@@ -413,7 +413,7 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
     public BlockPosition findNearestMapFeature(World world, String structureName, BlockPosition position, boolean flag) {
         return this.chunkGenerator.findNearestMapFeature(world, structureName, position, flag);
     }
-    
+
     public int getLoadedChunkCount() {
         return this.chunks.size();
     }
@@ -424,9 +424,9 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
     public boolean isLoaded(int chunkX, int chunkZ) {
         return this.chunks.containsKey(ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ));
     }
-    
+
     @Override @Deprecated public boolean e(int x, int z) { return this.isChunkGeneratedAt(x, z); } // Implement from net.minecraft.IChunkProvider
-	@Override public boolean isChunkGeneratedAt(int chunkX, int chunkZ) {
+    @Override public boolean isChunkGeneratedAt(int chunkX, int chunkZ) {
         return this.chunks.containsKey(ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ)) || this.chunkLoader.a(chunkX, chunkZ); // PAIL: isChunkGeneratedAt(x, z)
     }
 }

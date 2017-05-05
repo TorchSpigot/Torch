@@ -49,13 +49,13 @@ class Metrics {
 
     // The uuid of the server
     private static String serverUUID;
-    
+
     // The name of the server software
     private final String name = "Torch";
 
     // A list with all custom charts
     private final List<CustomChart> charts = new ArrayList<>();
-    
+
     // Executor for use in scheduling work and submitting data
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
@@ -83,7 +83,7 @@ class Metrics {
                             "To honor their work, you should not disable it.\n" +
                             "This has nearly no effect on the server performance!\n" +
                             "Check out https://bStats.org/ to learn more :)"
-            ).copyDefaults(true);
+                    ).copyDefaults(true);
             try {
                 config.save(configFile);
             } catch (IOException ignored) { }
@@ -114,9 +114,9 @@ class Metrics {
      */
     private void startSubmitting() {
         executor.scheduleAtFixedRate(() -> {
-                // Nevertheless we want our code to run in the main thread, so we have to use the MC scheduler
-                // Don't be afraid! The connection to the bStats server is still async, only the stats collection is sync ;)
-                MinecraftServer.getServer().postToMainThread(this::submitData);
+            // Nevertheless we want our code to run in the main thread, so we have to use the MC scheduler
+            // Don't be afraid! The connection to the bStats server is still async, only the stats collection is sync ;)
+            MinecraftServer.getServer().postToMainThread(this::submitData);
         }, 5, 30, TimeUnit.MINUTES);
         // Submit the data every 30 minutes, first time after 5 minutes to give other plugins enough time to start
         // WARNING: Changing the frequency has no effect but your plugin WILL be blocked/deleted!

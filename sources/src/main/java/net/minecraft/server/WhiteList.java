@@ -14,24 +14,24 @@ public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
     }
 
     @Override
-	protected JsonListEntry<GameProfile> a(JsonObject jsonobject) {
+    protected JsonListEntry<GameProfile> a(JsonObject jsonobject) {
         return new WhiteListEntry(jsonobject);
     }
 
     public boolean isWhitelisted(GameProfile profile) {
         if (TorchServer.authUUID()) {
-        	return this.contains(profile);
+            return this.contains(profile);
         } else {
-        	return this.contains(profile) || this.contains(new GameProfile(profile.getId(), profile.getName().toLowerCase())); // Support for offline servers
+            return this.contains(profile) || this.contains(new GameProfile(profile.getId(), profile.getName().toLowerCase())); // Support for offline servers
         }
     }
-    
+
     @Override
     public String[] getEntries() {
         String[] values = new String[this.getMap().size()]; int index = 0;
-		for (WhiteListEntry entry : this.getMap().values()) values[index++] = entry.getKey().getName();
-		
-    	return values;
+        for (WhiteListEntry entry : this.getMap().values()) values[index++] = entry.getKey().getName();
+
+        return values;
     }
 
     protected String b(GameProfile gameprofile) {
@@ -55,7 +55,7 @@ public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
     }
 
     @Override
-	protected String a(GameProfile object) {
+    protected String a(GameProfile object) {
         return this.b(object);
     }
 }

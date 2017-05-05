@@ -30,7 +30,7 @@ public class PlayerChunk {
     private boolean loadInProgress = false;
     private Runnable loadedRunnable = new Runnable() {
         @Override
-		public void run() {
+        public void run() {
             loadInProgress = false;
             PlayerChunk.this.chunk = PlayerChunk.this.playerChunkMap.getWorld().getChunkProviderServer().getOrLoadChunkAt(location.x, location.z);
             markChunkUsed(); // Paper - delay chunk unloads
@@ -116,7 +116,7 @@ public class PlayerChunk {
             } else {
                 this.chunk = this.playerChunkMap.getWorld().getChunkProviderServer().getOrLoadChunkAt(this.location.x, this.location.z);
             }
-            */
+             */
             if (!loadInProgress) {
                 loadInProgress = true;
                 this.chunk = playerChunkMap.getWorld().getChunkProviderServer().getChunkAt(this.location.x, this.location.z, loadedRunnable, flag);

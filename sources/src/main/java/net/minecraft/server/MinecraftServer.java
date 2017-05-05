@@ -27,16 +27,16 @@ import org.torch.server.TorchPlayerList;
 import org.torch.server.TorchServer;
 
 public abstract class MinecraftServer implements Runnable, ICommandListener, IAsyncTaskHandler, IMojangStatistics, org.torch.api.TorchServant {
-	/**
-	 * STATIC FIELDS
-	 */
-	/**
-	 * Torch server instance
-	 */
-	protected static TorchServer reactor;
-	/**
-	 * Legacy server instance
-	 */
+    /**
+     * STATIC FIELDS
+     */
+    /**
+     * Torch server instance
+     */
+    protected static TorchServer reactor;
+    /**
+     * Legacy server instance
+     */
     private static MinecraftServer SERVER;
     /**
      * Common logger
@@ -66,7 +66,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
      * The sample tps interval
      */
     private static final int SAMPLE_INTERVAL = TorchServer.SAMPLE_TICK_INTERVAL;
-    
+
     /**
      * ANAPHASE FIELDS
      */
@@ -98,7 +98,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
      * Current TPS
      */
     @Anaphase public double[] recentTps = new double[3];
-    
+
     /**
      * NORMAL FIELDS
      */
@@ -134,7 +134,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     public final SlackActivityAccountant slackActivityAccountant;
     private boolean hasStopped;
     private final Object stopLock;
-    
+
     /**
      * OBFUSCATED FIELDS
      */
@@ -245,83 +245,83 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public MinecraftServer(OptionSet optionSet, Proxy proxy, DataConverterManager dataconvertermanager, YggdrasilAuthenticationService yggdrasilauthenticationservice, MinecraftSessionService minecraftsessionservice, GameProfileRepository gameprofilerepository, UserCache usercache) {
-    	// Setup instance for org.torch.api.TorchReactor
-    	SERVER = this;
-    	// Setup instance for org.torch.api.TorchServant
-    	if (proxy == Proxy.NO_PROXY) {
-    		// Request from dedicated server constructor
-    		reactor = new TorchServer(optionSet, dataconvertermanager, yggdrasilauthenticationservice, minecraftsessionservice, gameprofilerepository, usercache);
-    	} else {
-    		reactor = new TorchServer(optionSet, proxy, dataconvertermanager, yggdrasilauthenticationservice, minecraftsessionservice, gameprofilerepository, usercache);
-    	}
-    	
-    	/**
-    	 * NORMAL FIELDS
-    	 */
-    	convertable = reactor.getAnvilFileConverter();
-    	universe = reactor.getUniverseAnvilFile();
-    	methodProfiler = reactor.getMethodProfiler();
-    	dataConverterManager = reactor.getDataConverterManager();
-    	serverIp = reactor.getServerIp();
-    	isRunning = reactor.isRunning();
-    	onlineMode = reactor.onlineMode; // SP
-    	spawnAnimals = reactor.isSpawnAnimals();
-    	spawnNPCs = reactor.isSpawnNPCs();
-    	pvpMode = reactor.isPvpMode();
-    	allowFlight = reactor.isAllowFlight();
-    	motd = reactor.getMotd();
-    	demoMode = reactor.isDemoMode();
-    	worlds = reactor.getWorlds();
-    	server = reactor.getCraftServer();
-    	options = reactor.getOptions();
-    	console = reactor.getConsole();
-    	remoteConsole = reactor.getRemoteConsole();
-    	reader = reactor.getReader();
-    	processQueue = reactor.getProcessQueue();
-    	autosavePeriod = reactor.getAutosavePeriod();
-    	serverAutoSave = reactor.isServerAutoSave();
-    	slackActivityAccountant = reactor.getSlackActivityAccountant();
-    	hasStopped = reactor.isHasStopped();
-    	stopLock = reactor.getStopLock();
-    	serverThread = primaryThread = reactor.getServerThread();
-    	
-    	/**
-    	 * OBFUSCATED FIELDS
-    	 */
-    	m = reactor.getUsageSnooper();
-    	o = reactor.getTickables();
-    	b = reactor.getCommandManager();
-    	p = reactor.getServerConnection();
-    	q = reactor.getServerPing();
-    	r = reactor.getRandom();
-    	u = reactor.getServerPort();
-    	// v = reactor.getPlayerList(); // Moved to Setter
-    	e = reactor.getServerProxy();
-    	f = reactor.getCurrentTask();
-    	g = reactor.getPercentDone();
-    	A = reactor.isPreventProxyConnections();
-    	G = reactor.getBuildLimit();
-    	H = reactor.getMaxPlayerIdleMinutes();
-    	h = reactor.getTickTimeArray();
-    	i = reactor.getTimeOfLastDimensionTick();
-    	I = reactor.getServerKeyPair();
-    	J = reactor.getServerOwner();
-    	K = reactor.getPrimaryWorldFolderName();
-    	N = reactor.isEnableBonusChest();
-    	O = reactor.getResourcePackUrl();
-    	P = reactor.getResourcePackHash();
-    	Q = reactor.isServerIsRunning();
-    	R = reactor.getTimeOfLastWarning();
-    	S = reactor.getUserMessage();
-    	T = reactor.isStartProfiling();
-    	U = reactor.isGamemodeForced();
-    	V = reactor.getAuthService();
-    	W = reactor.getSessionService();
-    	X = reactor.getProfileRepo();
-    	Y = reactor.getUserCache();
-    	Z = reactor.getNanoTimeSinceStatusRefresh();
-    	j = reactor.getFutureTaskQueue();
-    	ab = reactor.getCurrentTime();
+        // Setup instance for org.torch.api.TorchReactor
+        SERVER = this;
+        // Setup instance for org.torch.api.TorchServant
+        if (proxy == Proxy.NO_PROXY) {
+            // Request from dedicated server constructor
+            reactor = new TorchServer(optionSet, dataconvertermanager, yggdrasilauthenticationservice, minecraftsessionservice, gameprofilerepository, usercache);
+        } else {
+            reactor = new TorchServer(optionSet, proxy, dataconvertermanager, yggdrasilauthenticationservice, minecraftsessionservice, gameprofilerepository, usercache);
+        }
+
+        /**
+         * NORMAL FIELDS
+         */
+        convertable = reactor.getAnvilFileConverter();
+        universe = reactor.getUniverseAnvilFile();
+        methodProfiler = reactor.getMethodProfiler();
+        dataConverterManager = reactor.getDataConverterManager();
+        serverIp = reactor.getServerIp();
+        isRunning = reactor.isRunning();
+        onlineMode = reactor.onlineMode; // SP
+        spawnAnimals = reactor.isSpawnAnimals();
+        spawnNPCs = reactor.isSpawnNPCs();
+        pvpMode = reactor.isPvpMode();
+        allowFlight = reactor.isAllowFlight();
+        motd = reactor.getMotd();
+        demoMode = reactor.isDemoMode();
+        worlds = reactor.getWorlds();
+        server = reactor.getCraftServer();
+        options = reactor.getOptions();
+        console = reactor.getConsole();
+        remoteConsole = reactor.getRemoteConsole();
+        reader = reactor.getReader();
+        processQueue = reactor.getProcessQueue();
+        autosavePeriod = reactor.getAutosavePeriod();
+        serverAutoSave = reactor.isServerAutoSave();
+        slackActivityAccountant = reactor.getSlackActivityAccountant();
+        hasStopped = reactor.isHasStopped();
+        stopLock = reactor.getStopLock();
+        serverThread = primaryThread = reactor.getServerThread();
+
+        /**
+         * OBFUSCATED FIELDS
+         */
+        m = reactor.getUsageSnooper();
+        o = reactor.getTickables();
+        b = reactor.getCommandManager();
+        p = reactor.getServerConnection();
+        q = reactor.getServerPing();
+        r = reactor.getRandom();
+        u = reactor.getServerPort();
+        // v = reactor.getPlayerList(); // Moved to Setter
+        e = reactor.getServerProxy();
+        f = reactor.getCurrentTask();
+        g = reactor.getPercentDone();
+        A = reactor.isPreventProxyConnections();
+        G = reactor.getBuildLimit();
+        H = reactor.getMaxPlayerIdleMinutes();
+        h = reactor.getTickTimeArray();
+        i = reactor.getTimeOfLastDimensionTick();
+        I = reactor.getServerKeyPair();
+        J = reactor.getServerOwner();
+        K = reactor.getPrimaryWorldFolderName();
+        N = reactor.isEnableBonusChest();
+        O = reactor.getResourcePackUrl();
+        P = reactor.getResourcePackHash();
+        Q = reactor.isServerIsRunning();
+        R = reactor.getTimeOfLastWarning();
+        S = reactor.getUserMessage();
+        T = reactor.isStartProfiling();
+        U = reactor.isGamemodeForced();
+        V = reactor.getAuthService();
+        W = reactor.getSessionService();
+        X = reactor.getProfileRepo();
+        Y = reactor.getUserCache();
+        Z = reactor.getNanoTimeSinceStatusRefresh();
+        j = reactor.getFutureTaskQueue();
+        ab = reactor.getCurrentTime();
     }
 
     public abstract PropertyManager getPropertyManager();
@@ -342,15 +342,15 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void a(String s, String s1, long i, WorldType worldtype, String s2) {
-    	reactor.loadDefaultWorlds(s, s1, i, worldtype, s2);
+        reactor.loadDefaultWorlds(s, s1, i, worldtype, s2);
     }
 
     protected void l() {
-    	reactor.initialAllWorldsChunk();
+        reactor.initialAllWorldsChunk();
     }
 
     protected void a(String s, IDataManager idatamanager) {
-    	reactor.setResourcePackFromWorld(s, idatamanager);
+        reactor.setResourcePackFromWorld(s, idatamanager);
     }
 
     public abstract boolean getGenerateStructures();
@@ -380,7 +380,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void stop() throws ExceptionWorldConflict { // CraftBukkit - added throws
-    	reactor.stopServer();
+        reactor.stopServer();
     }
 
     public String getServerIp() {
@@ -388,7 +388,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void c(String s) {
-    	reactor.setServerIp(s);
+        reactor.setServerIp(s);
     }
 
     public boolean isRunning() {
@@ -396,16 +396,16 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void safeShutdown() {
-    	reactor.safeShutdown();
+        reactor.safeShutdown();
     }
 
     @Override
-	public void run() {
-    	reactor.run();
+    public void run() {
+        reactor.run();
     }
 
     public void a(ServerPing serverping) {
-    	reactor.applyServerIconToPing(serverping);
+        reactor.applyServerIconToPing(serverping);
     }
 
     public File A() {
@@ -417,11 +417,11 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     public void B() {}
 
     protected void C() throws ExceptionWorldConflict { // CraftBukkit - added throws
-    	reactor.tick();
+        reactor.tick();
     }
 
     public void D() {
-    	reactor.updateLogicsAndPhysics();
+        reactor.updateLogicsAndPhysics();
     }
 
     public boolean getAllowNether() {
@@ -429,15 +429,15 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void a(ITickable itickable) {
-    	reactor.registerTickable(itickable);
+        reactor.registerTickable(itickable);
     }
 
     public static void main(final OptionSet options) { // CraftBukkit - replaces main(String[] astring)
-    	TorchServer.main(options);
+        TorchServer.main(options);
     }
 
     public void F() {
-    	reactor.startServerThread();
+        reactor.startServerThread();
     }
 
     public File d(String s) {
@@ -445,15 +445,15 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void info(String s) {
-    	reactor.info(s);
+        reactor.info(s);
     }
 
     public void warning(String s) {
-    	reactor.warning(s);
+        reactor.warning(s);
     }
 
     public WorldServer getWorldServer(int i) {
-    	return reactor.getWorldServer(i);
+        return reactor.getWorldServer(i);
     }
 
     public String getVersion() {
@@ -481,11 +481,11 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void g(String s) {
-    	reactor.error(s);
+        reactor.error(s);
     }
 
     public void h(String s) {
-    	reactor.debug(s);
+        reactor.debug(s);
     }
 
     public String getServerModName() {
@@ -493,11 +493,11 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public CrashReport b(CrashReport crashreport) {
-    	return reactor.addServerInfoToCrashReport(crashreport);
+        return reactor.addServerInfoToCrashReport(crashreport);
     }
 
     public List<String> tabCompleteCommand(ICommandListener icommandlistener, String s, @Nullable BlockPosition blockposition, boolean flag) {
-    	return reactor.tabCompleteCommand(icommandlistener, s, blockposition, flag);
+        return reactor.tabCompleteCommand(icommandlistener, s, blockposition, flag);
     }
 
     public boolean M() {
@@ -505,17 +505,17 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     @Override
-	public String getName() {
+    public String getName() {
         return reactor.getName();
     }
 
     @Override
-	public void sendMessage(IChatBaseComponent ichatbasecomponent) {
-    	reactor.sendMessage(ichatbasecomponent);
+    public void sendMessage(IChatBaseComponent ichatbasecomponent) {
+        reactor.sendMessage(ichatbasecomponent);
     }
 
     @Override
-	public boolean a(int i, String s) {
+    public boolean a(int i, String s) {
         return reactor.canUseCommand(i, s);
     }
 
@@ -532,7 +532,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void setPort(int i) {
-    	reactor.setServerPort(i);
+        reactor.setServerPort(i);
     }
 
     public String Q() {
@@ -540,7 +540,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void i(String s) {
-    	reactor.setServerOwner(s);
+        reactor.setServerOwner(s);
     }
 
     public boolean R() {
@@ -552,11 +552,11 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void setWorld(String s) {
-    	reactor.setPrimaryWorldFolderName(s);
+        reactor.setPrimaryWorldFolderName(s);
     }
 
     public void a(KeyPair keypair) {
-    	reactor.setServerKeyPair(keypair);
+        reactor.setServerKeyPair(keypair);
     }
 
     public void a(EnumDifficulty enumdifficulty) {
@@ -572,11 +572,11 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void b(boolean flag) {
-    	reactor.setDemoMode(flag);
+        reactor.setDemoMode(flag);
     }
 
     public void c(boolean flag) {
-    	reactor.setEnableBonusChest(flag);
+        reactor.setEnableBonusChest(flag);
     }
 
     public Convertable getConvertable() {
@@ -592,19 +592,19 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void setResourcePack(String s, String s1) {
-    	reactor.setResourcePack(s, s1);
+        reactor.setResourcePack(s, s1);
     }
 
     // Snooper
     @Override
-	public void a(MojangStatisticsGenerator mojangstatisticsgenerator) {}
+    public void a(MojangStatisticsGenerator mojangstatisticsgenerator) {}
 
     // Snooper
     @Override
-	public void b(MojangStatisticsGenerator mojangstatisticsgenerator) {}
+    public void b(MojangStatisticsGenerator mojangstatisticsgenerator) {}
 
     @Override
-	public boolean getSnooperEnabled() {
+    public boolean getSnooperEnabled() {
         return reactor.getSnooperEnabled();
     }
 
@@ -615,7 +615,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void setOnlineMode(boolean flag) {
-    	reactor.setOnlineMode(flag);
+        reactor.setOnlineMode(flag);
     }
 
     public boolean ac() {
@@ -623,7 +623,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void e(boolean flag) {
-    	reactor.setPreventProxyConnections(flag);
+        reactor.setPreventProxyConnections(flag);
     }
 
     public boolean getSpawnAnimals() {
@@ -631,7 +631,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void setSpawnAnimals(boolean flag) {
-    	reactor.setSpawnAnimals(flag);
+        reactor.setSpawnAnimals(flag);
     }
 
     public boolean getSpawnNPCs() {
@@ -641,7 +641,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     public abstract boolean af();
 
     public void setSpawnNPCs(boolean flag) {
-    	reactor.setSpawnNPCs(flag);
+        reactor.setSpawnNPCs(flag);
     }
 
     public boolean getPVP() {
@@ -649,7 +649,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void setPVP(boolean flag) {
-    	reactor.setPvpMode(flag);
+        reactor.setPvpMode(flag);
     }
 
     public boolean getAllowFlight() {
@@ -657,7 +657,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void setAllowFlight(boolean flag) {
-    	reactor.setAllowFlight(flag);
+        reactor.setAllowFlight(flag);
     }
 
     public abstract boolean getEnableCommandBlock();
@@ -667,7 +667,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void setMotd(String s) {
-    	reactor.setMotd(s);
+        reactor.setMotd(s);
     }
 
     public int getMaxBuildHeight() {
@@ -675,7 +675,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void c(int i) {
-    	reactor.setBuildLimit(i);
+        reactor.setBuildLimit(i);
     }
 
     public boolean isStopped() {
@@ -687,21 +687,21 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void a(PlayerList playerlist) {
-    	reactor.setPlayerList(playerlist.getReactor());
+        reactor.setPlayerList(playerlist.getReactor());
     }
 
     public void setGamemode(EnumGamemode enumgamemode) {
-    	reactor.setGamemodeForWorlds(enumgamemode);
+        reactor.setGamemodeForWorlds(enumgamemode);
     }
 
     public ServerConnection getServerConnection() {
         return reactor.getServerConnection();
     }
-    
+
     public void setServerConnection(ServerConnection connection) {
         this.p = connection;
     }
-    
+
     public ServerConnection an() {
         return reactor.handleServerConnection();
     }
@@ -717,26 +717,26 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void ar() {
-    	reactor.startProfiling();
+        reactor.startProfiling();
     }
 
     @Override
-	public BlockPosition getChunkCoordinates() {
+    public BlockPosition getChunkCoordinates() {
         return reactor.getChunkCoordinates();
     }
 
     @Override
-	public Vec3D d() {
+    public Vec3D d() {
         return reactor.getEntityVec3D();
     }
 
     @Override
-	public World getWorld() {
+    public World getWorld() {
         return reactor.getWorld();
     }
 
     @Override
-	public Entity f() {
+    public Entity f() {
         return reactor.getEntity();
     }
 
@@ -749,7 +749,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void setForceGamemode(boolean flag) {
-    	reactor.setForceGamemode(flag);
+        reactor.setForceGamemode(flag);
     }
 
     public boolean getForceGamemode() {
@@ -769,11 +769,11 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void setIdleTimeout(int i) {
-    	reactor.setIdleTimeout(i);
+        reactor.setIdleTimeout(i);
     }
 
     @Override
-	public IChatBaseComponent getScoreboardDisplayName() {
+    public IChatBaseComponent getScoreboardDisplayName() {
         return reactor.getScoreboardDisplayName();
     }
 
@@ -798,24 +798,24 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public void aD() {
-    	reactor.refreshStatusNextTick();
+        reactor.refreshStatusNextTick();
     }
 
     @Nullable
     public Entity a(UUID uuid) {
-    	return reactor.getEntityFromUUID(uuid);
+        return reactor.getEntityFromUUID(uuid);
     }
 
     @Override
-	public boolean getSendCommandFeedback() {
+    public boolean getSendCommandFeedback() {
         return reactor.getSendCommandFeedback();
     }
 
     @Override
-	public void a(CommandObjectiveExecutor.EnumCommandResult commandobjectiveexecutor_enumcommandresult, int i) {}
+    public void a(CommandObjectiveExecutor.EnumCommandResult commandobjectiveexecutor_enumcommandresult, int i) {}
 
     @Override
-	public MinecraftServer B_() {
+    public MinecraftServer B_() {
         return reactor.getMinecraftServer();
     }
 
@@ -824,16 +824,16 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public <V> ListenableFuture<V> a(Callable<V> callable) {
-    	return reactor.postToMainThreadMaybeAsync(callable, true);
+        return reactor.postToMainThreadMaybeAsync(callable, true);
     }
 
     @Override
-	public ListenableFuture<Object> postToMainThread(Runnable runnable) {
+    public ListenableFuture<Object> postToMainThread(Runnable runnable) {
         return reactor.postToMainThread(runnable);
     }
 
     @Override
-	public boolean isMainThread() {
+    public boolean isMainThread() {
         return reactor.isMainThread();
     }
 
@@ -860,9 +860,9 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     public static MinecraftServer getServer() {
         return SERVER;
     }
-    
+
     @Override
-	public TorchServer getReactor() {
+    public TorchServer getReactor() {
         return reactor;
     }
 }

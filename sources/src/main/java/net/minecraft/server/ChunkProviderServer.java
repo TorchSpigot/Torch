@@ -14,49 +14,49 @@ import org.torch.server.TorchChunkProvider;
 import static org.torch.server.TorchServer.logger;
 
 public class ChunkProviderServer implements IChunkProvider, org.torch.api.TorchServant {
-	@Getter public final TorchChunkProvider reactor;
-	
+    @Getter public final TorchChunkProvider reactor;
+
     private static final Logger a = logger;
     private static final double UNLOAD_QUEUE_RESIZE_FACTOR = TorchChunkProvider.UNLOAD_QUEUE_RESIZE_FACTOR;
-    
+
     public final WorldServer world;
     public final ChunkGenerator chunkGenerator;
     public final IChunkLoader chunkLoader;
-    
+
     // TODO: port
     // private long lastQueuedSaves = 0L;
     // private long lastProcessedSaves = 0L;
     // private long lastSaveStatPrinted = System.currentTimeMillis();
     // protected Chunk lastChunkByPos = null;
-    
+
     public final it.unimi.dsi.fastutil.longs.LongSet unloadQueue;
     public Long2ObjectOpenHashMap<Chunk> chunks;
 
     public ChunkProviderServer(WorldServer worldserver, IChunkLoader ichunkloader, ChunkGenerator chunkgenerator) {
-    	reactor = new TorchChunkProvider(worldserver, ichunkloader, chunkgenerator, this);
-    	
+        reactor = new TorchChunkProvider(worldserver, ichunkloader, chunkgenerator, this);
+
         this.world = worldserver;
         this.chunkLoader = ichunkloader;
         this.chunkGenerator = chunkgenerator;
-        
+
         this.unloadQueue = reactor.getUnloadQueue();
         this.chunks = reactor.getChunks();
     }
-    
+
     public Collection<Chunk> a() {
         return reactor.getLoadedChunks();
     }
 
     public void unload(Chunk chunk) {
-    	reactor.postChunkToUnload(chunk);
+        reactor.postChunkToUnload(chunk);
     }
 
     public void b() {
-    	reactor.unloadAllChunks();
+        reactor.unloadAllChunks();
     }
 
     @Override
-	@Nullable
+    @Nullable
     public Chunk getLoadedChunkAt(int i, int j) {
         return reactor.getLoadedChunkAt(i, j);
     }
@@ -78,7 +78,7 @@ public class ChunkProviderServer implements IChunkProvider, org.torch.api.TorchS
     // CraftBukkit end
 
     @Override
-	public Chunk getChunkAt(int i, int j) {
+    public Chunk getChunkAt(int i, int j) {
         return reactor.getChunkAt(i, j);
     }
 
@@ -104,7 +104,7 @@ public class ChunkProviderServer implements IChunkProvider, org.torch.api.TorchS
     }
 
     public void saveChunk(Chunk chunk) {
-    	reactor.saveChunkData(chunk);
+        reactor.saveChunkData(chunk);
     }
 
     public boolean a(boolean flag) {
@@ -116,7 +116,7 @@ public class ChunkProviderServer implements IChunkProvider, org.torch.api.TorchS
     }
 
     @Override
-	public boolean unloadChunks() {
+    public boolean unloadChunks() {
         return reactor.unloadChunks();
     }
 
@@ -131,7 +131,7 @@ public class ChunkProviderServer implements IChunkProvider, org.torch.api.TorchS
     }
 
     @Override
-	public String getName() {
+    public String getName() {
         return reactor.getName();
     }
 
@@ -153,7 +153,7 @@ public class ChunkProviderServer implements IChunkProvider, org.torch.api.TorchS
     }
 
     @Override
-	public boolean e(int i, int j) {
+    public boolean e(int i, int j) {
         return reactor.isChunkGeneratedAt(i, j);
     }
 }

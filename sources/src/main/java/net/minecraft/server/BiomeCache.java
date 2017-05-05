@@ -5,9 +5,9 @@ import org.torch.server.TorchBiomeCache;
 import lombok.Getter;
 
 public class BiomeCache implements org.torch.api.TorchServant {
-	@Getter private final TorchBiomeCache reactor;
-	
-	/** chunkManager */
+    @Getter private final TorchBiomeCache reactor;
+
+    /** chunkManager */
     private final WorldChunkManager a;
     /** lastCleanupTime */
     // private long b;
@@ -17,9 +17,9 @@ public class BiomeCache implements org.torch.api.TorchServant {
     // private final List<BiomeCache.a> d;
 
     public BiomeCache(WorldChunkManager worldchunkmanager) {
-    	reactor = new TorchBiomeCache(worldchunkmanager, this);
-        
-    	this.a = reactor.getChunkManager();
+        reactor = new TorchBiomeCache(worldchunkmanager, this);
+
+        this.a = reactor.getChunkManager();
     }
 
     /* public BiomeCache.a a(int i, int j) {
@@ -31,7 +31,7 @@ public class BiomeCache implements org.torch.api.TorchServant {
     }
 
     @Deprecated public void a() {} // cleanupCache
-    
+
     public BiomeBase[] b(int i, int j) {
         return reactor.requestCache(i, j);
     }
@@ -41,20 +41,20 @@ public class BiomeCache implements org.torch.api.TorchServant {
         public int b; // xPos
         public int c; // zPos
         public long d; // lastAccessTime
-        
+
         public a(int i, int j) {
         	this.b = i;
             this.c = j;
             this.a = new BiomeBase[256];
             BiomeCache.this.a.a(this.a, i << 4, j << 4, 16, 16, false);
         }
-        
+
         //public a(int x, int z, BiomeBase[] cache) {
         //	a = cache;
         //	b = x;
         //	c = z;
         //}
-        
+
         public BiomeBase a(int i, int j) {
             return this.a[i & 15 | (j & 15) << 4];
         }

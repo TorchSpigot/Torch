@@ -20,21 +20,21 @@ import lombok.Getter;
 import lombok.Setter;
 
 public abstract class PlayerList implements org.torch.api.TorchServant {
-	/**
-	 * Torch PlayerList reactor
-	 */
-	@Getter private TorchPlayerList reactor;
-	
-	/**
-	 * STATIC FIELDS
-	 */
+    /**
+     * Torch PlayerList reactor
+     */
+    @Getter private TorchPlayerList reactor;
+
+    /**
+     * STATIC FIELDS
+     */
     private static final Logger f = TorchServer.logger;
     public static final File a = TorchPlayerList.PLAYER_BANS_FILE;
     public static final File b = TorchPlayerList.IP_BANS_FILE;
     public static final File c = TorchPlayerList.OPS_FILE;
     public static final File d = TorchPlayerList.WHITELIST_FILE;
     private static final SimpleDateFormat g = TorchPlayerList.DATE_FORMAT;
-    
+
     /**
      * ANAPHASE FIELDS
      */
@@ -43,7 +43,7 @@ public abstract class PlayerList implements org.torch.api.TorchServant {
      */
     @Nullable @Getter @Setter
     @Anaphase String collideRuleTeamName;
-    
+
     /**
      * NORMAL FIELDS
      */
@@ -54,10 +54,10 @@ public abstract class PlayerList implements org.torch.api.TorchServant {
     public IPlayerFileData playerFileData;
     private boolean hasWhitelist;
     protected int maxPlayers;
-    
+
     private CraftServer cserver;
     private final Map<String,EntityPlayer> playersByName;
-    
+
     /**
      * OBFUSCATED FIELDS
      */
@@ -79,33 +79,33 @@ public abstract class PlayerList implements org.torch.api.TorchServant {
     private int u; public void setPlayerPingIndex(int index) { u = index; } // Setter for port
 
     public PlayerList(MinecraftServer minecraftserver) {
-    	// Setup instance for org.torch.api.TorchServant
-    	reactor = new TorchPlayerList(minecraftserver, this);
-    	server = minecraftserver;
-    	
+        // Setup instance for org.torch.api.TorchServant
+        reactor = new TorchPlayerList(minecraftserver, this);
+        server = minecraftserver;
+
         /**
          * NORMAL FIELDS
          */
-    	players = reactor.getPlayers();
-    	operators = reactor.getOperators();
-    	whitelist = reactor.getWhitelist();
-    	// playerFileData = reactor.getPlayerFileData(); // Moved to TorchPlayerList
-    	hasWhitelist = reactor.isWhitelistMode();
-    	maxPlayers = reactor.getMaxPlayers();
-    	cserver = reactor.getCraftServer();
-    	playersByName = reactor.getPlayersByName();
-    	
+        players = reactor.getPlayers();
+        operators = reactor.getOperators();
+        whitelist = reactor.getWhitelist();
+        // playerFileData = reactor.getPlayerFileData(); // Moved to TorchPlayerList
+        hasWhitelist = reactor.isWhitelistMode();
+        maxPlayers = reactor.getMaxPlayers();
+        cserver = reactor.getCraftServer();
+        playersByName = reactor.getPlayersByName();
+
         /**
          * OBFUSCATED FIELDS
          */
-    	j = reactor.getUuidToPlayerMap();
-    	k = reactor.getBannedPlayers();
-    	l = reactor.getBannedIPs();
-    	o = reactor.getPlayerStatFiles();
-    	r = reactor.getViewDistance();
-    	s = reactor.getGameMode();
-    	t = reactor.isAllowedCommands();
-    	u = reactor.getPlayerPingIndex();
+        j = reactor.getUuidToPlayerMap();
+        k = reactor.getBannedPlayers();
+        l = reactor.getBannedIPs();
+        o = reactor.getPlayerStatFiles();
+        r = reactor.getViewDistance();
+        s = reactor.getGameMode();
+        t = reactor.isAllowedCommands();
+        u = reactor.getPlayerPingIndex();
     }
 
     public void a(NetworkManager networkmanager, EntityPlayer entityplayer) {
@@ -190,7 +190,7 @@ public abstract class PlayerList implements org.torch.api.TorchServant {
         }
 
         return new EntityPlayer(this.server, this.server.getWorldServer(0), gameprofile, (PlayerInteractManager) object);
-        */
+         */
         return reactor.processLogin(gameprofile, player);
         // CraftBukkit end
     }
@@ -210,7 +210,7 @@ public abstract class PlayerList implements org.torch.api.TorchServant {
     }
 
     public void f(EntityPlayer entityplayer) {
-    	reactor.updatePermissionLevel(entityplayer);
+        reactor.updatePermissionLevel(entityplayer);
     }
 
     public void a(EntityPlayer entityplayer, int i) {
@@ -241,7 +241,7 @@ public abstract class PlayerList implements org.torch.api.TorchServant {
 
     // CraftBukkit start - add a world/entity limited version
     public void sendAll(Packet packet, EntityHuman entityhuman) {
-    	reactor.sendAll(packet, entityhuman);
+        reactor.sendAll(packet, entityhuman);
     }
 
     public void sendAll(Packet packet, World world) {
@@ -270,7 +270,7 @@ public abstract class PlayerList implements org.torch.api.TorchServant {
     }
 
     public GameProfile[] g() {
-    	return reactor.getOnlinePlayerProfiles();
+        return reactor.getOnlinePlayerProfiles();
     }
 
     public GameProfileBanList getProfileBans() {
@@ -282,7 +282,7 @@ public abstract class PlayerList implements org.torch.api.TorchServant {
     }
 
     public void addOp(GameProfile gameprofile) {
-    	reactor.addOp(gameprofile);
+        reactor.addOp(gameprofile);
     }
 
     public void removeOp(GameProfile gameprofile) {
@@ -345,7 +345,7 @@ public abstract class PlayerList implements org.torch.api.TorchServant {
     }
 
     public void reloadWhitelist() {
-    	reactor.readWhiteList();
+        reactor.readWhiteList();
     }
 
     public void b(EntityPlayer entityplayer, WorldServer worldserver) {
@@ -373,7 +373,7 @@ public abstract class PlayerList implements org.torch.api.TorchServant {
     }
 
     public void setHasWhitelist(boolean flag) {
-    	reactor.setWhitelistMode(flag);
+        reactor.setWhitelistMode(flag);
     }
 
     public List<EntityPlayer> b(String s) {
@@ -407,11 +407,11 @@ public abstract class PlayerList implements org.torch.api.TorchServant {
     // CraftBukkit end
 
     public void sendMessage(IChatBaseComponent ichatbasecomponent, boolean flag) {
-    	reactor.sendMessage(ichatbasecomponent, flag);
+        reactor.sendMessage(ichatbasecomponent, flag);
     }
 
     public void sendMessage(IChatBaseComponent ichatbasecomponent) {
-    	reactor.sendMessage(ichatbasecomponent);
+        reactor.sendMessage(ichatbasecomponent);
     }
 
     public ServerStatisticManager a(EntityHuman entityhuman) {

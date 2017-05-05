@@ -42,28 +42,28 @@ public class JsonList<K, V extends JsonListEntry<K>> {
     private boolean e = true;
     private static final ParameterizedType f = new ParameterizedType() {
         @Override
-		public Type[] getActualTypeArguments() {
+        public Type[] getActualTypeArguments() {
             return new Type[] { JsonListEntry.class};
         }
 
         @Override
-		public Type getRawType() {
+        public Type getRawType() {
             return List.class;
         }
 
         @Override
-		public Type getOwnerType() {
+        public Type getOwnerType() {
             return null;
         }
     };
-    
+
     // Torch start
     /** Cached string keys, K -> String */
     LoadingCache<K, String> stringKeys = Caffeine.newBuilder().maximumSize(512).build(K::toString); // TODO: configurable size
-    
+
     private final static long EXPIRE_CHECK_INTERVAL = TimeUnit.MILLISECONDS.convert(9, TimeUnit.SECONDS); // TODO: configurable
     /** The last time to check expire, in milliseconds. */
-	private long lastExpireCheckTime = System.currentTimeMillis();
+    private long lastExpireCheckTime = System.currentTimeMillis();
     // Torch end
 
     public JsonList(File file) {
@@ -93,21 +93,21 @@ public class JsonList<K, V extends JsonListEntry<K>> {
     }
 
     public V get(K k0) {
-    	// Torch start - reduce expire check
-    	final long now = System.currentTimeMillis();
-    	
-    	if ((now - lastExpireCheckTime) > EXPIRE_CHECK_INTERVAL) {
-    		lastExpireCheckTime = now;
-    		this.removeExpired();
-    	}
-    	// Torch end
-        
+        // Torch start - reduce expire check
+        final long now = System.currentTimeMillis();
+
+        if ((now - lastExpireCheckTime) > EXPIRE_CHECK_INTERVAL) {
+            lastExpireCheckTime = now;
+            this.removeExpired();
+        }
+        // Torch end
+
         return this.d.get(a(k0)); // CraftBukkit - fix decompile error
     }
 
     public void remove(K k0) {
         this.d.remove(a(k0));
-        
+
         this.save();
     }
 
@@ -126,7 +126,7 @@ public class JsonList<K, V extends JsonListEntry<K>> {
     }
 
     protected String a(K k) {
-    	return stringKeys.get(k); // Torch - cache keys
+        return stringKeys.get(k); // Torch - cache keys
     }
 
     public boolean contains(K k0) { return this.d(k0); } // OBFHELPER
@@ -151,18 +151,18 @@ public class JsonList<K, V extends JsonListEntry<K>> {
 
     @Async public void save() {
         Collection<V> values = this.d.values();
-        
+
         MCUtil.scheduleAsyncTask(() -> {
-        	String jsonString = this.b.toJson(values);
-        	BufferedWriter writer = null;
-            
+            String jsonString = this.b.toJson(values);
+            BufferedWriter writer = null;
+
             try {
                 writer = Files.newWriter(this.c, Charsets.UTF_8);
                 writer.write(jsonString);
             } catch (IOException io) {
-            	logger.warn("Failed to save {}", this.c.getName());
-            	io.printStackTrace();
-			} finally {
+                logger.warn("Failed to save {}", this.c.getName());
+                io.printStackTrace();
+            } finally {
                 IOUtils.closeQuietly(writer);
             }
         });
@@ -175,7 +175,7 @@ public class JsonList<K, V extends JsonListEntry<K>> {
         try {
             bufferedreader = Files.newReader(this.c, Charsets.UTF_8);
             collection = (Collection) this.b.fromJson(bufferedreader, JsonList.f);
-        // Spigot Start
+            // Spigot Start
         } catch ( java.io.FileNotFoundException ex )
         {
             org.bukkit.Bukkit.getLogger().log( java.util.logging.Level.INFO, "Unable to find file {0}, creating it.", this.c );
@@ -185,7 +185,7 @@ public class JsonList<K, V extends JsonListEntry<K>> {
             File backup = new File( this.c + ".backup" );
             this.c.renameTo( backup );
             this.c.delete();
-        // Spigot End
+            // Spigot End
         } finally {
             IOUtils.closeQuietly(bufferedreader);
         }
@@ -227,12 +227,12 @@ public class JsonList<K, V extends JsonListEntry<K>> {
         }
 
         @Override
-		public JsonElement serialize(JsonListEntry<K> object, Type type, JsonSerializationContext jsonserializationcontext) { // CraftBukkit - fix decompile error
+        public JsonElement serialize(JsonListEntry<K> object, Type type, JsonSerializationContext jsonserializationcontext) { // CraftBukkit - fix decompile error
             return this.a(object, type, jsonserializationcontext);
         }
 
         @Override
-		public JsonListEntry<K> deserialize(JsonElement jsonelement, Type type, JsonDeserializationContext jsondeserializationcontext) throws JsonParseException { // CraftBukkit - fix decompile error
+        public JsonListEntry<K> deserialize(JsonElement jsonelement, Type type, JsonDeserializationContext jsondeserializationcontext) throws JsonParseException { // CraftBukkit - fix decompile error
             return this.a(jsonelement, type, jsondeserializationcontext);
         }
 

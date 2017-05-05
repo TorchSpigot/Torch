@@ -41,8 +41,6 @@ import org.spigotmc.SlackActivityAccountant;
 import org.spigotmc.SpigotConfig;
 import org.torch.api.Anaphase;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
@@ -75,37 +73,37 @@ import jline.console.ConsoleReader;
  */
 @Getter
 public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
-	
-	/**
-	 * The instance of the server
-	 */
-	private static TorchServer server;
-	
-	/**
+
+    /**
+     * The instance of the server
+     */
+    private static TorchServer server;
+
+    /**
      * The common logger
      */
     public static final Logger logger = LogManager.getLogger("Minecraft");
-    
+
     /**
      * The game version supported by the server
      */
     public static final String GAME_VERSION = "1.11.2";
-    
+
     /**
      * The protocol version supported by the server
      */
     public static final int PROTOCOL_VERSION = 316;
-    
+
     /**
      * The usercache file
      */
     public static final File USER_CACHE_FILE = new File("usercache.json");
-    
+
     /**
      * The pattern for decode resource pack SHA1
      */
     public static final Pattern RESOURCE_PACK_SHA1_PATTERN = Pattern.compile("^[a-fA-F0-9]{40}$");
-    
+
     /**
      * Anvil converter for anvil file
      */
@@ -142,9 +140,9 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      * If the server can spawn structures
      */
     private boolean generateStructures;
-    
+
     private EnumGamemode gameMode;
-    
+
     private boolean guiIsEnabled;
     /**
      * The anvil file
@@ -246,11 +244,11 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      * The maximum player idle minutes
      */
     private int maxPlayerIdleMinutes;
-    
+
     public final long[] tickTimeArray = new long[100];
-    
+
     public long[][] timeOfLastDimensionTick;
-    
+
     @Setter private KeyPair serverKeyPair;
     /**
      * Username of the server owner (for LAN servers)
@@ -264,7 +262,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      * If the server is demo mode
      */
     @Setter private boolean demoMode;
-    
+
     @Setter private boolean enableBonusChest;
     /**
      * The url of custom resource pack
@@ -282,9 +280,9 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      * Sets when warned for "Can't keep up", which triggers again after 15 seconds
      */
     private long timeOfLastWarning;
-    
+
     private String userMessage;
-    
+
     @Deprecated private boolean startProfiling;
     /**
      * If the given game mode will be forced apply
@@ -306,9 +304,9 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      * The user cache
      */
     private final UserCache userCache;
-    
+
     private long nanoTimeSinceStatusRefresh;
-    
+
     protected final Queue<FutureTask<?>> futureTaskQueue = new com.destroystokyo.paper.utils.CachedSizeConcurrentLinkedQueue<>();
     /**
      * The main server thread
@@ -318,7 +316,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      * Simply return current system time millis
      */
     private long currentTime = System.currentTimeMillis();
-    
+
     ///////// CB / S / P Stuffs
     /**
      * The worlds
@@ -348,7 +346,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      * The jline reader
      */
     @Anaphase @Setter public ConsoleReader reader;
-    
+
     public java.util.Queue<Runnable> processQueue = new com.destroystokyo.paper.utils.CachedSizeConcurrentLinkedQueue<>();
     /**
      * A singal of Paper, which is used to judge if the server should be auto saved
@@ -366,7 +364,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      * A Bukkit signal, which is used to stopping server
      */
     private final Object stopLock = new Object();
-    
+
     ///////// TPS Stuffs
     /**
      * The sample TPS
@@ -388,11 +386,11 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      * The sample tps interval
      */
     public static final int SAMPLE_TICK_INTERVAL = 20;
-    
+
     public TorchServer(OptionSet optionSet, Proxy proxy, DataConverterManager dataFixer, YggdrasilAuthenticationService yggdrasil, MinecraftSessionService session, GameProfileRepository profileRepository, UserCache profileCache) {
         server = this;
         ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
-        
+
         serverProxy = proxy;
         authService = yggdrasil;
         sessionService = session;
@@ -401,23 +399,23 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         commandManager = createCommandDispatcher();
         dataConverterManager = dataFixer;
         options = optionSet;
-        
+
         // Initial the server connection
         handleServerConnection();
         getMinecraftServer().setServerConnection(this.serverConnection);
-        
+
         Regulator.getInstance();
-        
+
         // Try to see if we're actually running in a terminal, disable jline if not
         if (System.console() == null && System.getProperty("jline.terminal") == null) {
             System.setProperty("jline.terminal", "jline.UnsupportedTerminal");
             Main.useJline = false;
         }
-        
+
         try {
-        	getMinecraftServer().reader = new ConsoleReader(System.in, System.out);
+            getMinecraftServer().reader = new ConsoleReader(System.in, System.out);
             // Avoid parsing exceptions for uncommonly used event designators
-        	getMinecraftServer().reader.setExpandEvents(false);
+            getMinecraftServer().reader.setExpandEvents(false);
         } catch (Throwable t) {
             try {
                 // Try again with jline disabled for Windows users without C++ 2008 Redistributable
@@ -430,28 +428,28 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
                 logger.warn((String) null, ex);
             }
         }
-        
+
         // Initial the console reader
         setReader(getMinecraftServer().reader);
-        
+
         Runtime.getRuntime().addShutdownHook(new org.bukkit.craftbukkit.util.ServerShutdownThread(getMinecraftServer()));
         serverThread = new Thread(this, "Server thread");
         // Bump the main thread priority
         Thread.currentThread().setPriority(9);
     }
-    
+
     /**
      * Constructor for the dedicated server
      */
     public TorchServer(OptionSet optionSet, DataConverterManager dataFixer, YggdrasilAuthenticationService yggdrasil, MinecraftSessionService session, GameProfileRepository profileRepository, UserCache userCache) {
         this(optionSet, Proxy.NO_PROXY, dataFixer, yggdrasil, session, profileRepository, userCache);
-        
+
         new Thread("Server Infinisleeper") {
-        	{ setDaemon(true); start(); }
-        	
-        	@Override
+            { setDaemon(true); start(); }
+
+            @Override
             public void run() {
-        		try {
+                try {
                     while (true) Thread.sleep(2147483647L);
                 } catch (InterruptedException interruptedexception) {
                     ;
@@ -459,11 +457,11 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             }
         };
     }
-    
+
     public static void main(final OptionSet options) {
-    	// Register bootstrap
-    	DispenserRegistry.c();
-    	
+        // Register bootstrap
+        DispenserRegistry.c();
+
         try {
             String rootDirectory = ".";
             YggdrasilAuthenticationService authService = new YggdrasilAuthenticationService(Proxy.NO_PROXY, UUID.randomUUID().toString());
@@ -471,45 +469,45 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             GameProfileRepository profileRepo = authService.createProfileRepository();
             UserCache profileCache = new UserCache(profileRepo, new File(rootDirectory, USER_CACHE_FILE.getName()));
             final DedicatedServer dedicatedserver = new DedicatedServer(options, DataConverterRegistry.a(), authService, sessionService, profileRepo, profileCache);
-            
+
             if (options.has("port")) {
                 int port = (Integer) options.valueOf("port");
                 if (port > 0 && port < 65536) {
                     dedicatedserver.setPort(port);
                 }
             }
-            
+
             if (options.has("universe")) {
                 dedicatedserver.universe = (File) options.valueOf("universe");
             }
-            
+
             if (options.has("world")) {
                 dedicatedserver.setWorld((String) options.valueOf("world"));
             }
-            
+
             dedicatedserver.primaryThread.start();
         } catch (Throwable t) {
             logger.fatal("Failed to start the minecraft server", t);
             t.printStackTrace();
         }
     }
-    
+
     @Override
     public void run() {
         try {
             if (this.init()) {
                 currentTime = System.currentTimeMillis();
-                
+
                 serverPing.setMOTD(new ChatComponentText(motd));
                 serverPing.setServerInfo(new ServerPing.ServerData(GAME_VERSION, PROTOCOL_VERSION));
                 this.applyServerIconToPing(serverPing);
-                
+
                 Arrays.fill(getMinecraftServer().recentTps, 20);
                 long start = System.nanoTime(), lastTick = start - SAMPLE_TICK_TIME, catchupTime = 0, curTime, wait, tickSection = start;
                 while (this.isRunning) {
                     curTime = System.nanoTime();
                     wait = SAMPLE_TICK_TIME - (curTime - lastTick);
-                    
+
                     if (wait > 0) {
                         if (catchupTime < 2E6) {
                             wait += Math.abs(catchupTime);
@@ -521,7 +519,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
                             catchupTime = 0;
                         }
                     }
-                    
+
                     if (wait > 0) {
                         Thread.sleep(wait / 1000000);
                         curTime = System.nanoTime();
@@ -553,14 +551,14 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         } catch (Throwable throwable) {
             logger.error("Encountered an unexpected exception", throwable);
             if ( throwable.getCause() != null ) MinecraftServer.LOGGER.error( "\tCause of unexpected exception was", throwable.getCause() );
-            
+
             CrashReport crashreport;
             if (throwable instanceof ReportedException) {
                 crashreport = this.addServerInfoToCrashReport(((ReportedException) throwable).a());
             } else {
                 crashreport = this.addServerInfoToCrashReport(new CrashReport("Exception in server tick loop", throwable));
             }
-            
+
             File file = new File(new File(this.getDataDirectory(), "crash-reports"), "crash-" + (new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")).format(new Date()) + "-server.txt");
             // Check if the report has been saved successfully
             if (crashreport.a(file)) {
@@ -568,12 +566,12 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             } else {
                 MinecraftServer.LOGGER.error("We were unable to save this crash report to disk.");
             }
-            
+
             this.finalTick(crashreport);
         } finally {
             try {
                 org.spigotmc.WatchdogThread.doStop();
-                
+
                 this.isStopped = true;
                 this.stopServer();
             } catch (Throwable throwable1) {
@@ -583,18 +581,18 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
                     reader.getTerminal().restore();
                 } catch (Exception ignored) {
                 }
-                
+
                 this.isStopped = true;
                 this.systemExitNow();
             }
 
         }
     }
-    
+
     public static boolean authUUID() { // TODO: configurable
-    	return Bukkit.getOnlineMode() || SpigotConfig.bungee;
+        return Bukkit.getOnlineMode() || SpigotConfig.bungee;
     }
-    
+
     /**
      * Load resource pack hash from the property
      */
@@ -603,7 +601,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             if (this.propertyManager.a("resource-pack-sha1")) {
                 logger.warn("resource-pack-hash is deprecated and found along side resource-pack-sha1. resource-pack-hash will be ignored.");
             } else {
-            	logger.warn("resource-pack-hash is deprecated. Please use resource-pack-sha1 instead.");
+                logger.warn("resource-pack-hash is deprecated. Please use resource-pack-sha1 instead.");
                 this.propertyManager.getString("resource-pack-sha1", this.propertyManager.getString("resource-pack-hash", ""));
                 this.propertyManager.b("resource-pack-hash");
             }
@@ -612,35 +610,35 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         String sha1 = this.propertyManager.getString("resource-pack-sha1", "");
 
         if (!sha1.isEmpty() && !RESOURCE_PACK_SHA1_PATTERN.matcher(sha1).matches()) {
-        	logger.warn("Invalid sha1 for resource-pack-sha1");
+            logger.warn("Invalid sha1 for resource-pack-sha1");
         }
 
         if (!this.propertyManager.getString("resource-pack", "").isEmpty() && sha1.isEmpty()) {
-        	logger.warn("You specified a resource pack without providing a sha1 hash. Pack will be updated on the client only if you change the name of the pack.");
+            logger.warn("You specified a resource pack without providing a sha1 hash. Pack will be updated on the client only if you change the name of the pack.");
         }
 
         return sha1;
     }
-    
+
     /**
      * Called on exit from the main run() loop, does nothing
      */
     @Deprecated
     public void finalTick(CrashReport report) {}
-    
+
     /**
      * Apply server ping icon from icon file
      */
     public void applyServerIconToPing(ServerPing serverping) {
         File file = this.getFile("server-icon.png");
-        
+
         if (!file.exists()) {
             file = this.getAnvilFileConverter().b(this.getPrimaryWorldFolderName(), "icon.png");
         }
-        
+
         if (file.isFile()) {
             ByteBuf bytebuf = Unpooled.buffer();
-            
+
             try {
                 BufferedImage bufferedimage = ImageIO.read(file);
 
@@ -658,44 +656,44 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         }
 
     }
-    
+
     /**
      * Return current tick number (incremented every tick)
      */
     public int getCurrentTick() {
-    	return MinecraftServer.currentTick;
+        return MinecraftServer.currentTick;
     }
-    
+
     /**
      * Directly calls System.exit(0), instantly killing the program.
      */
     @Deprecated
     public void systemExitNow() {
-    	System.exit(0);
+        System.exit(0);
     }
-    
+
     public void convertMapIfNeeded(String world) {
         if (this.getAnvilFileConverter().isConvertable(world)) {
             logger.info("Converting map!");
-            
+
             this.setUserMessage("menu.convertingLevel");
             this.getAnvilFileConverter().convert(world, new IProgressUpdate() {
                 private long startTime = System.currentTimeMillis();
-                
+
                 /**
                  * Shows the 'Saving level' string
                  */
                 @Override
-				public void a(String message) { displaySavingString(message); } // OBFHELPER
+                public void a(String message) { displaySavingString(message); } // OBFHELPER
                 public void displaySavingString(String message) {}
 
                 /**
                  * Updates the progress bar on the loading screen to the specified amount
                  */
                 @Override
-				public void a(int progress) { setLoadingProgress(progress); } // OBFHELPER
+                public void a(int progress) { setLoadingProgress(progress); } // OBFHELPER
                 public void setLoadingProgress(int progress) {
-                	if (System.currentTimeMillis() - this.startTime >= 1000L) {
+                    if (System.currentTimeMillis() - this.startTime >= 1000L) {
                         this.startTime = System.currentTimeMillis();
                         MinecraftServer.LOGGER.info("Converting... {}%", new Object[] { Integer.valueOf(progress)});
                     }
@@ -705,20 +703,20 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
                  * Displays a string on the loading screen supposed to indicate what is being done currently
                  */
                 @Override
-				public void c(String message) { displayLoadingString(message); } // OBFHELPER
+                public void c(String message) { displayLoadingString(message); } // OBFHELPER
                 public void displayLoadingString(String message) {}
             });
         }
     }
-    
+
     /**
      * Load all default worlds: world, world_nether and world_the_end
      */
     @SuppressWarnings("deprecation")
-	public void loadDefaultWorlds(String saveName, String worldName, long seed, WorldType worldtype, String generatorOptions) {
+    public void loadDefaultWorlds(String saveName, String worldName, long seed, WorldType worldtype, String generatorOptions) {
         this.convertMapIfNeeded(worldName);
         this.setUserMessage("menu.loadingLevel");
-        
+
         getMinecraftServer().worldServer = new WorldServer[3];
         int worldCount = 3;
 
@@ -819,11 +817,11 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             worlds.add(world);
             getPlayerList().setPlayerFileData(worlds.toArray(new WorldServer[worlds.size()]));
         }
-        
+
         getPlayerList().setPlayerFileData(getMinecraftServer().worldServer);
         this.setDifficultyForAllWorlds(this.getDifficulty());
         this.initialAllWorldsChunk();
-        
+
         // Handle collideRule team for player collision toggle
         final Scoreboard scoreboard = this.getWorld().getScoreboard();
         final java.util.Collection<String> toRemove = scoreboard.getTeams().stream().filter(team -> team.getName().startsWith("collideRule_")).map(ScoreboardTeam::getName).collect(java.util.stream.Collectors.toList());
@@ -832,15 +830,15 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         }
 
         if (!com.destroystokyo.paper.PaperConfig.enablePlayerCollisions) {
-        	// Note: CollideRuleTeamName Marked as @Anaphase
+            // Note: CollideRuleTeamName Marked as @Anaphase
             playerList.getServant().setCollideRuleTeamName(org.apache.commons.lang3.StringUtils.left("collideRule_" + this.getWorld().random.nextInt(), 16));
             ScoreboardTeam collideTeam = scoreboard.createTeam(playerList.getServant().getCollideRuleTeamName());
-            
+
             // Because we want to mimic them not being on a team at all
             collideTeam.setCanSeeFriendlyInvisibles(false);
         }
     }
-    
+
     /**
      * Main function called by run() every loop
      */
@@ -848,23 +846,23 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         co.aikar.timings.TimingsManager.FULL_SERVER_TICK.startTiming();
         this.slackActivityAccountant.tickStarted();
         long startTime = System.nanoTime();
-        
+
         // Sync ticks for compatability, currentTick increased before this
         getMinecraftServer().setTicks(MinecraftServer.currentTick);
-        
+
         this.updateLogicsPhysicsExecuteCommands();
-        
+
         if (startTime - this.nanoTimeSinceStatusRefresh >= 5000000000L) {
             this.nanoTimeSinceStatusRefresh = startTime;
             this.serverPing.setPlayerSample(new ServerPing.ServerPingPlayerSample(this.getMaxPlayers(), this.getCurrentPlayerCount()));
-            
+
             GameProfile[] samplePlayers = new GameProfile[Math.min(this.getCurrentPlayerCount(), 12)];
             int random = MathHelper.nextInt(this.random, 0, this.getCurrentPlayerCount() - samplePlayers.length);
 
             for (int k = 0; k < samplePlayers.length; ++k) {
-            	samplePlayers[k] = this.playerList.players.get(random + k).getProfile();
+                samplePlayers[k] = this.playerList.players.get(random + k).getProfile();
             }
-            
+
             Collections.shuffle(Arrays.asList(samplePlayers));
             this.serverPing.b().a(samplePlayers); // PAIL: Apply sample players
         }
@@ -886,7 +884,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             if (world.paperConfig.autoSavePeriod > 0) world.getWorld().save(false);
         }
         craftServer.playerCommandState = false;
-        
+
         long tickNanos;
         this.tickTimeArray[MinecraftServer.currentTick % 100] = tickNanos = System.nanoTime() - startTime;
 
@@ -895,7 +893,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         this.slackActivityAccountant.tickEnded(tickNanos);
         co.aikar.timings.TimingsManager.FULL_SERVER_TICK.stopTiming();
     }
-    
+
     /**
      * Main tick stuff, called from updateLogicsPhysicsExecuteCommands()
      */
@@ -903,10 +901,10 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         MinecraftTimings.bukkitSchedulerTimer.startTiming();
         this.craftServer.getScheduler().mainThreadHeartbeat(MinecraftServer.currentTick);
         MinecraftTimings.bukkitSchedulerTimer.stopTiming();
-        
+
         MinecraftTimings.minecraftSchedulerTimer.startTiming();
         while (!futureTaskQueue.isEmpty()) {
-        	SystemUtils.a(futureTaskQueue.remove(), logger);
+            SystemUtils.a(futureTaskQueue.remove(), logger);
         }
         MinecraftTimings.minecraftSchedulerTimer.stopTiming();
 
@@ -916,11 +914,11 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             processQueue.remove().run();
         }
         MinecraftTimings.processQueueTimer.stopTiming();
-        
+
         MinecraftTimings.chunkIOTickTimer.startTiming();
         org.bukkit.craftbukkit.chunkio.ChunkIOExecutor.tick();
         MinecraftTimings.chunkIOTickTimer.stopTiming();
-        
+
         MinecraftTimings.timeUpdateTimer.startTiming();
         // Send time updates to everyone, it will get the right time from the world the player is in.
         if (MinecraftServer.currentTick % 20 == 0) {
@@ -931,22 +929,22 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             }
         }
         MinecraftTimings.timeUpdateTimer.stopTiming();
-        
+
         int index, size; CrashReport crashreport;
         for (index = 0, size = worlds.size(); index < size; index++) {
             WorldServer worldserver = this.worlds.get(index);
-            
+
             try {
                 worldserver.timings.doTick.startTiming();
                 worldserver.doTick();
                 worldserver.timings.doTick.stopTiming();
             } catch (Throwable t) {
                 try {
-                	crashreport = CrashReport.a(t, "Exception ticking world");
+                    crashreport = CrashReport.a(t, "Exception ticking world");
                 } catch (Throwable throwable){
                     throw new RuntimeException("Error generating crash report", throwable);
                 }
-                
+
                 worldserver.a(crashreport);
                 throw new ReportedException(crashreport);
             }
@@ -957,11 +955,11 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
                 worldserver.timings.tickEntities.stopTiming();
             } catch (Throwable t) {
                 try {
-                	crashreport = CrashReport.a(t, "Exception ticking world entities");
+                    crashreport = CrashReport.a(t, "Exception ticking world entities");
                 } catch (Throwable throwable){
                     throw new RuntimeException("Error generating crash report", throwable);
                 }
-                
+
                 worldserver.a(crashreport);
                 throw new ReportedException(crashreport);
             }
@@ -969,22 +967,22 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             worldserver.getTracker().updatePlayers();
             worldserver.explosionDensityCache.clear(); // Paper - Optimize explosions
         }
-        
+
         MinecraftTimings.connectionTimer.startTiming();
         this.serverConnection.c();
         MinecraftTimings.connectionTimer.stopTiming();
-        
+
         MinecraftTimings.playerListTimer.startTiming();
         this.playerList.tick();
         MinecraftTimings.playerListTimer.stopTiming();
-        
+
         MinecraftTimings.tickablesTimer.startTiming();
         for (index = 0, size = tickables.size(); index < this.tickables.size(); index++) {
             tickables.get(index).F_();
         }
         MinecraftTimings.tickablesTimer.stopTiming();
     }
-    
+
     /**
      * Initial chunks for all worlds
      */
@@ -1002,7 +1000,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             BlockPosition spawnPosition = world.getSpawn();
             long startTime = System.currentTimeMillis();
             int times = 0;
-            
+
             short radius = world.paperConfig.keepLoadedRange;
             for (int startPosX = -radius; startPosX <= radius && isRunning(); startPosX += 16) {
                 for (int startPosZ = -radius; startPosZ <= radius && isRunning(); startPosZ += 16) {
@@ -1012,28 +1010,28 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
                         this.setCurrentTask("Preparing spawn area", times * 100 / 625);
                         startTime = eachTime;
                     }
-                    
+
                     times++;
                     world.getChunkProviderServer().getChunkAt(spawnPosition.getX() + startPosX >> 4, spawnPosition.getZ() + startPosZ >> 4);
                 }
             }
         }
-        
+
         for (WorldServer world : this.worlds) {
             this.craftServer.getPluginManager().callEvent(new org.bukkit.event.world.WorldLoadEvent(world.getWorld()));
         }
-        
+
         this.clearCurrentTask();
         this.craftServer.enablePlugins(org.bukkit.plugin.PluginLoadOrder.POSTWORLD);
     }
-    
+
     /**
      * Typically "menu.convertingLevel", "menu.loadingLevel" or others
      */
     public synchronized void setUserMessage(String newUserMessage) {
         this.userMessage = newUserMessage;
     }
-    
+
     /**
      * Saves all necessary data as preparation for stopping the server
      */
@@ -1043,7 +1041,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             if (hasStopped) return;
             hasStopped = true;
         }
-        
+
         logger.info("Stopping server");
         // Stop server timings
         MinecraftTimings.stopServer();
@@ -1059,12 +1057,12 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             // SPIGOT-625 - give server at least a chance to send packets
             try { Thread.sleep(100); } catch (InterruptedException ex) {} // TODO: Packet sending
         }
-        
+
         if (getMinecraftServer().worldServer != null) {
             logger.info("Saving worlds");
 
             for (WorldServer world : getMinecraftServer().worldServer) {
-            	if (world != null) world.savingDisabled = false;
+                if (world != null) world.savingDisabled = false;
             }
 
             this.saveChunks(false);
@@ -1078,10 +1076,10 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             this.userCache.c(false);
         }
     }
-    
+
     public void setResourcePackFromWorld(String world, IDataManager dataManager) {
         File file = new File(dataManager.getDirectory(), "resources.zip");
-        
+
         if (file.isFile()) {
             try {
                 this.setResourcePack("level://" + URLEncoder.encode(world, Charsets.UTF_8.toString()) + "/" + "resources.zip", "");
@@ -1090,14 +1088,14 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             }
         }
     }
-    
+
     /**
      * Returns the world instances
      */
     public WorldServer[] getWorldServers() {
-    	return getMinecraftServer().worldServer;
+        return getMinecraftServer().worldServer;
     }
-    
+
     /**
      * Sets custom resource pack for the server
      */
@@ -1105,7 +1103,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         this.resourcePackUrl = url;
         this.resourcePackHash = hash;
     }
-    
+
     /**
      * Sets current task and its percent, be used to display a percent remaining given text and the percentage
      */
@@ -1114,7 +1112,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         this.percentDone = percent;
         logger.info("{}: {}%", new Object[] { message, Integer.valueOf(percent) });
     }
-    
+
     /**
      * Sets current task to null and set its percentage to 0
      */
@@ -1122,25 +1120,25 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         this.currentTask = null;
         this.percentDone = 0;
     }
-    
+
     /**
      * Sets game mode for all worlds
      */
     public void setGamemodeForWorlds(EnumGamemode gamemode) {
         for (int index = 0, size = this.worlds.size(); index < size; index++) {
-        	worlds.get(index).getWorldData().setGameType(gamemode);
+            worlds.get(index).getWorldData().setGameType(gamemode);
         }
     }
-    
+
     /**
      * Save all worlds and their level
      */
     public void saveChunks(boolean isSilent) {
         for (WorldServer world : this.worlds) {
-        	if (world == null) continue;
-        	if (!isSilent) logger.info("Saving chunks for level \'{}\'/{}", new Object[] { world.getWorldData().getName(), world.worldProvider.getDimensionManager().b()});
-    		
-    		try {
+            if (world == null) continue;
+            if (!isSilent) logger.info("Saving chunks for level \'{}\'/{}", new Object[] { world.getWorldData().getName(), world.worldProvider.getDimensionManager().b()});
+
+            try {
                 world.save(true, (IProgressUpdate) null);
                 world.saveLevel();
             } catch (ExceptionWorldConflict conflict) {
@@ -1148,21 +1146,21 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             }
         }
     }
-    
+
     /**
      * Returns the root directory of the server
      */
     public File getDataDirectory() {
         return new File(".");
     }
-    
+
     /**
      * If the nether is allowed in this server, default true
      */
     public boolean getAllowNether() {
-    	return this.propertyManager.getBoolean("allow-nether", true);
+        return this.propertyManager.getBoolean("allow-nether", true);
     }
-    
+
     /**
      * Start a pure server thread, may unsafe
      */
@@ -1171,7 +1169,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         this.serverThread = new Thread(this, "Server thread");
         this.serverThread.start();
     }
-    
+
     /**
      * Returns a specified file in the server root directory
      */
@@ -1182,7 +1180,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
     public void registerTickable(ITickable itickable) {
         this.tickables.add(itickable);
     }
-    
+
     /**
      * Returns the number of players currently on the server
      */
@@ -1196,22 +1194,22 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
     public int getMaxPlayers() {
         return this.playerList.getMaxPlayers();
     }
-    
+
     /**
      * Starting the method profiler at the beginning of next tick, deprecated because the vanilla method profiler has been removed
      */
     @Deprecated
     public void startProfiling() {
-    	this.startProfiling = true;
+        this.startProfiling = true;
     }
-    
+
     /**
      * Returns the server connection, initial if doesn't exist
      */
     public ServerConnection handleServerConnection() {
         return this.serverConnection == null ? this.serverConnection = new ServerConnection(getMinecraftServer()) : this.serverConnection;
     }
-    
+
     /**
      * Returns an array of the usernames of all the connected players
      */
@@ -1225,7 +1223,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
     public GameProfile[] getOnlinePlayerProfiles() {
         return this.playerList.getOnlinePlayerProfiles();
     }
-    
+
     /**
      * Send a info via default logger 
      */
@@ -1239,21 +1237,21 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
     public void warning(String warn) {
         logger.warn(warn);
     }
-    
+
     /**
      * Send a error via default logger 
      */
     public void error(String error) {
         logger.error(error);
     }
-    
+
     /**
      * Send a debug info via default logger 
      */
     public void debug(String info) {
         if (isDebugging()) logger.info(info);
     }
-    
+
     /**
      * Sets the maximum idle minutes and then save the properties
      */
@@ -1262,67 +1260,67 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         this.propertyManager.setProperty("player-idle-timeout", Integer.valueOf(minutes));
         this.saveProperties();
     }
-    
+
     /**
      * Get moded server name
      */
     public String getServerModName() {
         return "Torch"; // Torch - Torch > // Paper - Paper > // Spigot - Spigot > // CraftBukkit - cb > vanilla!
     }
-    
+
     /**
      * Adds the server info, including from theWorldServer, to the crash report.
      */
     public CrashReport addServerInfoToCrashReport(CrashReport crashreport) {
         crashreport.g().a("Profiler Position", new CrashReportCallable<String>() {
-        	
+
             @Override
             public String call() throws Exception {
-            	return methodProfiler.a ? methodProfiler.c() : "N/A (disabled)";
+                return methodProfiler.a ? methodProfiler.c() : "N/A (disabled)";
             }
         });
-        
+
         if (this.playerList != null) {
             crashreport.g().a("Player Count", new CrashReportCallable<String>() {
-            	
+
                 @Override
                 public String call() throws Exception {
-                	return playerList.getPlayerCount() + " / " + playerList.getMaxPlayers() + "; " + playerList.getPlayers();
+                    return playerList.getPlayerCount() + " / " + playerList.getMaxPlayers() + "; " + playerList.getPlayers();
                 }
             });
         }
 
         return crashreport;
     }
-    
+
     /**
      * Tab complete via Bukkit
      */
     public List<String> tabCompleteCommand(ICommandListener icommandlistener, String s, @Nullable BlockPosition blockposition, boolean flag) {
         return craftServer.tabComplete(icommandlistener, s, blockposition, true);
     }
-    
+
     /**
      * Sets owner for the server
      */
     public void setServerOwner(String owner) {
         this.serverOwner = owner;
     }
-    
+
     /**
      * Check if anvil file is set, this will always returns true
      */
     public boolean isAnvilFileSet() {
         return true;
     }
-    
+
     /**
      * Returns {@code true} if the CommandSender is allowed to execute the command, {@code false} if not
      */
     public boolean canUseCommand(int permLevel, String commandName) {
         return true;
     }
-    
+
     /**
      * If the server has a owner, representing it's a single player game
      */
@@ -1330,15 +1328,15 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
     public boolean isSinglePlayer() {
         return this.serverOwner != null;
     }
-    
+
     /**
      * Sets game difficulty for all worlds, useless if hardcore mode is enabled
      */
     public void setDifficultyForAllWorlds(EnumDifficulty difficulty) {
         for (WorldServer world : this.worlds) {
-        	if (world == null) continue;
-        	
-        	if (world.getWorldData().isHardcore()) {
+            if (world == null) continue;
+
+            if (world.getWorldData().isHardcore()) {
                 world.getWorldData().setDifficulty(EnumDifficulty.HARD);
                 world.setSpawnFlags(true, true);
             } else if (this.isSinglePlayer()) {
@@ -1350,68 +1348,68 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             }
         }
     }
-    
+
     /**
      * Search entity via uuid from all worlds, null if can't find
      */
     @Nullable
     public Entity getEntityFromUUID(UUID uuid) {
         for (WorldServer world : this.worlds) {
-        	if (world == null) continue;
-        	
-        	Entity entity = world.getEntity(uuid);
+            if (world == null) continue;
+
+            Entity entity = world.getEntity(uuid);
             if (entity != null) return entity;
         }
 
         return null;
     }
-    
+
     /**
      * Returns the spawn protection area's size, default 16
      */
     public int getSpawnProtectionSize() {
-    	return this.propertyManager.getInt("spawn-protection", 16);
+        return this.propertyManager.getInt("spawn-protection", 16);
     }
-    
+
     /**
      * Sets the forceGamemode field (whether joining players will be put in their old gamemode or the default one)
      */
     public void setForceGamemode(boolean flag) {
         this.isGamemodeForced = flag;
     }
-    
+
     /**
      * If the server will announcing player achievements, default true
      */
     public boolean isAnnouncingPlayerAchievements() {
-    	return this.propertyManager.getBoolean("announce-player-achievements", true);
+        return this.propertyManager.getBoolean("announce-player-achievements", true);
     }
-    
+
     public void refreshStatusNextTick() {
         this.nanoTimeSinceStatusRefresh = 0L;
     }
-    
+
     /**
      * Get the spawn radius of the given server, returns 10 if the server is null
      */
     public int getSpawnRadius(@Nullable WorldServer worldserver) {
         return worldserver != null ? worldserver.getGameRules().c("spawnRadius") : 10;
     }
-    
+
     /**
      * The compression treshold. If the packet is larger than the specified amount of bytes, it will be compressed, default 256
      */
     public int getNetworkCompressionThreshold() {
-    	return this.propertyManager.getInt("network-compression-threshold", 256);
+        return this.propertyManager.getInt("network-compression-threshold", 256);
     }
-    
+
     /**
      * If the server can spawn monsters, default true
      */
     public boolean getSpawnMonsters() {
-    	return this.propertyManager.getBoolean("spawn-monsters", true);
+        return this.propertyManager.getBoolean("spawn-monsters", true);
     }
-    
+
     /**
      * Get world instance in given dimension, returns the primary world instance if the given dimension can't find
      */
@@ -1423,14 +1421,14 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         }
         return worlds.get(0);
     }
-    
+
     /**
      * Returns standard minecraft version of the server, 1.11.2, etc.
      */
     public String getMinecraftVersion() {
         return GAME_VERSION;
     }
-    
+
     /**
      * Returns the maximum supported world size, the vaild value from 1 to 29999984, default to maxium
      */
@@ -1445,35 +1443,35 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
     public void safeShutdown() {
         this.isRunning = false;
     }
-    
+
     /**
      * Create a new command dispatcher
      */
     public CommandDispatcher createCommandDispatcher() {
         return new CommandDispatcher(getMinecraftServer());
     }
-    
+
     /**
      * Check if the server running in online-mode
      */
     public boolean getOnlineMode() {
         return craftServer.getOnlineMode();
     }
-    
+
     /**
      * Returns the instance of the server.
      */
     public static final TorchServer getServer() {
-    	return server;
+        return server;
     }
-    
+
     /**
      * Used by RCon's Query in the form of "MajorServerMod 1.2.3: MyPlugin 1.3; AnotherPlugin 2.1; AndSoForth 1.0".
      */
     public String getPluginsRcon() {
         StringBuilder result = new StringBuilder();
         org.bukkit.plugin.Plugin[] plugins = craftServer.getPluginManager().getPlugins();
-        
+
         result.append(craftServer.getName());
         result.append(" on Bukkit ");
         result.append(craftServer.getBukkitVersion());
@@ -1491,15 +1489,15 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
                 result.append(plugins[i].getDescription().getVersion().replaceAll(";", ","));
             }
         }
-        
+
         return result.toString();
     }
-    
+
     /**
      * Check if the block is in the server protected area
      */
     public boolean isBlockProtected(World world, BlockPosition blockposition, EntityHuman entityhuman) {
-    	if (world.worldProvider.getDimensionManager().getDimensionID() != 0) {
+        if (world.worldProvider.getDimensionManager().getDimensionID() != 0) {
         } else if (this.getDedicatedPlayerList().getOPs().isEmpty()) {
         } else if (this.getDedicatedPlayerList().isOp(entityhuman.getProfile())) {
         } else if (this.getSpawnProtectionSize() <= 0) {
@@ -1511,16 +1509,16 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
 
             return maxDistance <= this.getSpawnProtectionSize();
         }
-    	
-    	return false;
+
+        return false;
     }
-    
+
     /**
      * Try to converts the old version UUID files
      */
     public boolean convertFilesUUID() {
-    	logger.info("Beginning UUID conversion, this may take A LONG time");
-    	
+        logger.info("Beginning UUID conversion, this may take A LONG time");
+
         boolean convertedAny = false, convertedUserBanlist = false; int index;
         for (index = 0; !convertedUserBanlist && index <= 2; ++index) {
             if (index > 0) {
@@ -1531,68 +1529,68 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             convertedUserBanlist = NameReferencingFileConverter.a(getMinecraftServer());
             if (convertedUserBanlist) convertedAny = true;
         }
-        
+
         boolean convertedIPBanlist = false;
         for (index = 0; !convertedIPBanlist && index <= 2; ++index) {
             if (index > 0) {
-            	logger.warn("Encountered a problem while converting the ip banlist, retrying in a few seconds");
+                logger.warn("Encountered a problem while converting the ip banlist, retrying in a few seconds");
                 this.sleepFiveSeconds();
             }
-            
+
             convertedIPBanlist = NameReferencingFileConverter.b(getMinecraftServer());
             if (convertedIPBanlist) convertedAny = true;
         }
-        
+
         boolean convertedOPlist = false;
         for (index = 0; !convertedOPlist && index <= 2; ++index) {
             if (index > 0) {
-            	logger.warn("Encountered a problem while converting the op list, retrying in a few seconds");
+                logger.warn("Encountered a problem while converting the op list, retrying in a few seconds");
                 this.sleepFiveSeconds();
             }
 
             convertedOPlist = NameReferencingFileConverter.c(getMinecraftServer());
             if (convertedOPlist) convertedAny = true;
         }
-        
+
         boolean convertedWhitelist = false;
         for (index = 0; !convertedWhitelist && index <= 2; ++index) {
             if (index > 0) {
-            	logger.warn("Encountered a problem while converting the whitelist, retrying in a few seconds");
+                logger.warn("Encountered a problem while converting the whitelist, retrying in a few seconds");
                 this.sleepFiveSeconds();
             }
 
             convertedWhitelist = NameReferencingFileConverter.d(getMinecraftServer());
             if (convertedWhitelist) convertedAny = true;
         }
-        
+
         boolean convertedPlayerFiles = false;
         for (index = 0; !convertedPlayerFiles && index <= 2; ++index) {
             if (index > 0) {
-            	logger.warn("Encountered a problem while converting the player save files, retrying in a few seconds");
+                logger.warn("Encountered a problem while converting the player save files, retrying in a few seconds");
                 this.sleepFiveSeconds();
             }
 
             convertedPlayerFiles = NameReferencingFileConverter.a(this.getDedicatedServer(), this.propertyManager);
             if (convertedPlayerFiles) convertedAny = true;
         }
-        
+
         return convertedAny;
     }
-    
+
     /**
-	 * Returns the internal dedicated server instance
-	 */
-	public DedicatedServer getDedicatedServer() {
-		return DedicatedServer.getServer();
-	}
-    
+     * Returns the internal dedicated server instance
+     */
+    public DedicatedServer getDedicatedServer() {
+        return DedicatedServer.getServer();
+    }
+
     /**
      * Returns the max-tick-time setting from property, 1L by default
      */
     public long getMaxTickTime() {
         return this.propertyManager.getLong("max-tick-time", TimeUnit.MINUTES.toMillis(1L));
     }
-    
+
     /**
      * Execute a command from remote(rcon)
      */
@@ -1601,13 +1599,13 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             @Override
             protected String evaluate() {
                 remoteControlCommandListener.clearMessages();
-                
+
                 RemoteServerCommandEvent event = new RemoteServerCommandEvent(remoteConsole, command);
                 craftServer.getPluginManager().callEvent(event);
                 if (event.isCancelled()) {
                     return "";
                 }
-                
+
                 ServerCommand serverCommand = new ServerCommand(event.getCommand(), remoteControlCommandListener);
                 craftServer.dispatchServerCommand(remoteConsole, serverCommand);
                 return remoteControlCommandListener.getMessages();
@@ -1634,7 +1632,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             throw new RuntimeException("Interrupted processing rcon command " + command, e);
         }
     }
-    
+
     /**
      * Simply sleep current thread for 5 seconds
      */
@@ -1646,14 +1644,14 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         }
     }
 
-	/**
-	 * Check if snooper is enabled, default true but never enable actually(we disabled)
-	 * For further info, see http://wiki.vg/Snoop
-	 */
-	public boolean getSnooperEnabled() {
-		return this.propertyManager.getBoolean("snooper-enabled", true);
+    /**
+     * Check if snooper is enabled, default true but never enable actually(we disabled)
+     * For further info, see http://wiki.vg/Snoop
+     */
+    public boolean getSnooperEnabled() {
+        return this.propertyManager.getBoolean("snooper-enabled", true);
     }
-	
+
     /**
      * Main tick function and then execute pending commands
      */
@@ -1661,12 +1659,12 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         this.updateLogicsAndPhysics();
         this.executePendingCommands();
     }
-    
+
     /**
      * Dispatches the commands issued from console
      */
     public void executePendingCommands() {
-    	MinecraftTimings.serverCommandTimer.startTiming();
+        MinecraftTimings.serverCommandTimer.startTiming();
         while (!this.serverCommandQueue.isEmpty()) {
             ServerCommand servercommand = this.serverCommandQueue.remove(0);
             // Fire the server command event
@@ -1680,26 +1678,26 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
 
         MinecraftTimings.serverCommandTimer.stopTiming();
     }
-	
-	/**
-	 * Issue a server command to execute
-	 */
-	public void issueCommand(String command, ICommandListener listener) {
+
+    /**
+     * Issue a server command to execute
+     */
+    public void issueCommand(String command, ICommandListener listener) {
         this.serverCommandQueue.add(new ServerCommand(command, listener));
     }
-	
-	/**
-	 * Check if current thread is the main thread
-	 */
-	public boolean isMainThread() {
+
+    /**
+     * Check if current thread is the main thread
+     */
+    public boolean isMainThread() {
         return Thread.currentThread() == this.serverThread;
     }
-	
+
     /**
      * Post a callable task to main thread(next tick), also return a listenable future task
      */
     public <V> ListenableFuture<V> postToMainThreadMaybeAsync(Callable<V> callable, boolean onlyPostOnAsync) {
-    	if (onlyPostOnAsync && !this.isMainThread()) {
+        if (onlyPostOnAsync && !this.isMainThread()) {
             ListenableFutureTask<V> future = ListenableFutureTask.create(callable);
 
             this.futureTaskQueue.add(future);
@@ -1712,90 +1710,90 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             }
         }
     }
-    
+
     /**
      * Try to post a runnable task to main thread(next tick), or call it if in main thread, also return a listenable future task, the runnable can't be null
      */
-	public ListenableFuture<Object> postToMainThread(Runnable runnable) {
-		Validate.notNull(runnable);
-		return this.postToMainThreadMaybeAsync(Executors.callable(runnable), true);
-	}
-	
-	/**
-	 * Get the Vec3D of the entity called command, returns a pure Vec3D (0, 0, 0) here
-	 */
-	@Deprecated
-	public Vec3D getEntityVec3D() {
-		return Vec3D.a;
-	}
+    public ListenableFuture<Object> postToMainThread(Runnable runnable) {
+        Validate.notNull(runnable);
+        return this.postToMainThreadMaybeAsync(Executors.callable(runnable), true);
+    }
 
-	/**
-	 * Returns a zero blockposition (0, 0, 0)
-	 */
-	@Deprecated
-	public BlockPosition getChunkCoordinates() {
+    /**
+     * Get the Vec3D of the entity called command, returns a pure Vec3D (0, 0, 0) here
+     */
+    @Deprecated
+    public Vec3D getEntityVec3D() {
+        return Vec3D.a;
+    }
+
+    /**
+     * Returns a zero blockposition (0, 0, 0)
+     */
+    @Deprecated
+    public BlockPosition getChunkCoordinates() {
         return BlockPosition.ZERO;
     }
 
-	/**
-	 * Returns a green color "Server" string
-	 */
-	public String getName() {
+    /**
+     * Returns a green color "Server" string
+     */
+    public String getName() {
         return org.bukkit.ChatColor.GREEN + "Server";
     }
 
-	/**
-	 * Simply package server name to a ChatComponentText
-	 */
-	@Deprecated
-	public IChatBaseComponent getScoreboardDisplayName() {
+    /**
+     * Simply package server name to a ChatComponentText
+     */
+    @Deprecated
+    public IChatBaseComponent getScoreboardDisplayName() {
         return new ChatComponentText(this.getName());
     }
 
-	/**
-	 * Returns the sendCommandFeedback game rule of the primary world
-	 */
-	public boolean getSendCommandFeedback() {
+    /**
+     * Returns the sendCommandFeedback game rule of the primary world
+     */
+    public boolean getSendCommandFeedback() {
         return worlds.get(0).getGameRules().getBoolean("sendCommandFeedback");
     }
 
-	/**
-	 * Returns the primary world
-	 */
+    /**
+     * Returns the primary world
+     */
     public World getWorld() {
         return this.worlds.get(0);
     }
 
-	/**
-	 * Simply send a message
-	 */
+    /**
+     * Simply send a message
+     */
     public void sendMessage(IChatBaseComponent component) {
         logger.info(component.toPlainText());
     }
 
-	/**
-	 * Get the entity called command, returns null here
-	 */
-	@Deprecated
-	public Entity getEntity() {
-		return null;
-	}
+    /**
+     * Get the entity called command, returns null here
+     */
+    @Deprecated
+    public Entity getEntity() {
+        return null;
+    }
 
-	/**
-	 * Returns the internal minecraft server instance
-	 */
-	public static MinecraftServer getMinecraftServer() {
-		return MinecraftServer.getServer();
-	}
-	
-	/**
+    /**
+     * Returns the internal minecraft server instance
+     */
+    public static MinecraftServer getMinecraftServer() {
+        return MinecraftServer.getServer();
+    }
+
+    /**
      * Sets the game type for the server and all worlds
      */
     public void setGamemodeGlobal(EnumGamemode gamemode) {
         this.setGamemodeForWorlds(gamemode);
         this.gameMode = gamemode;
     }
-    
+
     /**
      * Adds the server info, including from theWorldServer, to the crash report.
      */
@@ -1803,41 +1801,41 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         crashreport = this.addServerInfoToCrashReport(crashreport);
         crashreport.g().a("Is Modded", new CrashReportCallable<String>() {
             @Override
-			public String call() throws Exception {
-            	String moddedName = getServerModName();
+            public String call() throws Exception {
+                String moddedName = getServerModName();
 
                 return !"vanilla".equals(moddedName) ? "Definitely; Server brand changed to \'" + moddedName + "\'" : "Unknown (can\'t tell)";
             }
         });
-        
+
         crashreport.g().a("Type", new CrashReportCallable<String>() {
             @Override
-			public String call() throws Exception {
-            	return "Dedicated Server (map_server.txt)";
+            public String call() throws Exception {
+                return "Dedicated Server (map_server.txt)";
             }
         });
         return crashreport;
     }
-	
-	/**
+
+    /**
      * Initialises the server and starts it
      */
-	public boolean init() throws IOException {
-		Thread consoleHandlerThread = new Thread("Server console handler") {
+    public boolean init() throws IOException {
+        Thread consoleHandlerThread = new Thread("Server console handler") {
             @Override
-			public void run() {
+            public void run() {
                 if (!org.bukkit.craftbukkit.Main.useConsole) return;
 
                 jline.console.ConsoleReader bufferedreader = getMinecraftServer().reader;
                 String sourceCommand;
-                
+
                 try {
                     // JLine disabling compatibility
                     while (!isStopped() && isRunning()) {
                         if (org.bukkit.craftbukkit.Main.useJline) {
-                        	sourceCommand = bufferedreader.readLine(">", null);
+                            sourceCommand = bufferedreader.readLine(">", null);
                         } else {
-                        	sourceCommand = bufferedreader.readLine();
+                            sourceCommand = bufferedreader.readLine();
                         }
                         // Trim to filter lines which are just spaces
                         if (sourceCommand != null && sourceCommand.trim().length() > 0) {
@@ -1850,21 +1848,21 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
 
             }
         };
-        
+
         java.util.logging.Logger global = java.util.logging.Logger.getLogger("");
         global.setUseParentHandlers(false);
         for (java.util.logging.Handler handler : global.getHandlers()) {
             global.removeHandler(handler);
         }
         global.addHandler(new org.bukkit.craftbukkit.util.ForwardLogHandler());
-        
+
         final org.apache.logging.log4j.core.Logger logger = ((org.apache.logging.log4j.core.Logger) LogManager.getRootLogger());
         for (org.apache.logging.log4j.core.Appender appender : logger.getAppenders().values()) {
             if (appender instanceof org.apache.logging.log4j.core.appender.ConsoleAppender) {
                 logger.removeAppender(appender);
             }
         }
-        
+
         new Thread(new org.bukkit.craftbukkit.util.TerminalConsoleWriterThread(System.out, this.reader)).start();
 
         System.setOut(new PrintStream(new LoggerOutputStream(logger, Level.INFO), true));
@@ -1872,16 +1870,16 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
 
         consoleHandlerThread.setDaemon(true);
         consoleHandlerThread.start();
-        
+
         logger.info("Starting minecraft server version " + GAME_VERSION);
         if (Runtime.getRuntime().maxMemory() / 1024L / 1024L < 512L) {
             logger.warn("Better to start the server with more ram, launch it as \"java -d64 -server -Xmx1024M -Xms1024M -jar torchpowered.jar\"");
         }
-        
+
         //logger.info("Loading properties");
         // CLI argument support
         this.getDedicatedServer().propertyManager = this.propertyManager = new PropertyManager(this.options);
-        
+
         if (this.isSinglePlayer()) {
             this.setServerIp("127.0.0.1");
         } else {
@@ -1889,7 +1887,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             this.setPreventProxyConnections(this.propertyManager.getBoolean("prevent-proxy-connections", false));
             this.setServerIp(this.propertyManager.getString("server-ip", ""));
         }
-        
+
         this.setSpawnAnimals(this.propertyManager.getBoolean("spawn-animals", true));
         this.setSpawnNPCs(this.propertyManager.getBoolean("spawn-npcs", true));
         this.setPvpMode(this.propertyManager.getBoolean("pvp", true));
@@ -1906,31 +1904,31 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
 
         this.generateStructures = this.propertyManager.getBoolean("generate-structures", true);
         int i = this.propertyManager.getInt("gamemode", EnumGamemode.SURVIVAL.getId());
-        
+
         this.gameMode = WorldSettings.a(i);
         logger.info("Default game type: {}", new Object[] { this.gameMode });
-        
+
         InetAddress inetaddress = null;
         if (!this.getServerIp().isEmpty()) inetaddress = InetAddress.getByName(this.getServerIp());
-        
+
         if (this.getServerPort() < 0) {
             this.setServerPort(this.propertyManager.getInt("server-port", 25565));
         }
-        
+
         // Initial the craft server in player list
         this.setPlayerList(new DedicatedPlayerList(this.getDedicatedServer()).getReactor());
         this.getServant().setPlayerList(this.playerList);
-        
+
         org.spigotmc.SpigotConfig.init((File) options.valueOf("spigot-settings"));
         org.spigotmc.SpigotConfig.registerCommands();
-        
+
         com.destroystokyo.paper.PaperConfig.init((File) options.valueOf("paper-settings"));
         com.destroystokyo.paper.PaperConfig.registerCommands();
 
         //logger.info("Generating keypair");
         this.setServerKeyPair(MinecraftEncryption.b());
         logger.info("Binding server to {}:{}", new Object[] { this.getServerIp().isEmpty() ? "*" : this.getServerIp(), Integer.valueOf(this.getServerPort()) });
-        
+
         if (!org.spigotmc.SpigotConfig.lateBind) {
             try {
                 this.getServerConnection().a(inetaddress, this.getServerPort());
@@ -1941,10 +1939,10 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
                 return false;
             }
         }
-        
+
         craftServer.loadPlugins();
         craftServer.enablePlugins(org.bukkit.plugin.PluginLoadOrder.STARTUP);
-        
+
         if (!this.getOnlineMode()) {
             logger.warn("**** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!");
             logger.warn("The server will make no attempt to authenticate usernames. Beware.");
@@ -1958,21 +1956,21 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             // Spigot end
             logger.warn("To change this, set \"online-mode\" to \"true\" in the server.properties file.");
         }
-        
+
         if (this.convertFilesUUID()) {
-        	// Save the user cache after convert them
+            // Save the user cache after convert them
             this.getUserCache().c();
         }
-        
+
         if (!NameReferencingFileConverter.a(this.propertyManager)) return false;
-        
+
         this.anvilFileConverter = new WorldLoaderServer(craftServer.getWorldContainer(), this.getDataConverterManager());
         long j = System.nanoTime();
-        
+
         if (this.getPrimaryWorldFolderName() == null) {
             this.setPrimaryWorldFolderName(this.propertyManager.getString("level-name", "world"));
         }
-        
+
         String levelSeed = this.propertyManager.getString("level-seed", "");
         String levelType = this.propertyManager.getString("level-type", "DEFAULT");
         String generatorSettings = this.propertyManager.getString("generator-settings", "");
@@ -1984,45 +1982,45 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
                 // If the given seed is invaild, use random seed
                 if (seed != 0L) generatorSeed = seed;
             } catch (NumberFormatException numberformatexception) {
-            	generatorSeed = levelSeed.hashCode();
+                generatorSeed = levelSeed.hashCode();
             }
         }
-        
+
         WorldType worldtype = WorldType.getType(levelType);
         if (worldtype == null) worldtype = WorldType.NORMAL;
-        
+
         this.isAnnouncingPlayerAchievements();
         this.getEnableCommandBlock();
         this.getOpPermissionLevel();
         this.getSnooperEnabled();
         this.getNetworkCompressionThreshold();
-        
+
         this.setBuildLimit(this.propertyManager.getInt("max-build-height", 256));
         this.setBuildLimit((this.getBuildLimit() + 8) / 16 * 16);
         this.setBuildLimit(MathHelper.clamp(this.getBuildLimit(), 64, 256));
         this.propertyManager.setProperty("max-build-height", Integer.valueOf(this.getBuildLimit()));
-        
+
         // Set user cache and session service for skulls
         TileEntitySkull.a(this.getUserCache());
         TileEntitySkull.a(this.getSessionService());
         // Set online mode for the user cache
         UserCache.a(this.getOnlineMode());
-        
+
         logger.info("Preparing level \"{}\"", new Object[] { this.getPrimaryWorldFolderName() });
         this.loadDefaultWorlds(this.getPrimaryWorldFolderName(), this.getPrimaryWorldFolderName(), generatorSeed, worldtype, generatorSettings);
-        
+
         long i1 = System.nanoTime() - j;
         String s3 = String.format("%.3fs", new Object[] { Double.valueOf(i1 / 1.0E9D)});
-        
+
         logger.info("Ready for connections! ({})", new Object[] { s3});
-        
+
         if (this.propertyManager.getBoolean("enable-query", false)) {
             logger.info("Starting GS4 status listener");
             this.remoteQueryListener = new RemoteStatusListener(this.getDedicatedServer());
             // Start the rcon query thread
             this.remoteQueryListener.a();
         }
-        
+
         if (this.propertyManager.getBoolean("enable-rcon", false)) {
             logger.info("Starting remote control listener");
             this.remoteControlListener = new RemoteControlListener(this.getDedicatedServer());
@@ -2030,7 +2028,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             this.remoteControlListener.a();
             this.remoteConsole = new org.bukkit.craftbukkit.command.CraftRemoteConsoleCommandSender(this.remoteControlCommandListener);
         }
-        
+
         if (this.craftServer.getBukkitSpawnRadius() > -1) {
             logger.info("'settings.spawn-radius' in bukkit.yml has been moved to 'spawn-protection' in server.properties. I will move your config for you.");
             this.propertyManager.properties.remove("spawn-protection");
@@ -2038,7 +2036,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             this.craftServer.removeBukkitSpawnRadius();
             this.propertyManager.savePropertiesFile();
         }
-        
+
         if (org.spigotmc.SpigotConfig.lateBind) {
             try {
                 this.getServerConnection().a(inetaddress, this.getServerPort());
@@ -2049,38 +2047,38 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
                 return false;
             }
         }
-        
+
         return true;
-	}
+    }
 
     /**
      * Get the server's difficulty, returns default(normal) if not found
      */
     public EnumDifficulty getDifficulty() {
-    	return EnumDifficulty.getById(this.propertyManager.getInt("difficulty", EnumDifficulty.NORMAL.a()));
+        return EnumDifficulty.getById(this.propertyManager.getInt("difficulty", EnumDifficulty.NORMAL.a()));
     }
 
     /**
      * Defaults to false
      */
     public boolean isHardcore() {
-    	return this.propertyManager.getBoolean("hardcore", false);
+        return this.propertyManager.getBoolean("hardcore", false);
     }
-    
+
     /**
      * Defaults to 4
      */
     public int getOpPermissionLevel() {
-    	return this.propertyManager.getInt("op-permission-level", 4);
+        return this.propertyManager.getInt("op-permission-level", 4);
     }
 
     /**
      * Get if RCON command events should be broadcast to ops, default true
      */
     public boolean shouldBroadcastRconToOps() {
-    	return this.propertyManager.getBoolean("broadcast-rcon-to-ops", true);
+        return this.propertyManager.getBoolean("broadcast-rcon-to-ops", true);
     }
-    
+
     /**
      * If the server running in debug mode(the mode with debug info output), default false
      */
@@ -2092,62 +2090,62 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      * Get if console command events should be broadcast to ops, default true
      */
     public boolean shouldBroadcastConsoleToOps() {
-    	return this.propertyManager.getBoolean("broadcast-console-to-ops", true);
+        return this.propertyManager.getBoolean("broadcast-console-to-ops", true);
     }
-    
+
     /**
      * This method will only called from a dedicated server, so it will always return true
      */
     public static boolean isDedicatedServer() {
-    	return true;
+        return true;
     }
-    
+
     /**
      * Get if native transport should be used. Native transport means linux server performance improvements and
      * optimized packet sending/receiving on linux
      */
     public boolean shouldUseNativeTransport() {
-    	return this.propertyManager.getBoolean("use-native-transport", true);
+        return this.propertyManager.getBoolean("use-native-transport", true);
     }
-    
+
     @Deprecated
     public net.minecraft.server.DedicatedPlayerList getDedicatedPlayerList() {
         return (net.minecraft.server.DedicatedPlayerList) this.playerList.getServant();
     }
-    
+
     /**
      * Gets an integer property. If it does not exist, set it to the specified value
      */
     public int getIntProperty(String key, int defaultValue) {
-    	return this.propertyManager.getInt(key, defaultValue);
+        return this.propertyManager.getInt(key, defaultValue);
     }
 
     /**
      * Gets a string property. If it does not exist, set it to the specified value
      */
     public String getStringProperty(String key, String defaultValue) {
-    	return this.propertyManager.getString(key, defaultValue);
+        return this.propertyManager.getString(key, defaultValue);
     }
 
     /**
      * Gets a boolean property. If it does not exist, set it to the specified value
      */
     public boolean getBooleanProperty(String key, boolean defaultValue) {
-    	return this.propertyManager.getBoolean(key, defaultValue);
+        return this.propertyManager.getBoolean(key, defaultValue);
     }
 
     /**
      * Saves an Object with the given property name
      */
     public void setProperty(String key, Object value) {
-    	this.propertyManager.setProperty(key, value);
+        this.propertyManager.setProperty(key, value);
     }
 
     /**
      * Saves all of the server properties to the properties file
      */
     public void saveProperties() {
-    	this.propertyManager.savePropertiesFile();
+        this.propertyManager.savePropertiesFile();
     }
 
     /**
@@ -2158,29 +2156,29 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         File file = this.propertyManager.c();
         return file != null ? file.getAbsolutePath() : "No settings file";
     }
-    
+
     public void setGuiEnabled() {
-    	ServerGUI.a(this.getDedicatedServer());
+        ServerGUI.a(this.getDedicatedServer());
         this.guiIsEnabled = true;
     }
-    
+
     /**
      * Return whether command blocks are enabled
      */
     public boolean getEnableCommandBlock() {
-    	return this.propertyManager.getBoolean("enable-command-block", false);
+        return this.propertyManager.getBoolean("enable-command-block", false);
     }
-    
+
     /**
      * On dedicated server does nothing. On LAN servers, sets commandsAllowedForAll, gameType and allows external connections
      */
     @Deprecated
     public String shareToLAN(EnumGamemode gamemode, boolean flag) {
-    	return "";
+        return "";
     }
-    
-	@Override
-	public MinecraftServer getServant() {
-		return MinecraftServer.getServer();
-	}
+
+    @Override
+    public MinecraftServer getServant() {
+        return MinecraftServer.getServer();
+    }
 }

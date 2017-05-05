@@ -12,12 +12,12 @@ public class OpList extends JsonList<GameProfile, OpListEntry> {
     }
 
     @Override
-	protected JsonListEntry<GameProfile> a(JsonObject jsonobject) {
+    protected JsonListEntry<GameProfile> a(JsonObject jsonobject) {
         return new OpListEntry(jsonobject);
     }
 
     @Override
-	public String[] getEntries() {
+    public String[] getEntries() {
         String[] astring = new String[this.e().size()];
         int i = 0;
 
@@ -30,7 +30,7 @@ public class OpList extends JsonList<GameProfile, OpListEntry> {
         return astring;
     }
 
-	public int getPermissionLevel(GameProfile gameprofile) { // Torch - rename to avoid decompile error
+    public int getPermissionLevel(GameProfile gameprofile) { // Torch - rename to avoid decompile error
         OpListEntry oplistentry = this.get(gameprofile);
 
         return oplistentry != null ? oplistentry.a() : 0;
@@ -62,8 +62,8 @@ public class OpList extends JsonList<GameProfile, OpListEntry> {
         return oplistentry.getKey();
     }
 
-	@Override
-	protected String a(GameProfile object) {
+    @Override
+    protected String a(GameProfile object) {
         return this.c(object);
     }
 }
