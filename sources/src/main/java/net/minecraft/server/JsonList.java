@@ -52,12 +52,6 @@ public class JsonList<K, V extends JsonListEntry<K>> {
             return null;
         }
     };
-    
-    // Torch start
-    /** Only used to reduce entries overread */
-    protected boolean modified = false;
-    protected String[] lastEntries; // TODO: always overread twice
-    // Torch end
 
     public JsonList(File file) {
         this.c = file;
@@ -80,7 +74,6 @@ public class JsonList<K, V extends JsonListEntry<K>> {
     }
 
     public void add(V v0) {
-    	modified = true; // Torch
         this.d.put(this.a(v0.getKey()), v0);
 
         this.save();
@@ -92,7 +85,6 @@ public class JsonList<K, V extends JsonListEntry<K>> {
     }
 
     public void remove(K k0) {
-    	modified = true; // Torch
         this.d.remove(this.a(k0));
 
         this.save();
@@ -155,7 +147,6 @@ public class JsonList<K, V extends JsonListEntry<K>> {
     }
 
     public void load() throws FileNotFoundException {
-    	modified = true; // Torch
         Collection collection = null;
         BufferedReader bufferedreader = null;
 

@@ -31,13 +31,10 @@ public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
     
     @Override
     public String[] getEntries() {
-    	if (!modified) return lastEntries; // Returns cached entries directly if un-modified
-    	
         String[] values = new String[this.getMap().size()]; int index = 0;
 		for (WhiteListEntry entry : this.getMap().values()) values[index++] = entry.getKey().getName();
-    	
-		modified = false; // Mark as un-modified, skip next time
-    	return lastEntries = values;
+		
+    	return values;
     }
 
     protected String b(GameProfile gameprofile) {

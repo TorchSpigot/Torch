@@ -9,19 +9,23 @@ public class CommandWhitelist extends CommandAbstract {
 
     public CommandWhitelist() {}
 
-    public String getCommand() {
+    @Override
+	public String getCommand() {
         return "whitelist";
     }
 
-    public int a() {
+    @Override
+	public int a() {
         return 3;
     }
 
-    public String getUsage(ICommandListener icommandlistener) {
+    @Override
+	public String getUsage(ICommandListener icommandlistener) {
         return "commands.whitelist.usage";
     }
 
-    public void execute(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring) throws CommandException {
+    @Override
+	public void execute(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring) throws CommandException {
         if (astring.length < 1) {
             throw new ExceptionUsage("commands.whitelist.usage", new Object[0]);
         } else {
@@ -32,12 +36,12 @@ public class CommandWhitelist extends CommandAbstract {
                 minecraftserver.getPlayerList().setHasWhitelist(false);
                 a(icommandlistener, (ICommand) this, "commands.whitelist.disabled", new Object[0]);
             } else if ("list".equals(astring[0])) {
-                icommandlistener.sendMessage(new ChatMessage("commands.whitelist.list", new Object[] { Integer.valueOf(minecraftserver.getPlayerList().getWhitelisted().length), Integer.valueOf(minecraftserver.getPlayerList().getSeenPlayers().length)}));
-                String[] astring1 = minecraftserver.getPlayerList().getWhitelisted();
-
-                icommandlistener.sendMessage(new ChatComponentText(a((Object[]) astring1)));
+            	String[] whitelisted = minecraftserver.getPlayerList().getWhitelisted(); // Torch
+            	
+                icommandlistener.sendMessage(new ChatMessage("commands.whitelist.list", new Object[] { Integer.valueOf(whitelisted.length), Integer.valueOf(minecraftserver.getPlayerList().getSeenPlayers().length)}));
+                icommandlistener.sendMessage(new ChatComponentText(a(whitelisted)));
             } else {
-                GameProfile gameprofile;
+                // GameProfile gameprofile;
 
                 if ("add".equals(astring[0])) {
                     if (astring.length < 2) {
@@ -83,7 +87,8 @@ public class CommandWhitelist extends CommandAbstract {
         }
     }
 
-    public List<String> tabComplete(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring, @Nullable BlockPosition blockposition) {
+    @Override
+	public List<String> tabComplete(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring, @Nullable BlockPosition blockposition) {
         if (astring.length == 1) {
             return a(astring, new String[] { "on", "off", "list", "add", "remove", "reload"});
         } else {
