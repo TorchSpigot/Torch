@@ -7,7 +7,7 @@ public class AsyncCatcher {
 
     public static void catchOp(String reason) {
         if (enabled) {
-        	if (!TorchServer.getServer().isMainThread()) throw new IllegalStateException( "Asynchronous " + reason + "!" );
+            if (!TorchServer.getServer().isMainThread()) throw new IllegalStateException( "Asynchronous " + reason + "!" );
         }
     }
 }

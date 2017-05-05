@@ -1108,7 +1108,7 @@ public final class TorchPlayerList implements TorchReactor {
 
     public void savePlayers(Integer interval) {
         // Ensure main
-        MCUtil.ensureMain("Save Players", () -> {
+        server.postToMainThreadMaybeAsync(() -> {
             long now = MinecraftServer.currentTick;
             MinecraftTimings.savePlayers.startTiming();
             for (int index = 0, size = this.players.size(); index < size; ++index) {
@@ -1119,7 +1119,7 @@ public final class TorchPlayerList implements TorchReactor {
             }
             MinecraftTimings.savePlayers.stopTiming();
             return null;
-        });
+        }, true);
     }
 
     public void addWhitelist(GameProfile profile) {
