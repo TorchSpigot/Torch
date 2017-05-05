@@ -1,5 +1,7 @@
 package net.minecraft.server;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
@@ -12,7 +14,6 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.koloboke.collect.map.hash.HashObjObjMaps;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -26,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Logger;
-
 import static org.torch.server.TorchServer.logger;
 
 public class JsonList<K, V extends JsonListEntry<K>> {
@@ -52,6 +52,9 @@ public class JsonList<K, V extends JsonListEntry<K>> {
             return null;
         }
     };
+    
+    /** Cached string keys, K -> String */
+    LoadingCache<K, String> stringKeys = Caffeine.newBuilder().maximumSize(512).build(K::toString); // TODO: configurable size
 
     public JsonList(File file) {
         this.c = file;
@@ -80,13 +83,13 @@ public class JsonList<K, V extends JsonListEntry<K>> {
     }
 
     public V get(K k0) {
-        this.h();
-        return this.d.get(this.a(k0)); // CraftBukkit - fix decompile error
+        this.removeExpired();
+        return this.d.get(a(k0)); // CraftBukkit - fix decompile error
     }
 
     public void remove(K k0) {
-        this.d.remove(this.a(k0));
-
+        this.d.remove(a(k0));
+        
         this.save();
     }
 
@@ -104,18 +107,19 @@ public class JsonList<K, V extends JsonListEntry<K>> {
         return this.d.size() < 1;
     }
 
-    protected String a(K k0) {
-        return k0.toString();
+    protected String a(K k) {
+    	return stringKeys.get(k); // Torch - cache keys
     }
 
     public boolean contains(K k0) { return this.d(k0); } // OBFHELPER
     protected boolean d(K k0) {
-        return this.d.containsKey(this.a(k0));
+        return this.d.containsKey(a(k0));
     }
 
-    private void h() { // Torch - slight optimization
+    public void removeExpired() { this.h(); } // OBFHELPER
+    private void h() {
         Iterator<V> iterator = this.d.values().iterator();
-        while (iterator.hasNext()) if (iterator.next().hasExpired()) iterator.remove();
+        while (iterator.hasNext()) if (iterator.next().hasExpired()) iterator.remove(); // Torch - slight optimization
     }
 
     protected JsonListEntry<K> a(JsonObject jsonobject) {

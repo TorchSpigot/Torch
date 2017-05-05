@@ -299,12 +299,12 @@ public final class TorchPlayerList implements TorchReactor {
     @SuppressWarnings("deprecation")
 	public void updatePermissionLevel(EntityPlayer player) {
         GameProfile gameprofile = player.getProfile();
-        // If the player is Op, return the permission level
-        int permLevel = this.isOp(gameprofile) ? this.operators.a(gameprofile) : 0;
+        // PAIL: Return the permission level if the player is Opped
+        int permLevel = this.isOp(gameprofile) ? this.operators.getPermissionLevel(gameprofile) : 0;
 
-        // If the world is commands allowed, return 4
+        // PAIL: If the world is commands allowed, return 4
         permLevel = this.server.isSinglePlayer() && this.minecraftServer.worldServer[0].getWorldData().u() ? 4 : permLevel;
-        // If the server is commands allowed for all (chest mode), return 4
+        // PAIL: If the server is commands allowed for all (chest mode), return 4
         permLevel = this.allowedCommands ? 4 : permLevel;
         this.sendPlayerPermissionLevel(player, permLevel);
     }

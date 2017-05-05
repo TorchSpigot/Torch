@@ -38,7 +38,7 @@ public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
     }
 
     protected String b(GameProfile gameprofile) {
-        return gameprofile.getId().toString();
+        return super.a(gameprofile); // Torch - use cache
     }
 
     public GameProfile a(String s) {
