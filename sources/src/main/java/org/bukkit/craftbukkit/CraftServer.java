@@ -1349,7 +1349,7 @@ public final class CraftServer implements Server {
             // Spigot end
             if (profile == null) {
                 // Make an OfflinePlayer using an offline mode UUID since the name has no profile
-                result = getOfflinePlayer(new GameProfile(UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes(Charsets.UTF_8)), name));
+                result = getOfflinePlayer(new GameProfile(EntityHuman.offlinePlayerUUID(name), name));
             } else {
                 // Use the GameProfile even when we get a UUID so we ensure we still have a name
                 result = getOfflinePlayer(profile);

@@ -316,9 +316,9 @@ public final class TorchPlayerList implements TorchReactor {
         }
     }
     
-    public boolean isWhitelisted(GameProfile gameprofile) {
+    public boolean isWhitelisted(GameProfile profile) {
     	// whitelistIsDisabled || isOP || isWhitelisted
-        return !this.isWhitelistMode || this.operators.contains(gameprofile) || this.whitelist.contains(gameprofile);
+        return !this.isWhitelistMode || this.operators.contains(profile) || this.whitelist.isWhitelisted(profile);
     }
     
 	public boolean isOp(GameProfile gameprofile) {
@@ -1122,13 +1122,25 @@ public final class TorchPlayerList implements TorchReactor {
         });
     }
     
-    public void addWhitelist(GameProfile gameprofile) {
-        this.whitelist.add(new WhiteListEntry(gameprofile));
+    public void addWhitelist(GameProfile profile) {
+    	if (TorchServer.authUUID()) {
+    		this.whitelist.add(new WhiteListEntry(profile));
+        } else {
+        	this.whitelist.add(new WhiteListEntry(new GameProfile(profile.getId(), profile.getName().toLowerCase()))); // Support for offline servers
+        }
+    	
         this.saveWhiteList();
     }
 
-    public void removeWhitelist(GameProfile gameprofile) {
-        this.whitelist.remove(gameprofile);
+    public void removeWhitelist(GameProfile profile) {
+    	if (TorchServer.authUUID()) { // TODO: configurable
+    		this.whitelist.remove(profile);
+        } else {
+        	// Support for offline servers
+        	this.whitelist.remove(profile);
+        	this.whitelist.remove(new GameProfile(profile.getId(), profile.getName().toLowerCase()));
+        }
+    	
         this.saveWhiteList();
     }
 
@@ -1412,11 +1424,7 @@ public final class TorchPlayerList implements TorchReactor {
     }
     
     public void saveOpsList() {
-        try {
-            this.operators.save();
-        } catch (Throwable t) {
-        	logger.warn("Failed to save operators list: ", t);
-        }
+    	this.operators.save();
     }
 
     public void loadOpsList() {
@@ -1428,11 +1436,7 @@ public final class TorchPlayerList implements TorchReactor {
     }
 
     public void saveWhiteList() {
-        try {
-            this.whitelist.save();
-        } catch (Throwable t) {
-            logger.warn("Failed to save white-list: ", t);
-        }
+    	this.whitelist.save();
     }
 
     public void readWhiteList() {

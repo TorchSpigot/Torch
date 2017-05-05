@@ -31,12 +31,14 @@ import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.LoggerOutputStream;
 import org.bukkit.craftbukkit.Main;
 import org.bukkit.craftbukkit.util.Waitable;
 import org.bukkit.event.server.RemoteServerCommandEvent;
 import org.bukkit.event.server.ServerCommandEvent;
 import org.spigotmc.SlackActivityAccountant;
+import org.spigotmc.SpigotConfig;
 import org.torch.api.Anaphase;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
@@ -584,6 +586,10 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             }
 
         }
+    }
+    
+    public static boolean authUUID() { // TODO: configurable
+    	return Bukkit.getOnlineMode() || SpigotConfig.bungee;
     }
     
     /**

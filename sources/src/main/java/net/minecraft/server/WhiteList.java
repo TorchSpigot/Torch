@@ -4,8 +4,8 @@ import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
 import java.io.File;
 import java.util.Iterator;
-import org.bukkit.Bukkit;
-import org.spigotmc.SpigotConfig;
+
+import org.torch.server.TorchServer;
 
 public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
 
@@ -18,15 +18,12 @@ public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
         return new WhiteListEntry(jsonobject);
     }
 
-    public boolean isWhitelisted(GameProfile profile) { // Torch - skip UUID check for offline servers
-        if (Bukkit.getOnlineMode() || SpigotConfig.bungee) { // TODO: configurable
+    public boolean isWhitelisted(GameProfile profile) {
+        if (TorchServer.authUUID()) {
         	return this.contains(profile);
         } else {
-        	for (WhiteListEntry entry : this.getMap().values()) {
-        		if (entry.getKey().getName().equalsIgnoreCase(profile.getName())) return true;
-        	}
+        	return this.contains(profile) || this.contains(new GameProfile(profile.getId(), profile.getName().toLowerCase())); // Support for offline servers
         }
-		return false;
     }
     
     @Override
@@ -42,7 +39,7 @@ public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
     }
 
     public GameProfile a(String s) {
-        Iterator iterator = this.e().values().iterator();
+        Iterator<WhiteListEntry> iterator = this.e().values().iterator();
 
         WhiteListEntry whitelistentry;
 
@@ -51,7 +48,7 @@ public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
                 return null;
             }
 
-            whitelistentry = (WhiteListEntry) iterator.next();
+            whitelistentry = iterator.next();
         } while (!s.equalsIgnoreCase(whitelistentry.getKey().getName()));
 
         return whitelistentry.getKey();

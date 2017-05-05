@@ -52,7 +52,8 @@ public class LoginListener implements PacketLoginInListener, ITickable {
         LoginListener.random.nextBytes(this.e);
     }
 
-    public void F_() {
+    @Override
+	public void F_() {
         if (this.g == LoginListener.EnumProtocolState.READY_TO_ACCEPT) {
             this.b();
         } else if (this.g == LoginListener.EnumProtocolState.DELAY_ACCEPT) {
@@ -99,7 +100,7 @@ public class LoginListener implements PacketLoginInListener, ITickable {
             uuid = networkManager.spoofedUUID;
         } else
         {
-            uuid = UUID.nameUUIDFromBytes( ( "OfflinePlayer:" + this.i.getName() ).getBytes( Charsets.UTF_8 ) );
+            uuid = EntityHuman.offlinePlayerUUID(this.i.getName());
         }
 
         this.i = new GameProfile( uuid, this.i.getName() );
@@ -137,8 +138,9 @@ public class LoginListener implements PacketLoginInListener, ITickable {
                         LoginListener.this.networkManager.setCompressionLevel(LoginListener.this.server.aG());
                     }
 
-                    public void operationComplete(ChannelFuture future) throws Exception { // CraftBukkit - fix decompile error
-                        this.a((ChannelFuture) future);
+                    @Override
+					public void operationComplete(ChannelFuture future) throws Exception { // CraftBukkit - fix decompile error
+                        this.a(future);
                     }
                 }, new GenericFutureListener[0]);
             }
@@ -156,7 +158,8 @@ public class LoginListener implements PacketLoginInListener, ITickable {
 
     }
 
-    public void a(IChatBaseComponent ichatbasecomponent) {
+    @Override
+	public void a(IChatBaseComponent ichatbasecomponent) {
         LoginListener.c.info("{} lost connection: {}", new Object[] { this.d(), ichatbasecomponent.toPlainText()});
     }
 
@@ -164,7 +167,8 @@ public class LoginListener implements PacketLoginInListener, ITickable {
         return this.i != null ? this.i + " (" + this.networkManager.getSocketAddress() + ")" : String.valueOf(this.networkManager.getSocketAddress());
     }
 
-    public void a(PacketLoginInStart packetlogininstart) {
+    @Override
+	public void a(PacketLoginInStart packetlogininstart) {
         Validate.validState(this.g == LoginListener.EnumProtocolState.HELLO, "Unexpected hello packet", new Object[0]);
         this.i = packetlogininstart.a();
         if (this.server.getOnlineMode() && !this.networkManager.isLocal()) {
@@ -192,7 +196,8 @@ public class LoginListener implements PacketLoginInListener, ITickable {
 
     }
 
-    public void a(PacketLoginInEncryptionBegin packetlogininencryptionbegin) {
+    @Override
+	public void a(PacketLoginInEncryptionBegin packetlogininencryptionbegin) {
         Validate.validState(this.g == LoginListener.EnumProtocolState.KEY, "Unexpected key packet", new Object[0]);
         PrivateKey privatekey = this.server.O().getPrivate();
 
@@ -204,7 +209,8 @@ public class LoginListener implements PacketLoginInListener, ITickable {
             this.networkManager.a(this.loginKey);
             // Paper start - Cache authenticator threads
             authenticatorPool.execute(new Runnable() {
-                public void run() {
+                @Override
+				public void run() {
                     GameProfile gameprofile = LoginListener.this.i;
 
                     try {
@@ -298,7 +304,7 @@ public class LoginListener implements PacketLoginInListener, ITickable {
     // Spigot end
 
     protected GameProfile a(GameProfile gameprofile) {
-        UUID uuid = UUID.nameUUIDFromBytes(("OfflinePlayer:" + gameprofile.getName()).getBytes(Charsets.UTF_8));
+        UUID uuid = EntityHuman.offlinePlayerUUID(gameprofile.getName());
 
         return new GameProfile(uuid, gameprofile.getName());
     }
