@@ -219,11 +219,6 @@ public class PaperConfig {
         loadPermsBeforePlugins = getBoolean("settings.load-permissions-yml-before-plugins", true);
     }
 
-    public static boolean setHealthBeforeDeathEvent = false;
-    private static void healthDeath() {
-        setHealthBeforeDeathEvent = getBoolean("settings.set-health-before-death-event", false);
-    }
-
     public static int regionFileCacheSize = 256;
     private static void regionFileCacheSize() {
         regionFileCacheSize = getInt("settings.region-file-cache-size", 256);
