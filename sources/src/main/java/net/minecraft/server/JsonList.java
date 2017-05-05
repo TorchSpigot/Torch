@@ -85,11 +85,7 @@ public class JsonList<K, V extends JsonListEntry<K>> {
     	modified = true; // Torch
         this.d.put(this.a(v0.getKey()), v0);
 
-        try {
-            this.save();
-        } catch (IOException ioexception) {
-        	logger.warn("Could not save the list after adding a user.", ioexception);
-        }
+        this.save();
     }
 
     public V get(K k0) {
@@ -101,11 +97,7 @@ public class JsonList<K, V extends JsonListEntry<K>> {
     	modified = true; // Torch
         this.d.remove(this.a(k0));
 
-        try {
-            this.save();
-        } catch (IOException ioexception) {
-        	logger.warn("Could not save the list after removing a user.", ioexception);
-        }
+        this.save();
     }
 
     public String[] getEntries() {
@@ -145,29 +137,29 @@ public class JsonList<K, V extends JsonListEntry<K>> {
         return this.d;
     }
 
-    public void save() throws IOException {
+    public void save() {
     	// Torch start
     	if (!needSave) {
     		needSave = true; return;
     	}
-    	// Torch
-        Collection<V> values = this.d.values();
+        Collection values = this.d.values();
         
         MCUtil.scheduleAsyncTask(() -> {
         	String jsonString = this.b.toJson(values);
-        	BufferedWriter bufferedwriter = null;
+        	BufferedWriter writer = null;
             
             try {
-                bufferedwriter = Files.newWriter(this.c, Charsets.UTF_8);
-                bufferedwriter.write(jsonString);
+                writer = Files.newWriter(this.c, Charsets.UTF_8);
+                writer.write(jsonString);
             } catch (IOException io) {
             	logger.warn("Could not save the list after adding/removing a user.", io);
 			} finally {
-                IOUtils.closeQuietly(bufferedwriter);
+                IOUtils.closeQuietly(writer);
             }
         });
         
-        needSave = false; // Torch
+        needSave = false;
+        // Torch end
     }
 
     public void load() throws FileNotFoundException {
