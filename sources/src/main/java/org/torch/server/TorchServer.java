@@ -57,7 +57,7 @@ import joptsimple.OptionSet;
 
 import lombok.Getter;
 import lombok.Setter;
-
+import net.md_5.bungee.api.ChatColor;
 import net.minecraft.server.*;
 
 import io.netty.buffer.ByteBuf;
@@ -1739,7 +1739,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      * Returns a green color "Server" string
      */
     public String getName() {
-        return org.bukkit.ChatColor.GREEN + "Server";
+        return ChatColor.GREEN + "Server" + ChatColor.RESET;
     }
 
     /**
@@ -1768,7 +1768,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      * Simply send a message
      */
     public void sendMessage(IChatBaseComponent component) {
-        logger.info(component.toPlainText());
+        Bukkit.getConsoleSender().sendMessage(component.toPlainText());
     }
 
     /**
