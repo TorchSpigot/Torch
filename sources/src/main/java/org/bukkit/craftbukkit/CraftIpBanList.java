@@ -1,19 +1,15 @@
 package org.bukkit.craftbukkit;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Date;
 import java.util.Set;
 
 import net.minecraft.server.IpBanEntry;
 import net.minecraft.server.IpBanList;
-import net.minecraft.server.MinecraftServer;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 
 import com.google.common.collect.ImmutableSet;
-import java.util.logging.Level;
-import org.bukkit.Bukkit;
 
 public class CraftIpBanList implements org.bukkit.BanList {
     private final IpBanList list;
@@ -26,7 +22,7 @@ public class CraftIpBanList implements org.bukkit.BanList {
     public org.bukkit.BanEntry getBanEntry(String target) {
         Validate.notNull(target, "Target cannot be null");
 
-        IpBanEntry entry = (IpBanEntry) list.get(target);
+        IpBanEntry entry = list.get(target);
         if (entry == null) {
             return null;
         }
@@ -44,11 +40,13 @@ public class CraftIpBanList implements org.bukkit.BanList {
 
         list.add(entry);
 
-        try {
+        // Torch start - remove unnecessary save, list.add also does
+        /* try {
             list.save();
         } catch (IOException ex) {
             Bukkit.getLogger().log(Level.SEVERE, "Failed to save banned-ips.json, {0}", ex.getMessage());
-        }
+        } */
+        // Torch end
 
         return new CraftIpBanEntry(target, entry, list);
     }
@@ -57,7 +55,7 @@ public class CraftIpBanList implements org.bukkit.BanList {
     public Set<org.bukkit.BanEntry> getBanEntries() {
         ImmutableSet.Builder<org.bukkit.BanEntry> builder = ImmutableSet.builder();
         for (String target : list.getEntries()) {
-            builder.add(new CraftIpBanEntry(target, (IpBanEntry) list.get(target), list));
+            builder.add(new CraftIpBanEntry(target, list.get(target), list));
         }
 
         return builder.build();

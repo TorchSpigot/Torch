@@ -57,8 +57,6 @@ public class JsonList<K, V extends JsonListEntry<K>> {
     /** Only used to reduce entries overread */
     protected boolean modified = false;
     protected String[] lastEntries; // TODO: always overread twice
-    /** Only used to reduce list saving */
-    protected boolean needSave = true; // TODO: always save twice
     // Torch end
 
     public JsonList(File file) {
@@ -138,11 +136,7 @@ public class JsonList<K, V extends JsonListEntry<K>> {
     }
 
     public void save() {
-    	// Torch start
-    	if (!needSave) {
-    		needSave = true; return;
-    	}
-        Collection values = this.d.values();
+        Collection<V> values = this.d.values();
         
         MCUtil.scheduleAsyncTask(() -> {
         	String jsonString = this.b.toJson(values);
@@ -152,14 +146,12 @@ public class JsonList<K, V extends JsonListEntry<K>> {
                 writer = Files.newWriter(this.c, Charsets.UTF_8);
                 writer.write(jsonString);
             } catch (IOException io) {
-            	logger.warn("Could not save the list after adding/removing a user.", io);
+            	logger.warn("Failed to save {}", this.c.getName());
+            	io.printStackTrace();
 			} finally {
                 IOUtils.closeQuietly(writer);
             }
         });
-        
-        needSave = false;
-        // Torch end
     }
 
     public void load() throws FileNotFoundException {

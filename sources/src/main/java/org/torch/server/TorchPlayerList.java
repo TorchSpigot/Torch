@@ -1388,11 +1388,7 @@ public final class TorchPlayerList implements TorchReactor {
     }
     
     public void saveIPBanList() {
-        try {
-            this.bannedIPs.save();
-        } catch (IOException io) {
-        	logger.warn("Failed to save ip banlist: ", io);
-        }
+        this.bannedIPs.save();
     }
     
     public void loadIPBanList() {
@@ -1404,11 +1400,7 @@ public final class TorchPlayerList implements TorchReactor {
     }
 
     public void savePlayerBanList() {
-        try {
-            this.bannedPlayers.save();
-        } catch (IOException io) {
-        	logger.warn("Failed to save user banlist: ", io);
-        }
+        this.bannedPlayers.save();
     }
 
     public void loadPlayerBanList() {

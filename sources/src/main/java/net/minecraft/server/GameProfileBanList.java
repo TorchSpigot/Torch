@@ -5,8 +5,6 @@ import com.mojang.authlib.GameProfile;
 import java.io.File;
 import java.util.Iterator;
 
-import org.torch.server.TorchServer;
-
 public class GameProfileBanList extends JsonList<GameProfile, GameProfileBanEntry> {
 
     public GameProfileBanList(File file) {

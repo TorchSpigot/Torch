@@ -1,6 +1,5 @@
 package org.bukkit.craftbukkit;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.Set;
 
@@ -14,8 +13,6 @@ import org.apache.commons.lang.Validate;
 
 import com.google.common.collect.ImmutableSet;
 import com.mojang.authlib.GameProfile;
-import java.util.logging.Level;
-import org.bukkit.Bukkit;
 
 public class CraftProfileBanList implements org.bukkit.BanList {
     private final GameProfileBanList list;
@@ -33,7 +30,7 @@ public class CraftProfileBanList implements org.bukkit.BanList {
             return null;
         }
 
-        GameProfileBanEntry entry = (GameProfileBanEntry) list.get(profile);
+        GameProfileBanEntry entry = list.get(profile);
         if (entry == null) {
             return null;
         }
@@ -56,11 +53,13 @@ public class CraftProfileBanList implements org.bukkit.BanList {
 
         list.add(entry);
 
-        try {
+        // Torch start - remove unnecessary save, list.add also does
+        /* try {
             list.save();
         } catch (IOException ex) {
             Bukkit.getLogger().log(Level.SEVERE, "Failed to save banned-players.json, {0}", ex.getMessage());
-        }
+        } */
+        // Torch end
 
         return new CraftProfileBanEntry(profile, entry, list);
     }

@@ -79,10 +79,13 @@ public final class CraftIpBanEntry implements org.bukkit.BanEntry {
     public void save() {
         IpBanEntry entry = new IpBanEntry(target, this.created, this.source, this.expiration, this.reason);
         this.list.add(entry);
-        try {
+        
+        // Torch start - remove unnecessary save, list.add also does
+        /* try {
             this.list.save();
         } catch (IOException ex) {
             Bukkit.getLogger().log(Level.SEVERE, "Failed to save banned-ips.json, {0}", ex.getMessage());
-        }
+        } */
+        // Torch end
     }
 }
