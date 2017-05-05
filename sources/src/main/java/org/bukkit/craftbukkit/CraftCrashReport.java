@@ -4,7 +4,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import net.minecraft.server.CrashReportCallable;
 
 import org.bukkit.Bukkit;
@@ -15,6 +14,7 @@ import net.minecraft.server.MinecraftServer;
 
 public class CraftCrashReport implements CrashReportCallable<Object> {
 
+    @Override
     public Object call() throws Exception {
         StringWriter value = new StringWriter();
         try {

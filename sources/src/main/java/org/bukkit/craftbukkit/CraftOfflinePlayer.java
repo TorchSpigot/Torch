@@ -82,31 +82,25 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
 
     @Override
 	public void setOp(boolean value) {
-        if (value == isOp()) {
-            return;
-        }
+        if (value == isOp()) return;
 
         if (value) {
-            server.getHandle().addOp(profile);
+            server.playerList.addOp(profile);
         } else {
-            server.getHandle().removeOp(profile);
+            server.playerList.removeOp(profile);
         }
     }
 
     @Override
 	public boolean isBanned() {
-        if (getName() == null) {
-            return false;
-        }
+        if (getName() == null) return false;
 
         return server.getBanList(BanList.Type.NAME).isBanned(getName());
     }
 
     @Override
 	public void setBanned(boolean value) {
-        if (getName() == null) {
-            return;
-        }
+        if (getName() == null) return;
 
         if (value) {
             server.getBanList(BanList.Type.NAME).addBan(getName(), null, null, null);
@@ -117,15 +111,15 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
 
     @Override
 	public boolean isWhitelisted() {
-        return server.getHandle().getWhitelist().isWhitelisted(profile);
+        return server.playerList.isWhitelisted(profile);
     }
 
     @Override
 	public void setWhitelisted(boolean value) {
         if (value) {
-            server.getHandle().addWhitelist(profile);
+            server.playerList.addWhitelist(profile);
         } else {
-            server.getHandle().removeWhitelist(profile);
+            server.playerList.removeWhitelist(profile);
         }
     }
 
