@@ -1292,24 +1292,8 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
             // Paper Start
             if (org.spigotmc.AsyncCatcher.enabled && !org.bukkit.Bukkit.isPrimaryThread()) {
                 final String fCommandLine = s;
-                MinecraftServer.LOGGER.log(org.apache.logging.log4j.Level.ERROR, "Command Dispatched Async: " + fCommandLine);
-                MinecraftServer.LOGGER.log(org.apache.logging.log4j.Level.ERROR, "Please notify author of plugin causing this execution to fix this bug! see: http://bit.ly/1oSiM6C", new Throwable());
-                Waitable wait = new Waitable() {
-                    @Override
-                    protected Object evaluate() {
-                        chat(fCommandLine, false);
-                        return null;
-                    }
-                };
-                minecraftServer.processQueue.add(wait);
-                try {
-                    wait.get();
-                    return;
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt(); // This is proper habit for java. If we aren't handling it, pass it on!
-                } catch (Exception e) {
-                    throw new RuntimeException("Exception processing chat command", e.getCause());
-                }
+                MinecraftServer.LOGGER.log(org.apache.logging.log4j.Level.ERROR, "Command Dispatched Async: " + fCommandLine + ", Post to Main Thread!");
+                minecraftServer.processQueue.add(() -> chat(fCommandLine, false));
             }
             // Paper End
             this.handleCommand(s);
