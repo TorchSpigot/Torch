@@ -25,6 +25,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Logger;
 import org.torch.api.Async;
@@ -55,8 +57,14 @@ public class JsonList<K, V extends JsonListEntry<K>> {
         }
     };
     
+    // Torch start
     /** Cached string keys, K -> String */
     LoadingCache<K, String> stringKeys = Caffeine.newBuilder().maximumSize(512).build(K::toString); // TODO: configurable size
+    
+    private final static long EXPIRE_CHECK_INTERVAL = TimeUnit.MILLISECONDS.convert(9, TimeUnit.SECONDS); // TODO: configurable
+    /** The last time to check expire, in milliseconds. */
+	private long lastExpireCheckTime = System.currentTimeMillis();
+    // Torch end
 
     public JsonList(File file) {
         this.c = file;
@@ -85,7 +93,15 @@ public class JsonList<K, V extends JsonListEntry<K>> {
     }
 
     public V get(K k0) {
-        this.removeExpired();
+    	// Torch start - reduce expire check
+    	final long now = System.currentTimeMillis();
+    	
+    	if ((now - lastExpireCheckTime) > EXPIRE_CHECK_INTERVAL) {
+    		lastExpireCheckTime = now;
+    		this.removeExpired();
+    	}
+    	// Torch end
+        
         return this.d.get(a(k0)); // CraftBukkit - fix decompile error
     }
 
