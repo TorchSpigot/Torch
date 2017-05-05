@@ -1850,11 +1850,12 @@ public abstract class EntityHuman extends EntityLiving {
         return this.getDataWatcher().get(EntityHuman.a).floatValue();
     }
 
+    public static UUID matchUUID(GameProfile profile) { return a(profile); } // OBFHELPER
     public static UUID a(GameProfile gameprofile) {
         UUID uuid = gameprofile.getId();
 
         if (uuid == null) {
-            uuid = d(gameprofile.getName());
+            uuid = offlinePlayerUUID(gameprofile.getName());
         }
 
         return uuid;

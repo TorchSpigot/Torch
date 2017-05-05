@@ -59,7 +59,7 @@ public class JsonList<K, V extends JsonListEntry<K>> {
 
     // Torch start
     /** Cached string keys, K -> String */
-    LoadingCache<K, String> stringKeys = Caffeine.newBuilder().maximumSize(512).build(K::toString); // TODO: configurable size
+    private final LoadingCache<K, String> stringKeys = Caffeine.newBuilder().maximumSize(512).build(K::toString); // TODO: configurable size
 
     private final static long EXPIRE_CHECK_INTERVAL = TimeUnit.MILLISECONDS.convert(9, TimeUnit.SECONDS); // TODO: configurable
     /** The last time to check expire, in milliseconds. */

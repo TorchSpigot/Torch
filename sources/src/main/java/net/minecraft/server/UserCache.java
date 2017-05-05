@@ -1,9 +1,10 @@
 package net.minecraft.server;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -39,35 +40,44 @@ import java.util.Map;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import org.apache.commons.io.IOUtils;
-import org.bukkit.Bukkit;
-import org.torch.server.TorchServer;
+import org.apache.commons.lang3.StringUtils;
+import org.torch.api.Async;
 
 public class UserCache {
 
     public static final SimpleDateFormat a = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+    /** onlineMode */
     private static boolean c;
+    /** Username -> UserCacheEntry */
     private final Map<String, UserCache.UserCacheEntry> d = HashObjObjMaps.newMutableMap();
+    /** UUID -> UserCacheEntry */
     private final Map<UUID, UserCache.UserCacheEntry> e = HashObjObjMaps.newMutableMap();
+    /** All cached GameProfiles */
     private final Deque<GameProfile> f = new java.util.concurrent.LinkedBlockingDeque<GameProfile>(); // CraftBukkit
     private final GameProfileRepository g;
     protected final Gson b;
+    /** userCacheFile */
     private final File h;
     private static final ParameterizedType i = new ParameterizedType() {
         @Override
-		public Type[] getActualTypeArguments() {
+        public Type[] getActualTypeArguments() {
             return new Type[] { UserCache.UserCacheEntry.class};
         }
 
         @Override
-		public Type getRawType() {
+        public Type getRawType() {
             return List.class;
         }
 
         @Override
-		public Type getOwnerType() {
+        public Type getOwnerType() {
             return null;
         }
     };
+    
+    // Torch start
+    private final static Cache<String, GameProfile> offlineCache = isOnlineMode() ? null : Caffeine.newBuilder().maximumSize(512).build(); // TODO: configurable size
+    // Torch end
 
     public UserCache(GameProfileRepository gameprofilerepository, File file) {
         this.g = gameprofilerepository;
@@ -79,44 +89,47 @@ public class UserCache {
         this.b();
     }
 
-    private static GameProfile a(GameProfileRepository gameprofilerepository, String s) {
-        final GameProfile[] agameprofile = new GameProfile[1];
-        ProfileLookupCallback profilelookupcallback = new ProfileLookupCallback() {
+    private static GameProfile a(GameProfileRepository profileRepo, String name) {
+        if (!isOnlineMode() && !StringUtils.isBlank(name)) return getProfileOffline(name);
+        
+        final GameProfile[] profile = new GameProfile[1];
+        ProfileLookupCallback lookup = new ProfileLookupCallback() {
             @Override
-			public void onProfileLookupSucceeded(GameProfile gameprofile) {
-                agameprofile[0] = gameprofile;
+            public void onProfileLookupSucceeded(GameProfile gameprofile) {
+                profile[0] = gameprofile;
             }
 
             @Override
-			public void onProfileLookupFailed(GameProfile gameprofile, Exception exception) {
-                agameprofile[0] = null;
+            public void onProfileLookupFailed(GameProfile gameprofile, Exception exception) {
+                profile[0] = null;
             }
         };
-
-        gameprofilerepository.findProfilesByNames(new String[] { s}, Agent.MINECRAFT, profilelookupcallback);
-        if (!d() && agameprofile[0] == null && !org.apache.commons.lang3.StringUtils.isBlank(s)) { // Paper - Don't lookup a profile with a blank name
-            UUID uuid = EntityHuman.a(new GameProfile((UUID) null, s));
-            GameProfile gameprofile = new GameProfile(uuid, s);
-
-            profilelookupcallback.onProfileLookupSucceeded(gameprofile);
-        }
-
-        return agameprofile[0];
+        
+        profileRepo.findProfilesByNames(new String[] { name }, Agent.MINECRAFT, lookup);
+        
+        return profile[0];
     }
 
     public static void a(boolean flag) {
         UserCache.c = flag;
     }
 
+    public static boolean isOnlineMode() { return d(); } // OBFHELPER
     private static boolean d() {
         return UserCache.c;
     }
 
+    public void addEntry(GameProfile profile) { this.a(profile); } // OBFHELPER
     public void a(GameProfile gameprofile) {
-        this.a(gameprofile, (Date) null);
+        if (!isOnlineMode()) return;
+        
+        this.addEntry(gameprofile, null);
     }
 
+    public void addEntry(GameProfile profile, Date date) { this.a(profile, date); } // OBFHELPER
     private synchronized void a(GameProfile gameprofile, Date date) { // Paper - synchronize
+        if (!isOnlineMode()) return;
+        
         UUID uuid = gameprofile.getId();
 
         if (date == null) {
@@ -127,71 +140,90 @@ public class UserCache {
             date = calendar.getTime();
         }
 
-        String s = gameprofile.getName().toLowerCase(Locale.ROOT);
-        UserCache.UserCacheEntry usercache_usercacheentry = new UserCache.UserCacheEntry(gameprofile, date, null);
+        UserCache.UserCacheEntry entry = new UserCache.UserCacheEntry(gameprofile, date, null);
 
-        //if (this.e.containsKey(uuid)) { // Paper
-            UserCache.UserCacheEntry usercache_usercacheentry1 = this.e.get(uuid);
-        if (usercache_usercacheentry1 != null) { // Paper
+        UserCache.UserCacheEntry cachedEntry = this.e.get(uuid);
+        if (cachedEntry != null) { // Paper
 
-            this.d.remove(usercache_usercacheentry1.a().getName().toLowerCase(Locale.ROOT));
+            this.d.remove(cachedEntry.getKey().getName().toLowerCase(Locale.ROOT));
             this.f.remove(gameprofile);
         }
 
-        this.d.put(gameprofile.getName().toLowerCase(Locale.ROOT), usercache_usercacheentry);
-        this.e.put(uuid, usercache_usercacheentry);
+        this.d.put(gameprofile.getName().toLowerCase(Locale.ROOT), entry);
+        this.e.put(uuid, entry);
         this.f.addFirst(gameprofile);
-        if( !org.spigotmc.SpigotConfig.saveUserCacheOnStopOnly ) this.c(); // Spigot - skip saving if disabled
+        if( !org.spigotmc.SpigotConfig.saveUserCacheOnStopOnly ) this.saveUserCache(); // Spigot - skip saving if disabled
+    }
+    
+    @Nullable
+    public GameProfile getProfile(String name) {
+        if (!isOnlineMode() && !StringUtils.isBlank(name)) {
+            return getProfileOffline(name);
+        } else {
+            return this.getProfileOnline(name);
+        }
+    }
+    
+    private static GameProfile getProfileOffline(String name) {
+        GameProfile offline = offlineCache.getIfPresent(name.toLowerCase());
+        
+        if (offline == null) {
+            offline = new GameProfile(EntityHuman.offlinePlayerUUID(name), name);
+            offlineCache.put(name.toLowerCase(), offline);
+        }
+        
+        return offline;
     }
 
     @Nullable
-    public synchronized GameProfile getProfile(String s) { // Paper - synchronize
-        String s1 = s.toLowerCase(Locale.ROOT);
-        UserCache.UserCacheEntry usercache_usercacheentry = this.d.get(s1);
+    public synchronized GameProfile getProfileOnline(String name) { // Paper - synchronize
+        String standardUsername = name.toLowerCase(Locale.ROOT);
+        UserCache.UserCacheEntry entry = this.d.get(standardUsername);
 
-        if (usercache_usercacheentry != null && (new Date()).getTime() >= usercache_usercacheentry.c.getTime()) {
-            this.e.remove(usercache_usercacheentry.a().getId());
-            this.d.remove(usercache_usercacheentry.a().getName().toLowerCase(Locale.ROOT));
-            this.f.remove(usercache_usercacheentry.a());
-            usercache_usercacheentry = null;
+        if (entry != null && (new Date()).getTime() >= entry.c.getTime()) {
+            this.e.remove(entry.getKey().getId());
+            this.d.remove(entry.getKey().getName().toLowerCase(Locale.ROOT));
+            this.f.remove(entry.getKey());
+            entry = null;
         }
-
-        GameProfile gameprofile;
-
-        if (usercache_usercacheentry != null) {
-            gameprofile = usercache_usercacheentry.a();
-            this.f.remove(gameprofile);
-            this.f.addFirst(gameprofile);
+        
+        GameProfile profile;
+        
+        if (entry != null) {
+            profile = entry.getKey();
+            this.f.remove(profile);
+            this.f.addFirst(profile);
         } else {
-            gameprofile = a(this.g, s); // Spigot - use correct case for offline players
-            if (gameprofile != null) {
-                this.a(gameprofile);
-                usercache_usercacheentry = this.d.get(s1);
+            profile = a(this.g, name); // Spigot - use correct case for offline players
+            if (profile != null) {
+                this.addEntry(profile);
+                entry = this.d.get(standardUsername);
             }
         }
-
-        if( !org.spigotmc.SpigotConfig.saveUserCacheOnStopOnly ) this.c(); // Spigot - skip saving if disabled
-        return usercache_usercacheentry == null ? null : usercache_usercacheentry.a();
+        
+        if( !org.spigotmc.SpigotConfig.saveUserCacheOnStopOnly ) this.saveUserCache(); // Spigot - skip saving if disabled
+        return entry == null ? null : entry.getKey();
     }
 
     public synchronized String[] a() { // Paper - synchronize
-        ArrayList arraylist = Lists.newArrayList(this.d.keySet());
-
-        return (String[]) arraylist.toArray(new String[arraylist.size()]);
+        if (!isOnlineMode()) offlineCache.asMap().keySet().toArray();
+        
+        return this.d.keySet().toArray(new String[this.d.size()]);
     }
 
-    @Nullable
-    public GameProfile a(UUID uuid) {
+    @Nullable public GameProfile getProfileByUUID(UUID uuid) { return this.a(uuid); } // OBFHELPER
+    @Nullable public GameProfile a(UUID uuid) {
         UserCache.UserCacheEntry usercache_usercacheentry = this.e.get(uuid);
 
-        return usercache_usercacheentry == null ? null : usercache_usercacheentry.a();
+        return usercache_usercacheentry == null ? null : usercache_usercacheentry.getKey();
     }
 
+    public UserCacheEntry getEntryByUUID(UUID uuid) { return this.b(uuid); } // OBFHELPER
     private UserCache.UserCacheEntry b(UUID uuid) {
         UserCache.UserCacheEntry usercache_usercacheentry = this.e.get(uuid);
 
         if (usercache_usercacheentry != null) {
-            GameProfile gameprofile = usercache_usercacheentry.a();
+            GameProfile gameprofile = usercache_usercacheentry.getKey();
 
             this.f.remove(gameprofile);
             this.f.addFirst(gameprofile);
@@ -217,17 +249,17 @@ public class UserCache {
                     UserCache.UserCacheEntry usercache_usercacheentry = (UserCache.UserCacheEntry) iterator.next();
 
                     if (usercache_usercacheentry != null) {
-                        this.a(usercache_usercacheentry.a(), usercache_usercacheentry.b());
+                        this.addEntry(usercache_usercacheentry.getKey(), usercache_usercacheentry.b());
                     }
                 }
             }
         } catch (FileNotFoundException filenotfoundexception) {
             ;
-        // Spigot Start
+            // Spigot Start
         } catch (com.google.gson.JsonSyntaxException ex) {
             JsonList.a.warn( "Usercache.json is corrupted or has bad formatting. Deleting it to prevent further issues." );
             this.h.delete();
-        // Spigot End
+            // Spigot End
         } catch (JsonParseException jsonparseexception) {
             ;
         } finally {
@@ -237,7 +269,8 @@ public class UserCache {
     }
 
     // Paper start
-    public void c() {
+    @Async public void saveUserCache() { this.c(); } // OBFHELPER
+    @Async public void c() {
         c(true);
     }
     public void c(boolean asyncSave) {
@@ -245,20 +278,20 @@ public class UserCache {
         String s = this.b.toJson(this.a(org.spigotmc.SpigotConfig.userCacheCap));
         Runnable save = () -> {
 
-        BufferedWriter bufferedwriter = null;
+            BufferedWriter bufferedwriter = null;
 
-        try {
-            bufferedwriter = Files.newWriter(this.h, Charsets.UTF_8);
-            bufferedwriter.write(s);
-            return;
-        } catch (FileNotFoundException filenotfoundexception) {
-            return;
-        } catch (IOException ioexception) {
-            ;
-        } finally {
-            IOUtils.closeQuietly(bufferedwriter);
-        }
-        // Paper start
+            try {
+                bufferedwriter = Files.newWriter(this.h, Charsets.UTF_8);
+                bufferedwriter.write(s);
+                return;
+            } catch (FileNotFoundException filenotfoundexception) {
+                return;
+            } catch (IOException ioexception) {
+                ;
+            } finally {
+                IOUtils.closeQuietly(bufferedwriter);
+            }
+            // Paper start
         };
         if (asyncSave) {
             MCUtil.scheduleAsyncTask(save);
@@ -269,24 +302,17 @@ public class UserCache {
 
     }
 
-    private List<UserCache.UserCacheEntry> a(int i) {
-        ArrayList arraylist = Lists.newArrayList();
-        ArrayList arraylist1 = Lists.newArrayList(Iterators.limit(this.f.iterator(), i));
-        Iterator iterator = arraylist1.iterator();
-
-        while (iterator.hasNext()) {
-            GameProfile gameprofile = (GameProfile) iterator.next();
-            UserCache.UserCacheEntry usercache_usercacheentry = this.b(gameprofile.getId());
-
-            if (usercache_usercacheentry != null) {
-                arraylist.add(usercache_usercacheentry);
-            }
-        }
-
-        return arraylist;
+    public List<UserCacheEntry> getEntriesWithLimitedSize(int size) { return this.a(size); } // OBFHELPER
+    private List<UserCache.UserCacheEntry> a(int size) {
+        ArrayList<UserCacheEntry> list = Lists.newArrayList();
+        
+        Iterator<GameProfile> itr = Iterators.limit(this.f.iterator(), size);
+        while (itr.hasNext()) list.add(this.getEntryByUUID(itr.next().getId()));
+        
+        return list;
     }
 
-    class UserCacheEntry {
+    public class UserCacheEntry {
 
         private final GameProfile b;
         private final Date c;
@@ -296,6 +322,7 @@ public class UserCache {
             this.c = date;
         }
 
+        public GameProfile getKey() { return this.a(); } // OBFHELPER
         public GameProfile a() {
             return this.b;
         }
@@ -316,8 +343,8 @@ public class UserCache {
         public JsonElement a(UserCache.UserCacheEntry usercache_usercacheentry, Type type, JsonSerializationContext jsonserializationcontext) {
             JsonObject jsonobject = new JsonObject();
 
-            jsonobject.addProperty("name", usercache_usercacheentry.a().getName());
-            UUID uuid = usercache_usercacheentry.a().getId();
+            jsonobject.addProperty("name", usercache_usercacheentry.getKey().getName());
+            UUID uuid = usercache_usercacheentry.getKey().getId();
 
             jsonobject.addProperty("uuid", uuid == null ? "" : uuid.toString());
             jsonobject.addProperty("expiresOn", UserCache.a.format(usercache_usercacheentry.b()));
@@ -366,12 +393,12 @@ public class UserCache {
         }
 
         @Override
-		public JsonElement serialize(UserCacheEntry object, Type type, JsonSerializationContext jsonserializationcontext) { // CraftBukkit - decompile error
+        public JsonElement serialize(UserCacheEntry object, Type type, JsonSerializationContext jsonserializationcontext) { // CraftBukkit - decompile error
             return this.a(object, type, jsonserializationcontext);
         }
 
         @Override
-		public UserCacheEntry deserialize(JsonElement jsonelement, Type type, JsonDeserializationContext jsondeserializationcontext) throws JsonParseException { // CraftBukkit - decompile error
+        public UserCacheEntry deserialize(JsonElement jsonelement, Type type, JsonDeserializationContext jsondeserializationcontext) throws JsonParseException { // CraftBukkit - decompile error
             return this.a(jsonelement, type, jsondeserializationcontext);
         }
 
