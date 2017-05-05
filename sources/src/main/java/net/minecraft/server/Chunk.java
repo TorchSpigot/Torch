@@ -167,10 +167,10 @@ public class Chunk {
         return null;
     }
 
+    public int findFilledTop() { return this.g(); } // OBFHELPER
     public int g() {
-        ChunkSection chunksection = this.y();
-
-        return chunksection == null ? 0 : chunksection.getYPosition();
+        ChunkSection section = this.y();
+        return section == null ? 0 : section.getYPosition();
     }
 
     public ChunkSection[] getSections() {

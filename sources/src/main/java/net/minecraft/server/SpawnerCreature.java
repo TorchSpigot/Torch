@@ -1,17 +1,18 @@
 package net.minecraft.server;
 
 import java.util.Random;
+import java.util.Set;
+
 import lombok.Getter;
 
-import org.bukkit.craftbukkit.util.LongHashSet;
 // CraftBukkit end
 import org.torch.server.TorchCreatureSpawner;
 
 public final class SpawnerCreature implements org.torch.api.TorchServant {
 	@Getter private final TorchCreatureSpawner reactor;
 	
-    private static final int a = TorchCreatureSpawner.MOB_COUNT_DIV;
-    private final LongHashSet b; // CraftBukkit
+    // private static final int a = TorchCreatureSpawner.MOB_COUNT_DIV;
+    private final Set b; // CraftBukkit // Torch
 
     public SpawnerCreature() {
     	reactor = new TorchCreatureSpawner(this);
@@ -44,7 +45,7 @@ public final class SpawnerCreature implements org.torch.api.TorchServant {
     }
 
     private static BlockPosition getRandomPosition(World world, int i, int j) {
-        return TorchCreatureSpawner.getRandomPosition(world, i, j);
+        return TorchCreatureSpawner.createRandomPosition(world, i, j);
     }
 
     public static boolean a(IBlockData iblockdata) {
@@ -56,6 +57,6 @@ public final class SpawnerCreature implements org.torch.api.TorchServant {
     }
 
     public static void a(World world, BiomeBase biomebase, int i, int j, int k, int l, Random random) {
-        TorchCreatureSpawner.performWorldGenSpawning(world, biomebase, i, j, k, l, random);
+        TorchCreatureSpawner.performWorldGenerateSpawning(world, biomebase, i, j, k, l, random);
     }
 }

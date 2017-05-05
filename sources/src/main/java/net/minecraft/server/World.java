@@ -3114,6 +3114,7 @@ public abstract class World implements IBlockAccess {
         return 256;
     }
 
+    public int getActualWorldHeight() { return this.Z(); } // OBFHELPER
     public int Z() {
         return this.worldProvider.n() ? 128 : 256;
     }
@@ -3204,6 +3205,7 @@ public abstract class World implements IBlockAccess {
 
     }
 
+    public DifficultyDamageScaler createDamageScaler(BlockPosition position) { return this.D(position); } // OBFHELPER
     public DifficultyDamageScaler D(BlockPosition blockposition) {
         long i = 0L;
         float f = 0.0F;

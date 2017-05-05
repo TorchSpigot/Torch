@@ -1,7 +1,6 @@
 package net.minecraft.server;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.koloboke.collect.set.hash.HashObjSets;
 
 import java.util.ArrayList;
@@ -9,6 +8,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import org.torch.server.Regulator;
 
 public class ScoreboardServer extends Scoreboard {
 
@@ -239,12 +240,14 @@ public class ScoreboardServer extends Scoreboard {
     }
 
     // CraftBukkit start - Send to players
-    private void sendAll(Packet packet) {
-        for (EntityPlayer entityplayer : this.a.getPlayerList().players) {
-            if (entityplayer.getBukkitEntity().getScoreboard().getHandle() == this) {
-                entityplayer.playerConnection.sendPacket(packet);
-            }
-        }
+    private void sendAll(Packet<?> packet) {
+        Regulator.post(() -> {
+        	for (EntityPlayer player : this.a.getReactor().getPlayerList().players) {
+        		if (player.getBukkitEntity().getScoreboard().getHandle() == this) {
+        			player.playerConnection.sendPacket(packet);
+        		}
+        	}
+        });
     }
     // CraftBukkit end
 }

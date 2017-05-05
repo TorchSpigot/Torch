@@ -29,7 +29,8 @@ public class PlayerChunk {
     // CraftBukkit start - add fields
     private boolean loadInProgress = false;
     private Runnable loadedRunnable = new Runnable() {
-        public void run() {
+        @Override
+		public void run() {
             loadInProgress = false;
             PlayerChunk.this.chunk = PlayerChunk.this.playerChunkMap.getWorld().getChunkProviderServer().getOrLoadChunkAt(location.x, location.z);
             markChunkUsed(); // Paper - delay chunk unloads
@@ -194,7 +195,7 @@ public class PlayerChunk {
     public void a(Packet<?> packet) {
         if (this.done) {
             for (int i = 0; i < this.c.size(); ++i) {
-                ((EntityPlayer) this.c.get(i)).playerConnection.sendPacket(packet);
+                this.c.get(i).playerConnection.sendPacket(packet);
             }
 
         }
@@ -213,14 +214,14 @@ public class PlayerChunk {
                     k = (this.dirtyBlocks[0] >> 8 & 15) + this.location.z * 16;
                     BlockPosition blockposition = new BlockPosition(i, j, k);
 
-                    this.a((Packet) (new PacketPlayOutBlockChange(this.playerChunkMap.getWorld(), blockposition)));
+                    this.a((new PacketPlayOutBlockChange(this.playerChunkMap.getWorld(), blockposition)));
                     if (this.playerChunkMap.getWorld().getType(blockposition).getBlock().isTileEntity()) {
                         this.a(this.playerChunkMap.getWorld().getTileEntity(blockposition));
                     }
                 } else if (this.dirtyCount == 64) {
-                    this.a((Packet) (new PacketPlayOutMapChunk(this.chunk, this.h)));
+                    this.a((new PacketPlayOutMapChunk(this.chunk, this.h)));
                 } else {
-                    this.a((Packet) (new PacketPlayOutMultiBlockChange(this.dirtyCount, this.dirtyBlocks, this.chunk)));
+                    this.a((new PacketPlayOutMultiBlockChange(this.dirtyCount, this.dirtyBlocks, this.chunk)));
 
                     for (i = 0; i < this.dirtyCount; ++i) {
                         j = (this.dirtyBlocks[i] >> 12 & 15) + this.location.x * 16;
@@ -245,7 +246,7 @@ public class PlayerChunk {
             PacketPlayOutTileEntityData packetplayouttileentitydata = tileentity.getUpdatePacket();
 
             if (packetplayouttileentitydata != null) {
-                this.a((Packet) packetplayouttileentitydata);
+                this.a(packetplayouttileentitydata);
             }
         }
 
@@ -263,7 +264,7 @@ public class PlayerChunk {
         int i = 0;
 
         for (int j = this.c.size(); i < j; ++i) {
-            EntityPlayer entityplayer = (EntityPlayer) this.c.get(i);
+            EntityPlayer entityplayer = this.c.get(i);
 
             if (predicate.apply(entityplayer) && this.location.a(entityplayer) < d0 * d0) {
                 return true;
@@ -273,6 +274,7 @@ public class PlayerChunk {
         return false;
     }
 
+    public boolean isDone() { return this.e(); } // OBFHELPER
     public boolean e() {
         return this.done;
     }

@@ -5,6 +5,8 @@ import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.koloboke.collect.map.hash.HashObjObjMaps;
 
+import net.minecraft.server.BiomeBase.BiomeMeta;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -276,13 +278,14 @@ public class WorldServer extends World implements IAsyncTaskHandler {
         timings.doChunkGC.stopTiming(); // Spigot
     }
 
-    @Nullable public BiomeBase.BiomeMeta getSpawnListEntryForTypeAt(EnumCreatureType creatureType, BlockPosition position) { return this.a(creatureType, position); } // OBFHELPER
+    @Nullable public BiomeMeta createRandomSpawnEntry(EnumCreatureType creatureType, BlockPosition position) { return this.a(creatureType, position); } // OBFHELPER
     @Nullable public BiomeBase.BiomeMeta a(EnumCreatureType enumcreaturetype, BlockPosition blockposition) {
         List list = this.getChunkProviderServer().a(enumcreaturetype, blockposition);
 
         return list != null && !list.isEmpty() ? (BiomeBase.BiomeMeta) WeightedRandom.a(this.random, list) : null;
     }
 
+    public boolean possibleToSpawn(EnumCreatureType creatureType, BiomeMeta spawnEntry, BlockPosition position) { return this.a(creatureType, spawnEntry, position); } // OBFHELPER
     public boolean a(EnumCreatureType enumcreaturetype, BiomeBase.BiomeMeta biomebase_biomemeta, BlockPosition blockposition) {
         List list = this.getChunkProviderServer().a(enumcreaturetype, blockposition);
 

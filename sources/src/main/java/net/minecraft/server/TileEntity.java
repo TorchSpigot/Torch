@@ -31,7 +31,7 @@ public abstract class TileEntity {
 
     @Nullable
     public static MinecraftKey a(Class<? extends TileEntity> oclass) {
-        return (MinecraftKey) TileEntity.f.b(oclass);
+        return TileEntity.f.b(oclass);
     }
 
     static boolean IGNORE_TILE_UPDATES = false; // Paper
@@ -56,7 +56,7 @@ public abstract class TileEntity {
     }
 
     private NBTTagCompound c(NBTTagCompound nbttagcompound) {
-        MinecraftKey minecraftkey = (MinecraftKey) TileEntity.f.b(this.getClass());
+        MinecraftKey minecraftkey = TileEntity.f.b(this.getClass());
 
         if (minecraftkey == null) {
             throw new RuntimeException(this.getClass() + " is missing a mapping! This is a bug!");
@@ -75,7 +75,7 @@ public abstract class TileEntity {
         String s = nbttagcompound.getString("id");
 
         try {
-            Class oclass = (Class) TileEntity.f.get(new MinecraftKey(s));
+            Class oclass = TileEntity.f.get(new MinecraftKey(s));
 
             if (oclass != null) {
                 tileentity = (TileEntity) oclass.newInstance();
@@ -173,7 +173,8 @@ public abstract class TileEntity {
                 return TileEntity.f.b(TileEntity.this.getClass()) + " // " + TileEntity.this.getClass().getCanonicalName();
             }
 
-            public Object call() throws Exception {
+            @Override
+			public Object call() throws Exception {
                 return this.a();
             }
         });
@@ -195,7 +196,8 @@ public abstract class TileEntity {
                     }
                 }
 
-                public Object call() throws Exception {
+                @Override
+				public Object call() throws Exception {
                     return this.a();
                 }
             });
@@ -213,7 +215,8 @@ public abstract class TileEntity {
                     }
                 }
 
-                public Object call() throws Exception {
+                @Override
+				public Object call() throws Exception {
                     return this.a();
                 }
             });

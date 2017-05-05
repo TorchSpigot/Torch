@@ -426,6 +426,10 @@ public abstract class BiomeBase {
             this.c = j;
             this.d = k;
         }
+        
+        public Class<? extends EntityInsentient> entityClass() {
+        	return this.b;
+        }
 
         @Override
 		public String toString() {

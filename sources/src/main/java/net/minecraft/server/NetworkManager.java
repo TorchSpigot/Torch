@@ -27,6 +27,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
+import org.torch.api.Async;
 
 public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
 
@@ -39,7 +40,8 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
             return new NioEventLoopGroup(0, (new ThreadFactoryBuilder()).setNameFormat("Netty Client IO #%d").setDaemon(true).build());
         }
 
-        protected Object init() {
+        @Override
+		protected Object init() {
             return this.a();
         }
     };
@@ -48,7 +50,8 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
             return new EpollEventLoopGroup(0, (new ThreadFactoryBuilder()).setNameFormat("Netty Epoll Client IO #%d").setDaemon(true).build());
         }
 
-        protected Object init() {
+        @Override
+		protected Object init() {
             return this.a();
         }
     };
@@ -57,7 +60,8 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
             return new LocalEventLoopGroup(0, (new ThreadFactoryBuilder()).setNameFormat("Netty Local Client IO #%d").setDaemon(true).build());
         }
 
-        protected Object init() {
+        @Override
+		protected Object init() {
             return this.a();
         }
     };
@@ -80,7 +84,8 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
         this.h = enumprotocoldirection;
     }
 
-    public void channelActive(ChannelHandlerContext channelhandlercontext) throws Exception {
+    @Override
+	public void channelActive(ChannelHandlerContext channelhandlercontext) throws Exception {
         super.channelActive(channelhandlercontext);
         this.channel = channelhandlercontext.channel();
         this.l = this.channel.remoteAddress();
@@ -102,11 +107,13 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
         NetworkManager.g.debug("Enabled auto read");
     }
 
-    public void channelInactive(ChannelHandlerContext channelhandlercontext) throws Exception {
+    @Override
+	public void channelInactive(ChannelHandlerContext channelhandlercontext) throws Exception {
         this.close(new ChatMessage("disconnect.endOfStream", new Object[0]));
     }
 
-    public void exceptionCaught(ChannelHandlerContext channelhandlercontext, Throwable throwable) throws Exception {
+    @Override
+	public void exceptionCaught(ChannelHandlerContext channelhandlercontext, Throwable throwable) throws Exception {
         ChatMessage chatmessage;
 
         if (throwable instanceof TimeoutException) {
@@ -137,7 +144,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
         this.m = packetlistener;
     }
 
-    public void sendPacket(Packet<?> packet) {
+    @Async public void sendPacket(Packet<?> packet) {
         if (this.isConnected()) {
             this.m();
             this.a(packet, (GenericFutureListener[]) null);
@@ -155,10 +162,10 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
         // Paper end
     }
 
-    public void sendPacket(Packet<?> packet, GenericFutureListener<? extends Future<? super Void>> genericfuturelistener, GenericFutureListener<? extends Future<? super Void>>... agenericfuturelistener) {
+    @Async public void sendPacket(Packet<?> packet, GenericFutureListener<? extends Future<? super Void>> genericfuturelistener, GenericFutureListener<? extends Future<? super Void>>... agenericfuturelistener) {
         if (this.isConnected()) {
             this.m();
-            this.a(packet, (GenericFutureListener[]) ArrayUtils.add(agenericfuturelistener, 0, genericfuturelistener));
+            this.a(packet, ArrayUtils.add(agenericfuturelistener, 0, genericfuturelistener));
         }
         // Paper start - Remove but force a conflict
 //        else {
@@ -173,9 +180,9 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
         // Paper end
     }
 
-    private void a(final Packet<?> packet, @Nullable final GenericFutureListener<? extends Future<? super Void>>[] agenericfuturelistener) {
+    @Async private void a(final Packet<?> packet, @Nullable final GenericFutureListener<? extends Future<? super Void>>[] agenericfuturelistener) {
         final EnumProtocol enumprotocol = EnumProtocol.a(packet);
-        final EnumProtocol enumprotocol1 = (EnumProtocol) this.channel.attr(NetworkManager.c).get();
+        final EnumProtocol enumprotocol1 = this.channel.attr(NetworkManager.c).get();
 
         if (enumprotocol1 != enumprotocol) {
             NetworkManager.g.debug("Disabled auto read");
@@ -196,7 +203,8 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
             channelfuture.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
         } else {
             this.channel.eventLoop().execute(new Runnable() {
-                public void run() {
+                @Override
+				public void run() {
                     if (enumprotocol != enumprotocol1) {
                         NetworkManager.this.setProtocol(enumprotocol);
                     }
@@ -329,8 +337,9 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
         }
     }
 
-    protected void channelRead0(ChannelHandlerContext channelhandlercontext, Packet object) throws Exception { // CraftBukkit - fix decompile error
-        this.a(channelhandlercontext, (Packet) object);
+    @Override
+	protected void channelRead0(ChannelHandlerContext channelhandlercontext, Packet object) throws Exception { // CraftBukkit - fix decompile error
+        this.a(channelhandlercontext, object);
     }
 
     static class QueuedPacket {

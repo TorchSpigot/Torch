@@ -54,6 +54,7 @@ import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.util.NumberConversions;
+import org.torch.api.Async;
 import org.torch.server.Regulator;
 
 import com.destroystokyo.paper.event.player.IllegalPacketEvent; // Paper
@@ -1097,7 +1098,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
 
     }
     
-    public void sendPacket(final Packet<?> packet) {
+    @Async public void sendPacket(final Packet<?> packet) {
     	if (packet == null || this.processedDisconnect) return;
     	
         if (packet instanceof PacketPlayOutChat) {

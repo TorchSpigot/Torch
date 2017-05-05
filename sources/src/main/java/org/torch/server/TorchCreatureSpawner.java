@@ -1,29 +1,36 @@
 package org.torch.server;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
-
 import lombok.Getter;
 
 import org.bukkit.craftbukkit.util.LongHash;
-import org.bukkit.craftbukkit.util.LongHashSet;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.spigotmc.AsyncCatcher;
 import org.torch.api.TorchReactor;
 
 import com.destroystokyo.paper.exception.ServerInternalException;
-
+import com.koloboke.collect.set.hash.HashLongSet;
+import com.koloboke.collect.set.hash.HashLongSets;
 import net.minecraft.server.*;
 import net.minecraft.server.BiomeBase.BiomeMeta;
+import net.minecraft.server.BlockPosition.MutableBlockPosition;
+import net.minecraft.server.EntityInsentient.EnumEntityPositionType;
 
 @Getter
 public final class TorchCreatureSpawner implements TorchReactor {
+	/** The legacy */
 	private final SpawnerCreature servant;
 	
-	public static final int MOB_COUNT_DIV = (int) Math.pow(17.0D, 2.0D);
+	// public static final int MOB_COUNT_DIV = (int) Math.pow(17.0D, 2.0D);
 	/** The 17x17 area around the player where mobs can spawn */
-    private final LongHashSet spawnableChunks = new LongHashSet();
+    private final HashLongSet spawnableChunks = HashLongSets.newMutableSet();
+    
+ 	/** Collect the chunks that will actually be eligible for spawning, vanilla 8 */
+ 	private static int RANGE;
+
+ 	/** The chunk area covered by each player, vanilla 17x17 */
+ 	private static int CHUNKS_PER_PLAYER = (RANGE * 2 + 1) * (RANGE * 2 + 1);
 
     public TorchCreatureSpawner(SpawnerCreature legacy) {
     	servant = legacy;
@@ -40,53 +47,54 @@ public final class TorchCreatureSpawner implements TorchReactor {
     }
     
     /**
-     * Adds all chunks within the spawn radius of the players to spawnableChunks.
+     * Adds all chunks within the spawn radius of the players to spawnableChunks
      * Returns number of spawnable chunks
      */
-    public int findChunksForSpawning(WorldServer world, boolean spawnHostileCreatures, boolean spawnPassiveCreatures, boolean spawnOnSetTickRate) {
+    public int findChunksForSpawning(WorldServer world, boolean spawnHostileCreatures, boolean spawnPassiveCreatures, boolean spawnAnimals) {
     	// Paper - At least until we figure out what is calling this async
     	AsyncCatcher.catchOp("check for eligible spawn chunks");
-        if (!spawnHostileCreatures && !spawnPassiveCreatures) return 0;
+    	
+        if ((!spawnHostileCreatures && !spawnPassiveCreatures) || world.players.isEmpty()) return 0;
         
         this.spawnableChunks.clear();
         int foundChunks = 0;
         
-        for (EntityHuman player : world.players) {
-        	if (player.isSpectator() || !player.affectsSpawning) continue;
-        	
-        	int chunkX = MathHelper.floor(player.locX / 16.0D);
-        	int chunkZ = MathHelper.floor(player.locZ / 16.0D);
-            
-            byte spawnRange = world.spigotConfig.mobSpawnRange;
-            spawnRange = (spawnRange > world.spigotConfig.viewDistance) ? (byte) world.spigotConfig.viewDistance : spawnRange;
-            spawnRange = (spawnRange > 8) ? 8 : spawnRange;
-            
-            for (int levelX = -spawnRange; levelX <= spawnRange; levelX++) {
-                for (int levelZ = -spawnRange; levelZ <= spawnRange; levelZ++) {
-                    boolean reachedEdge = levelX == -spawnRange || levelX == spawnRange || levelZ == -spawnRange || levelZ == spawnRange;
-                    ChunkCoordIntPair chunkPair = new ChunkCoordIntPair(levelX + chunkX, levelZ + chunkZ);
-                    
-                    // CraftBukkit - use LongHash and LongHashSet
-                    long chunkCoords = LongHash.toLong(chunkPair.x, chunkPair.z);
-                    if (!this.spawnableChunks.contains(chunkCoords)) {
-                    	foundChunks++;
-                        
-                        if (!reachedEdge && world.getWorldBorder().isInBounds(chunkPair)) {
-                            PlayerChunk currentChunk = world.getPlayerChunkMap().getChunk(chunkPair.x, chunkPair.z);
-                            
-                            if (currentChunk != null && currentChunk.e()) this.spawnableChunks.add(chunkCoords);
-                        }
-                    }
-                }
-            }
+        if (RANGE == 0) {
+        	RANGE = world.spigotConfig.mobSpawnRange;
+        	RANGE = (RANGE > world.spigotConfig.viewDistance) ? world.spigotConfig.viewDistance : RANGE;
+        	RANGE = (RANGE > 8) ? 8 : RANGE;
         }
         
+        for (final EntityHuman player : world.players) {
+        	if (player.isSpectator() || !player.affectsSpawning) continue;
+        	
+			final int centerX = MathHelper.floor(player.locX / 16.0D);
+			final int centerZ = MathHelper.floor(player.locZ / 16.0D);
+			
+			for (int levelX = -RANGE; levelX <= RANGE; levelX++) {
+				for (int levelZ = -RANGE; levelZ <= RANGE; levelZ++) {
+					boolean reachedEdge = levelX == -RANGE || levelX == RANGE || levelZ == -RANGE || levelZ == RANGE;
+					
+					ChunkCoordIntPair chunkPair = new ChunkCoordIntPair(levelX + centerX, levelZ + centerZ);
+					foundChunks++;
+					
+					if (!reachedEdge && world.getWorldBorder().isInBounds(chunkPair)) {
+                        PlayerChunk chunk = world.getPlayerChunkMap().getChunk(chunkPair.x, chunkPair.z);
+                        
+                        if (chunk != null && chunk.isDone()) this.spawnableChunks.add(LongHash.toLong(chunkPair.x, chunkPair.z));
+                    }
+				}
+			}
+			
+		}
+        
         int spawnableChunks = 0;
-        BlockPosition spawnPosition = world.getSpawn();
-        for (EnumCreatureType creatureType : EnumCreatureType.values()) {
+        BlockPosition spawnPoint = world.getSpawn();
+        
+        for (EnumCreatureType type : EnumCreatureType.values()) {
             // CraftBukkit - use per-world spawn limits
-            int spawnLimit = creatureType.b();
-            switch (creatureType) {
+            int spawnLimit = type.getMaxNumberOfCreature();
+            switch (type) {
                 case MONSTER:
                 	spawnLimit = world.getWorld().getMonsterSpawnLimit();
                     break;
@@ -100,183 +108,171 @@ public final class TorchCreatureSpawner implements TorchReactor {
                 	spawnLimit = world.getWorld().getAmbientSpawnLimit();
                     break;
             }
-
+            
             if (spawnLimit == 0) continue;
 			int mobCount = 0;
 			
-            if ((!creatureType.d() || spawnPassiveCreatures) && (creatureType.d() || spawnHostileCreatures) && (!creatureType.e() || spawnOnSetTickRate)) {
-            	// Paper - use 17x17 like vanilla (a at top of file)
-                if ((mobCount = getEntityCount(world, creatureType.a())) <= spawnLimit * foundChunks / 289) {
-                	
-                    BlockPosition.MutableBlockPosition mutablePosition = new BlockPosition.MutableBlockPosition();
-                    Iterator chunkIterator = this.spawnableChunks.iterator();
-                    
-                    int mobLimit = (spawnLimit * foundChunks / 256) - mobCount + 1; // Spigot - up to 1 more than limit
-                    
-                    try {
-                    	LoopChunks:
-                            while (chunkIterator.hasNext() && (mobLimit > 0)) { // Spigot - while more allowed
-                                // CraftBukkit - Use LongHash and LongObjectHashMap
-                                long key = ((Long) chunkIterator.next()).longValue();
-                                BlockPosition randomPos = getRandomPosition(world, LongHash.msw(key), LongHash.lsw(key));
-                                int randomX = randomPos.getX();
-                                int randomY = randomPos.getY();
-                                int randomZ = randomPos.getZ();
-                                
-                                if (!world.getType(randomPos).m()) {
-                                    int spawnedEntity = 0;
-                                    int reLoopTimes = 0;
-                                    
-                                    while (reLoopTimes < 3) {
-                                        int j3 = randomX;
-                                        int k3 = randomY;
-                                        int l3 = randomZ;
-                                        BiomeBase.BiomeMeta biomeMeta = null;
-                                        GroupDataEntity entityGroup = null;
-                                        int i4 = MathHelper.ceil(Math.random() * 4.0D);
-                                        int j4 = 0;
-                                        
-                                        while (true) {
-                                            if (j4 < i4) {
-                                                ReLoop: {
-                                                    j3 += world.random.nextInt(6) - world.random.nextInt(6);
-                                                    k3 += world.random.nextInt(1) - world.random.nextInt(1);
-                                                    l3 += world.random.nextInt(6) - world.random.nextInt(6);
-                                                    mutablePosition.c(j3, k3, l3);
-                                                    float f = j3 + 0.5F;
-                                                    float f1 = l3 + 0.5F;
+			if ((!type.isPeaceful() || spawnPassiveCreatures) && (type.isPeaceful() || spawnHostileCreatures) && (!type.isAnimal() || spawnAnimals)
+					&& ((mobCount = getEntityCount(world, type.a())) <= spawnLimit * foundChunks / CHUNKS_PER_PLAYER)) {
+				
+				MutableBlockPosition currentPos = new BlockPosition.MutableBlockPosition();
+				
+				int mobLimit = (spawnLimit * foundChunks / 256) - mobCount + 1; // Spigot - up to 1 more than limit
+				
+				SEARCH:
+					for (Long hash : this.spawnableChunks) {
+						if (mobLimit <= 0) return spawnableChunks;
+						
+						BlockPosition randomPos = createRandomPosition(world, LongHash.msw(hash), LongHash.lsw(hash));
+						int randomX = randomPos.getX();
+                        int randomY = randomPos.getY();
+                        int randomZ = randomPos.getZ();
+						
+                        final IBlockData block = world.getType(randomPos);
+                        if (!block.m() && block.getMaterial() == type.getCreatureMaterial()) {
+                        	int spawnedEntity = 0;
+                            int research = 0;
+                            
+                            while (research < 3) {
+                            	int cX = randomX;
+    							int cY = randomY;
+    							int cZ = randomZ;
+    							final int noise = 6;
+    							BiomeMeta spawnEntry = null;
+    							GroupDataEntity entityData = null;
+    							
+    							int respawn = 0;
+    							while (true) {
+    								if (respawn < 4) {
+    									SPAWN: {
+    										cX += world.random.nextInt(noise) - world.random.nextInt(noise);
+											cY += world.random.nextInt(1) - world.random.nextInt(1);
+											cZ += world.random.nextInt(noise) - world.random.nextInt(noise);
+											
+											currentPos.setValues(cX, cY, cZ);
+											
+											if (!world.isPlayerNearby(cZ, cY, cZ, 24.0D) && spawnPoint.distanceSquared(cX + 0.5F, cY, cZ + 0.5F) >= 576.0D) {
+												if (spawnEntry == null) {
+													spawnEntry = world.createRandomSpawnEntry(type, currentPos);
+
+													if (spawnEntry == null) break SPAWN;
+												}
+												
+												if (world.possibleToSpawn(type, spawnEntry, currentPos) && canCreatureTypeSpawnAtLocation(EntityPositionTypes.a(spawnEntry.entityClass()), world, currentPos)) {
+                                                    EntityInsentient entity;
                                                     
-                                                    if (!world.isPlayerNearby(f, k3, f1, 24.0D) && spawnPosition.distanceSquared(f, k3, f1) >= 576.0D) {
-                                                        if (biomeMeta == null) {
-                                                        	biomeMeta = world.getSpawnListEntryForTypeAt(creatureType, mutablePosition);
-                                                        	
-                                                            if (biomeMeta == null) break ReLoop;
+                                                    entity = createCreature(world, spawnEntry.entityClass());
+                                                    if (entity == null) return spawnableChunks;
+                                                    
+                                                    entity.setPositionRotation(cX, cY, cZ, world.random.nextFloat() * 360.0F, 0.0F);
+                                                    
+                                                    if (entity.isNotColliding() && entity.canSpawn()) {
+                                                    	entityData = entity.prepare(world.createDamageScaler(new BlockPosition(entity)), entityData);
+                                                    	
+                                                        if (entity.canSpawn()) {
+                                                            if (world.addEntity(entity, SpawnReason.NATURAL)) {
+                                                            	
+                                                            	spawnedEntity++;
+                                                            	mobLimit--;
+                                                            }
+                                                        } else {
+                                                        	entity.die();
                                                         }
                                                         
-                                                        if (world.a(creatureType, biomeMeta, mutablePosition) && canCreatureTypeSpawnAtLocation(EntityPositionTypes.a(biomeMeta.b), world, mutablePosition)) {
-                                                            EntityInsentient entity;
-                                                            
-                                                            entity = biomeMeta.b.getConstructor(new Class[] { World.class}).newInstance(new Object[] { world});
-                                                            
-                                                            entity.setPositionRotation(f, k3, f1, world.random.nextFloat() * 360.0F, 0.0F);
-                                                            if (entity.isNotColliding() && entity.canSpawn()) {
-                                                            	entityGroup = entity.prepare(world.D(new BlockPosition(entity)), entityGroup);
-                                                            	
-                                                                if (entity.canSpawn()) {
-                                                                    if (world.addEntity(entity, SpawnReason.NATURAL)) {
-                                                                    	++spawnedEntity;
-                                                                    	mobLimit--;
-                                                                    }
-                                                                } else {
-                                                                	entity.die();
-                                                                }
-                                                                
-                                                                // Spigot - If we're past limit, stop spawn
-                                                                if (mobLimit <= 0) continue LoopChunks;
-                                                            }
-                                                            
-                                                            spawnableChunks += spawnedEntity;
-                                                        }
+                                                        if (mobLimit <= 0) continue SEARCH; // Spigot - If we're past limit, stop spawn
                                                     }
                                                     
-                                                    ++j4;
-                                                    continue;
+                                                    spawnableChunks += spawnedEntity;
                                                 }
-                                            }
-                                            
-                                            ++reLoopTimes;
-                                            break;
-                                        }
-                                    }
-                                }
+											}
+											
+											respawn++;
+											continue;
+    									} // SPAWN LABEL END
+    								}
+    							
+    							research++;
+    							break;
                             }
-                    		
-                    } catch (Throwable t) {
-                        t.printStackTrace();
-                        ServerInternalException.reportInternalException(t);
-                        return spawnableChunks;
-                    }
+                        }
+					}
                     
-                }
-            }
+				} // SEARCH LABEL END
+			}
         }
-
+        
         return spawnableChunks;
     }
     
-    public static BlockPosition getRandomPosition(World world, int x, int z) {
-        Chunk chunk = world.getChunkAt(x, z);
-        int k = x * 16 + world.random.nextInt(16);
-        int l = z * 16 + world.random.nextInt(16);
-        int i1 = MathHelper.roundUp(chunk.e(new BlockPosition(k, 0, l)) + 1, 16);
-        int j1 = world.random.nextInt(i1 > 0 ? i1 : chunk.g() + 16 - 1);
+    public static BlockPosition createRandomPosition(World world, int chunkX, int chunkZ) {
+        Chunk chunk = world.getChunkAt(chunkX, chunkZ);
+        int x = chunkX * 16 + world.random.nextInt(16);
+        int z = chunkZ * 16 + world.random.nextInt(16);
+        final int y = world.random.nextInt(chunk == null ? world.getActualWorldHeight() : chunk.findFilledTop() + 16 - 1);
         
-        return new BlockPosition(k, j1, l);
+        return new BlockPosition(x, y, z);
     }
     
     public static boolean isValidEmptySpawnBlock(IBlockData blockData) {
         return blockData.l() ? false : (blockData.n() ? false : (blockData.getMaterial().isLiquid() ? false : !BlockMinecartTrackAbstract.i(blockData)));
     }
     
-    public static boolean canCreatureTypeSpawnAtLocation(EntityInsentient.EnumEntityPositionType entityPosition, World world, BlockPosition position) {
-        if (!world.getWorldBorder().a(position)) {
+    /**
+	 * Returns whether or not the specified creature type can spawn at the specified location
+	 */
+    public static boolean canCreatureTypeSpawnAtLocation(EnumEntityPositionType type, World world, BlockPosition position) {
+        if (!world.getWorldBorder().a(position)) return false;
+        
+        IBlockData blockType = world.getType(position);
+        if (type == EnumEntityPositionType.IN_WATER) {
+            return blockType.getMaterial() == Material.WATER && world.getType(position.down()).getMaterial() == Material.WATER && !world.getType(position.up()).m();
+        }
+        
+        BlockPosition down = position.down();
+        if (!world.getType(down).r()) {
             return false;
         } else {
-            IBlockData blockType = world.getType(position);
+            Block downBlock = world.getType(down).getBlock();
+            boolean downVaild = downBlock != Blocks.BEDROCK && downBlock != Blocks.BARRIER;
             
-            if (entityPosition == EntityInsentient.EnumEntityPositionType.IN_WATER) {
-                return blockType.getMaterial() == Material.WATER && world.getType(position.down()).getMaterial() == Material.WATER && !world.getType(position.up()).m();
-            } else {
-                BlockPosition downPosition = position.down();
-                
-                if (!world.getType(downPosition).r()) {
-                    return false;
-                } else {
-                    Block downBlock = world.getType(downPosition).getBlock();
-                    boolean downVaild = downBlock != Blocks.BEDROCK && downBlock != Blocks.BARRIER;
-                    
-                    return downVaild && isValidEmptySpawnBlock(blockType) && isValidEmptySpawnBlock(world.getType(position.up()));
-                }
-            }
+            return downVaild && isValidEmptySpawnBlock(blockType) && isValidEmptySpawnBlock(world.getType(position.up()));
         }
     }
     
     /**
      * Called during chunk generation to spawn initial creatures
      */
-    public static void performWorldGenSpawning(World world, BiomeBase biome, int i, int j, int k, int l, Random random) {
-        List<BiomeMeta> creatures = biome.getMobs(EnumCreatureType.CREATURE);
-        if (creatures.isEmpty()) return;
+    public static void performWorldGenerateSpawning(World world, BiomeBase biome, int i, int j, int k, int l, Random random) {
+        List<BiomeMeta> spawnableTypes = biome.getMobs(EnumCreatureType.CREATURE);
+        
+        if (spawnableTypes.isEmpty()) return;
         
         while (random.nextFloat() < biome.getSpawningChance()) {
-            BiomeBase.BiomeMeta biomeMeta = WeightedRandom.a(world.random, creatures);
-            int groupCount = biomeMeta.c + random.nextInt(1 + biomeMeta.d - biomeMeta.c);
-            GroupDataEntity entityGroup = null;
+            BiomeMeta randomEntry = WeightedRandom.a(world.random, spawnableTypes);
+            
+            int groupCount = randomEntry.c + random.nextInt(1 + randomEntry.d - randomEntry.c);
+            GroupDataEntity entityData = null;
+            
             int x = i + random.nextInt(k);
             int z = j + random.nextInt(l);
             int l1 = x;
             int i2 = z;
             
-            for (int j2 = 0; j2 < groupCount; ++j2) {
+            for (int index = 0; index < groupCount; index++) {
                 boolean spawned = false;
                 
-                for (int loop = 0; !spawned && loop < 4; ++loop) {
-                    BlockPosition position = world.getTopSolidOrLiquidBlock(new BlockPosition(x, 0, z));
+                for (int retry = 0; !spawned && retry < 4; retry++) {
+                    BlockPosition topBlock = world.getTopSolidOrLiquidBlock(new BlockPosition(x, 0, z));
                     
-                    if (canCreatureTypeSpawnAtLocation(EntityInsentient.EnumEntityPositionType.ON_GROUND, world, position)) {
-                        EntityInsentient entity;
+                    if (canCreatureTypeSpawnAtLocation(EnumEntityPositionType.ON_GROUND, world, topBlock)) {
+                    	
+                        EntityInsentient entity = createCreature(world, randomEntry.b);
+                        if (entity == null) continue;
                         
-                        try {
-                            entity = biomeMeta.b.getConstructor(new Class[] { World.class}).newInstance(new Object[] { world});
-                        } catch (Throwable t) {
-                            t.printStackTrace();
-                            ServerInternalException.reportInternalException(t);
-                            continue;
-                        }
+                        entity.setPositionRotation(x + 0.5F, topBlock.getY(), z + 0.5F, random.nextFloat() * 360.0F, 0.0F);
                         
-                        entity.setPositionRotation(x + 0.5F, position.getY(), z + 0.5F, random.nextFloat() * 360.0F, 0.0F);
                         // CraftBukkit Added a reason for spawning this creature, moved entityinsentient.prepare(groupdataentity) up
-                        entityGroup = entity.prepare(world.D(new BlockPosition(entity)), entityGroup);
+                        entityData = entity.prepare(world.createDamageScaler(new BlockPosition(entity)), entityData);
                         world.addEntity(entity, SpawnReason.CHUNK_GEN);
                         
                         spawned = true;
@@ -291,4 +287,15 @@ public final class TorchCreatureSpawner implements TorchReactor {
             }
         }
     }
+    
+    private static EntityInsentient createCreature(final World world, final Class<?> entityClass) {
+		try {
+			return (EntityInsentient) entityClass.getConstructor(World.class).newInstance(world);
+		} catch (final Throwable t) {
+			t.printStackTrace();
+            ServerInternalException.reportInternalException(t);
+		}
+		
+		return null;
+	}
 }
