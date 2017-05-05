@@ -17,7 +17,7 @@ public final class TorchBiomeCache implements TorchReactor {
     
 	// TODO: May tied to server tick rather than wall clock time / Configurable size
     /** Cached biome bases, ChunkCoordIntPair -> Biomes */
-    Cache<Long, BiomeBase[]> caches = Caffeine.newBuilder().maximumSize(4096).expireAfterWrite(30, TimeUnit.SECONDS).build();
+    Cache<Long, BiomeBase[]> caches = Caffeine.newBuilder().maximumSize(4096).expireAfterAccess(30, TimeUnit.SECONDS).build();
     
     public TorchBiomeCache(WorldChunkManager worldChunkManager, BiomeCache legacy) {
     	servant = legacy;
