@@ -63,11 +63,11 @@ public final class TorchUserCache implements TorchReactor {
     /**
      * Username -> UserCacheEntry
      * */
-    private final Map<String, UserCacheEntry> usernameToCaches = Maps.newConcurrentMap();
+    // private final Map<String, UserCacheEntry> usernameToCaches = Maps.newConcurrentMap();
     /**
      * UUID -> UserCacheEntry
      * */
-    private final Map<UUID, UserCacheEntry> uuidToCaches = Maps.newConcurrentMap();
+    // private final Map<UUID, UserCacheEntry> uuidToCaches = Maps.newConcurrentMap();
     /**
      * All cached GameProfiles
      * */
@@ -103,7 +103,6 @@ public final class TorchUserCache implements TorchReactor {
 
     public TorchUserCache(GameProfileRepository repo, File file, UserCache legacy) {
         servant = legacy;
-        
         profileRepo = repo;
         usercacheFile = file;
         
