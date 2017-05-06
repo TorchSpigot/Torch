@@ -1166,6 +1166,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         // CraftBukkit end
     }
 
+    public String getIpAdress() { return this.A(); } // OBFHELPER
     public String A() {
         String s = this.playerConnection.networkManager.getSocketAddress().toString();
 

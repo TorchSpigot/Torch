@@ -5,6 +5,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Queues;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -53,7 +54,7 @@ public class UserCache {
     /** UUID -> UserCacheEntry */
     private final Map<UUID, UserCache.UserCacheEntry> e = HashObjObjMaps.newMutableMap();
     /** All cached GameProfiles */
-    private final Deque<GameProfile> f = new java.util.concurrent.LinkedBlockingDeque<GameProfile>(); // CraftBukkit
+    private final Deque<GameProfile> f = Queues.newLinkedBlockingDeque();
     private final GameProfileRepository g;
     protected final Gson b;
     /** userCacheFile */
@@ -275,7 +276,7 @@ public class UserCache {
     }
     public void c(boolean asyncSave) {
         // Paper end
-        String s = this.b.toJson(this.a(org.spigotmc.SpigotConfig.userCacheCap));
+        String s = this.b.toJson(this.matchEntriesWithLimitedSize(org.spigotmc.SpigotConfig.userCacheCap));
         Runnable save = () -> {
 
             BufferedWriter bufferedwriter = null;
@@ -302,7 +303,7 @@ public class UserCache {
 
     }
 
-    public List<UserCacheEntry> getEntriesWithLimitedSize(int size) { return this.a(size); } // OBFHELPER
+    public List<UserCacheEntry> matchEntriesWithLimitedSize(int size) { return this.a(size); } // OBFHELPER
     private List<UserCache.UserCacheEntry> a(int size) {
         ArrayList<UserCacheEntry> list = Lists.newArrayList();
         

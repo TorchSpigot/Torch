@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,7 +40,9 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.util.Vector;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
+import org.torch.api.Async;
 import org.torch.api.TorchReactor;
+
 import net.minecraft.server.*;
 
 import static org.torch.server.TorchServer.logger;
@@ -331,12 +332,12 @@ public final class TorchPlayerList implements TorchReactor {
         // factor3 = bypassesPlayerLimit?
         this.operators.add(new OpListEntry(gameprofile, this.server.getOpPermissionLevel(), this.operators.b(gameprofile)));
         this.sendPlayerPermissionLevel(this.getPlayerByUUID(gameprofile.getId()), permLevel);
-
+        
         // Handle Bukkit permissions
         Player player = server.craftServer.getPlayer(gameprofile.getId());
         if (player != null) player.recalculatePermissions();
-
-        this.saveOpsList();
+        
+        // this.saveOpsList(); - Already saved in operators.add()
     }
 
     public void removeOp(GameProfile gameprofile) {
@@ -347,7 +348,7 @@ public final class TorchPlayerList implements TorchReactor {
         Player player = server.craftServer.getPlayer(gameprofile.getId());
         if (player != null) player.recalculatePermissions();
 
-        this.saveOpsList();
+        // this.saveOpsList(); - Already saved in operators.remove()
     }
 
     public void initializeConnectionToPlayer(NetworkManager networkmanager, EntityPlayer entityplayer) {
@@ -548,9 +549,7 @@ public final class TorchPlayerList implements TorchReactor {
 
         // sendAll above replaced with this loop
         Regulator.post(() -> {
-            for (int i = 0, size = this.players.size(); i < size; ++i) {
-                EntityPlayer eachPlayer = this.players.get(i);
-
+            for (EntityPlayer eachPlayer : this.players) {
                 if (eachPlayer.getBukkitEntity().canSee(entityplayer.getBukkitEntity())) {
                     eachPlayer.playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, entityplayer));
                 }
@@ -625,9 +624,7 @@ public final class TorchPlayerList implements TorchReactor {
 
         // Remove the disconnected player from others
         PacketPlayOutPlayerInfo packet = new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, player);
-        for (int i = 0, size = players.size(); i < size; i++) {
-            EntityPlayer eachPlayer = this.players.get(i);
-
+        for (EntityPlayer eachPlayer : this.players) {
             if (eachPlayer.getBukkitEntity().canSee(player.getBukkitEntity())) {
                 eachPlayer.playerConnection.sendPacket(packet);
             } else {
@@ -1006,9 +1003,7 @@ public final class TorchPlayerList implements TorchReactor {
     public void tick() {
         if (++this.playerPingIndex > 600) {
             Regulator.post(() -> {
-                for (int index = 0, size = this.players.size(); index < size; ++index) {
-                    final EntityPlayer target = this.players.get(index);
-
+                for (EntityPlayer target : this.players) {
                     target.playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.UPDATE_LATENCY, Iterables.filter(this.players, new Predicate<EntityPlayer>() {
                         @Override
                         public boolean apply(EntityPlayer input) {
@@ -1027,10 +1022,10 @@ public final class TorchPlayerList implements TorchReactor {
     /**
      * Send packet to all online players
      */
-    public void sendAll(Packet<?> packet) {
+    @Async public void sendAll(Packet<?> packet) {
         Regulator.post(() -> {
-            for (int index = 0, size = this.players.size(); index < size; ++index) {
-                this.players.get(index).playerConnection.sendPacket(packet);
+            for (EntityPlayer player : this.players) {
+                player.playerConnection.sendPacket(packet);
             }
         });
     }
@@ -1038,10 +1033,9 @@ public final class TorchPlayerList implements TorchReactor {
     /**
      * Only send packet to the players who can see the key player
      */
-    public void sendAll(Packet<?> packet, EntityHuman keyPlayer) {
+    @Async public void sendAll(Packet<?> packet, EntityHuman keyPlayer) {
         Regulator.post(() -> {
-            for (int index = 0, size = this.players.size(); index < size; ++index) {
-                EntityPlayer target =  this.players.get(index);
+            for (EntityPlayer target : this.players) {
                 if (keyPlayer != null && keyPlayer instanceof EntityPlayer && !target.getBukkitEntity().canSee(((EntityPlayer) keyPlayer).getBukkitEntity())) {
                     continue;
                 }
@@ -1053,10 +1047,10 @@ public final class TorchPlayerList implements TorchReactor {
     /**
      * Only send packet to the players in the world
      */
-    public void sendAll(Packet<?> packet, World world) {
+    @Async public void sendAll(Packet<?> packet, World world) {
         Regulator.post(() -> {
-            for (int index = 0, size = this.players.size(); index < size; ++index) {
-                ((EntityPlayer) world.players.get(index)).playerConnection.sendPacket(packet);
+            for (EntityPlayer player : this.players) {
+                player.playerConnection.sendPacket(packet);
             }
         });
     }
@@ -1064,10 +1058,9 @@ public final class TorchPlayerList implements TorchReactor {
     /**
      * Only send packet to the players in the world (dimension)
      */
-    public void sendAll(Packet<?> packet, int dimension) {
+    @Async public void sendAll(Packet<?> packet, int dimension) {
         Regulator.post(() -> {
-            for (int index = 0, size = this.players.size(); index < size; ++index) {
-                EntityPlayer player = this.players.get(index);
+            for (EntityPlayer player : this.players) {
                 if (player.dimension == dimension) player.playerConnection.sendPacket(packet);
             }
         });
@@ -1076,23 +1069,21 @@ public final class TorchPlayerList implements TorchReactor {
     /**
      * The packet is not sent to the source player, but all other players who can see the source player within the search radius
      */
-    public void sendPacketNearby(@Nullable EntityHuman sourcePlayer, double x, double y, double z, double radius, int dimension, Packet<?> packet) {
+    @Async public void sendPacketNearby(@Nullable EntityHuman sourcePlayer, double x, double y, double z, double radius, int dimension, Packet<?> packet) {
         Regulator.post(() -> {
-            for (int index = 0, size = this.players.size(); index < size; ++index) {
-                EntityPlayer entityplayer = this.players.get(index);
-
+            for (EntityPlayer eachPlayer : this.players) {
                 // Test if player receiving packet can see the source of the packet
-                if (sourcePlayer != null && sourcePlayer instanceof EntityPlayer && !entityplayer.getBukkitEntity().canSee(((EntityPlayer) sourcePlayer).getBukkitEntity())) {
+                if (sourcePlayer != null && sourcePlayer instanceof EntityPlayer && !eachPlayer.getBukkitEntity().canSee(((EntityPlayer) sourcePlayer).getBukkitEntity())) {
                     continue;
                 }
 
-                if (entityplayer != sourcePlayer && entityplayer.dimension == dimension) {
-                    double shiftX = x - entityplayer.locX;
-                    double shiftY = y - entityplayer.locY;
-                    double shiftZ = z - entityplayer.locZ;
+                if (eachPlayer != sourcePlayer && eachPlayer.dimension == dimension) {
+                    double shiftX = x - eachPlayer.locX;
+                    double shiftY = y - eachPlayer.locY;
+                    double shiftZ = z - eachPlayer.locZ;
 
                     if (shiftX * shiftX + shiftY * shiftY + shiftZ * shiftZ < radius * radius) {
-                        entityplayer.playerConnection.sendPacket(packet);
+                        eachPlayer.playerConnection.sendPacket(packet);
                     }
                 }
             }
@@ -1111,10 +1102,9 @@ public final class TorchPlayerList implements TorchReactor {
         server.postToMainThreadMaybeAsync(() -> {
             long now = MinecraftServer.currentTick;
             MinecraftTimings.savePlayers.startTiming();
-            for (int index = 0, size = this.players.size(); index < size; ++index) {
-                EntityPlayer entityplayer = this.players.get(index);
-                if (interval == null || now - entityplayer.lastSave >= interval) {
-                    this.savePlayerFile(entityplayer);
+            for (EntityPlayer player : this.players) {
+                if (interval == null || now - player.lastSave >= interval) {
+                    this.savePlayerFile(player);
                 }
             }
             MinecraftTimings.savePlayers.stopTiming();
@@ -1217,18 +1207,16 @@ public final class TorchPlayerList implements TorchReactor {
      * Get a comma separated list of online players
      */
     public String getFormattedListOfPlayers(boolean includeUUIDs) {
-        String result = "";
-        List<EntityPlayer> players = Collections.unmodifiableList(this.players);
-
-        for (int i = 0, size = players.size(); i < size; ++i) {
-            if (i > 0) {
+        String result = ""; boolean first = true;
+        for (EntityPlayer player : this.players) {
+            if (!first) {
                 result = result + ", ";
-            }
-
-            result = result + players.get(i).getName();
-            if (includeUUIDs) result = result + " (" + players.get(i).bf() + ")";
+            } else first = false;
+            
+            result = result + player.getName();
+            if (includeUUIDs) result = result + " (" + player.getUUIDString() + ")";
         }
-
+        
         return result;
     }
 
@@ -1236,12 +1224,11 @@ public final class TorchPlayerList implements TorchReactor {
      * Returns an array of the usernames of all the connected players
      */
     public String[] getOnlinePlayerNames() {
-        String[] names = new String[this.players.size()];
-
-        for (int i = 0, size = this.players.size(); i < size; ++i) {
-            names[i] = this.players.get(i).getName();
+        String[] names = new String[this.players.size()]; int index = 0;
+        for (EntityPlayer player : this.players) {
+            names[index++] = player.getName();
         }
-
+        
         return names;
     }
 
@@ -1249,12 +1236,11 @@ public final class TorchPlayerList implements TorchReactor {
      * Returns an array of the game profile of all the connected players
      */
     public GameProfile[] getOnlinePlayerProfiles() {
-        GameProfile[] profiles = new GameProfile[this.players.size()];
-
-        for (int i = 0, size = this.players.size(); i < size; ++i) {
-            profiles[i] = this.players.get(i).getProfile();
+        GameProfile[] profiles = new GameProfile[this.players.size()]; int index = 0;
+        for (EntityPlayer player : this.players) {
+            profiles[index++] = player.getProfile();
         }
-
+        
         return profiles;
     }
 
@@ -1297,17 +1283,14 @@ public final class TorchPlayerList implements TorchReactor {
     /**
      * Returns a list containing all players using the given IP adress
      */
-    public List<EntityPlayer> matchingPlayersByAddress(String IPAdress) {
-        ArrayList<EntityPlayer> arraylist = Lists.newArrayList();
-
-        for (int i = 0, size = this.players.size(); i < size; i++) {
-            EntityPlayer player = this.players.get(i);
-
-            // Get and check the IP adress from player
-            if (player.A().equals(IPAdress)) arraylist.add(player);
+    public List<EntityPlayer> matchingPlayersByAddress(String IpAdress) {
+        ArrayList<EntityPlayer> list = Lists.newArrayList();
+        
+        for (EntityPlayer player : this.players) {
+            if (player.getIpAdress().equals(IpAdress)) list.add(player);
         }
-
-        return arraylist;
+        
+        return list;
     }
 
     /**

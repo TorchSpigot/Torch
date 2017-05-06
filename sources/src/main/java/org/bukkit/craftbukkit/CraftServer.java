@@ -189,12 +189,7 @@ public final class CraftServer implements Server {
     public CraftServer(TorchServer console, TorchPlayerList playerList) {
         this.console = console;
         this.playerList = playerList;
-        this.playerView = Collections.unmodifiableList(Lists.transform(playerList.getPlayers(), new Function<EntityPlayer, CraftPlayer>() {
-            @Override
-            public CraftPlayer apply(EntityPlayer player) {
-                return player.getBukkitEntity();
-            }
-        }));
+        this.playerView = Collections.unmodifiableList(Lists.transform(playerList.players, player -> player.getBukkitEntity()));
         this.serverVersion = CraftServer.class.getPackage().getImplementationVersion();
         online.value = console.getPropertyManager().getBoolean("online-mode", true);
 
@@ -400,7 +395,6 @@ public final class CraftServer implements Server {
 
     @Override
     @Deprecated
-    @SuppressWarnings("unchecked")
     public Player[] _INVALID_getOnlinePlayers() {
         return getOnlinePlayers().toArray(EMPTY_PLAYER_ARRAY);
     }

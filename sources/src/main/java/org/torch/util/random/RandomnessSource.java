@@ -2,6 +2,8 @@ package org.torch.util.random;
 
 import java.io.Serializable;
 
+import org.torch.util.random.RandomnessSource;
+
 /**
  * From DreamSpigotPlus project.
  * @Link: https://github.com/DreamSpigotMC/DreamSpigotPlus/blob/master/PaperSpigot-Server-Patches/0024-DreamSpigotPlus-Use-a-Shared-LightRNG-for-Entities.patch

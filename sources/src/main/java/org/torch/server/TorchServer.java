@@ -14,12 +14,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -37,11 +40,13 @@ import org.bukkit.craftbukkit.Main;
 import org.bukkit.craftbukkit.util.Waitable;
 import org.bukkit.event.server.RemoteServerCommandEvent;
 import org.bukkit.event.server.ServerCommandEvent;
+import org.spigotmc.AsyncCatcher;
 import org.spigotmc.SlackActivityAccountant;
 import org.spigotmc.SpigotConfig;
 import org.torch.api.Anaphase;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -857,12 +862,14 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             this.serverPing.setPlayerSample(new ServerPing.ServerPingPlayerSample(this.getMaxPlayers(), this.getCurrentPlayerCount()));
 
             GameProfile[] samplePlayers = new GameProfile[Math.min(this.getCurrentPlayerCount(), 12)];
-            int random = MathHelper.nextInt(this.random, 0, this.getCurrentPlayerCount() - samplePlayers.length);
-
-            for (int k = 0; k < samplePlayers.length; ++k) {
-                samplePlayers[k] = this.playerList.players.get(random + k).getProfile();
+            // int random = MathHelper.nextInt(this.random, 0, this.getCurrentPlayerCount() - samplePlayers.length);
+            
+            int index = 0;
+            Iterator<EntityPlayer> itr = Iterators.limit(playerList.players.iterator(), samplePlayers.length);
+            while (itr.hasNext()) {
+                samplePlayers[index++] = itr.next().getProfile();
             }
-
+            
             Collections.shuffle(Arrays.asList(samplePlayers));
             this.serverPing.b().a(samplePlayers); // PAIL: Apply sample players
         }
@@ -922,11 +929,12 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         MinecraftTimings.timeUpdateTimer.startTiming();
         // Send time updates to everyone, it will get the right time from the world the player is in.
         if (MinecraftServer.currentTick % 20 == 0) {
-            for (int index = 0, size = getPlayerList().players.size(); index < size; index++) {
-                EntityPlayer entityplayer = this.getPlayerList().players.get(index);
-                // Add support for per player time
-                entityplayer.playerConnection.sendPacket(new PacketPlayOutUpdateTime(entityplayer.world.getTime(), entityplayer.getPlayerTime(), entityplayer.world.getGameRules().getBoolean("doDaylightCycle")));
-            }
+            Regulator.post(() -> {
+                for (EntityPlayer player : this.getPlayerList().players) {
+                    // Add support for per player time
+                    player.playerConnection.sendPacket(new PacketPlayOutUpdateTime(player.world.getTime(), player.getPlayerTime(), player.world.getGameRules().getBoolean("doDaylightCycle")));
+                }
+            });
         }
         MinecraftTimings.timeUpdateTimer.stopTiming();
 
@@ -988,7 +996,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      */
     public void initialAllWorldsChunk() {
         this.setUserMessage("menu.generatingTerrain");
-
+        
         // Fire WorldLoadEvent and handle whether or not to keep the spawn in memory
         for (WorldServer world : this.worlds) {
             logger.info("Preparing start region for level " + world.dimension + " (Seed: " + world.getSeed() + ")");
@@ -997,22 +1005,22 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
                 continue;
             }
 
-            BlockPosition spawnPosition = world.getSpawn();
-            long startTime = System.currentTimeMillis();
+            BlockPosition spawnPoint = world.getSpawn();
+            long lastTime = System.currentTimeMillis();
             int times = 0;
 
             short radius = world.paperConfig.keepLoadedRange;
-            for (int startPosX = -radius; startPosX <= radius && isRunning(); startPosX += 16) {
-                for (int startPosZ = -radius; startPosZ <= radius && isRunning(); startPosZ += 16) {
-                    long eachTime = System.currentTimeMillis();
+            for (int posX = -radius; posX <= radius && isRunning(); posX += 16) {
+                for (int posZ = -radius; posZ <= radius && isRunning(); posZ += 16) {
+                    long now = System.currentTimeMillis();
 
-                    if (eachTime - startTime > 1000L) {
+                    if (now - lastTime > 1000L) {
                         this.setCurrentTask("Preparing spawn area", times * 100 / 625);
-                        startTime = eachTime;
+                        lastTime = now;
                     }
-
+                    
                     times++;
-                    world.getChunkProviderServer().getChunkAt(spawnPosition.getX() + startPosX >> 4, spawnPosition.getZ() + startPosZ >> 4);
+                    world.getChunkProviderServer().getChunkAt(spawnPoint.getX() + posX >> 4, spawnPoint.getZ() + posZ >> 4);
                 }
             }
         }

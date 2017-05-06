@@ -4,12 +4,10 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.CraftWorld;
-import org.bukkit.craftbukkit.util.Waitable;
 import org.spigotmc.AsyncCatcher;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;

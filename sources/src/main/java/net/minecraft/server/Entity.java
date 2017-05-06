@@ -2552,6 +2552,7 @@ public abstract class Entity implements ICommandListener {
         return this.uniqueID;
     }
 
+    public String getUUIDString() { return this.bf(); } // OBFHELPER
     public String bf() {
         return this.ar;
     }

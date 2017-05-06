@@ -9,6 +9,10 @@ See <http://creativecommons.org/publicdomain/zero/1.0/>. */
 
 package org.torch.util.random;
 
+import org.torch.util.random.LightRNG;
+import org.torch.util.random.RandomnessSource;
+import org.torch.util.random.StatefulRandomness;
+
 /**
  * From DreamSpigotPlus project.
  * @Link: https://github.com/DreamSpigotMC/DreamSpigotPlus/blob/master/PaperSpigot-Server-Patches/0024-DreamSpigotPlus-Use-a-Shared-LightRNG-for-Entities.patch
