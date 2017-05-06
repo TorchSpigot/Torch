@@ -38,6 +38,7 @@ import org.bukkit.craftbukkit.Main;
 import org.bukkit.craftbukkit.util.Waitable;
 import org.bukkit.event.server.RemoteServerCommandEvent;
 import org.bukkit.event.server.ServerCommandEvent;
+import org.fusesource.jansi.AnsiConsole;
 import org.spigotmc.SlackActivityAccountant;
 import org.spigotmc.SpigotConfig;
 import org.torch.api.Anaphase;
@@ -412,6 +413,8 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         if (System.console() == null && System.getProperty("jline.terminal") == null) {
             System.setProperty("jline.terminal", "jline.UnsupportedTerminal");
             Main.useJline = false;
+        } else {
+            AnsiConsole.systemInstall();
         }
 
         try {
