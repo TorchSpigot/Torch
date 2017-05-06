@@ -8,8 +8,8 @@ import net.minecraft.server.GameProfileBanList;
 import net.minecraft.server.JsonListEntry;
 import net.minecraft.server.MinecraftServer;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
 
 import com.google.common.collect.ImmutableSet;
 import com.mojang.authlib.GameProfile;

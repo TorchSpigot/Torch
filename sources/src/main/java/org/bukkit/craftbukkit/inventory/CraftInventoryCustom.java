@@ -6,7 +6,7 @@ import java.util.List;
 import net.minecraft.server.ChatComponentText;
 
 import net.minecraft.server.IChatBaseComponent;
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;

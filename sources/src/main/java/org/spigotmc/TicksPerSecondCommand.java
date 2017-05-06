@@ -1,5 +1,6 @@
 package org.spigotmc;
 
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -30,7 +31,7 @@ public class TicksPerSecondCommand extends Command
         for ( int i = 0; i < tps.length; i++) {
             tpsAvg[i] = format( tps[i] );
         }
-        sender.sendMessage( ChatColor.GOLD + "TPS from last 1m, 5m, 15m: " + org.apache.commons.lang.StringUtils.join(tpsAvg, ", "));
+        sender.sendMessage( ChatColor.GOLD + "TPS from last 1m, 5m, 15m: " + StringUtils.join(tpsAvg, ", "));
         // Paper end
 
         return true;

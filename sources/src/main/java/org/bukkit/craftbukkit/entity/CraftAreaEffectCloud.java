@@ -6,7 +6,7 @@ import net.minecraft.server.EntityLiving;
 import net.minecraft.server.MobEffect;
 import net.minecraft.server.MobEffectList;
 
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 import org.bukkit.Color;
 import org.bukkit.Particle;
 import org.bukkit.craftbukkit.CraftParticle;

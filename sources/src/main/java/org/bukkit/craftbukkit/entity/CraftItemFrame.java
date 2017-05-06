@@ -6,7 +6,7 @@ import net.minecraft.server.EnumDirection;
 import net.minecraft.server.ItemStack;
 import net.minecraft.server.WorldServer;
 
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
 import org.bukkit.Rotation;
 import org.bukkit.block.BlockFace;

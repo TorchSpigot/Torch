@@ -1,7 +1,7 @@
 package net.minecraft.server;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.spigotmc.AsyncCatcher;
@@ -23,7 +23,7 @@ public final class MCUtil {
      * @return Stacktrace
      */
     public static String stack() {
-        return ExceptionUtils.getFullStackTrace(new Throwable());
+        return ExceptionUtils.getStackTrace(new Throwable());
     }
 
     /**
@@ -33,7 +33,7 @@ public final class MCUtil {
      * @return Stacktrace
      */
     public static String stack(String str) {
-        return ExceptionUtils.getFullStackTrace(new Throwable(str));
+        return ExceptionUtils.getStackTrace(new Throwable(str));
     }
 
     /**

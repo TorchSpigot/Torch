@@ -2,7 +2,7 @@ package org.bukkit.craftbukkit.entity;
 
 import java.util.List;
 import net.minecraft.server.EntityVillager;
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.inventory.CraftInventory;
 import org.bukkit.craftbukkit.inventory.CraftMerchant;

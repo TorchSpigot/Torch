@@ -6,8 +6,8 @@ import java.util.Set;
 
 import net.minecraft.server.IpBanEntry;
 import net.minecraft.server.IpBanList;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
 
 import com.google.common.collect.ImmutableSet;
 

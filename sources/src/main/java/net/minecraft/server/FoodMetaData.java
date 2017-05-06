@@ -1,5 +1,7 @@
 package net.minecraft.server;
 
+import org.apache.commons.lang3.Validate;
+
 public class FoodMetaData {
 
     public int foodLevel = 20;
@@ -13,14 +15,14 @@ public class FoodMetaData {
 
     // CraftBukkit start - added EntityHuman constructor
     public FoodMetaData(EntityHuman entityhuman) {
-        org.apache.commons.lang.Validate.notNull(entityhuman);
+        Validate.notNull(entityhuman);
         this.entityhuman = entityhuman;
     }
     // CraftBukkit end
 
     public void eat(int i, float f) {
         this.foodLevel = Math.min(i + this.foodLevel, 20);
-        this.saturationLevel = Math.min(this.saturationLevel + (float) i * f * 2.0F, (float) this.foodLevel);
+        this.saturationLevel = Math.min(this.saturationLevel + i * f * 2.0F, this.foodLevel);
     }
 
     public void a(ItemFood itemfood, ItemStack itemstack) {

@@ -3,7 +3,7 @@ package org.bukkit.craftbukkit.scoreboard;
 import java.util.Set;
 
 import net.minecraft.server.ScoreboardTeamBase.EnumNameTagVisibility;
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.scoreboard.NameTagVisibility;

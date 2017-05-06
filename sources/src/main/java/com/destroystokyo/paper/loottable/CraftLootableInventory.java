@@ -1,6 +1,6 @@
 package com.destroystokyo.paper.loottable;
 
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
 import java.util.UUID;
 

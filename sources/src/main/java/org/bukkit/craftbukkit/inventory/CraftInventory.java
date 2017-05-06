@@ -18,7 +18,7 @@ import net.minecraft.server.TileEntityDropper;
 import net.minecraft.server.TileEntityFurnace;
 import net.minecraft.server.TileEntityShulkerBox;
 
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 import org.bukkit.Location;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.inventory.InventoryType;

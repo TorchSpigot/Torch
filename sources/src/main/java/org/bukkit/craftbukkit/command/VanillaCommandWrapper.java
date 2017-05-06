@@ -5,7 +5,7 @@ import java.util.List;
 
 import net.minecraft.server.*;
 
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.Level;
 import org.bukkit.Location;
 import org.bukkit.command.BlockCommandSender;
