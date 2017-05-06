@@ -144,7 +144,8 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
         this.m = packetlistener;
     }
 
-    @Async public void sendPacket(Packet<?> packet) {
+    @Async
+    public void sendPacket(Packet<?> packet) {
         if (this.isConnected()) {
             this.m();
             this.a(packet, (GenericFutureListener[]) null);
@@ -162,7 +163,8 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
         // Paper end
     }
 
-    @Async public void sendPacket(Packet<?> packet, GenericFutureListener<? extends Future<? super Void>> genericfuturelistener, GenericFutureListener<? extends Future<? super Void>>... agenericfuturelistener) {
+    @Async
+    public void sendPacket(Packet<?> packet, GenericFutureListener<? extends Future<? super Void>> genericfuturelistener, GenericFutureListener<? extends Future<? super Void>>... agenericfuturelistener) {
         if (this.isConnected()) {
             this.m();
             this.a(packet, ArrayUtils.add(agenericfuturelistener, 0, genericfuturelistener));
@@ -180,7 +182,8 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
         // Paper end
     }
 
-    @Async private void a(final Packet<?> packet, @Nullable final GenericFutureListener<? extends Future<? super Void>>[] agenericfuturelistener) {
+    @Async
+    private void a(final Packet<?> packet, @Nullable final GenericFutureListener<? extends Future<? super Void>>[] agenericfuturelistener) {
         final EnumProtocol enumprotocol = EnumProtocol.a(packet);
         final EnumProtocol enumprotocol1 = this.channel.attr(NetworkManager.c).get();
 

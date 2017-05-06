@@ -149,7 +149,8 @@ public class JsonList<K, V extends JsonListEntry<K>> {
         return this.d;
     }
 
-    @Async public void save() {
+    @Async
+    public void save() {
         Collection<V> values = this.d.values();
 
         MCUtil.scheduleAsyncTask(() -> {

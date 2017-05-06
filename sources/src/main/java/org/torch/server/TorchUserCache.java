@@ -5,7 +5,6 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -41,7 +40,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import org.apache.commons.io.IOUtils;
@@ -61,18 +59,8 @@ public final class TorchUserCache implements TorchReactor {
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
     
     /**
-     * Username -> UserCacheEntry
-     * */
-    // private final Map<String, UserCacheEntry> usernameToCaches = Maps.newConcurrentMap();
-    /**
-     * UUID -> UserCacheEntry
-     * */
-    // private final Map<UUID, UserCacheEntry> uuidToCaches = Maps.newConcurrentMap();
-    /**
-     * All cached GameProfiles
-     * */
-    // private final Deque<GameProfile> cachedProfiles = new java.util.concurrent.ConcurrentLinkedDeque<GameProfile>();
-    
+     * All user caches, Username -> Entry(profile and expire date included)
+     */
     private final Cache<String, UserCacheEntry> caches = Caffeine.newBuilder().build();
     
     /** GameProfile repository */
@@ -112,10 +100,14 @@ public final class TorchUserCache implements TorchReactor {
     }
 
     /**
-     * Find the profile by the name from mojang, triggering network operation
+     * Lookup the profile by the name from Mojang, triggering network operation
      */
     @Nullable
     public static GameProfile matchProfile(GameProfileRepository profileRepo, String name) {
+        // We don't care about the online player's name case,
+        // whatever we request from the API (lower or upper case), we always get the correct profile (with the correct username).
+        // But notice that we must ensure the offline player's profile is in the correct case,
+        // or the user system (ops, ban-list, ect) will broken in offline servers.
         if (!isOnlineMode()) {
             return new GameProfile(EntityHuman.offlinePlayerUUID(name), name);
         }
@@ -139,7 +131,7 @@ public final class TorchUserCache implements TorchReactor {
     }
 
     /**
-     * Add an entry to this cache
+     * Add an entry to this cache with the default expire date
      */
     public UserCacheEntry putCache(String username) {
         return putCache(username, null);
@@ -250,7 +242,8 @@ public final class TorchUserCache implements TorchReactor {
         }
     }
     
-    @Async public void save() {
+    @Async
+    public void save() {
         save(true);
     }
     

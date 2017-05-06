@@ -90,8 +90,9 @@ public class UserCache implements org.torch.api.TorchServant {
     }
 
     // Paper start
-    @Async public void c() {
-        c(true);
+    @Async
+    public void c() {
+        reactor.save();
     }
     public void c(boolean asyncSave) {
         reactor.save(asyncSave);

@@ -1098,7 +1098,8 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
 
     }
     
-    @Async public void sendPacket(final Packet<?> packet) {
+    @Async
+    public void sendPacket(final Packet<?> packet) {
     	if (packet == null || this.processedDisconnect) return;
     	
         if (packet instanceof PacketPlayOutChat) {
