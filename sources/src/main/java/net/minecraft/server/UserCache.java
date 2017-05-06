@@ -166,11 +166,11 @@ public class UserCache {
     }
     
     private static GameProfile getProfileOffline(String name) {
-        GameProfile offline = offlineCache.getIfPresent(name.toLowerCase());
+        GameProfile offline = offlineCache.getIfPresent(name);
         
         if (offline == null) {
             offline = new GameProfile(EntityHuman.offlinePlayerUUID(name), name);
-            offlineCache.put(name.toLowerCase(), offline);
+            offlineCache.put(name, offline);
         }
         
         return offline;
