@@ -396,7 +396,7 @@ public class Village {
 
             if (nbttagcompound2.hasKey("UUID") && this.a != null && this.a.getMinecraftServer() != null) {
                 UserCache usercache = this.a.getMinecraftServer().getUserCache();
-                GameProfile gameprofile = usercache.a(UUID.fromString(nbttagcompound2.getString("UUID")));
+                GameProfile gameprofile = usercache.peekCachedProfile(nbttagcompound2.getString("Name")); // TODO
 
                 if (gameprofile != null) {
                     this.j.put(gameprofile.getName(), Integer.valueOf(nbttagcompound2.getInt("S")));

@@ -34,6 +34,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
      * Torch server instance
      */
     protected static TorchServer reactor;
+    
     /**
      * Legacy server instance
      */

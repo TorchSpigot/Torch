@@ -21,10 +21,11 @@ public class BlockDoor extends Block {
         this.y(this.blockStateList.getBlockData().set(BlockDoor.FACING, EnumDirection.NORTH).set(BlockDoor.OPEN, Boolean.valueOf(false)).set(BlockDoor.HINGE, BlockDoor.EnumDoorHinge.LEFT).set(BlockDoor.POWERED, Boolean.valueOf(false)).set(BlockDoor.HALF, BlockDoor.EnumDoorHalf.LOWER));
     }
 
+    @Override
     public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         iblockdata = iblockdata.b(iblockaccess, blockposition);
-        EnumDirection enumdirection = (EnumDirection) iblockdata.get(BlockDoor.FACING);
-        boolean flag = !((Boolean) iblockdata.get(BlockDoor.OPEN)).booleanValue();
+        EnumDirection enumdirection = iblockdata.get(BlockDoor.FACING);
+        boolean flag = !iblockdata.get(BlockDoor.OPEN).booleanValue();
         boolean flag1 = iblockdata.get(BlockDoor.HINGE) == BlockDoor.EnumDoorHinge.RIGHT;
 
         switch (enumdirection) {
@@ -43,18 +44,22 @@ public class BlockDoor extends Block {
         }
     }
 
+    @Override
     public String getName() {
         return LocaleI18n.get((this.a() + ".name").replaceAll("tile", "item"));
     }
 
+    @Override
     public boolean b(IBlockData iblockdata) {
         return false;
     }
 
+    @Override
     public boolean b(IBlockAccess iblockaccess, BlockPosition blockposition) {
         return g(c(iblockaccess, blockposition));
     }
 
+    @Override
     public boolean c(IBlockData iblockdata) {
         return false;
     }
@@ -67,10 +72,12 @@ public class BlockDoor extends Block {
         return this.material == Material.ORE ? 1005 : 1006;
     }
 
+    @Override
     public MaterialMapColor r(IBlockData iblockdata) {
         return iblockdata.getBlock() == Blocks.IRON_DOOR ? MaterialMapColor.h : (iblockdata.getBlock() == Blocks.WOODEN_DOOR ? BlockWood.EnumLogVariant.OAK.c() : (iblockdata.getBlock() == Blocks.SPRUCE_DOOR ? BlockWood.EnumLogVariant.SPRUCE.c() : (iblockdata.getBlock() == Blocks.BIRCH_DOOR ? BlockWood.EnumLogVariant.BIRCH.c() : (iblockdata.getBlock() == Blocks.JUNGLE_DOOR ? BlockWood.EnumLogVariant.JUNGLE.c() : (iblockdata.getBlock() == Blocks.ACACIA_DOOR ? BlockWood.EnumLogVariant.ACACIA.c() : (iblockdata.getBlock() == Blocks.DARK_OAK_DOOR ? BlockWood.EnumLogVariant.DARK_OAK.c() : super.r(iblockdata)))))));
     }
 
+    @Override
     public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
         if (this.material == Material.ORE) {
             return false;
@@ -84,7 +91,7 @@ public class BlockDoor extends Block {
                 iblockdata = iblockdata1.a((IBlockState) BlockDoor.OPEN);
                 world.setTypeAndData(blockposition1, iblockdata, 10);
                 world.b(blockposition1, blockposition);
-                world.a(entityhuman, ((Boolean) iblockdata.get(BlockDoor.OPEN)).booleanValue() ? this.g() : this.e(), blockposition, 0);
+                world.a(entityhuman, iblockdata.get(BlockDoor.OPEN).booleanValue() ? this.g() : this.e(), blockposition, 0);
                 return true;
             }
         }
@@ -97,7 +104,7 @@ public class BlockDoor extends Block {
             BlockPosition blockposition1 = iblockdata.get(BlockDoor.HALF) == BlockDoor.EnumDoorHalf.LOWER ? blockposition : blockposition.down();
             IBlockData iblockdata1 = blockposition == blockposition1 ? iblockdata : world.getType(blockposition1);
 
-            if (iblockdata1.getBlock() == this && ((Boolean) iblockdata1.get(BlockDoor.OPEN)).booleanValue() != flag) {
+            if (iblockdata1.getBlock() == this && iblockdata1.get(BlockDoor.OPEN).booleanValue() != flag) {
                 world.setTypeAndData(blockposition1, iblockdata1.set(BlockDoor.OPEN, Boolean.valueOf(flag)), 10);
                 world.b(blockposition1, blockposition);
                 world.a((EntityHuman) null, flag ? this.g() : this.e(), blockposition, 0);
@@ -106,6 +113,7 @@ public class BlockDoor extends Block {
         }
     }
 
+    @Override
     public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
         if (iblockdata.get(BlockDoor.HALF) == BlockDoor.EnumDoorHalf.UPPER) {
             BlockPosition blockposition2 = blockposition.down();
@@ -148,7 +156,7 @@ public class BlockDoor extends Block {
                 int power = bukkitBlock.getBlockPower();
                 int powerTop = blockTop.getBlockPower();
                 if (powerTop > power) power = powerTop;
-                int oldPower = (Boolean) iblockdata2.get(BlockDoor.POWERED) ? 15 : 0;
+                int oldPower = iblockdata2.get(BlockDoor.POWERED) ? 15 : 0;
 
                 if (oldPower == 0 ^ power == 0) {
                     BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(bukkitBlock, oldPower, power);
@@ -157,7 +165,7 @@ public class BlockDoor extends Block {
                     boolean flag1 = eventRedstone.getNewCurrent() > 0;
                     // CraftBukkit end
                     world.setTypeAndData(blockposition3, iblockdata2.set(BlockDoor.POWERED, Boolean.valueOf(flag1)), 2);
-                    if (flag1 != ((Boolean) iblockdata.get(BlockDoor.OPEN)).booleanValue()) {
+                    if (flag1 != iblockdata.get(BlockDoor.OPEN).booleanValue()) {
                         world.setTypeAndData(blockposition, iblockdata.set(BlockDoor.OPEN, Boolean.valueOf(flag1)), 2);
                         world.b(blockposition, blockposition);
                         world.a((EntityHuman) null, flag1 ? this.g() : this.e(), blockposition, 0);
@@ -168,14 +176,17 @@ public class BlockDoor extends Block {
 
     }
 
+    @Override
     public Item getDropType(IBlockData iblockdata, Random random, int i) {
         return iblockdata.get(BlockDoor.HALF) == BlockDoor.EnumDoorHalf.UPPER ? Items.a : this.h();
     }
 
+    @Override
     public boolean canPlace(World world, BlockPosition blockposition) {
         return blockposition.getY() >= 255 ? false : world.getType(blockposition.down()).r() && super.canPlace(world, blockposition) && super.canPlace(world, blockposition.up());
     }
 
+    @Override
     public EnumPistonReaction h(IBlockData iblockdata) {
         return EnumPistonReaction.DESTROY;
     }
@@ -196,6 +207,7 @@ public class BlockDoor extends Block {
         return e(k) | (flag ? 8 : 0) | (flag1 ? 16 : 0) | (flag2 ? 32 : 0);
     }
 
+    @Override
     public ItemStack a(World world, BlockPosition blockposition, IBlockData iblockdata) {
         return new ItemStack(this.h());
     }
@@ -204,6 +216,7 @@ public class BlockDoor extends Block {
         return this == Blocks.IRON_DOOR ? Items.IRON_DOOR : (this == Blocks.SPRUCE_DOOR ? Items.SPRUCE_DOOR : (this == Blocks.BIRCH_DOOR ? Items.BIRCH_DOOR : (this == Blocks.JUNGLE_DOOR ? Items.JUNGLE_DOOR : (this == Blocks.ACACIA_DOOR ? Items.ACACIA_DOOR : (this == Blocks.DARK_OAK_DOOR ? Items.DARK_OAK_DOOR : Items.WOODEN_DOOR)))));
     }
 
+    @Override
     public void a(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman) {
         BlockPosition blockposition1 = blockposition.down();
         BlockPosition blockposition2 = blockposition.up();
@@ -222,6 +235,7 @@ public class BlockDoor extends Block {
 
     }
 
+    @Override
     public IBlockData updateState(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         IBlockData iblockdata1;
 
@@ -240,18 +254,22 @@ public class BlockDoor extends Block {
         return iblockdata;
     }
 
+    @Override
     public IBlockData a(IBlockData iblockdata, EnumBlockRotation enumblockrotation) {
-        return iblockdata.get(BlockDoor.HALF) != BlockDoor.EnumDoorHalf.LOWER ? iblockdata : iblockdata.set(BlockDoor.FACING, enumblockrotation.a((EnumDirection) iblockdata.get(BlockDoor.FACING)));
+        return iblockdata.get(BlockDoor.HALF) != BlockDoor.EnumDoorHalf.LOWER ? iblockdata : iblockdata.set(BlockDoor.FACING, enumblockrotation.a(iblockdata.get(BlockDoor.FACING)));
     }
 
+    @Override
     public IBlockData a(IBlockData iblockdata, EnumBlockMirror enumblockmirror) {
-        return enumblockmirror == EnumBlockMirror.NONE ? iblockdata : iblockdata.a(enumblockmirror.a((EnumDirection) iblockdata.get(BlockDoor.FACING))).a((IBlockState) BlockDoor.HINGE);
+        return enumblockmirror == EnumBlockMirror.NONE ? iblockdata : iblockdata.a(enumblockmirror.a(iblockdata.get(BlockDoor.FACING))).a((IBlockState) BlockDoor.HINGE);
     }
 
+    @Override
     public IBlockData fromLegacyData(int i) {
         return (i & 8) > 0 ? this.getBlockData().set(BlockDoor.HALF, BlockDoor.EnumDoorHalf.UPPER).set(BlockDoor.HINGE, (i & 1) > 0 ? BlockDoor.EnumDoorHinge.RIGHT : BlockDoor.EnumDoorHinge.LEFT).set(BlockDoor.POWERED, Boolean.valueOf((i & 2) > 0)) : this.getBlockData().set(BlockDoor.HALF, BlockDoor.EnumDoorHalf.LOWER).set(BlockDoor.FACING, EnumDirection.fromType2(i & 3).f()).set(BlockDoor.OPEN, Boolean.valueOf((i & 4) > 0));
     }
 
+    @Override
     public int toLegacyData(IBlockData iblockdata) {
         byte b0 = 0;
         int i;
@@ -262,12 +280,12 @@ public class BlockDoor extends Block {
                 i |= 1;
             }
 
-            if (((Boolean) iblockdata.get(BlockDoor.POWERED)).booleanValue()) {
+            if (iblockdata.get(BlockDoor.POWERED).booleanValue()) {
                 i |= 2;
             }
         } else {
-            i = b0 | ((EnumDirection) iblockdata.get(BlockDoor.FACING)).e().get2DRotationValue();
-            if (((Boolean) iblockdata.get(BlockDoor.OPEN)).booleanValue()) {
+            i = b0 | iblockdata.get(BlockDoor.FACING).e().get2DRotationValue();
+            if (iblockdata.get(BlockDoor.OPEN).booleanValue()) {
                 i |= 4;
             }
         }
@@ -299,6 +317,7 @@ public class BlockDoor extends Block {
         return (i & 8) != 0;
     }
 
+    @Override
     protected BlockStateList getStateList() {
         return new BlockStateList(this, new IBlockState[] { BlockDoor.HALF, BlockDoor.FACING, BlockDoor.OPEN, BlockDoor.HINGE, BlockDoor.POWERED});
     }
@@ -309,10 +328,12 @@ public class BlockDoor extends Block {
 
         private EnumDoorHinge() {}
 
+        @Override
         public String toString() {
             return this.getName();
         }
 
+        @Override
         public String getName() {
             return this == BlockDoor.EnumDoorHinge.LEFT ? "left" : "right";
         }
@@ -324,10 +345,12 @@ public class BlockDoor extends Block {
 
         private EnumDoorHalf() {}
 
+        @Override
         public String toString() {
             return this.getName();
         }
 
+        @Override
         public String getName() {
             return this == BlockDoor.EnumDoorHalf.UPPER ? "upper" : "lower";
         }

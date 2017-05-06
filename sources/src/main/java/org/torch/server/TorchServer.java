@@ -21,8 +21,6 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -40,7 +38,6 @@ import org.bukkit.craftbukkit.Main;
 import org.bukkit.craftbukkit.util.Waitable;
 import org.bukkit.event.server.RemoteServerCommandEvent;
 import org.bukkit.event.server.ServerCommandEvent;
-import org.spigotmc.AsyncCatcher;
 import org.spigotmc.SlackActivityAccountant;
 import org.spigotmc.SpigotConfig;
 import org.torch.api.Anaphase;
@@ -1079,7 +1076,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         // Stop snooper if running
         if (this.usageSnooper.d()) this.usageSnooper.e();
         // In non-online mode, the usercahce is useless
-        if (org.spigotmc.SpigotConfig.saveUserCacheOnStopOnly && org.bukkit.Bukkit.getOnlineMode()) {
+        if (org.spigotmc.SpigotConfig.saveUserCacheOnStopOnly) {
             logger.info("Saving usercache.json");
             this.userCache.c(false);
         }

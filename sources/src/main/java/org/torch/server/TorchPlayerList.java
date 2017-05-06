@@ -354,7 +354,7 @@ public final class TorchPlayerList implements TorchReactor {
     public void initializeConnectionToPlayer(NetworkManager networkmanager, EntityPlayer entityplayer) {
         GameProfile gameprofile = entityplayer.getProfile();
         UserCache usercache = this.server.getUserCache();
-        GameProfile cachedProfile = usercache.a(gameprofile.getId());
+        GameProfile cachedProfile = usercache.peekCachedProfile(gameprofile.getName());
         String username = cachedProfile == null ? gameprofile.getName() : cachedProfile.getName();
 
         // Add profile cache
@@ -1434,5 +1434,10 @@ public final class TorchPlayerList implements TorchReactor {
         this.isWhitelistMode = flag;
         this.getServer().setProperty("white-list", Boolean.valueOf(flag));
         this.getServer().saveProperties();
+    }
+    
+    /** Get player's name by uuid */
+    @Nullable public String uuidToUsername(UUID uuid) {
+        return this.uuidToPlayerMap.get(uuid).getName();
     }
 }
