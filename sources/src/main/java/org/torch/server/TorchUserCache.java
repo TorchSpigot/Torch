@@ -270,7 +270,7 @@ public final class TorchUserCache implements TorchReactor {
             
             if (entries != null) {
                 for (UserCacheEntry entry : Lists.reverse(entries)) {
-                    if (entry != null) this.offerCache(entry.profile, entry.expireDate);
+                    if (entry != null) this.putCache(entry.profile.getName(), entry.expireDate);
                 }
             }
             
