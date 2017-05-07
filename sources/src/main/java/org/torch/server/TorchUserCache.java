@@ -216,24 +216,33 @@ public final class TorchUserCache implements TorchReactor {
     } */
     
     /** Offer or replace the old cache if present */
-    @Async public void offerCache(GameProfile profile) {
+    @Async
+    public void offerCache(GameProfile profile) {
         offerCache(profile, (Date) null);
     }
     
     /** Offer or replace the old cache if present, with an expire date */
-    @Async public void offerCache(GameProfile profile, Date date) {
+    @Async
+    public void offerCache(GameProfile profile, Date date) {
         if (date == null) date = warpExpireDate();
         
         String keyUsername = Caches.toLowerCase(profile.getName(), Locale.ROOT);
         UserCacheEntry entry = caches.getIfPresent(keyUsername);
         
         if (entry != null) {
+            // Remove expired entry
+            if (System.currentTimeMillis() >= entry.expireDate.getTime()) {
+                caches.invalidate(keyUsername);
+                entry = null;
+            }
+            
             // The posted profile may has an incorrect case, this only happened on offline servers,
             // replace with an lower-case profile.
-            if (!isOnlineMode() && !entry.profile.getName().equals(profile.getName())) {
+            if (entry != null && !isOnlineMode() && !entry.profile.getName().equals(profile.getName())) {
                 entry = new UserCacheEntry(matchProfile(profileRepo, keyUsername), date);
                 caches.put(keyUsername, entry);
             }
+            
         } else {
             if (isOnlineMode()) {
                 Date date_ = date;
@@ -270,7 +279,7 @@ public final class TorchUserCache implements TorchReactor {
             
             if (entries != null) {
                 for (UserCacheEntry entry : Lists.reverse(entries)) {
-                    if (entry != null) this.putCache(entry.profile.getName(), entry.expireDate);
+                    if (entry != null) this.offerCache(entry.profile, entry.expireDate);
                 }
             }
             
