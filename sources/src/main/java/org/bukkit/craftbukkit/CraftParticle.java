@@ -1,10 +1,7 @@
 package org.bukkit.craftbukkit;
 
-import net.minecraft.server.Block;
 import net.minecraft.server.EnumParticle;
-import net.minecraft.server.IBlockData;
 import org.bukkit.Particle;
-import org.bukkit.craftbukkit.util.CraftMagicNumbers;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.MaterialData;
 
@@ -34,7 +31,7 @@ public class CraftParticle {
                 return new int[]{0};
             }
             MaterialData data = (MaterialData) obj;
-            return new int[]{data.getItemTypeId() + ((int)(data.getData()) << 12)};
+            return new int[]{data.getItemTypeId() + ((data.getData()) << 12)};
         }
         throw new IllegalArgumentException(particle.getDataType().toString());
     }

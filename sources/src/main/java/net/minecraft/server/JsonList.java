@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Logger;
 import org.torch.api.Async;
+import org.torch.server.Caches;
 
 import static org.torch.server.TorchServer.logger;
 
@@ -59,9 +60,6 @@ public class JsonList<K, V extends JsonListEntry<K>> {
     };
 
     // Torch start
-    /** Cached string keys, Object -> String */
-    private final static LoadingCache<Object, String> stringKeys = Caffeine.newBuilder().maximumSize(512).build(Object::toString); // TODO: configurable size
-
     private final static long EXPIRE_CHECK_INTERVAL = TimeUnit.MILLISECONDS.convert(9, TimeUnit.SECONDS); // TODO: configurable
     /** The last time to check expire, in milliseconds. */
     private long lastExpireCheckTime = System.currentTimeMillis();
@@ -127,11 +125,11 @@ public class JsonList<K, V extends JsonListEntry<K>> {
     }
     
     protected static String uuidToString(UUID uuid) {
-        return stringKeys.get(uuid);
+        return Caches.objectString(uuid);
     }
 
     protected String a(K k) {
-        return stringKeys.get(k); // Torch - cache keys
+        return Caches.objectString(k); // Torch - cache keys
     }
 
     public boolean contains(K k0) { return this.d(k0); } // OBFHELPER

@@ -7,11 +7,13 @@ import com.mojang.authlib.properties.Property;
 import java.util.UUID;
 import javax.annotation.Nullable;
 
+import org.torch.server.Caches;
+
+import com.github.benmanes.caffeine.cache.CacheLoader;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 // Spigot start
 import com.google.common.base.Predicate;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -33,10 +35,10 @@ public class TileEntitySkull extends TileEntity /*implements ITickable*/ { // Pa
     // Spigot start
     public static final Executor executor = Executors.newFixedThreadPool(3,
             new ThreadFactoryBuilder()
-                    .setNameFormat("Head Conversion Thread - %1$d")
-                    .build()
-    );
-    public static final LoadingCache<String, GameProfile> skinCache = CacheBuilder.newBuilder()
+            .setNameFormat("Head Conversion Thread - %1$d")
+            .build()
+            );
+    public static final LoadingCache<String, GameProfile> skinCache = Caffeine.newBuilder()
             .maximumSize( 5000 )
             .expireAfterAccess( 60, TimeUnit.MINUTES )
             .build( new CacheLoader<String, GameProfile>()
@@ -93,6 +95,7 @@ public class TileEntitySkull extends TileEntity /*implements ITickable*/ { // Pa
         TileEntitySkull.k = minecraftsessionservice;
     }
 
+    @Override
     public NBTTagCompound save(NBTTagCompound nbttagcompound) {
         super.save(nbttagcompound);
         nbttagcompound.setByte("SkullType", (byte) (this.a & 255));
@@ -107,6 +110,7 @@ public class TileEntitySkull extends TileEntity /*implements ITickable*/ { // Pa
         return nbttagcompound;
     }
 
+    @Override
     public void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
         this.a = nbttagcompound.getByte("SkullType");
@@ -143,11 +147,13 @@ public class TileEntitySkull extends TileEntity /*implements ITickable*/ { // Pa
         return this.g;
     }
 
+    @Override
     @Nullable
     public PacketPlayOutTileEntityData getUpdatePacket() {
         return new PacketPlayOutTileEntityData(this.position, 4, this.d());
     }
 
+    @Override
     public NBTTagCompound d() {
         return this.save(new NBTTagCompound());
     }
@@ -191,14 +197,14 @@ public class TileEntitySkull extends TileEntity /*implements ITickable*/ { // Pa
             } else if (MinecraftServer.getServer() == null) {
                 callback.apply(gameprofile);
             } else {
-                GameProfile profile = skinCache.getIfPresent(gameprofile.getName().toLowerCase()); // Paper
+                GameProfile profile = skinCache.getIfPresent(Caches.toLowerCase(gameprofile.getName())); // Paper
                 if (profile != null && Iterables.getFirst(profile.getProperties().get("textures"), (Object) null) != null) {
                     callback.apply(profile);
                 } else {
                     executor.execute(new Runnable() {
                         @Override
                         public void run() {
-                            final GameProfile profile = skinCache.getUnchecked(gameprofile.getName().toLowerCase());                            
+                            final GameProfile profile = skinCache.get(Caches.toLowerCase(gameprofile.getName()));                            
                             MinecraftServer.getServer().processQueue.add(new Runnable() {
                                 @Override
                                 public void run() {
@@ -227,6 +233,7 @@ public class TileEntitySkull extends TileEntity /*implements ITickable*/ { // Pa
         this.rotation = i;
     }
 
+    @Override
     public void a(EnumBlockMirror enumblockmirror) {
         if (this.world != null && this.world.getType(this.getPosition()).get(BlockSkull.FACING) == EnumDirection.UP) {
             this.rotation = enumblockmirror.a(this.rotation, 16);
@@ -234,6 +241,7 @@ public class TileEntitySkull extends TileEntity /*implements ITickable*/ { // Pa
 
     }
 
+    @Override
     public void a(EnumBlockRotation enumblockrotation) {
         if (this.world != null && this.world.getType(this.getPosition()).get(BlockSkull.FACING) == EnumDirection.UP) {
             this.rotation = enumblockrotation.a(this.rotation, 16);

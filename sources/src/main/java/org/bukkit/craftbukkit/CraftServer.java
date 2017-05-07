@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -108,6 +109,7 @@ import org.bukkit.plugin.messaging.StandardMessenger;
 import org.bukkit.scheduler.BukkitWorker;
 import org.bukkit.util.StringUtil;
 import org.bukkit.util.permissions.DefaultPermissions;
+import org.torch.server.Caches;
 import org.torch.server.TorchPlayerList;
 import org.torch.server.TorchServer;
 import org.yaml.snakeyaml.Yaml;
@@ -416,10 +418,10 @@ public final class CraftServer implements Server {
             return found;
         }
 
-        String lowerName = name.toLowerCase(java.util.Locale.ENGLISH);
+        String lowerName = Caches.toLowerCase(name, Locale.ENGLISH);
         int delta = Integer.MAX_VALUE;
         for (Player player : getOnlinePlayers()) {
-            if (player.getName().toLowerCase(java.util.Locale.ENGLISH).startsWith(lowerName)) {
+            if (Caches.toLowerCase(player.getName(), Locale.ENGLISH).startsWith(lowerName)) {
                 int curDelta = Math.abs(player.getName().length() - lowerName.length());
                 if (curDelta < delta) {
                     found = player;
@@ -1058,7 +1060,7 @@ public final class CraftServer implements Server {
     public World getWorld(String name) {
         Validate.notNull(name, "Name cannot be null");
 
-        return worlds.get(name.toLowerCase(java.util.Locale.ENGLISH));
+        return worlds.get(Caches.toLowerCase(name, Locale.ENGLISH));
     }
 
     @Override

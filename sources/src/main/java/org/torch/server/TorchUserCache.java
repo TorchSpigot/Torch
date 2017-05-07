@@ -168,7 +168,7 @@ public final class TorchUserCache implements TorchReactor {
     public GameProfile requestProfile(String username) {
         if (StringUtils.isBlank(username)) return null;
         
-        String keyUsername = username.toLowerCase(Locale.ROOT);
+        String keyUsername = Caches.toLowerCase(username, Locale.ROOT);
         UserCacheEntry cachedEntry = caches.getIfPresent(keyUsername);
         
         // Remove expired entry
@@ -224,7 +224,7 @@ public final class TorchUserCache implements TorchReactor {
         if (date == null) date = warpExpireDate();
         
         UserCacheEntry entry = new UserCacheEntry(profile, date);
-        caches.put(profile.getName().toLowerCase(Locale.ROOT), entry);
+        caches.put(Caches.toLowerCase(profile.getName(), Locale.ROOT), entry);
         
         // Spigot - skip saving if disabled
         if(!org.spigotmc.SpigotConfig.saveUserCacheOnStopOnly) this.save();

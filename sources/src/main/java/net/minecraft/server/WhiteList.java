@@ -5,8 +5,6 @@ import com.mojang.authlib.GameProfile;
 import java.io.File;
 import java.util.Iterator;
 
-import org.torch.server.TorchServer;
-
 public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
 
     public WhiteList(File file) {
@@ -19,11 +17,7 @@ public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
     }
 
     public boolean isWhitelisted(GameProfile profile) {
-        if (TorchServer.authUUID()) {
-            return this.contains(profile);
-        } else {
-            return this.contains(profile) || this.contains(new GameProfile(profile.getId(), profile.getName().toLowerCase())); // Support for offline servers
-        }
+        return this.contains(profile);
     }
 
     @Override

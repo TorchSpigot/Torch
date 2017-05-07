@@ -9,7 +9,6 @@ import java.io.File;
 import java.lang.reflect.ParameterizedType;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 import javax.annotation.Nullable;
 import org.torch.api.Anaphase;
 import org.torch.api.Async;

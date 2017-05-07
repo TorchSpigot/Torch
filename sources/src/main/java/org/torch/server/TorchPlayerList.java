@@ -1114,23 +1114,13 @@ public final class TorchPlayerList implements TorchReactor {
     }
 
     public void addWhitelist(GameProfile profile) {
-        if (TorchServer.authUUID()) {
-            this.whitelist.add(new WhiteListEntry(profile));
-        } else {
-            this.whitelist.add(new WhiteListEntry(new GameProfile(profile.getId(), profile.getName().toLowerCase()))); // Support for offline servers
-        }
+        this.whitelist.add(new WhiteListEntry(profile));
 
         this.saveWhiteList();
     }
 
     public void removeWhitelist(GameProfile profile) {
-        if (TorchServer.authUUID()) { // TODO: configurable
-            this.whitelist.remove(profile);
-        } else {
-            // Support for offline servers
-            this.whitelist.remove(profile);
-            this.whitelist.remove(new GameProfile(profile.getId(), profile.getName().toLowerCase()));
-        }
+        this.whitelist.remove(profile);
 
         this.saveWhiteList();
     }

@@ -595,10 +595,6 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         }
     }
 
-    public static boolean authUUID() { // TODO: configurable
-        return Bukkit.getOnlineMode() || (SpigotConfig.bungee && PaperConfig.bungeeOnlineMode);
-    }
-
     /**
      * Load resource pack hash from the property
      */

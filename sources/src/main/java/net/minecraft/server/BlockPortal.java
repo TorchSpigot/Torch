@@ -20,8 +20,9 @@ public class BlockPortal extends BlockHalfTransparent {
         this.a(true);
     }
 
+    @Override
     public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
-        switch ((EnumDirection.EnumAxis) iblockdata.get(BlockPortal.AXIS)) {
+        switch (iblockdata.get(BlockPortal.AXIS)) {
         case X:
             return BlockPortal.b;
 
@@ -34,6 +35,7 @@ public class BlockPortal extends BlockHalfTransparent {
         }
     }
 
+    @Override
     public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
         super.b(world, blockposition, iblockdata, random);
         if (world.spigotConfig.enableZombiePigmenPortalSpawns && world.worldProvider.d() && world.getGameRules().getBoolean("doMobSpawning") && random.nextInt(2000) < world.getDifficulty().a()) { // Spigot
@@ -47,7 +49,7 @@ public class BlockPortal extends BlockHalfTransparent {
 
             if (i > 0 && !world.getType(blockposition1.up()).m()) {
                 // CraftBukkit - set spawn reason to NETHER_PORTAL
-                Entity entity = ItemMonsterEgg.spawnCreature(world, EntityTypes.getName(EntityPigZombie.class), (double) blockposition1.getX() + 0.5D, (double) blockposition1.getY() + 1.1D, (double) blockposition1.getZ() + 0.5D, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.NETHER_PORTAL);
+                Entity entity = ItemMonsterEgg.spawnCreature(world, EntityTypes.getName(EntityPigZombie.class), blockposition1.getX() + 0.5D, blockposition1.getY() + 1.1D, blockposition1.getZ() + 0.5D, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.NETHER_PORTAL);
 
                 if (entity != null) {
                     entity.portalCooldown = entity.aE();
@@ -57,6 +59,7 @@ public class BlockPortal extends BlockHalfTransparent {
 
     }
 
+    @Override
     @Nullable
     public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return BlockPortal.k;
@@ -66,6 +69,7 @@ public class BlockPortal extends BlockHalfTransparent {
         return enumdirection_enumaxis == EnumDirection.EnumAxis.X ? 1 : (enumdirection_enumaxis == EnumDirection.EnumAxis.Z ? 2 : 0);
     }
 
+    @Override
     public boolean c(IBlockData iblockdata) {
         return false;
     }
@@ -90,8 +94,9 @@ public class BlockPortal extends BlockHalfTransparent {
         }
     }
 
+    @Override
     public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
-        EnumDirection.EnumAxis enumdirection_enumaxis = (EnumDirection.EnumAxis) iblockdata.get(BlockPortal.AXIS);
+        EnumDirection.EnumAxis enumdirection_enumaxis = iblockdata.get(BlockPortal.AXIS);
         BlockPortal.Shape blockportal_shape;
 
         if (enumdirection_enumaxis == EnumDirection.EnumAxis.X) {
@@ -108,10 +113,12 @@ public class BlockPortal extends BlockHalfTransparent {
 
     }
 
+    @Override
     public int a(Random random) {
         return 0;
     }
 
+    @Override
     public void a(World world, BlockPosition blockposition, IBlockData iblockdata, Entity entity) {
         if (!entity.isPassenger() && !entity.isVehicle() && entity.aX()) {
             // CraftBukkit start - Entity in portal
@@ -123,23 +130,27 @@ public class BlockPortal extends BlockHalfTransparent {
 
     }
 
+    @Override
     public ItemStack a(World world, BlockPosition blockposition, IBlockData iblockdata) {
         return ItemStack.a;
     }
 
+    @Override
     public IBlockData fromLegacyData(int i) {
         return this.getBlockData().set(BlockPortal.AXIS, (i & 3) == 2 ? EnumDirection.EnumAxis.Z : EnumDirection.EnumAxis.X);
     }
 
+    @Override
     public int toLegacyData(IBlockData iblockdata) {
-        return a((EnumDirection.EnumAxis) iblockdata.get(BlockPortal.AXIS));
+        return a(iblockdata.get(BlockPortal.AXIS));
     }
 
+    @Override
     public IBlockData a(IBlockData iblockdata, EnumBlockRotation enumblockrotation) {
         switch (enumblockrotation) {
         case COUNTERCLOCKWISE_90:
         case CLOCKWISE_90:
-            switch ((EnumDirection.EnumAxis) iblockdata.get(BlockPortal.AXIS)) {
+            switch (iblockdata.get(BlockPortal.AXIS)) {
             case X:
                 return iblockdata.set(BlockPortal.AXIS, EnumDirection.EnumAxis.Z);
 
@@ -155,6 +166,7 @@ public class BlockPortal extends BlockHalfTransparent {
         }
     }
 
+    @Override
     protected BlockStateList getStateList() {
         return new BlockStateList(this, new IBlockState[] { BlockPortal.AXIS});
     }
