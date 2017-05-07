@@ -50,6 +50,7 @@ import org.torch.api.Async;
 import org.torch.api.TorchReactor;
 
 import static net.minecraft.server.UserCache.isOnlineMode;
+import static net.minecraft.server.UserCache.setOnlineMode;
 import static org.torch.server.TorchServer.logger;
 
 @Getter
@@ -127,6 +128,16 @@ public final class TorchUserCache implements TorchReactor {
         
         return profile[0];
     }
+    
+    /** Generate an new expire date for the cache */
+    public static Date warpExpireDate() {
+        // Generate new expire date if not given
+        Calendar calendar = Calendar.getInstance();
+        
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        calendar.add(Calendar.MONTH, 1); // TODO: configurable expire date
+        return calendar.getTime();
+    }
 
     /**
      * Add an entry to this cache with the default expire date
@@ -139,14 +150,7 @@ public final class TorchUserCache implements TorchReactor {
      * Add an entry to this cache with an expire date, return the new entry
      */
     public UserCacheEntry putCache(String keyUsername, Date date) {
-        // Generate new expire date if not given
-        if (date == null) {
-            Calendar calendar = Calendar.getInstance();
-            
-            calendar.setTimeInMillis(System.currentTimeMillis());
-            calendar.add(Calendar.MONTH, 1); // TODO: configurable expire date
-            date = calendar.getTime();
-        }
+        if (date == null) date = warpExpireDate();
         
         UserCacheEntry entry = new UserCacheEntry(matchProfile(profileRepo, keyUsername), date);
         caches.put(keyUsername, entry);
@@ -209,6 +213,22 @@ public final class TorchUserCache implements TorchReactor {
         
         return caches.getIfPresent(username);
     } */
+    
+    /** Offer or replace the old cache if present */
+    public void offerCache(GameProfile profile) {
+        offerCache(profile, (Date) null);
+    }
+    
+    /** Offer or replace the old cache if present, with an expire date */
+    public void offerCache(GameProfile profile, Date date) {
+        if (date == null) date = warpExpireDate();
+        
+        UserCacheEntry entry = new UserCacheEntry(profile, date);
+        caches.put(profile.getName().toLowerCase(Locale.ROOT), entry);
+        
+        // Spigot - skip saving if disabled
+        if(!org.spigotmc.SpigotConfig.saveUserCacheOnStopOnly) this.save();
+    }
     
     public String[] getCachedUsernames() {
         return caches.asMap().keySet().toArray(new String[caches.asMap().size()]);
@@ -292,9 +312,10 @@ public final class TorchUserCache implements TorchReactor {
             this.expireDate = date;
         }
         
-        /* public UserCache.UserCacheEntry toLegacy() {
+        @Deprecated
+        public UserCache.UserCacheEntry toLegacy() {
             return servant.new UserCacheEntry(profile, expireDate);
-        } */
+        }
     }
     
     private final class CacheSerializer implements JsonDeserializer<UserCacheEntry>, JsonSerializer<UserCacheEntry> {

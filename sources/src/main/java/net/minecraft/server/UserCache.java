@@ -45,6 +45,7 @@ public class UserCache implements org.torch.api.TorchServant {
         return TorchUserCache.matchProfile(profileRepo, name);
     }
 
+    public static void setOnlineMode(boolean flag) { a(flag); } // OBFHELPER
     public static void a(boolean flag) {
         UserCache.c = flag;
     }
@@ -55,11 +56,11 @@ public class UserCache implements org.torch.api.TorchServant {
     }
 
     public void a(GameProfile profile) {
-        reactor.putCache(profile.getName().toLowerCase(Locale.ROOT));
+        reactor.offerCache(profile);
     }
 
     private void a(GameProfile profile, Date date) {
-        reactor.putCache(profile.getName().toLowerCase(Locale.ROOT), date);
+        reactor.offerCache(profile, date);
     }
     
     @Nullable
@@ -71,8 +72,14 @@ public class UserCache implements org.torch.api.TorchServant {
         return reactor.getCachedUsernames();
     }
     
-    public GameProfile peekCachedProfile(String username) { // TODO
+    @Deprecated
+    public GameProfile peekCachedProfile(String username) {
         return reactor.peekCachedProfile(username);
+    }
+    
+    @Deprecated
+    public UserCache.UserCacheEntry peekCachedEntry(String username) {
+        return reactor.peekCachedEntry(username).toLegacy();
     }
 
     /*
@@ -82,7 +89,7 @@ public class UserCache implements org.torch.api.TorchServant {
     }
 
     private UserCache.UserCacheEntry b(UUID uuid) {
-        return reactor.peekCachedProfile(uuid);
+        return reactor.peekCachedEntry(uuid).toLegacy();
     } */
 
     public void b() {
@@ -100,8 +107,9 @@ public class UserCache implements org.torch.api.TorchServant {
 
     /* private List<UserCache.UserCacheEntry> a(int size) {
         return reactor.matchEntries(size);
-    }
+    } */
 
+    @Deprecated
     public class UserCacheEntry {
 
         private final GameProfile b;
@@ -125,7 +133,7 @@ public class UserCache implements org.torch.api.TorchServant {
         }
     }
 
-    class BanEntrySerializer implements JsonDeserializer<UserCache.UserCacheEntry>, JsonSerializer<UserCache.UserCacheEntry> {
+    /* class BanEntrySerializer implements JsonDeserializer<UserCache.UserCacheEntry>, JsonSerializer<UserCache.UserCacheEntry> {
 
         private BanEntrySerializer() {}
 

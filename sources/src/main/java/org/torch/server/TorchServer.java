@@ -43,6 +43,7 @@ import org.spigotmc.SlackActivityAccountant;
 import org.spigotmc.SpigotConfig;
 import org.torch.api.Anaphase;
 
+import com.destroystokyo.paper.PaperConfig;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
@@ -306,7 +307,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
     /**
      * The user cache
      */
-    private final UserCache userCache;
+    private final TorchUserCache userCache;
 
     private long nanoTimeSinceStatusRefresh;
 
@@ -398,7 +399,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         authService = yggdrasil;
         sessionService = session;
         profileRepo = profileRepository;
-        userCache = profileCache;
+        userCache = profileCache.getReactor();
         commandManager = createCommandDispatcher();
         dataConverterManager = dataFixer;
         options = optionSet;
@@ -595,7 +596,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
     }
 
     public static boolean authUUID() { // TODO: configurable
-        return Bukkit.getOnlineMode() || SpigotConfig.bungee;
+        return Bukkit.getOnlineMode() || (SpigotConfig.bungee && PaperConfig.bungeeOnlineMode);
     }
 
     /**
@@ -1081,7 +1082,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         // In non-online mode, the usercahce is useless
         if (org.spigotmc.SpigotConfig.saveUserCacheOnStopOnly) {
             logger.info("Saving usercache.json");
-            this.userCache.c(false);
+            this.userCache.save(false);
         }
     }
 
@@ -1965,10 +1966,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             logger.warn("To change this, set \"online-mode\" to \"true\" in the server.properties file.");
         }
 
-        if (this.convertFilesUUID()) {
-            // Save the user cache after convert them
-            this.getUserCache().c();
-        }
+        if (this.convertFilesUUID()) this.getUserCache().save();
 
         if (!NameReferencingFileConverter.a(this.propertyManager)) return false;
 
@@ -2009,10 +2007,10 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         this.propertyManager.setProperty("max-build-height", Integer.valueOf(this.getBuildLimit()));
 
         // Set user cache and session service for skulls
-        TileEntitySkull.a(this.getUserCache());
+        TileEntitySkull.a(this.getUserCache().getServant());
         TileEntitySkull.a(this.getSessionService());
         // Set online mode for the user cache
-        UserCache.a(this.getOnlineMode());
+        UserCache.setOnlineMode(this.getOnlineMode());
 
         logger.info("Preparing level \"{}\"", new Object[] { this.getPrimaryWorldFolderName() });
         this.loadDefaultWorlds(this.getPrimaryWorldFolderName(), this.getPrimaryWorldFolderName(), generatorSeed, worldtype, generatorSettings);

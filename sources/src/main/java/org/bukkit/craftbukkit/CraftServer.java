@@ -1335,20 +1335,9 @@ public final class CraftServer implements Server {
         if (result == null) {
             // Spigot Start
             GameProfile profile = null;
-            // Only fetch an online UUID in online mode
-            if ( MinecraftServer.getServer().getOnlineMode()
-                    || (org.spigotmc.SpigotConfig.bungee && com.destroystokyo.paper.PaperConfig.bungeeOnlineMode)) // Paper - Handle via setting
-            {
-                profile = console.getUserCache().getProfile( name );
-            }
-            // Spigot end
-            if (profile == null) {
-                // Make an OfflinePlayer using an offline mode UUID since the name has no profile
-                result = getOfflinePlayer(new GameProfile(EntityHuman.offlinePlayerUUID(name), name));
-            } else {
-                // Use the GameProfile even when we get a UUID so we ensure we still have a name
-                result = getOfflinePlayer(profile);
-            }
+            
+            profile = console.getUserCache().requestProfile(name); // Torch
+            result = getOfflinePlayer(profile); // Torch
         } else {
             offlinePlayers.remove(result.getUniqueId());
         }

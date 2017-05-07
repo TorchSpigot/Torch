@@ -64,7 +64,7 @@ public class NameReferencingFileConverter {
             }
 
             @Override
-			public boolean apply(@Nullable Object object) {
+            public boolean apply(@Nullable Object object) {
                 return this.a((String) object);
             }
         }), String.class);
@@ -94,7 +94,7 @@ public class NameReferencingFileConverter {
             if (gameprofilebanlist.c().exists()) {
                 try {
                     gameprofilebanlist.load();
-                // CraftBukkit start - FileNotFoundException -> IOException, don't print stacetrace
+                    // CraftBukkit start - FileNotFoundException -> IOException, don't print stacetrace
                 } catch (IOException filenotfoundexception) {
                     logger.warn("Could not load existing file {}", new Object[] { gameprofilebanlist.c().getName()});
                 }
@@ -106,8 +106,8 @@ public class NameReferencingFileConverter {
                 a(NameReferencingFileConverter.b, hashmap);
                 ProfileLookupCallback profilelookupcallback = new ProfileLookupCallback() {
                     @Override
-					public void onProfileLookupSucceeded(GameProfile gameprofile) {
-                        minecraftserver.getUserCache().a(gameprofile);
+                    public void onProfileLookupSucceeded(GameProfile gameprofile) {
+                        minecraftserver.getUserCache().getReactor().offerCache(gameprofile);
                         String[] astring = (String[]) hashmap.get(gameprofile.getName().toLowerCase(Locale.ROOT));
 
                         if (astring == null) {
@@ -124,7 +124,7 @@ public class NameReferencingFileConverter {
                     }
 
                     @Override
-					public void onProfileLookupFailed(GameProfile gameprofile, Exception exception) {
+                    public void onProfileLookupFailed(GameProfile gameprofile, Exception exception) {
                         logger.warn("Could not lookup user banlist entry for {}", new Object[] { gameprofile.getName(), exception});
                         if (!(exception instanceof ProfileNotFoundException)) {
                             throw new NameReferencingFileConverter.FileConversionException("Could not request user " + gameprofile.getName() + " from backend systems", exception, null);
@@ -155,7 +155,7 @@ public class NameReferencingFileConverter {
             if (ipbanlist.c().exists()) {
                 try {
                     ipbanlist.load();
-                // CraftBukkit start - FileNotFoundException -> IOException, don't print stacetrace
+                    // CraftBukkit start - FileNotFoundException -> IOException, don't print stacetrace
                 } catch (IOException filenotfoundexception) {
                     logger.warn("Could not load existing file {}", new Object[] { ipbanlist.c().getName()});
                 }
@@ -197,7 +197,7 @@ public class NameReferencingFileConverter {
             if (oplist.c().exists()) {
                 try {
                     oplist.load();
-                // CraftBukkit start - FileNotFoundException -> IOException, don't print stacetrace
+                    // CraftBukkit start - FileNotFoundException -> IOException, don't print stacetrace
                 } catch (IOException filenotfoundexception) {
                     logger.warn("Could not load existing file {}", new Object[] { oplist.c().getName()});
                 }
@@ -207,13 +207,13 @@ public class NameReferencingFileConverter {
                 List list = Files.readLines(NameReferencingFileConverter.c, Charsets.UTF_8);
                 ProfileLookupCallback profilelookupcallback = new ProfileLookupCallback() {
                     @Override
-					public void onProfileLookupSucceeded(GameProfile gameprofile) {
-                        minecraftserver.getUserCache().a(gameprofile);
+                    public void onProfileLookupSucceeded(GameProfile gameprofile) {
+                        minecraftserver.getUserCache().getReactor().offerCache(gameprofile);
                         oplist.add(new OpListEntry(gameprofile, minecraftserver.q(), false));
                     }
 
                     @Override
-					public void onProfileLookupFailed(GameProfile gameprofile, Exception exception) {
+                    public void onProfileLookupFailed(GameProfile gameprofile, Exception exception) {
                         logger.warn("Could not lookup oplist entry for {}", new Object[] { gameprofile.getName(), exception});
                         if (!(exception instanceof ProfileNotFoundException)) {
                             throw new NameReferencingFileConverter.FileConversionException("Could not request user " + gameprofile.getName() + " from backend systems", exception, null);
@@ -244,7 +244,7 @@ public class NameReferencingFileConverter {
             if (whitelist.c().exists()) {
                 try {
                     whitelist.load();
-                // CraftBukkit start - FileNotFoundException -> IOException, don't print stacetrace
+                    // CraftBukkit start - FileNotFoundException -> IOException, don't print stacetrace
                 } catch (IOException filenotfoundexception) {
                     logger.warn("Could not load existing file {}", new Object[] { whitelist.c().getName()});
                 }
@@ -254,13 +254,13 @@ public class NameReferencingFileConverter {
                 List list = Files.readLines(NameReferencingFileConverter.d, Charsets.UTF_8);
                 ProfileLookupCallback profilelookupcallback = new ProfileLookupCallback() {
                     @Override
-					public void onProfileLookupSucceeded(GameProfile gameprofile) {
-                        minecraftserver.getUserCache().a(gameprofile);
+                    public void onProfileLookupSucceeded(GameProfile gameprofile) {
+                        minecraftserver.getUserCache().getReactor().offerCache(gameprofile);
                         whitelist.add(new WhiteListEntry(gameprofile));
                     }
 
                     @Override
-					public void onProfileLookupFailed(GameProfile gameprofile, Exception exception) {
+                    public void onProfileLookupFailed(GameProfile gameprofile, Exception exception) {
                         logger.warn("Could not lookup user whitelist entry for {}", new Object[] { gameprofile.getName(), exception});
                         if (!(exception instanceof ProfileNotFoundException)) {
                             throw new NameReferencingFileConverter.FileConversionException("Could not request user " + gameprofile.getName() + " from backend systems", exception, null);
@@ -286,7 +286,7 @@ public class NameReferencingFileConverter {
 
     public static String a(final MinecraftServer minecraftserver, String s) {
         if (!UtilColor.b(s) && s.length() <= 16) {
-            GameProfile gameprofile = minecraftserver.getUserCache().getProfile(s);
+            GameProfile gameprofile = minecraftserver.getUserCache().getReactor().requestProfile(s);
 
             if (gameprofile != null && gameprofile.getId() != null) {
                 return gameprofile.getId().toString();
@@ -294,13 +294,13 @@ public class NameReferencingFileConverter {
                 final ArrayList arraylist = Lists.newArrayList();
                 ProfileLookupCallback profilelookupcallback = new ProfileLookupCallback() {
                     @Override
-					public void onProfileLookupSucceeded(GameProfile gameprofile) {
-                        minecraftserver.getUserCache().a(gameprofile);
+                    public void onProfileLookupSucceeded(GameProfile gameprofile) {
+                        minecraftserver.getUserCache().getReactor().offerCache(gameprofile);
                         arraylist.add(gameprofile);
                     }
 
                     @Override
-					public void onProfileLookupFailed(GameProfile gameprofile, Exception exception) {
+                    public void onProfileLookupFailed(GameProfile gameprofile, Exception exception) {
                         logger.warn("Could not lookup user whitelist entry for {}", new Object[] { gameprofile.getName(), exception});
                     }
                 };
@@ -343,8 +343,8 @@ public class NameReferencingFileConverter {
                 final String[] astring = (String[]) arraylist.toArray(new String[arraylist.size()]);
                 ProfileLookupCallback profilelookupcallback = new ProfileLookupCallback() {
                     @Override
-					public void onProfileLookupSucceeded(GameProfile gameprofile) {
-                        dedicatedserver.getUserCache().a(gameprofile);
+                    public void onProfileLookupSucceeded(GameProfile gameprofile) {
+                        dedicatedserver.getUserCache().getReactor().offerCache(gameprofile);
                         UUID uuid = gameprofile.getId();
 
                         if (uuid == null) {
@@ -355,7 +355,7 @@ public class NameReferencingFileConverter {
                     }
 
                     @Override
-					public void onProfileLookupFailed(GameProfile gameprofile, Exception exception) {
+                    public void onProfileLookupFailed(GameProfile gameprofile, Exception exception) {
                         logger.warn("Could not lookup user uuid for {}", new Object[] { gameprofile.getName(), exception});
                         if (exception instanceof ProfileNotFoundException) {
                             String s = this.a(gameprofile);
@@ -393,7 +393,7 @@ public class NameReferencingFileConverter {
                                 exception.printStackTrace();
                                 ServerInternalException.reportInternalException(exception); // Paper
                             }
-                       }
+                        }
                         // CraftBukkit end
 
                         NameReferencingFileConverter.b(file);

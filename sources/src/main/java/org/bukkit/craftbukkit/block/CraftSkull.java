@@ -153,20 +153,23 @@ public class CraftSkull extends CraftBlockState implements Skull {
         }
     }
 
+    @Override
     public boolean hasOwner() {
         return profile != null;
     }
 
+    @Override
     public String getOwner() {
         return hasOwner() ? profile.getName() : null;
     }
 
+    @Override
     public boolean setOwner(String name) {
         if (name == null || name.length() > MAX_OWNER_LENGTH) {
             return false;
         }
 
-        GameProfile profile = MinecraftServer.getServer().getUserCache().getProfile(name);
+        GameProfile profile = MinecraftServer.getServer().getUserCache().getReactor().requestProfile(name);
         if (profile == null) {
             return false;
         }
@@ -205,18 +208,22 @@ public class CraftSkull extends CraftBlockState implements Skull {
         this.profile = new GameProfile(player.getUniqueId(), player.getName());
     }
 
+    @Override
     public BlockFace getRotation() {
     	return getBlockFace(rotation);
     }
 
+    @Override
     public void setRotation(BlockFace rotation) {
         this.rotation = getBlockFace(rotation);
     }
 
+    @Override
     public SkullType getSkullType() {
         return skullType;
     }
 
+    @Override
     public void setSkullType(SkullType skullType) {
         this.skullType = skullType;
 

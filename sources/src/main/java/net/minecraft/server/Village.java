@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
+import org.torch.server.TorchUserCache;
+
 public class Village {
 
     private World a;
@@ -394,8 +396,8 @@ public class Village {
             NBTTagCompound nbttagcompound2 = nbttaglist1.get(j);
 
             if (nbttagcompound2.hasKey("UUID") && this.a != null && this.a.getMinecraftServer() != null) {
-                UserCache usercache = this.a.getMinecraftServer().getUserCache();
-                GameProfile gameprofile = usercache.peekCachedProfile(nbttagcompound2.getString("Name")); // TODO
+                TorchUserCache usercache = this.a.getMinecraftServer().getUserCache().getReactor();
+                GameProfile gameprofile = usercache.peekCachedProfile(nbttagcompound2.getString("Name"));
 
                 if (gameprofile != null) {
                     this.j.put(gameprofile.getName(), Integer.valueOf(nbttagcompound2.getInt("S")));
@@ -443,10 +445,10 @@ public class Village {
         while (iterator1.hasNext()) {
             String s = (String) iterator1.next();
             NBTTagCompound nbttagcompound2 = new NBTTagCompound();
-            UserCache usercache = this.a.getMinecraftServer().getUserCache();
+            TorchUserCache usercache = this.a.getMinecraftServer().getUserCache().getReactor();
 
             try {
-                GameProfile gameprofile = usercache.getProfile(s);
+                GameProfile gameprofile = usercache.requestProfile(s);
 
                 if (gameprofile != null) {
                     nbttagcompound2.setString("UUID", gameprofile.getId().toString());

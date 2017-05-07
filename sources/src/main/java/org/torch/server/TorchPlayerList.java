@@ -16,6 +16,7 @@ import java.net.SocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -352,20 +353,20 @@ public final class TorchPlayerList implements TorchReactor {
     }
 
     public void initializeConnectionToPlayer(NetworkManager networkmanager, EntityPlayer entityplayer) {
-        GameProfile gameprofile = entityplayer.getProfile();
-        UserCache usercache = this.server.getUserCache();
-        GameProfile cachedProfile = usercache.peekCachedProfile(gameprofile.getName());
-        String username = cachedProfile == null ? gameprofile.getName() : cachedProfile.getName();
+        GameProfile profile = entityplayer.getProfile();
+        TorchUserCache usercache = this.server.getUserCache();
+        GameProfile cachedProfile = usercache.peekCachedProfile(profile.getName());
+        String username = cachedProfile == null ? profile.getName() : cachedProfile.getName();
 
-        // Add profile cache
-        usercache.a(gameprofile);
+        usercache.offerCache(profile);
+        
         NBTTagCompound nbttagcompound = this.readPlayerDataFromFile(entityplayer);
         // Better rename detection
         if (nbttagcompound != null && nbttagcompound.hasKey("bukkit")) {
             NBTTagCompound bukkit = nbttagcompound.getCompound("bukkit");
             username = bukkit.hasKeyOfType("lastKnownName", 8) ? bukkit.getString("lastKnownName") : username;
         }
-
+        
         // Support PlayerInitialSpawnEvent
         Location originalLoc = new Location(entityplayer.world.getWorld(), entityplayer.locX, entityplayer.locY, entityplayer.locZ, entityplayer.yaw, entityplayer.pitch);
         com.destroystokyo.paper.event.player.PlayerInitialSpawnEvent event = new com.destroystokyo.paper.event.player.PlayerInitialSpawnEvent(entityplayer.getBukkitEntity(), originalLoc);

@@ -319,7 +319,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
         V = reactor.getAuthService();
         W = reactor.getSessionService();
         X = reactor.getProfileRepo();
-        Y = reactor.getUserCache();
+        Y = reactor.getUserCache().getServant();
         Z = reactor.getNanoTimeSinceStatusRefresh();
         j = reactor.getFutureTaskQueue();
         ab = reactor.getCurrentTime();
@@ -791,7 +791,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public UserCache getUserCache() {
-        return reactor.getUserCache();
+        return reactor.getUserCache().getServant();
     }
 
     public ServerPing getServerPing() {

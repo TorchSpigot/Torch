@@ -98,7 +98,7 @@ public class CommandWhitelist extends CommandAbstract {
                 }
 
                 if ("add".equals(astring[0])) {
-                    return a(astring, minecraftserver.getUserCache().a());
+                    return a(astring, minecraftserver.getUserCache().getReactor().getCachedUsernames());
                 }
             }
 
@@ -119,7 +119,7 @@ public class CommandWhitelist extends CommandAbstract {
             // The reason we essentially copy/pasta NMS code here is because the NMS online-only version
             // is capable of providing feedback to the person running the command based on whether or
             // not the player is a real online-mode account
-            GameProfile gameprofile = mcserver.getUserCache().getProfile(playerName);
+            GameProfile gameprofile = mcserver.getUserCache().getReactor().requestProfile(playerName);
             if (gameprofile == null) {
                 if (add) {
                     throw new CommandException("commands.whitelist.add.failed", new Object[] { playerName});
