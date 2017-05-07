@@ -43,6 +43,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.ThreadSafe;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.spigotmc.SpigotConfig;
@@ -53,7 +55,7 @@ import static net.minecraft.server.UserCache.isOnlineMode;
 import static net.minecraft.server.UserCache.setOnlineMode;
 import static org.torch.server.TorchServer.logger;
 
-@Getter
+@Getter @ThreadSafe
 public final class TorchUserCache implements TorchReactor {
     /** The legacy */
     private final UserCache servant;
@@ -105,10 +107,10 @@ public final class TorchUserCache implements TorchReactor {
      * Lookup the profile by the name from Mojang, triggering network operation
      */
     @Nullable
-    public static GameProfile matchProfile(GameProfileRepository profileRepo, String name) {
+    public static GameProfile matchProfile(GameProfileRepository profileRepo, String keyUsername) {
         // Keep current case for offline servers
         if (!isOnlineMode()) {
-            return new GameProfile(EntityHuman.offlinePlayerUUID(name), name);
+            return new GameProfile(EntityHuman.offlinePlayerUUID(keyUsername), keyUsername);
         }
         
         final GameProfile[] profile = new GameProfile[1];
@@ -124,7 +126,7 @@ public final class TorchUserCache implements TorchReactor {
             }
         };
         
-        profileRepo.findProfilesByNames(new String[] { name }, Agent.MINECRAFT, callback);
+        profileRepo.findProfilesByNames(new String[] { keyUsername }, Agent.MINECRAFT, callback);
         
         return profile[0];
     }
@@ -155,7 +157,6 @@ public final class TorchUserCache implements TorchReactor {
         UserCacheEntry entry = new UserCacheEntry(matchProfile(profileRepo, keyUsername), date);
         caches.put(keyUsername, entry);
         
-        // Spigot - skip saving if disabled
         if(!org.spigotmc.SpigotConfig.saveUserCacheOnStopOnly) this.save();
         
         return entry;
@@ -215,18 +216,42 @@ public final class TorchUserCache implements TorchReactor {
     } */
     
     /** Offer or replace the old cache if present */
-    public void offerCache(GameProfile profile) {
+    @Async public void offerCache(GameProfile profile) {
         offerCache(profile, (Date) null);
     }
     
     /** Offer or replace the old cache if present, with an expire date */
-    public void offerCache(GameProfile profile, Date date) {
+    @Async public void offerCache(GameProfile profile, Date date) {
         if (date == null) date = warpExpireDate();
         
-        UserCacheEntry entry = new UserCacheEntry(profile, date);
-        caches.put(Caches.toLowerCase(profile.getName(), Locale.ROOT), entry);
+        String keyUsername = Caches.toLowerCase(profile.getName(), Locale.ROOT);
+        UserCacheEntry entry = caches.getIfPresent(keyUsername);
         
-        // Spigot - skip saving if disabled
+        if (entry != null) {
+            // The posted profile may has an incorrect case, this only happened on offline servers,
+            // replace with an lower-case profile.
+            if (!isOnlineMode() && !entry.profile.getName().equals(profile.getName())) {
+                entry = new UserCacheEntry(matchProfile(profileRepo, keyUsername), date);
+                caches.put(keyUsername, entry);
+            }
+        } else {
+            if (isOnlineMode()) {
+                Date date_ = date;
+                Regulator.post(() -> {
+                    UserCacheEntry newEntry = new UserCacheEntry(matchProfile(profileRepo, keyUsername), date_);
+                    caches.put(keyUsername, newEntry);
+                    
+                    if(!org.spigotmc.SpigotConfig.saveUserCacheOnStopOnly) this.save(false);
+                });
+                
+                return;
+            } else {
+                entry = new UserCacheEntry(matchProfile(profileRepo, keyUsername), date);
+                caches.put(keyUsername, entry);
+            }
+            
+        }
+        
         if(!org.spigotmc.SpigotConfig.saveUserCacheOnStopOnly) this.save();
     }
     
@@ -245,7 +270,7 @@ public final class TorchUserCache implements TorchReactor {
             
             if (entries != null) {
                 for (UserCacheEntry entry : Lists.reverse(entries)) {
-                    if (entry != null) this.putCache(entry.profile.getName(), entry.expireDate);
+                    if (entry != null) this.offerCache(entry.profile, entry.expireDate);
                 }
             }
             
