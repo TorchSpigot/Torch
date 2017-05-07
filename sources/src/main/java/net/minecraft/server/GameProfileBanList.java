@@ -5,6 +5,10 @@ import com.mojang.authlib.GameProfile;
 import java.io.File;
 import java.util.Iterator;
 
+import org.torch.server.Caches;
+
+import static net.minecraft.server.UserCache.isOnlineMode;
+
 public class GameProfileBanList extends JsonList<GameProfile, GameProfileBanEntry> {
 
     public GameProfileBanList(File file) {
@@ -29,7 +33,7 @@ public class GameProfileBanList extends JsonList<GameProfile, GameProfileBanEntr
     }
 
     protected String b(GameProfile profile) {
-        return super.uuidToString(profile.getId()); // Torch - use cache
+        return isOnlineMode() ? Caches.objectString(profile) : Caches.toLowerCase(profile.getName()); // Torch - use cache
     }
 
     public GameProfile a(String s) {

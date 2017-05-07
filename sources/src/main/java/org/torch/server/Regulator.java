@@ -31,8 +31,8 @@ public class Regulator extends Thread {
     /**
      * Post a task
      */
-    public static void post(Runnable runnable) {
-        queue.add(runnable);
+    public static void post(Runnable run) {
+        queue.add(run);
     }
 
     /**

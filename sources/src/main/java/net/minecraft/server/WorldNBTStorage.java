@@ -64,10 +64,12 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
         }
     }
 
+    @Override
     public File getDirectory() {
         return this.baseDir;
     }
 
+    @Override
     public void checkSession() throws ExceptionWorldConflict {
         try {
             File file = new File(this.baseDir, "session.lock");
@@ -86,10 +88,12 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
         }
     }
 
+    @Override
     public IChunkLoader createChunkLoader(WorldProvider worldprovider) {
         throw new RuntimeException("Old Chunk Storage is no longer supported.");
     }
 
+    @Override
     @Nullable
     public WorldData getWorldData() {
         File file = new File(this.baseDir, "level.dat");
@@ -106,6 +110,7 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
         return file.exists() ? WorldLoader.a(file, this.a) : null;
     }
 
+    @Override
     public void saveWorldData(WorldData worlddata, @Nullable NBTTagCompound nbttagcompound) {
         NBTTagCompound nbttagcompound1 = worlddata.a(nbttagcompound);
         NBTTagCompound nbttagcompound2 = new NBTTagCompound();
@@ -117,7 +122,7 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
             File file1 = new File(this.baseDir, "level.dat_old");
             File file2 = new File(this.baseDir, "level.dat");
 
-            NBTCompressedStreamTools.a(nbttagcompound2, (OutputStream) (new FileOutputStream(file)));
+            NBTCompressedStreamTools.a(nbttagcompound2, (new FileOutputStream(file)));
             if (file1.exists()) {
                 file1.delete();
             }
@@ -137,17 +142,19 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
 
     }
 
+    @Override
     public void saveWorldData(WorldData worlddata) {
         this.saveWorldData(worlddata, (NBTTagCompound) null);
     }
 
+    @Override
     public void save(EntityHuman entityhuman) {
         try {
             NBTTagCompound nbttagcompound = entityhuman.e(new NBTTagCompound());
             File file = new File(this.playerDir, entityhuman.bf() + ".dat.tmp");
             File file1 = new File(this.playerDir, entityhuman.bf() + ".dat");
 
-            NBTCompressedStreamTools.a(nbttagcompound, (OutputStream) (new FileOutputStream(file)));
+            NBTCompressedStreamTools.a(nbttagcompound, (new FileOutputStream(file)));
             if (file1.exists()) {
                 file1.delete();
             }
@@ -159,6 +166,7 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
 
     }
 
+    @Override
     @Nullable
     public NBTTagCompound load(EntityHuman entityhuman) {
         NBTTagCompound nbttagcompound = null;
@@ -167,23 +175,26 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
             File file = new File(this.playerDir, entityhuman.bf() + ".dat");
             // Spigot Start
             boolean usingWrongFile = false;
-            if ( org.bukkit.Bukkit.getOnlineMode() && !file.exists() ) // Paper - Check online mode first
-            {
-                file = new File( this.playerDir, UUID.nameUUIDFromBytes( ( "OfflinePlayer:" + entityhuman.getName() ).getBytes( "UTF-8" ) ).toString() + ".dat");
-                if ( file.exists() )
-                {
+            if (org.bukkit.Bukkit.getOnlineMode() && !file.exists()) { // Paper - Check online mode first
+                file = new File(this.playerDir, EntityHuman.offlinePlayerUUID(entityhuman.getName(), false) + ".dat");
+                if (file.exists()) {
                     usingWrongFile = true;
                     org.bukkit.Bukkit.getServer().getLogger().warning( "Using offline mode UUID file for player " + entityhuman.getName() + " as it is the only copy we can find." );
+                } else {
+                    file = new File(this.playerDir, EntityHuman.offlinePlayerUUID(entityhuman.getName()) + ".dat");
+                    if (file.exists()) {
+                        usingWrongFile = true;
+                        org.bukkit.Bukkit.getServer().getLogger().warning( "Using offline mode UUID file for player " + entityhuman.getName() + " as it is the only copy we can find." );
+                    }
                 }
             }
             // Spigot End
 
             if (file.exists() && file.isFile()) {
-                nbttagcompound = NBTCompressedStreamTools.a((InputStream) (new FileInputStream(file)));
+                nbttagcompound = NBTCompressedStreamTools.a((new FileInputStream(file)));
             }
             // Spigot Start
-            if ( usingWrongFile )
-            {
+            if (usingWrongFile) {
                 file.renameTo( new File( file.getPath() + ".offline-read" ) );
             }
             // Spigot End
@@ -202,7 +213,7 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
                 }
             }
             // CraftBukkit end
-            entityhuman.f(this.a.a((DataConverterType) DataConverterTypes.PLAYER, nbttagcompound));
+            entityhuman.f(this.a.a(DataConverterTypes.PLAYER, nbttagcompound));
         }
 
         return nbttagcompound;
@@ -214,7 +225,7 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
             File file1 = new File(this.playerDir, s + ".dat");
 
             if (file1.exists()) {
-                return NBTCompressedStreamTools.a((InputStream) (new FileInputStream(file1)));
+                return NBTCompressedStreamTools.a((new FileInputStream(file1)));
             }
         } catch (Exception exception) {
             b.warn("Failed to load player data for " + s);
@@ -224,10 +235,12 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
     }
     // CraftBukkit end
 
+    @Override
     public IPlayerFileData getPlayerFileData() {
         return this;
     }
 
+    @Override
     public String[] getSeenPlayers() {
         String[] astring = this.playerDir.list();
 
@@ -244,17 +257,21 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
         return astring;
     }
 
+    @Override
     public void a() {}
 
+    @Override
     public File getDataFile(String s) {
         return new File(this.dataDir, s + ".dat");
     }
 
+    @Override
     public DefinedStructureManager h() {
         return this.h;
     }
 
     // CraftBukkit start
+    @Override
     public UUID getUUID() {
         if (uuid != null) return uuid;
         File file1 = new File(this.baseDir, "uid.dat");

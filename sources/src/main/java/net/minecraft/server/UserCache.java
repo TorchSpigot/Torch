@@ -17,7 +17,7 @@ import org.torch.server.TorchUserCache;
 public class UserCache implements org.torch.api.TorchServant {
     @Getter private final TorchUserCache reactor;
 
-    public static final SimpleDateFormat a = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+    public static final SimpleDateFormat a = TorchUserCache.DATE_FORMAT;
     /** onlineMode */
     @Anaphase private static boolean c;
     /** Username -> UserCacheEntry */

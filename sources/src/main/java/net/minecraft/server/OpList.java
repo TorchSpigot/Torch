@@ -5,6 +5,10 @@ import com.mojang.authlib.GameProfile;
 import java.io.File;
 import java.util.Iterator;
 
+import org.torch.server.Caches;
+
+import static net.minecraft.server.UserCache.isOnlineMode;
+
 public class OpList extends JsonList<GameProfile, OpListEntry> {
 
     public OpList(File file) {
@@ -43,7 +47,7 @@ public class OpList extends JsonList<GameProfile, OpListEntry> {
     }
 
     protected String c(GameProfile profile) { // PAIL: toStringKey
-        return super.uuidToString(profile.getId()); // Torch - use cache
+        return isOnlineMode() ? Caches.objectString(profile) : Caches.toLowerCase(profile.getName()); // Torch - use cache
     }
 
     public GameProfile a(String s) {
