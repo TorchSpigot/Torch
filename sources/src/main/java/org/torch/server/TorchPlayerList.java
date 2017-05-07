@@ -646,30 +646,30 @@ public final class TorchPlayerList implements TorchReactor {
     }
 
     // Whole method, SocketAddress to LoginListener, added hostname to signature, return EntityPlayer
-    public EntityPlayer attemptLogin(LoginListener loginlistener, GameProfile gameprofile, String hostname) {
+    public EntityPlayer attemptLogin(LoginListener loginlistener, GameProfile profile, String hostname) {
         // Get UUID from the profile
-        UUID uuid = EntityHuman.a(gameprofile);
-
-        // Kick player if already logged // Torch - slight optimization, TODO: check
-        EntityPlayer loggedPlayer = this.uuidToPlayerMap.get(uuid);
+        UUID uuid = EntityHuman.matchUUID(profile);
+        
+        // Kick player if already logged
+        EntityPlayer loggedPlayer = server.onlineMode ? uuidToPlayerMap.get(uuid) : playersByName.get(profile.getName());
         if (loggedPlayer != null) {
             // Force the player's inventory to be saved
             savePlayerFile(loggedPlayer);
             loggedPlayer.playerConnection.disconnect("You logged in from another location");
         }
-
+        
         // Instead of kicking then returning, we need to store the kick reason
         // in the event, check with plugins to see if it's ok, and THEN kick depending on the outcome
         SocketAddress socketaddress = loginlistener.networkManager.getSocketAddress();
-
-        EntityPlayer entity = new EntityPlayer(minecraftServer, server.getWorldServer(0), gameprofile, new PlayerInteractManager(server.getWorldServer(0)));
+        
+        EntityPlayer entity = new EntityPlayer(minecraftServer, server.getWorldServer(0), profile, new PlayerInteractManager(server.getWorldServer(0)));
         Player player = entity.getBukkitEntity();
         PlayerLoginEvent event = new PlayerLoginEvent(player, hostname, ((java.net.InetSocketAddress) socketaddress).getAddress(), ((java.net.InetSocketAddress) loginlistener.networkManager.getRawAddress()).getAddress());
         String reason;
 
         // Switch the kick reason
-        if (getBannedPlayers().isBanned(gameprofile) && !getBannedPlayers().get(gameprofile).hasExpired()) {
-            GameProfileBanEntry gameprofilebanentry = this.bannedPlayers.get(gameprofile);
+        if (getBannedPlayers().isBanned(profile) && !getBannedPlayers().get(profile).hasExpired()) {
+            GameProfileBanEntry gameprofilebanentry = this.bannedPlayers.get(profile);
 
             reason = "You are banned from this server!\nReason: " + gameprofilebanentry.getReason();
             if (gameprofilebanentry.getExpires() != null) {
@@ -677,7 +677,7 @@ public final class TorchPlayerList implements TorchReactor {
             }
 
             if (!gameprofilebanentry.hasExpired()) event.disallow(PlayerLoginEvent.Result.KICK_BANNED, reason);
-        } else if (!this.isWhitelisted(gameprofile)) {
+        } else if (!this.isWhitelisted(profile)) {
             event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, org.spigotmc.SpigotConfig.whitelistMessage);
         } else if (this.getBannedIPs().isBanned(socketaddress) && !this.getBannedIPs().get(socketaddress).hasExpired()) {
             IpBanEntry ipbanentry = this.bannedIPs.get(socketaddress);
@@ -689,7 +689,7 @@ public final class TorchPlayerList implements TorchReactor {
 
             event.disallow(PlayerLoginEvent.Result.KICK_BANNED, reason);
         } else {
-            if (this.players.size() >= this.maxPlayers && !this.bypassesPlayerLimit(gameprofile)) {
+            if (this.players.size() >= this.maxPlayers && !this.bypassesPlayerLimit(profile)) {
                 event.disallow(PlayerLoginEvent.Result.KICK_FULL, org.spigotmc.SpigotConfig.serverFullMessage);
             }
         }
