@@ -12,7 +12,7 @@ public class GameProfileBanList extends JsonList<GameProfile, GameProfileBanEntr
     }
 
     @Override
-	protected JsonListEntry<GameProfile> a(JsonObject jsonobject) {
+    protected JsonListEntry<GameProfile> a(JsonObject jsonobject) {
         return new GameProfileBanEntry(jsonobject);
     }
 
@@ -21,15 +21,15 @@ public class GameProfileBanList extends JsonList<GameProfile, GameProfileBanEntr
     }
 
     @Override
-	public String[] getEntries() {
+    public String[] getEntries() {
         String[] values = new String[this.getMap().size()]; int index = 0;
-		for (GameProfileBanEntry entry : this.getMap().values()) values[index++] = entry.getKey().getName();
-		
-    	return values;
+        for (GameProfileBanEntry entry : this.getMap().values()) values[index++] = entry.getKey().getName();
+
+        return values;
     }
 
-    protected String b(GameProfile gameprofile) {
-    	return super.a(gameprofile); // Torch - use cache
+    protected String b(GameProfile profile) {
+        return super.uuidToString(profile.getId()); // Torch - use cache
     }
 
     public GameProfile a(String s) {

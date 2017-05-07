@@ -42,8 +42,8 @@ public class OpList extends JsonList<GameProfile, OpListEntry> {
         return oplistentry != null ? oplistentry.b() : false;
     }
 
-    protected String c(GameProfile gameprofile) { // PAIL: toStringKey
-        return super.a(gameprofile); // Torch - use cache
+    protected String c(GameProfile profile) { // PAIL: toStringKey
+        return super.uuidToString(profile.getId()); // Torch - use cache
     }
 
     public GameProfile a(String s) {

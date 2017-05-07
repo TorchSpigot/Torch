@@ -40,6 +40,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import org.apache.commons.io.IOUtils;
@@ -104,10 +105,7 @@ public final class TorchUserCache implements TorchReactor {
      */
     @Nullable
     public static GameProfile matchProfile(GameProfileRepository profileRepo, String name) {
-        // We don't care about the online player's name case,
-        // whatever we request from the API (lower or upper case), we always get the correct profile (with the correct username).
-        // But notice that we must ensure the offline player's profile is in the correct case,
-        // or the user system (ops, ban-list, ect) will broken in offline servers.
+        // Keep current case for offline servers
         if (!isOnlineMode()) {
             return new GameProfile(EntityHuman.offlinePlayerUUID(name), name);
         }
@@ -133,14 +131,14 @@ public final class TorchUserCache implements TorchReactor {
     /**
      * Add an entry to this cache with the default expire date
      */
-    public UserCacheEntry putCache(String username) {
-        return putCache(username, null);
+    public UserCacheEntry putCache(String keyUsername) {
+        return putCache(keyUsername, (Date) null);
     }
 
     /**
      * Add an entry to this cache with an expire date, return the new entry
      */
-    public UserCacheEntry putCache(String username, Date date) {
+    public UserCacheEntry putCache(String keyUsername, Date date) {
         // Generate new expire date if not given
         if (date == null) {
             Calendar calendar = Calendar.getInstance();
@@ -150,8 +148,8 @@ public final class TorchUserCache implements TorchReactor {
             date = calendar.getTime();
         }
         
-        UserCacheEntry entry = new UserCacheEntry(matchProfile(profileRepo, username), date);
-        caches.put(username, entry);
+        UserCacheEntry entry = new UserCacheEntry(matchProfile(profileRepo, keyUsername), date);
+        caches.put(keyUsername, entry);
         
         // Spigot - skip saving if disabled
         if(!org.spigotmc.SpigotConfig.saveUserCacheOnStopOnly) this.save();
@@ -166,18 +164,19 @@ public final class TorchUserCache implements TorchReactor {
     public GameProfile requestProfile(String username) {
         if (StringUtils.isBlank(username)) return null;
         
-        UserCacheEntry cachedEntry = caches.getIfPresent(username);
+        String keyUsername = username.toLowerCase(Locale.ROOT);
+        UserCacheEntry cachedEntry = caches.getIfPresent(keyUsername);
         
         // Remove expired entry
         if (cachedEntry != null) {
             if (System.currentTimeMillis() >= cachedEntry.expireDate.getTime()) {
-                caches.invalidate(username);
+                caches.invalidate(keyUsername);
                 cachedEntry = null;
             }
         }
         
         if (cachedEntry == null) {
-            cachedEntry = putCache(username);
+            cachedEntry = putCache(keyUsername);
         }
         
         return cachedEntry == null ? null : cachedEntry.profile;

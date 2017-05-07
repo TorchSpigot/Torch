@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
@@ -58,8 +59,8 @@ public class JsonList<K, V extends JsonListEntry<K>> {
     };
 
     // Torch start
-    /** Cached string keys, K -> String */
-    private final LoadingCache<K, String> stringKeys = Caffeine.newBuilder().maximumSize(512).build(K::toString); // TODO: configurable size
+    /** Cached string keys, Object -> String */
+    private final static LoadingCache<Object, String> stringKeys = Caffeine.newBuilder().maximumSize(512).build(Object::toString); // TODO: configurable size
 
     private final static long EXPIRE_CHECK_INTERVAL = TimeUnit.MILLISECONDS.convert(9, TimeUnit.SECONDS); // TODO: configurable
     /** The last time to check expire, in milliseconds. */
@@ -123,6 +124,10 @@ public class JsonList<K, V extends JsonListEntry<K>> {
 
     public boolean isEmpty() {
         return this.d.size() < 1;
+    }
+    
+    protected static String uuidToString(UUID uuid) {
+        return stringKeys.get(uuid);
     }
 
     protected String a(K k) {

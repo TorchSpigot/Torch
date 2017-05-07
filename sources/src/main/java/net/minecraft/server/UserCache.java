@@ -55,11 +55,11 @@ public class UserCache implements org.torch.api.TorchServant {
     }
 
     public void a(GameProfile profile) {
-        reactor.putCache(profile.getName());
+        reactor.putCache(profile.getName().toLowerCase(Locale.ROOT));
     }
 
     private void a(GameProfile profile, Date date) {
-        reactor.putCache(profile.getName(), date);
+        reactor.putCache(profile.getName().toLowerCase(Locale.ROOT), date);
     }
     
     @Nullable
