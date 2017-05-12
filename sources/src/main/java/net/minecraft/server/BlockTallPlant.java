@@ -18,7 +18,7 @@ public class BlockTallPlant extends BlockPlant implements IBlockFragilePlantElem
     }
 
     @Override
-	public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+    public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return BlockTallPlant.j;
     }
 
@@ -32,12 +32,12 @@ public class BlockTallPlant extends BlockPlant implements IBlockFragilePlantElem
     }
 
     @Override
-	public boolean canPlace(World world, BlockPosition blockposition) {
+    public boolean canPlace(World world, BlockPosition blockposition) {
         return super.canPlace(world, blockposition) && world.isEmpty(blockposition.up());
     }
 
     @Override
-	public boolean a(IBlockAccess iblockaccess, BlockPosition blockposition) {
+    public boolean a(IBlockAccess iblockaccess, BlockPosition blockposition) {
         IBlockData iblockdata = iblockaccess.getType(blockposition);
 
         if (iblockdata.getBlock() != this) {
@@ -50,13 +50,13 @@ public class BlockTallPlant extends BlockPlant implements IBlockFragilePlantElem
     }
 
     @Override
-	protected void e(World world, BlockPosition blockposition, IBlockData iblockdata) {
+    protected void e(World world, BlockPosition blockposition, IBlockData iblockdata) {
         if (!this.f(world, blockposition, iblockdata)) {
-        	// CraftBukkit start
-        	if (org.bukkit.craftbukkit.event.CraftEventFactory.callBlockPhysicsEvent(world, blockposition).isCancelled()) {
-        		return;
-        	}
-        	// CraftBukkit end
+            // CraftBukkit start
+            if (org.bukkit.craftbukkit.event.CraftEventFactory.callBlockPhysicsEvent(world, blockposition).isCancelled()) {
+                return;
+            }
+            // CraftBukkit end
             boolean flag = iblockdata.get(BlockTallPlant.HALF) == BlockTallPlant.EnumTallPlantHalf.UPPER;
             BlockPosition blockposition1 = flag ? blockposition : blockposition.up();
             BlockPosition blockposition2 = flag ? blockposition.down() : blockposition;
@@ -78,7 +78,7 @@ public class BlockTallPlant extends BlockPlant implements IBlockFragilePlantElem
     }
 
     @Override
-	public boolean f(World world, BlockPosition blockposition, IBlockData iblockdata) {
+    public boolean f(World world, BlockPosition blockposition, IBlockData iblockdata) {
         if (iblockdata.get(BlockTallPlant.HALF) == BlockTallPlant.EnumTallPlantHalf.UPPER) {
             return world.getType(blockposition.down()).getBlock() == this;
         } else {
@@ -89,7 +89,7 @@ public class BlockTallPlant extends BlockPlant implements IBlockFragilePlantElem
     }
 
     @Override
-	public Item getDropType(IBlockData iblockdata, Random random, int i) {
+    public Item getDropType(IBlockData iblockdata, Random random, int i) {
         if (iblockdata.get(BlockTallPlant.HALF) == BlockTallPlant.EnumTallPlantHalf.UPPER) {
             return Items.a;
         } else {
@@ -100,7 +100,7 @@ public class BlockTallPlant extends BlockPlant implements IBlockFragilePlantElem
     }
 
     @Override
-	public int getDropData(IBlockData iblockdata) {
+    public int getDropData(IBlockData iblockdata) {
         return iblockdata.get(BlockTallPlant.HALF) != BlockTallPlant.EnumTallPlantHalf.UPPER && iblockdata.get(BlockTallPlant.VARIANT) != BlockTallPlant.EnumTallFlowerVariants.GRASS ? iblockdata.get(BlockTallPlant.VARIANT).a() : 0;
     }
 
@@ -110,19 +110,19 @@ public class BlockTallPlant extends BlockPlant implements IBlockFragilePlantElem
     }
 
     @Override
-	public void postPlace(World world, BlockPosition blockposition, IBlockData iblockdata, EntityLiving entityliving, ItemStack itemstack) {
+    public void postPlace(World world, BlockPosition blockposition, IBlockData iblockdata, EntityLiving entityliving, ItemStack itemstack) {
         world.setTypeAndData(blockposition.up(), this.getBlockData().set(BlockTallPlant.HALF, BlockTallPlant.EnumTallPlantHalf.UPPER), 2);
     }
 
     @Override
-	public void a(World world, EntityHuman entityhuman, BlockPosition blockposition, IBlockData iblockdata, @Nullable TileEntity tileentity, ItemStack itemstack) {
+    public void a(World world, EntityHuman entityhuman, BlockPosition blockposition, IBlockData iblockdata, @Nullable TileEntity tileentity, ItemStack itemstack) {
         if (world.isClientSide || itemstack.getItem() != Items.SHEARS || iblockdata.get(BlockTallPlant.HALF) != BlockTallPlant.EnumTallPlantHalf.LOWER || !this.b(world, blockposition, iblockdata, entityhuman)) {
             super.a(world, entityhuman, blockposition, iblockdata, tileentity, itemstack);
         }
     }
 
     @Override
-	public void a(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman) {
+    public void a(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman) {
         if (iblockdata.get(BlockTallPlant.HALF) == BlockTallPlant.EnumTallPlantHalf.UPPER) {
             if (world.getType(blockposition.down()).getBlock() == this) {
                 if (entityhuman.abilities.canInstantlyBuild) {
@@ -165,34 +165,34 @@ public class BlockTallPlant extends BlockPlant implements IBlockFragilePlantElem
     }
 
     @Override
-	public ItemStack a(World world, BlockPosition blockposition, IBlockData iblockdata) {
+    public ItemStack a(World world, BlockPosition blockposition, IBlockData iblockdata) {
         return new ItemStack(this, 1, this.a((IBlockAccess) world, blockposition, iblockdata).a());
     }
 
     @Override
-	public boolean a(World world, BlockPosition blockposition, IBlockData iblockdata, boolean flag) {
+    public boolean a(World world, BlockPosition blockposition, IBlockData iblockdata, boolean flag) {
         BlockTallPlant.EnumTallFlowerVariants blocktallplant_enumtallflowervariants = this.a((IBlockAccess) world, blockposition, iblockdata);
 
         return blocktallplant_enumtallflowervariants != BlockTallPlant.EnumTallFlowerVariants.GRASS && blocktallplant_enumtallflowervariants != BlockTallPlant.EnumTallFlowerVariants.FERN;
     }
 
     @Override
-	public boolean a(World world, Random random, BlockPosition blockposition, IBlockData iblockdata) {
+    public boolean a(World world, Random random, BlockPosition blockposition, IBlockData iblockdata) {
         return true;
     }
 
     @Override
-	public void b(World world, Random random, BlockPosition blockposition, IBlockData iblockdata) {
+    public void b(World world, Random random, BlockPosition blockposition, IBlockData iblockdata) {
         a(world, blockposition, new ItemStack(this, 1, this.a((IBlockAccess) world, blockposition, iblockdata).a()));
     }
 
     @Override
-	public IBlockData fromLegacyData(int i) {
+    public IBlockData fromLegacyData(int i) {
         return (i & 8) > 0 ? this.getBlockData().set(BlockTallPlant.HALF, BlockTallPlant.EnumTallPlantHalf.UPPER) : this.getBlockData().set(BlockTallPlant.HALF, BlockTallPlant.EnumTallPlantHalf.LOWER).set(BlockTallPlant.VARIANT, BlockTallPlant.EnumTallFlowerVariants.a(i & 7));
     }
 
     @Override
-	public IBlockData updateState(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+    public IBlockData updateState(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         if (iblockdata.get(BlockTallPlant.HALF) == BlockTallPlant.EnumTallPlantHalf.UPPER) {
             IBlockData iblockdata1 = iblockaccess.getType(blockposition.down());
 
@@ -205,17 +205,17 @@ public class BlockTallPlant extends BlockPlant implements IBlockFragilePlantElem
     }
 
     @Override
-	public int toLegacyData(IBlockData iblockdata) {
+    public int toLegacyData(IBlockData iblockdata) {
         return iblockdata.get(BlockTallPlant.HALF) == BlockTallPlant.EnumTallPlantHalf.UPPER ? 8 | iblockdata.get(BlockTallPlant.d).get2DRotationValue() : iblockdata.get(BlockTallPlant.VARIANT).a();
     }
 
     @Override
-	protected BlockStateList getStateList() {
+    protected BlockStateList getStateList() {
         return new BlockStateList(this, new IBlockState[] { BlockTallPlant.HALF, BlockTallPlant.VARIANT, BlockTallPlant.d});
     }
 
     @Override
-	public Block.EnumRandomOffset u() {
+    public Block.EnumRandomOffset u() {
         return Block.EnumRandomOffset.XZ;
     }
 
@@ -226,12 +226,12 @@ public class BlockTallPlant extends BlockPlant implements IBlockFragilePlantElem
         private EnumTallPlantHalf() {}
 
         @Override
-		public String toString() {
+        public String toString() {
             return this.getName();
         }
 
         @Override
-		public String getName() {
+        public String getName() {
             return this == BlockTallPlant.EnumTallPlantHalf.UPPER ? "upper" : "lower";
         }
     }
@@ -260,7 +260,7 @@ public class BlockTallPlant extends BlockPlant implements IBlockFragilePlantElem
         }
 
         @Override
-		public String toString() {
+        public String toString() {
             return this.i;
         }
 
@@ -273,7 +273,7 @@ public class BlockTallPlant extends BlockPlant implements IBlockFragilePlantElem
         }
 
         @Override
-		public String getName() {
+        public String getName() {
             return this.i;
         }
 

@@ -1,6 +1,9 @@
 package net.minecraft.server;
 
 import com.google.common.collect.Lists;
+
+import net.minecraft.server.BlockPistonExtension.EnumPistonType;
+
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -14,6 +17,7 @@ import java.util.ListIterator;
 import com.google.common.collect.ImmutableList;
 import org.bukkit.craftbukkit.block.CraftBlock;
 import org.bukkit.event.block.BlockPistonRetractEvent;
+import org.bukkit.event.block.BlockPistonEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 // CraftBukkit end
 
@@ -37,13 +41,15 @@ public class BlockPiston extends BlockDirectional {
         this.a(CreativeModeTab.d);
     }
 
+    @Override
     public boolean u(IBlockData iblockdata) {
-        return !((Boolean) iblockdata.get(BlockPiston.EXTENDED)).booleanValue();
+        return !iblockdata.get(BlockPiston.EXTENDED).booleanValue();
     }
 
+    @Override
     public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
-        if (((Boolean) iblockdata.get(BlockPiston.EXTENDED)).booleanValue()) {
-            switch ((EnumDirection) iblockdata.get(BlockPiston.FACING)) {
+        if (iblockdata.get(BlockPiston.EXTENDED).booleanValue()) {
+            switch (iblockdata.get(BlockPiston.FACING)) {
             case DOWN:
                 return BlockPiston.g;
 
@@ -68,18 +74,22 @@ public class BlockPiston extends BlockDirectional {
         }
     }
 
+    @Override
     public boolean k(IBlockData iblockdata) {
-        return !((Boolean) iblockdata.get(BlockPiston.EXTENDED)).booleanValue() || iblockdata.get(BlockPiston.FACING) == EnumDirection.DOWN;
+        return !iblockdata.get(BlockPiston.EXTENDED).booleanValue() || iblockdata.get(BlockPiston.FACING) == EnumDirection.DOWN;
     }
 
+    @Override
     public void a(IBlockData iblockdata, World world, BlockPosition blockposition, AxisAlignedBB axisalignedbb, List<AxisAlignedBB> list, @Nullable Entity entity, boolean flag) {
         a(blockposition, axisalignedbb, list, iblockdata.d(world, blockposition));
     }
 
+    @Override
     public boolean b(IBlockData iblockdata) {
         return false;
     }
 
+    @Override
     public void postPlace(World world, BlockPosition blockposition, IBlockData iblockdata, EntityLiving entityliving, ItemStack itemstack) {
         world.setTypeAndData(blockposition, iblockdata.set(BlockPiston.FACING, EnumDirection.a(blockposition, entityliving)), 2);
         if (!world.isClientSide) {
@@ -88,6 +98,7 @@ public class BlockPiston extends BlockDirectional {
 
     }
 
+    @Override
     public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
         if (!world.isClientSide) {
             this.e(world, blockposition, iblockdata);
@@ -95,6 +106,7 @@ public class BlockPiston extends BlockDirectional {
 
     }
 
+    @Override
     public void onPlace(World world, BlockPosition blockposition, IBlockData iblockdata) {
         if (!world.isClientSide && world.getTileEntity(blockposition) == null) {
             this.e(world, blockposition, iblockdata);
@@ -102,19 +114,20 @@ public class BlockPiston extends BlockDirectional {
 
     }
 
+    @Override
     public IBlockData getPlacedState(World world, BlockPosition blockposition, EnumDirection enumdirection, float f, float f1, float f2, int i, EntityLiving entityliving) {
         return this.getBlockData().set(BlockPiston.FACING, EnumDirection.a(blockposition, entityliving)).set(BlockPiston.EXTENDED, Boolean.valueOf(false));
     }
 
     private void e(World world, BlockPosition blockposition, IBlockData iblockdata) {
-        EnumDirection enumdirection = (EnumDirection) iblockdata.get(BlockPiston.FACING);
+        EnumDirection enumdirection = iblockdata.get(BlockPiston.FACING);
         boolean flag = this.a(world, blockposition, enumdirection);
 
-        if (flag && !((Boolean) iblockdata.get(BlockPiston.EXTENDED)).booleanValue()) {
+        if (flag && !iblockdata.get(BlockPiston.EXTENDED).booleanValue()) {
             if ((new PistonExtendsChecker(world, blockposition, enumdirection, true)).a()) {
                 world.playBlockAction(blockposition, this, 0, enumdirection.a());
             }
-        } else if (!flag && ((Boolean) iblockdata.get(BlockPiston.EXTENDED)).booleanValue()) {
+        } else if (!flag && iblockdata.get(BlockPiston.EXTENDED).booleanValue()) {
             // CraftBukkit start
             if (!this.sticky) {
                 org.bukkit.block.Block block = world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
@@ -166,8 +179,9 @@ public class BlockPiston extends BlockDirectional {
         }
     }
 
+    @Override
     public boolean a(IBlockData iblockdata, World world, BlockPosition blockposition, int i, int j) {
-        EnumDirection enumdirection = (EnumDirection) iblockdata.get(BlockPiston.FACING);
+        EnumDirection enumdirection = iblockdata.get(BlockPiston.FACING);
 
         if (!world.isClientSide) {
             boolean flag = this.a(world, blockposition, enumdirection);
@@ -230,6 +244,7 @@ public class BlockPiston extends BlockDirectional {
         return true;
     }
 
+    @Override
     public boolean c(IBlockData iblockdata) {
         return false;
     }
@@ -262,7 +277,7 @@ public class BlockPiston extends BlockDirectional {
                     if (iblockdata.p() == EnumPistonReaction.DESTROY) {
                         return flag;
                     }
-                } else if (((Boolean) iblockdata.get(BlockPiston.EXTENDED)).booleanValue()) {
+                } else if (iblockdata.get(BlockPiston.EXTENDED).booleanValue()) {
                     return false;
                 }
 
@@ -275,149 +290,151 @@ public class BlockPiston extends BlockDirectional {
         }
     }
 
-    private boolean a(World world, BlockPosition blockposition, EnumDirection enumdirection, boolean flag) {
-        if (!flag) {
-            world.setAir(blockposition.shift(enumdirection));
+    /** PAIL: doMove */
+    private boolean a(World world, BlockPosition position, EnumDirection direction, boolean extending) {
+        if (!extending) world.setAir(position.shift(direction));
+        
+        PistonExtendsChecker extendsChecker = new PistonExtendsChecker(world, position, direction, extending);
+        if (!extendsChecker.a()) return false; // PAIL: a() -> canMove()
+        
+        List<BlockPosition> movedBlockPos = extendsChecker.getMovedBlocks();
+        ArrayList<IBlockData> movedBlocks = Lists.newArrayList();
+
+        for (int i = 0, size = movedBlockPos.size(); i < size; i++) {
+            BlockPosition eachBlock = movedBlockPos.get(i);
+            movedBlocks.add(world.getType(eachBlock).b((IBlockAccess) world, eachBlock)); // PAIL: b -> getActualState
         }
+        
+        List<BlockPosition> brokenBlockPos = extendsChecker.getBrokenBlocks();
+        int blockSize = movedBlockPos.size() + brokenBlockPos.size();
+        IBlockData[] blocks = new IBlockData[blockSize];
+        EnumDirection actualDirection = extending ? direction : direction.opposite();
+        
+        // CraftBukkit start
+        final org.bukkit.block.Block bukkitBlock = world.getWorld().getBlockAt(position.getX(), position.getY(), position.getZ());
+        final List<BlockPosition> moved = extendsChecker.getMovedBlocks();
+        final List<BlockPosition> broken = extendsChecker.getBrokenBlocks();
+        
+        List<org.bukkit.block.Block> bukkitBlocks = new AbstractList<org.bukkit.block.Block>() {
+            @Override
+            public int size() {
+                return moved.size() + broken.size();
+            }
 
-        PistonExtendsChecker pistonextendschecker = new PistonExtendsChecker(world, blockposition, enumdirection, flag);
-
-        if (!pistonextendschecker.a()) {
-            return false;
+            @Override
+            public org.bukkit.block.Block get(int index) {
+                if (index >= size() || index < 0) {
+                    throw new ArrayIndexOutOfBoundsException(index);
+                }
+                BlockPosition pos = index < moved.size() ? moved.get(index) : broken.get(index - moved.size());
+                return bukkitBlock.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+            }
+        };
+        
+        BlockPistonEvent event;
+        if (extending) {
+            event = new BlockPistonExtendEvent(bukkitBlock, bukkitBlocks, CraftBlock.notchToBlockFace(actualDirection));
         } else {
-            List list = pistonextendschecker.getMovedBlocks();
-            ArrayList arraylist = Lists.newArrayList();
-
-            for (int i = 0; i < list.size(); ++i) {
-                BlockPosition blockposition1 = (BlockPosition) list.get(i);
-
-                arraylist.add(world.getType(blockposition1).b((IBlockAccess) world, blockposition1));
-            }
-
-            List list1 = pistonextendschecker.getBrokenBlocks();
-            int j = list.size() + list1.size();
-            IBlockData[] aiblockdata = new IBlockData[j];
-            EnumDirection enumdirection1 = flag ? enumdirection : enumdirection.opposite();
-            // CraftBukkit start
-            final org.bukkit.block.Block bblock = world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
-
-            final List<BlockPosition> moved = pistonextendschecker.getMovedBlocks();
-            final List<BlockPosition> broken = pistonextendschecker.getBrokenBlocks();
-
-            List<org.bukkit.block.Block> blocks = new AbstractList<org.bukkit.block.Block>() {
-
-                @Override
-                public int size() {
-                    return moved.size() + broken.size();
-                }
-
-                @Override
-                public org.bukkit.block.Block get(int index) {
-                    if (index >= size() || index < 0) {
-                        throw new ArrayIndexOutOfBoundsException(index);
-                    }
-                    BlockPosition pos = (BlockPosition) (index < moved.size() ? moved.get(index) : broken.get(index - moved.size()));
-                    return bblock.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
-                }
-            };
-            org.bukkit.event.block.BlockPistonEvent event;
-            if (flag) {
-                event = new BlockPistonExtendEvent(bblock, blocks, CraftBlock.notchToBlockFace(enumdirection1));
-            } else {
-                event = new BlockPistonRetractEvent(bblock, blocks, CraftBlock.notchToBlockFace(enumdirection1));
-            }
-            world.getServer().getPluginManager().callEvent(event);
-
-            if (event.isCancelled()) {
-                for (BlockPosition b : broken) {
-                    world.notify(b, Blocks.AIR.getBlockData(), world.getType(b), 3);
-                }
-                for (BlockPosition b : moved) {
-                    world.notify(b, Blocks.AIR.getBlockData(), world.getType(b), 3);
-                    b = b.shift(enumdirection1);
-                    world.notify(b, Blocks.AIR.getBlockData(), world.getType(b), 3);
-                }
-                return false;
-            }
-            // CraftBukkit end
-
-            int k;
-            BlockPosition blockposition2;
-            IBlockData iblockdata;
-
-            for (k = list1.size() - 1; k >= 0; --k) {
-                blockposition2 = (BlockPosition) list1.get(k);
-                iblockdata = world.getType(blockposition2);
-                iblockdata.getBlock().b(world, blockposition2, iblockdata, 0);
-                world.setTypeAndData(blockposition2, Blocks.AIR.getBlockData(), 4);
-                --j;
-                aiblockdata[j] = iblockdata;
-            }
-
-            for (k = list.size() - 1; k >= 0; --k) {
-                blockposition2 = (BlockPosition) list.get(k);
-                iblockdata = world.getType(blockposition2);
-                world.setTypeAndData(blockposition2, Blocks.AIR.getBlockData(), 2);
-                blockposition2 = blockposition2.shift(enumdirection1);
-                world.setTypeAndData(blockposition2, Blocks.PISTON_EXTENSION.getBlockData().set(BlockPiston.FACING, enumdirection), 4);
-                world.setTileEntity(blockposition2, BlockPistonMoving.a((IBlockData) arraylist.get(k), enumdirection, flag, false));
-                --j;
-                aiblockdata[j] = iblockdata;
-            }
-
-            BlockPosition blockposition3 = blockposition.shift(enumdirection);
-
-            if (flag) {
-                BlockPistonExtension.EnumPistonType blockpistonextension_enumpistontype = this.sticky ? BlockPistonExtension.EnumPistonType.STICKY : BlockPistonExtension.EnumPistonType.DEFAULT;
-
-                iblockdata = Blocks.PISTON_HEAD.getBlockData().set(BlockPistonExtension.FACING, enumdirection).set(BlockPistonExtension.TYPE, blockpistonextension_enumpistontype);
-                IBlockData iblockdata1 = Blocks.PISTON_EXTENSION.getBlockData().set(BlockPistonMoving.FACING, enumdirection).set(BlockPistonMoving.TYPE, this.sticky ? BlockPistonExtension.EnumPistonType.STICKY : BlockPistonExtension.EnumPistonType.DEFAULT);
-
-                world.setTypeAndData(blockposition3, iblockdata1, 4);
-                world.setTileEntity(blockposition3, BlockPistonMoving.a(iblockdata, enumdirection, true, true));
-            }
-
-            int l;
-
-            for (l = list1.size() - 1; l >= 0; --l) {
-                world.applyPhysics((BlockPosition) list1.get(l), aiblockdata[j++].getBlock(), false);
-            }
-
-            for (l = list.size() - 1; l >= 0; --l) {
-                world.applyPhysics((BlockPosition) list.get(l), aiblockdata[j++].getBlock(), false);
-            }
-
-            if (flag) {
-                world.applyPhysics(blockposition3, Blocks.PISTON_HEAD, false);
-            }
-
-            return true;
+            event = new BlockPistonRetractEvent(bukkitBlock, bukkitBlocks, CraftBlock.notchToBlockFace(actualDirection));
         }
+        
+        world.getServer().getPluginManager().callEvent(event);
+
+        if (event.isCancelled()) {
+            for (BlockPosition pos : broken) {
+                world.notify(pos, Blocks.AIR.getBlockData(), world.getType(pos), 3);
+            }
+            
+            for (BlockPosition pos : moved) {
+                world.notify(pos, Blocks.AIR.getBlockData(), world.getType(pos), 3);
+                pos = pos.shift(actualDirection);
+                world.notify(pos, Blocks.AIR.getBlockData(), world.getType(pos), 3);
+            }
+            return false;
+        }
+        // CraftBukkit end
+
+        int index;
+        BlockPosition eachBlock;
+        IBlockData eachType;
+        for (index = brokenBlockPos.size() - 1; index >= 0; --index) {
+            eachBlock = brokenBlockPos.get(index);
+            eachType = world.getType(eachBlock);
+            eachType.getBlock().b(world, eachBlock, eachType, 0); // PAIL: b -> dropBlock
+            world.setTypeAndData(eachBlock, Blocks.AIR.getBlockData(), 4);
+            
+            blockSize--;
+            blocks[blockSize] = eachType;
+        }
+
+        for (index = movedBlockPos.size() - 1; index >= 0; --index) {
+            eachBlock = movedBlockPos.get(index);
+            eachType = world.getType(eachBlock);
+            world.setTypeAndData(eachBlock, Blocks.AIR.getBlockData(), 2);
+            
+            eachBlock = eachBlock.shift(actualDirection);
+            world.setTypeAndData(eachBlock, Blocks.PISTON_EXTENSION.getBlockData().set(BlockPiston.FACING, direction), 4);
+            world.setTileEntity(eachBlock, BlockPistonMoving.a(movedBlocks.get(index), direction, extending, false));
+            
+            blockSize--;
+            blocks[blockSize] = eachType;
+        }
+
+        BlockPosition offset = position.shift(direction);
+        if (extending) {
+            EnumPistonType blockpistonextension_enumpistontype = this.sticky ? EnumPistonType.STICKY : EnumPistonType.DEFAULT;
+
+            eachType = Blocks.PISTON_HEAD.getBlockData().set(BlockPistonExtension.FACING, direction).set(BlockPistonExtension.TYPE, blockpistonextension_enumpistontype);
+            IBlockData iblockdata1 = Blocks.PISTON_EXTENSION.getBlockData().set(BlockPistonMoving.FACING, direction).set(BlockPistonMoving.TYPE, this.sticky ? BlockPistonExtension.EnumPistonType.STICKY : BlockPistonExtension.EnumPistonType.DEFAULT);
+
+            world.setTypeAndData(offset, iblockdata1, 4);
+            world.setTileEntity(offset, BlockPistonMoving.a(eachType, direction, true, true));
+        }
+
+        index = 0;
+        for (index = brokenBlockPos.size() - 1; index >= 0; --index) {
+            world.applyPhysics(brokenBlockPos.get(index), blocks[blockSize].getBlock(), false);
+        }
+
+        for (index = movedBlockPos.size() - 1; index >= 0; --index) {
+            world.applyPhysics(movedBlockPos.get(index), blocks[blockSize].getBlock(), false);
+        }
+
+        if (extending) {
+            world.applyPhysics(offset, Blocks.PISTON_HEAD, false);
+        }
+        
+        return true;
     }
 
+    @Override
     public IBlockData fromLegacyData(int i) {
         return this.getBlockData().set(BlockPiston.FACING, e(i)).set(BlockPiston.EXTENDED, Boolean.valueOf((i & 8) > 0));
     }
 
+    @Override
     public int toLegacyData(IBlockData iblockdata) {
         byte b0 = 0;
-        int i = b0 | ((EnumDirection) iblockdata.get(BlockPiston.FACING)).a();
+        int i = b0 | iblockdata.get(BlockPiston.FACING).a();
 
-        if (((Boolean) iblockdata.get(BlockPiston.EXTENDED)).booleanValue()) {
+        if (iblockdata.get(BlockPiston.EXTENDED).booleanValue()) {
             i |= 8;
         }
 
         return i;
     }
 
+    @Override
     public IBlockData a(IBlockData iblockdata, EnumBlockRotation enumblockrotation) {
-        return iblockdata.set(BlockPiston.FACING, enumblockrotation.a((EnumDirection) iblockdata.get(BlockPiston.FACING)));
+        return iblockdata.set(BlockPiston.FACING, enumblockrotation.a(iblockdata.get(BlockPiston.FACING)));
     }
 
+    @Override
     public IBlockData a(IBlockData iblockdata, EnumBlockMirror enumblockmirror) {
-        return iblockdata.a(enumblockmirror.a((EnumDirection) iblockdata.get(BlockPiston.FACING)));
+        return iblockdata.a(enumblockmirror.a(iblockdata.get(BlockPiston.FACING)));
     }
 
+    @Override
     protected BlockStateList getStateList() {
         return new BlockStateList(this, new IBlockState[] { BlockPiston.FACING, BlockPiston.EXTENDED});
     }

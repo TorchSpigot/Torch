@@ -2,8 +2,6 @@ package net.minecraft.server;
 
 import java.util.Random;
 import javax.annotation.Nullable;
-import org.bukkit.event.block.BlockPhysicsEvent;
-// CraftBukkit end
 
 public class BlockPlant extends Block {
 
@@ -24,7 +22,7 @@ public class BlockPlant extends Block {
     }
 
     @Override
-	public boolean canPlace(World world, BlockPosition blockposition) {
+    public boolean canPlace(World world, BlockPosition blockposition) {
         return super.canPlace(world, blockposition) && this.i(world.getType(blockposition.down()));
     }
 
@@ -33,20 +31,20 @@ public class BlockPlant extends Block {
     }
 
     @Override
-	public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
+    public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
         super.a(iblockdata, world, blockposition, block, blockposition1);
         this.e(world, blockposition, iblockdata);
     }
 
     @Override
-	public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
+    public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
         this.e(world, blockposition, iblockdata);
     }
 
     protected void e(World world, BlockPosition blockposition, IBlockData iblockdata) {
         if (!this.f(world, blockposition, iblockdata)) {
-        	// CraftBukkit start
-        	if (org.bukkit.craftbukkit.event.CraftEventFactory.callBlockPhysicsEvent(world, blockposition).isCancelled()) {
+            // CraftBukkit start
+            if (org.bukkit.craftbukkit.event.CraftEventFactory.callBlockPhysicsEvent(world, blockposition).isCancelled()) {
                 return;
             }
             // CraftBukkit end
@@ -61,23 +59,23 @@ public class BlockPlant extends Block {
     }
 
     @Override
-	public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+    public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return BlockPlant.b;
     }
 
     @Override
-	@Nullable
+    @Nullable
     public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return BlockPlant.k;
     }
 
     @Override
-	public boolean b(IBlockData iblockdata) {
+    public boolean b(IBlockData iblockdata) {
         return false;
     }
 
     @Override
-	public boolean c(IBlockData iblockdata) {
+    public boolean c(IBlockData iblockdata) {
         return false;
     }
 }
