@@ -104,7 +104,7 @@ public class ChunkProviderGenerate implements ChunkGenerator {
                     double d8 = (this.q[j2 + k2 + 1] - d4) * 0.125D;
 
                     for (int l2 = 0; l2 < 8; ++l2) {
-                        double d9 = 0.25D;
+                        // double d9 = 0.25D;
                         double d10 = d1;
                         double d11 = d2;
                         double d12 = (d3 - d1) * 0.25D;
@@ -154,7 +154,7 @@ public class ChunkProviderGenerate implements ChunkGenerator {
     }
 
     @Override
-	public Chunk getOrCreateChunk(int i, int j) {
+    public Chunk getOrCreateChunk(int i, int j) {
         this.i.setSeed(i * 341873128712L + j * 132897987541L);
         ChunkSnapshot chunksnapshot = new ChunkSnapshot();
 
@@ -206,7 +206,6 @@ public class ChunkProviderGenerate implements ChunkGenerator {
         return chunk;
     }
 
-    public void generateTerrainDensity(int i, int j, int k) { this.a(i, j, k); } // OBFHELPER
     private void a(int i, int j, int k) {
         this.h = this.c.a(this.h, i, k, 5, 5, this.s.e, this.s.f, this.s.g);
         float f = this.s.a;
@@ -312,7 +311,7 @@ public class ChunkProviderGenerate implements ChunkGenerator {
     }
 
     @Override
-	public void recreateStructures(int i, int j) {
+    public void recreateStructures(int i, int j) {
         BlockFalling.instaFall = true;
         int k = i * 16;
         int l = j * 16;
@@ -406,7 +405,7 @@ public class ChunkProviderGenerate implements ChunkGenerator {
     }
 
     @Override
-	public boolean a(Chunk chunk, int i, int j) {
+    public boolean a(Chunk chunk, int i, int j) {
         boolean flag = false;
 
         if (this.s.y && this.o && chunk.x() < 3600L) {
@@ -417,7 +416,7 @@ public class ChunkProviderGenerate implements ChunkGenerator {
     }
 
     @Override
-	public List<BiomeBase.BiomeMeta> getMobsFor(EnumCreatureType enumcreaturetype, BlockPosition blockposition) {
+    public List<BiomeBase.BiomeMeta> getMobsFor(EnumCreatureType enumcreaturetype, BlockPosition blockposition) {
         BiomeBase biomebase = this.n.getBiome(blockposition);
 
         if (this.o) {
@@ -433,14 +432,13 @@ public class ChunkProviderGenerate implements ChunkGenerator {
         return biomebase.getMobs(enumcreaturetype);
     }
 
-    @Override
-	@Nullable
+    @Override @Nullable
     public BlockPosition findNearestMapFeature(World world, String s, BlockPosition blockposition, boolean flag) {
         return !this.o ? null : ("Stronghold".equals(s) && this.w != null ? this.w.getNearestGeneratedFeature(world, blockposition, flag) : ("Mansion".equals(s) && this.C != null ? this.C.getNearestGeneratedFeature(world, blockposition, flag) : ("Monument".equals(s) && this.B != null ? this.B.getNearestGeneratedFeature(world, blockposition, flag) : ("Village".equals(s) && this.x != null ? this.x.getNearestGeneratedFeature(world, blockposition, flag) : ("Mineshaft".equals(s) && this.y != null ? this.y.getNearestGeneratedFeature(world, blockposition, flag) : ("Temple".equals(s) && this.z != null ? this.z.getNearestGeneratedFeature(world, blockposition, flag) : null))))));
     }
 
     @Override
-	public void recreateStructures(Chunk chunk, int i, int j) {
+    public void recreateStructures(Chunk chunk, int i, int j) {
         if (this.o) {
             if (this.s.w && this.n.paperConfig.generateMineshaft) { // Paper
                 this.y.a(this.n, i, j, (ChunkSnapshot) null);

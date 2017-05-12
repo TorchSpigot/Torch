@@ -156,16 +156,16 @@ public final class TorchUserCache implements TorchReactor {
      * */
     public static Date warpExpireDate(boolean force) {
         long now = System.currentTimeMillis();
-        if ((now - lastWarpExpireDate) > DATE_WARP_INTERVAL) {
+        if (force || (now - lastWarpExpireDate) > DATE_WARP_INTERVAL) {
             lastWarpExpireDate = now;
-            return lastExpireDate;
+            Calendar calendar = Calendar.getInstance();
+            
+            calendar.setTimeInMillis(now);
+            calendar.add(Calendar.MONTH, 1); // TODO: configurable expire date
+            return lastExpireDate = calendar.getTime();
         }
         
-        Calendar calendar = Calendar.getInstance();
-        
-        calendar.setTimeInMillis(now);
-        calendar.add(Calendar.MONTH, 1); // TODO: configurable expire date
-        return lastExpireDate = calendar.getTime();
+        return lastExpireDate;
     }
     
     public UserCacheEntry refreshExpireDate(UserCacheEntry entry) {
@@ -212,10 +212,9 @@ public final class TorchUserCache implements TorchReactor {
             if (isExpired(cachedEntry)) {
                 caches.invalidate(keyUsername);
                 return null;
-                
-            } else {
-                cachedEntry = putCache(keyUsername);
             }
+        } else {
+            cachedEntry = putCache(keyUsername);
         }
         
         return cachedEntry == null ? null : cachedEntry.profile;
@@ -257,13 +256,11 @@ public final class TorchUserCache implements TorchReactor {
     }
     
     /** Offer an entry, called on load caches */
-    public void offerCache(UserCacheEntry entry) {
+    private void offerCache(UserCacheEntry entry) {
         Validate.notNull(entry);
         if (isExpired(entry)) return;
         
         caches.put(authUUID() ? entry.profile.getName() : entry.profile.getName().toLowerCase(Locale.ROOT), entry);
-        
-        if(!SpigotConfig.saveUserCacheOnStopOnly) this.save();
     }
     
     public String[] getCachedUsernames() {
@@ -283,6 +280,8 @@ public final class TorchUserCache implements TorchReactor {
                 for (UserCacheEntry entry : Lists.reverse(entries)) {
                     if (entry != null) this.offerCache(entry);
                 }
+                
+                if(!SpigotConfig.saveUserCacheOnStopOnly) this.save();
             }
             
         } catch (FileNotFoundException e) {
@@ -331,12 +330,7 @@ public final class TorchUserCache implements TorchReactor {
      * Returns a list contains all cached entries, size limited with {@value SpigotConfig#userCacheCap}
      */
     public ArrayList<UserCacheEntry> collectEntries() {
-        ArrayList<UserCacheEntry> list = Lists.newArrayList();
-        
-        Iterator<UserCacheEntry> itr = caches.asMap().values().iterator();
-        while (itr.hasNext()) list.add(itr.next());
-        
-        return list;
+        return Lists.newArrayList(caches.asMap().values());
     }
     
     @Getter
