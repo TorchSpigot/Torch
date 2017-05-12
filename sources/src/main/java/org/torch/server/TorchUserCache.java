@@ -42,6 +42,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -61,6 +63,11 @@ public final class TorchUserCache implements TorchReactor {
     private final UserCache servant;
     
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+    
+    // Used to reduce date create
+    private final static long DATE_WARP_INTERVAL = TimeUnit.MILLISECONDS.convert(9, TimeUnit.MINUTES);
+    private static volatile long lastWarpExpireDate;
+    private static volatile Date lastExpireDate;
     
     /**
      * All user caches, Username -> Entry(profile and expire date included)
@@ -98,6 +105,8 @@ public final class TorchUserCache implements TorchReactor {
     }
 
     public TorchUserCache(GameProfileRepository repo, File file, UserCache legacy) {
+        lastExpireDate = warpExpireDate(true);
+        
         servant = legacy;
         profileRepo = repo;
         usercacheFile = file;
@@ -142,18 +151,25 @@ public final class TorchUserCache implements TorchReactor {
         return profile[0];
     }
     
-    /** Generate an new expire date for the cache */
-    public static Date warpExpireDate() {
-        // Generate new expire date if not given
+    /**
+     * Generate an new expire date for the cache
+     * */
+    public static Date warpExpireDate(boolean force) {
+        long now = System.currentTimeMillis();
+        if ((now - lastWarpExpireDate) > DATE_WARP_INTERVAL) {
+            lastWarpExpireDate = now;
+            return lastExpireDate;
+        }
+        
         Calendar calendar = Calendar.getInstance();
         
-        calendar.setTimeInMillis(System.currentTimeMillis());
+        calendar.setTimeInMillis(now);
         calendar.add(Calendar.MONTH, 1); // TODO: configurable expire date
-        return calendar.getTime();
+        return lastExpireDate = calendar.getTime();
     }
     
     public UserCacheEntry refreshExpireDate(UserCacheEntry entry) {
-        return new UserCacheEntry(entry.profile, warpExpireDate());
+        return new UserCacheEntry(entry.profile, warpExpireDate(false));
     }
     
     public boolean isExpired(UserCacheEntry entry) {
@@ -171,7 +187,7 @@ public final class TorchUserCache implements TorchReactor {
      * Add an entry to this cache with an expire date, return the new entry
      */
     public UserCacheEntry putCache(String keyUsername, Date date) {
-        if (date == null) date = warpExpireDate();
+        if (date == null) date = warpExpireDate(false);
         
         UserCacheEntry entry = new UserCacheEntry(matchProfile(profileRepo, keyUsername), date);
         caches.put(keyUsername, entry);
@@ -214,7 +230,7 @@ public final class TorchUserCache implements TorchReactor {
     
     /** Offer or replace the old cache if present */
     public void offerCache(GameProfile profile) {
-        offerCache(profile, warpExpireDate());
+        offerCache(profile, warpExpireDate(false));
     }
     
     /** Offer or replace the old cache if present, with an expire date */
