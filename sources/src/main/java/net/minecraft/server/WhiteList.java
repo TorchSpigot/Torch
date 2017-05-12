@@ -7,7 +7,7 @@ import java.util.Iterator;
 
 import org.torch.server.Caches;
 
-import static net.minecraft.server.UserCache.isOnlineMode;
+import static org.torch.server.TorchUserCache.authUUID;
 
 public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
 
@@ -33,7 +33,7 @@ public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
     }
 
     protected String b(GameProfile profile) {
-        return isOnlineMode() ? Caches.objectString(profile) : Caches.toLowerCase(profile.getName()); // Torch - use cache
+        return authUUID() ? Caches.objectString(profile) : Caches.toLowerCase(profile.getName()); // Torch - use cache
     }
 
     public GameProfile a(String s) {

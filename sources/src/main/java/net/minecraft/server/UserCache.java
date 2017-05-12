@@ -75,11 +75,6 @@ public class UserCache implements org.torch.api.TorchServant {
     public GameProfile peekCachedProfile(String username) {
         return reactor.peekCachedProfile(username);
     }
-    
-    @Deprecated
-    public UserCache.UserCacheEntry peekCachedEntry(String username) {
-        return reactor.peekCachedEntry(username).toLegacy();
-    }
 
     /*
     @Nullable
