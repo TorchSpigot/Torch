@@ -586,6 +586,7 @@ public abstract class World implements IBlockAccess {
 
     }
 
+    /** PAIL: neighborChanged */
     public void a(BlockPosition blockposition, final Block block, BlockPosition blockposition1) {
         if (!this.isClientSide) {
             IBlockData iblockdata = this.getType(blockposition);

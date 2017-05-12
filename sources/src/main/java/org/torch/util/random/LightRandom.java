@@ -16,53 +16,53 @@ import org.torch.util.random.LightRNG;
  * without breaking every code.
  */
 public class LightRandom extends Random {
-	private final static LightRNG light = new LightRNG(); // LightRNG, static.
+    private final static LightRNG light = new LightRNG(); // LightRNG, static.
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public LightRandom() {}
+    public LightRandom() {}
 
-	public LightRandom(final long seed) {
-		light.setSeed(seed);
-	}
+    public LightRandom(final long seed) {
+        light.setSeed(seed);
+    }
 
-	@Override
-	public int next(final int bits) {
-		return light.next(bits);
-	}
+    @Override
+    public int next(final int bits) {
+        return light.next(bits);
+    }
 
-	@Override
-	public void nextBytes(final byte[] bytes) {
-		light.nextBytes(bytes);
-	}
+    @Override
+    public void nextBytes(final byte[] bytes) {
+        light.nextBytes(bytes);
+    }
 
-	@Override
-	public int nextInt() {
-		return light.nextInt();
-	}
+    @Override
+    public int nextInt() {
+        return light.nextInt();
+    }
 
-	@Override
-	public int nextInt(final int n) {
-		return light.nextInt(n);
-	}
+    @Override
+    public int nextInt(final int n) {
+        return light.nextInt(n);
+    }
 
-	@Override
-	public long nextLong() {
-		return light.nextLong();
-	}
+    @Override
+    public long nextLong() {
+        return light.nextLong();
+    }
 
-	@Override
-	public boolean nextBoolean() {
-		return light.nextBoolean();
-	}
+    @Override
+    public boolean nextBoolean() {
+        return light.nextBoolean();
+    }
 
-	@Override
-	public float nextFloat() {
-		return light.nextFloat();
-	}
+    @Override
+    public float nextFloat() {
+        return light.nextFloat();
+    }
 
-	@Override
-	public double nextDouble() {
-		return light.nextDouble();
-	}
+    @Override
+    public double nextDouble() {
+        return light.nextDouble();
+    }
 }

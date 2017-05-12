@@ -10,7 +10,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 @ThreadSafe
-public final class Caches { // TODO: configurable size
+public final class Caches { // TODO: configurable size, time
     private Caches() {}
     
     /**
