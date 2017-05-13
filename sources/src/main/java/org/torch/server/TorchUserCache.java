@@ -134,14 +134,8 @@ public final class TorchUserCache implements TorchReactor {
             
             @Override
             public void onProfileLookupFailed(GameProfile gameprofile, Exception ex) {
-                logger.warn("Failed to lookup a player, {}: ", gameprofile.getName());
-                
-                ex.printStackTrace();
-                try {
-                    throw ex;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                logger.warn("Failed to lookup player {}, using local UUID.", gameprofile.getName());
+                profile[0] = new GameProfile(EntityHuman.offlinePlayerUUID(keyUsername), keyUsername);
             }
         };
         
