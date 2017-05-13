@@ -241,7 +241,7 @@ public final class TorchUserCache implements TorchReactor {
             
             // The offered profile may has an incorrect case, this only happened on offline servers,
             // replace with an lower-case profile.
-            if (!authUUID() && !entry.profile.getName().equals(profile.getName())) {
+            if (!isOnlineMode() && !entry.profile.getName().equals(profile.getName())) {
                 entry = new UserCacheEntry(matchProfile(profileRepo, keyUsername), date);
             } else {
                 entry = refreshExpireDate(entry);
