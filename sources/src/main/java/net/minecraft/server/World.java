@@ -17,7 +17,6 @@ import javax.annotation.Nullable;
 
 import java.util.Map;
 import org.bukkit.Bukkit;
-import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;

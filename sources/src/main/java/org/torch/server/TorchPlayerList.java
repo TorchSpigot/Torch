@@ -16,7 +16,6 @@ import java.net.SocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -1287,6 +1286,7 @@ public final class TorchPlayerList implements TorchReactor {
     /**
      * On LAN servers, returns the host's player data to be written to level.dat
      */
+    @Deprecated
     public NBTTagCompound getHostPlayerData() {
         return null;
     }

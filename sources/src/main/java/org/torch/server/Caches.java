@@ -42,8 +42,8 @@ public final class Caches { // TODO: configurable size, time
      * @return  the {@code String}, converted to lowercase.
      * @see     java.lang.String#toLowerCase()
      */
-    public static String toLowerCase(String str) {
-        return lowerCases.get(str, String::toLowerCase);
+    public static String toLowerCase(String src) {
+        return lowerCases.get(src, String::toLowerCase);
     }
     
     /**
@@ -97,12 +97,12 @@ public final class Caches { // TODO: configurable size, time
      * @see     java.lang.String#toUpperCase()
      * @see     java.lang.String#toUpperCase(Locale)
      */
-    public static String toLowerCase(String str, Locale locale) {
-        String lower = lowerCases.getIfPresent(str);
+    public static String toLowerCase(String src, Locale locale) {
+        String lower = lowerCases.getIfPresent(src);
 
         if (lower == null) {
-            lower = str.toLowerCase(locale);
-            lowerCases.put(str, lower);
+            lower = src.toLowerCase(locale);
+            lowerCases.put(src, lower);
         }
 
         return lower;

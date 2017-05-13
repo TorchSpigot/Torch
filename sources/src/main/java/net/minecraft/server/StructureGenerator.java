@@ -21,7 +21,7 @@ public abstract class StructureGenerator extends WorldGenBase {
     public abstract String a();
 
     @Override
-	protected final synchronized void a(World world, final int i, final int j, int k, int l, ChunkSnapshot chunksnapshot) {
+    protected final synchronized void a(World world, final int i, final int j, int k, int l, ChunkSnapshot chunksnapshot) {
         this.a(world);
         if (!this.c.containsKey(ChunkCoordIntPair.chunkXZ2Int(i, j))) {
             this.f.nextInt();
@@ -46,7 +46,7 @@ public abstract class StructureGenerator extends WorldGenBase {
                     }
 
                     @Override
-					public Object call() throws Exception {
+                    public Object call() throws Exception {
                         return this.a();
                     }
                 });
@@ -57,7 +57,7 @@ public abstract class StructureGenerator extends WorldGenBase {
                     }
 
                     @Override
-					public Object call() throws Exception {
+                    public Object call() throws Exception {
                         return this.a();
                     }
                 });
@@ -67,7 +67,7 @@ public abstract class StructureGenerator extends WorldGenBase {
                     }
 
                     @Override
-					public Object call() throws Exception {
+                    public Object call() throws Exception {
                         return this.a();
                     }
                 });

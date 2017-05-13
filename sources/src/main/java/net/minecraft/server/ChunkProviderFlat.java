@@ -94,7 +94,7 @@ public class ChunkProviderFlat implements ChunkGenerator {
     }
 
     @Override
-	public Chunk getOrCreateChunk(int i, int j) {
+    public Chunk getOrCreateChunk(int i, int j) {
         ChunkSnapshot chunksnapshot = new ChunkSnapshot();
 
         int k;
@@ -132,7 +132,7 @@ public class ChunkProviderFlat implements ChunkGenerator {
     }
 
     @Override
-	public void recreateStructures(int i, int j) {
+    public void recreateStructures(int i, int j) {
         int k = i * 16;
         int l = j * 16;
         BlockPosition blockposition = new BlockPosition(k, 0, l);
@@ -181,19 +181,19 @@ public class ChunkProviderFlat implements ChunkGenerator {
     }
 
     @Override
-	public boolean a(Chunk chunk, int i, int j) {
+    public boolean a(Chunk chunk, int i, int j) {
         return false;
     }
 
     @Override
-	public List<BiomeBase.BiomeMeta> getMobsFor(EnumCreatureType enumcreaturetype, BlockPosition blockposition) {
+    public List<BiomeBase.BiomeMeta> getMobsFor(EnumCreatureType enumcreaturetype, BlockPosition blockposition) {
         BiomeBase biomebase = this.a.getBiome(blockposition);
 
         return biomebase.getMobs(enumcreaturetype);
     }
 
     @Override
-	@Nullable
+    @Nullable
     public BlockPosition findNearestMapFeature(World world, String s, BlockPosition blockposition, boolean flag) {
         StructureGenerator structuregenerator = this.e.get(s);
 
@@ -201,7 +201,7 @@ public class ChunkProviderFlat implements ChunkGenerator {
     }
 
     @Override
-	public void recreateStructures(Chunk chunk, int i, int j) {
+    public void recreateStructures(Chunk chunk, int i, int j) {
         Iterator iterator = this.e.values().iterator();
 
         while (iterator.hasNext()) {
