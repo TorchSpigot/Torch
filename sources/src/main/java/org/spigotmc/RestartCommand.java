@@ -52,36 +52,7 @@ public class RestartCommand extends Command
                 // Disable Watchdog
                 WatchdogThread.doStop();
 
-                // Kick all players
-                for ( EntityPlayer p : (List< EntityPlayer>) MinecraftServer.getServer().getPlayerList().players )
-                {
-                    p.playerConnection.disconnect(SpigotConfig.restartMessage);
-                }
-                // Give the socket a chance to send the packets
-                try
-                {
-                    Thread.sleep( 100 );
-                } catch ( InterruptedException ex )
-                {
-                }
-                // Close the socket so we can rebind with the new process
-                MinecraftServer.getServer().getServerConnection().b();
-
-                // Give time for it to kick in
-                try
-                {
-                    Thread.sleep( 100 );
-                } catch ( InterruptedException ex )
-                {
-                }
-
-                // Actually shutdown
-                try
-                {
-                    MinecraftServer.getServer().stop();
-                } catch ( Throwable t )
-                {
-                }
+                shutdownServer(); // Paper - Moved to function that will handle sync and async
 
                 // This will be done AFTER the server has completely halted
                 Thread shutdownHook = new Thread()
@@ -98,9 +69,9 @@ public class RestartCommand extends Command
                             } else
                             {
                                 Runtime.getRuntime().exec( new String[]
-                                {
-                                    "sh", script.getPath()
-                                } );
+                                        {
+                                                "sh", script.getPath()
+                                        } );
                             }
                         } catch ( Exception e )
                         {
@@ -129,4 +100,53 @@ public class RestartCommand extends Command
             ex.printStackTrace();
         }
     }
+
+    // Paper start - sync copied from above with minor changes, async added
+    private static void shutdownServer()
+    {
+        if (MinecraftServer.getServer().isMainThread())
+        {
+            // Kick all players
+            for ( EntityPlayer p : com.google.common.collect.ImmutableList.copyOf( MinecraftServer.getServer().getPlayerList().players ) )
+            {
+                p.playerConnection.disconnect(SpigotConfig.restartMessage);
+            }
+            // Give the socket a chance to send the packets
+            try
+            {
+                Thread.sleep( 100 );
+            } catch ( InterruptedException ex )
+            {
+            }
+
+            closeSocket();
+
+            // Actually shutdown
+            try
+            {
+                MinecraftServer.getServer().stop();
+            } catch ( Throwable t )
+            {
+            }
+        } else
+        {
+            closeSocket();
+            MinecraftServer.getServer().safeShutdown();
+        }
+    }
+
+    // Paper - Split from moved code
+    private static void closeSocket() {
+        // Close the socket so we can rebind with the new process
+        MinecraftServer.getServer().getServerConnection().b();
+
+        // Give time for it to kick in
+        try
+        {
+            Thread.sleep( 100 );
+        } catch ( InterruptedException ex )
+        {
+        }
+    }
+    // Paper end
 }
