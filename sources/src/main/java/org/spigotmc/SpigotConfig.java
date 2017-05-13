@@ -1,6 +1,8 @@
 package org.spigotmc;
 
 import com.google.common.base.Throwables;
+import com.koloboke.collect.map.hash.HashObjIntMap;
+import com.koloboke.collect.map.hash.HashObjIntMaps;
 import com.koloboke.collect.map.hash.HashObjObjMaps;
 import com.koloboke.collect.set.hash.HashObjSets;
 
@@ -10,13 +12,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
-import gnu.trove.map.hash.TObjectIntHashMap;
 import net.minecraft.server.AttributeRanged;
 import net.minecraft.server.GenericAttributes;
 import net.minecraft.server.MinecraftServer;
@@ -251,7 +250,7 @@ public class SpigotConfig
     }
 
     public static boolean disableStatSaving;
-    public static TObjectIntHashMap<String> forcedStats = new TObjectIntHashMap<String>();
+    public static HashObjIntMap<String> forcedStats = HashObjIntMaps.newMutableMap();
     private static void stats()
     {
         disableStatSaving = getBoolean( "stats.disable-saving", false );

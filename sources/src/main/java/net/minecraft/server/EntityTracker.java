@@ -1,6 +1,8 @@
 package net.minecraft.server;
 
 import com.google.common.collect.Lists;
+import com.koloboke.collect.map.hash.HashIntObjMap;
+import com.koloboke.collect.map.hash.HashIntObjMaps;
 import com.koloboke.collect.set.hash.HashObjSets;
 
 import java.util.ArrayList;
@@ -14,7 +16,7 @@ public class EntityTracker {
     private static final Logger a = LogManager.getLogger();
     private final WorldServer world;
     private final Set<EntityTrackerEntry> c = HashObjSets.newMutableSet();
-    public final IntHashMap<EntityTrackerEntry> trackedEntities = new IntHashMap<EntityTrackerEntry>();
+    public final HashIntObjMap<EntityTrackerEntry> trackedEntities = HashIntObjMaps.newMutableMap(); // Torch
     private int e;
 
     public EntityTracker(WorldServer worldserver) {
@@ -109,14 +111,14 @@ public class EntityTracker {
         org.spigotmc.AsyncCatcher.catchOp( "entity track"); // Spigot
         i = org.spigotmc.TrackingRange.getEntityTrackingRange(entity, i); // Spigot
         try {
-            if (this.trackedEntities.b(entity.getId())) {
+            if (this.trackedEntities.containsKey(entity.getId())) {
                 throw new IllegalStateException("Entity is already tracked!");
             }
 
             EntityTrackerEntry entitytrackerentry = new EntityTrackerEntry(entity, i, this.e, j, flag);
 
             this.c.add(entitytrackerentry);
-            this.trackedEntities.a(entity.getId(), entitytrackerentry);
+            this.trackedEntities.put(entity.getId(), entitytrackerentry);
             entitytrackerentry.scanPlayers(this.world.players);
         } catch (Throwable throwable) {
             CrashReport crashreport = CrashReport.a(throwable, "Adding entity to track");
@@ -165,7 +167,7 @@ public class EntityTracker {
             }
         }
 
-        EntityTrackerEntry entitytrackerentry1 = this.trackedEntities.d(entity.getId());
+        EntityTrackerEntry entitytrackerentry1 = this.trackedEntities.remove(entity.getId());
 
         if (entitytrackerentry1 != null) {
             this.c.remove(entitytrackerentry1);

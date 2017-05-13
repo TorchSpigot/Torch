@@ -3,6 +3,8 @@ package net.minecraft.server;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Floats;
+import com.koloboke.collect.map.hash.HashIntObjMap;
+import com.koloboke.collect.map.hash.HashIntObjMaps;
 import com.koloboke.collect.set.hash.HashIntSets;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
@@ -76,7 +78,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
     private static final AtomicIntegerFieldUpdater chatSpamField = AtomicIntegerFieldUpdater.newUpdater(PlayerConnection.class, "chatThrottle");
     // CraftBukkit end
     private int j;
-    private final IntHashMap<Short> k = new IntHashMap();
+    private final HashIntObjMap<Short> k = HashIntObjMaps.newMutableMap(); // Torch
     private double l;
     private double m;
     private double n;
@@ -1973,7 +1975,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
                     this.player.broadcastCarriedItem();
                     this.player.f = false;
                 } else {
-                    this.k.a(this.player.activeContainer.windowId, Short.valueOf(packetplayinwindowclick.d()));
+                    this.k.put(this.player.activeContainer.windowId, Short.valueOf(packetplayinwindowclick.d()));
                     this.player.playerConnection.sendPacket(new PacketPlayOutTransaction(packetplayinwindowclick.a(), packetplayinwindowclick.d(), false));
                     this.player.activeContainer.a(this.player, false);
                     NonNullList nonnulllist1 = NonNullList.a();

@@ -13,6 +13,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+
 import javax.annotation.Nullable;
 
 import java.util.Map;
@@ -26,10 +28,11 @@ import org.bukkit.event.block.BlockCanBuildEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.generator.ChunkGenerator;
-// CraftBukkit end
-
 // Paper start
 import java.util.Set;
+
+import com.koloboke.collect.map.hash.HashIntObjMap;
+import com.koloboke.collect.map.hash.HashIntObjMaps;
 // Paper end
 import com.koloboke.collect.map.hash.HashObjFloatMaps;
 import com.koloboke.collect.map.hash.HashObjObjMaps;
@@ -72,10 +75,10 @@ public abstract class World implements IBlockAccess {
     private final Set<TileEntity> tileEntityListUnload = HashObjSets.newMutableSet(); // Paper
     public final List<EntityHuman> players = Lists.newArrayList();
     public final List<Entity> j = Lists.newArrayList();
-    protected final IntHashMap<Entity> entitiesById = new IntHashMap();
+    protected final HashIntObjMap<Entity> entitiesById = HashIntObjMaps.newMutableMap(); // Torch
     private final long I = 16777215L;
     private int J;
-    protected int l = (new Random()).nextInt();
+    protected int l = ThreadLocalRandom.current().nextInt();
     protected final int m = 1013904223;
     protected float n;
     public float o;

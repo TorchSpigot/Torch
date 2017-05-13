@@ -1151,7 +1151,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
     @Override
     protected void b(Entity entity) {
         super.b(entity);
-        this.entitiesById.a(entity.getId(), entity);
+        this.entitiesById.put(entity.getId(), entity);
         this.entitiesByUUID.put(entity.getUniqueID(), entity);
         Entity[] aentity = entity.aT();
 
@@ -1162,7 +1162,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
             for (int j = 0; j < i; ++j) {
                 Entity entity1 = aentity1[j];
 
-                this.entitiesById.a(entity1.getId(), entity1);
+                this.entitiesById.put(entity1.getId(), entity1);
             }
         }
 
@@ -1171,7 +1171,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
     @Override
     protected void c(Entity entity) {
         super.c(entity);
-        this.entitiesById.d(entity.getId());
+        this.entitiesById.remove(entity.getId());
         this.entitiesByUUID.remove(entity.getUniqueID());
         Entity[] aentity = entity.aT();
 
@@ -1182,7 +1182,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
             for (int j = 0; j < i; ++j) {
                 Entity entity1 = aentity1[j];
 
-                this.entitiesById.d(entity1.getId());
+                this.entitiesById.remove(entity1.getId());
             }
         }
 

@@ -1,10 +1,13 @@
 package net.minecraft.server;
 
+import com.koloboke.collect.map.hash.HashIntObjMap;
+import com.koloboke.collect.map.hash.HashIntObjMaps;
+
 public abstract class PathfinderAbstract {
 
     protected IBlockAccess a;
     protected EntityInsentient b;
-    protected final IntHashMap<PathPoint> c = new IntHashMap();
+    protected final HashIntObjMap<PathPoint> c = HashIntObjMaps.newMutableMap(); // Torch
     protected int d;
     protected int e;
     protected int f;
@@ -17,7 +20,7 @@ public abstract class PathfinderAbstract {
     public void a(IBlockAccess iblockaccess, EntityInsentient entityinsentient) {
         this.a = iblockaccess;
         this.b = entityinsentient;
-        this.c.c();
+        this.c.clear();
         this.d = MathHelper.d(entityinsentient.width + 1.0F);
         this.e = MathHelper.d(entityinsentient.length + 1.0F);
         this.f = MathHelper.d(entityinsentient.width + 1.0F);
@@ -30,11 +33,11 @@ public abstract class PathfinderAbstract {
 
     protected PathPoint a(int i, int j, int k) {
         int l = PathPoint.b(i, j, k);
-        PathPoint pathpoint = (PathPoint) this.c.get(l);
+        PathPoint pathpoint = this.c.get(l);
 
         if (pathpoint == null) {
             pathpoint = new PathPoint(i, j, k);
-            this.c.a(l, pathpoint);
+            this.c.put(l, pathpoint);
         }
 
         return pathpoint;
