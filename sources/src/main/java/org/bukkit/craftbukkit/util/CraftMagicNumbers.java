@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -14,7 +13,6 @@ import net.minecraft.server.Item;
 import net.minecraft.server.MinecraftKey;
 import net.minecraft.server.MojangsonParseException;
 import net.minecraft.server.MojangsonParser;
-import net.minecraft.server.NBTTagCompound;
 import net.minecraft.server.StatisticList;
 
 import org.bukkit.Achievement;

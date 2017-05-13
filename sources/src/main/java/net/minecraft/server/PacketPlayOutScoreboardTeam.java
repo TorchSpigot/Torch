@@ -64,6 +64,7 @@ public class PacketPlayOutScoreboardTeam implements Packet<PacketListenerPlayOut
         }
     }
 
+    @Override
     public void a(PacketDataSerializer packetdataserializer) throws IOException {
         this.a = packetdataserializer.e(16);
         this.i = packetdataserializer.readByte();
@@ -87,6 +88,7 @@ public class PacketPlayOutScoreboardTeam implements Packet<PacketListenerPlayOut
 
     }
 
+    @Override
     public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.a(this.a);
         packetdataserializer.writeByte(this.i);
@@ -113,6 +115,7 @@ public class PacketPlayOutScoreboardTeam implements Packet<PacketListenerPlayOut
 
     }
 
+    @Override
     public void a(PacketListenerPlayOut packetlistenerplayout) {
         packetlistenerplayout.a(this);
     }

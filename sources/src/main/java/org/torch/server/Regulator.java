@@ -7,7 +7,7 @@ import javax.annotation.concurrent.NotThreadSafe;
 import com.google.common.collect.Queues;
 
 @NotThreadSafe
-public class Regulator extends Thread {
+public final class Regulator extends Thread {
     private static final LinkedBlockingQueue<Runnable> queue = Queues.newLinkedBlockingQueue();
 
     private Regulator() {

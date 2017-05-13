@@ -12,14 +12,17 @@ public class PacketPlayInArmAnimation implements Packet<PacketListenerPlayIn> {
         this.a = enumhand;
     }
 
+    @Override
     public void a(PacketDataSerializer packetdataserializer) throws IOException {
-        this.a = (EnumHand) packetdataserializer.a(EnumHand.class);
+        this.a = packetdataserializer.a(EnumHand.class);
     }
 
+    @Override
     public void b(PacketDataSerializer packetdataserializer) throws IOException {
-        packetdataserializer.a((Enum) this.a);
+        packetdataserializer.a(this.a);
     }
 
+    @Override
     public void a(PacketListenerPlayIn packetlistenerplayin) {
         packetlistenerplayin.a(this);
     }

@@ -19,11 +19,13 @@ public class PacketPlayOutChat implements Packet<PacketListenerPlayOut> {
         this.b = b0;
     }
 
+    @Override
     public void a(PacketDataSerializer packetdataserializer) throws IOException {
         this.a = packetdataserializer.f();
         this.b = packetdataserializer.readByte();
     }
 
+    @Override
     public void b(PacketDataSerializer packetdataserializer) throws IOException {
         // Spigot start
         if (components != null) {
@@ -42,6 +44,7 @@ public class PacketPlayOutChat implements Packet<PacketListenerPlayOut> {
         packetdataserializer.writeByte(this.b);
     }
 
+    @Override
     public void a(PacketListenerPlayOut packetlistenerplayout) {
         packetlistenerplayout.a(this);
     }

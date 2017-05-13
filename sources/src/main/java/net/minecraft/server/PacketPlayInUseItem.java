@@ -14,25 +14,28 @@ public class PacketPlayInUseItem implements Packet<PacketListenerPlayIn> {
 
     public PacketPlayInUseItem() {}
 
+    @Override
     public void a(PacketDataSerializer packetdataserializer) throws IOException {
         this.timestamp = System.currentTimeMillis(); // Spigot
         this.a = packetdataserializer.e();
-        this.b = (EnumDirection) packetdataserializer.a(EnumDirection.class);
-        this.c = (EnumHand) packetdataserializer.a(EnumHand.class);
+        this.b = packetdataserializer.a(EnumDirection.class);
+        this.c = packetdataserializer.a(EnumHand.class);
         this.d = packetdataserializer.readFloat();
         this.e = packetdataserializer.readFloat();
         this.f = packetdataserializer.readFloat();
     }
 
+    @Override
     public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.a(this.a);
-        packetdataserializer.a((Enum) this.b);
-        packetdataserializer.a((Enum) this.c);
+        packetdataserializer.a(this.b);
+        packetdataserializer.a(this.c);
         packetdataserializer.writeFloat(this.d);
         packetdataserializer.writeFloat(this.e);
         packetdataserializer.writeFloat(this.f);
     }
 
+    @Override
     public void a(PacketListenerPlayIn packetlistenerplayin) {
         packetlistenerplayin.a(this);
     }

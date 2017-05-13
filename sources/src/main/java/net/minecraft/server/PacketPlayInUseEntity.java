@@ -17,22 +17,24 @@ public class PacketPlayInUseEntity implements Packet<PacketListenerPlayIn> {
         this.action = PacketPlayInUseEntity.EnumEntityUseAction.ATTACK;
     }
 
+    @Override
     public void a(PacketDataSerializer packetdataserializer) throws IOException {
         this.a = packetdataserializer.g();
-        this.action = (PacketPlayInUseEntity.EnumEntityUseAction) packetdataserializer.a(PacketPlayInUseEntity.EnumEntityUseAction.class);
+        this.action = packetdataserializer.a(PacketPlayInUseEntity.EnumEntityUseAction.class);
         if (this.action == PacketPlayInUseEntity.EnumEntityUseAction.INTERACT_AT) {
-            this.c = new Vec3D((double) packetdataserializer.readFloat(), (double) packetdataserializer.readFloat(), (double) packetdataserializer.readFloat());
+            this.c = new Vec3D(packetdataserializer.readFloat(), packetdataserializer.readFloat(), packetdataserializer.readFloat());
         }
 
         if (this.action == PacketPlayInUseEntity.EnumEntityUseAction.INTERACT || this.action == PacketPlayInUseEntity.EnumEntityUseAction.INTERACT_AT) {
-            this.d = (EnumHand) packetdataserializer.a(EnumHand.class);
+            this.d = packetdataserializer.a(EnumHand.class);
         }
 
     }
 
+    @Override
     public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.d(this.a);
-        packetdataserializer.a((Enum) this.action);
+        packetdataserializer.a(this.action);
         if (this.action == PacketPlayInUseEntity.EnumEntityUseAction.INTERACT_AT) {
             packetdataserializer.writeFloat((float) this.c.x);
             packetdataserializer.writeFloat((float) this.c.y);
@@ -40,11 +42,12 @@ public class PacketPlayInUseEntity implements Packet<PacketListenerPlayIn> {
         }
 
         if (this.action == PacketPlayInUseEntity.EnumEntityUseAction.INTERACT || this.action == PacketPlayInUseEntity.EnumEntityUseAction.INTERACT_AT) {
-            packetdataserializer.a((Enum) this.d);
+            packetdataserializer.a(this.d);
         }
 
     }
 
+    @Override
     public void a(PacketListenerPlayIn packetlistenerplayin) {
         packetlistenerplayin.a(this);
     }

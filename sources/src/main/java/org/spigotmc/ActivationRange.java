@@ -1,8 +1,6 @@
 package org.spigotmc;
 
 import java.util.List;
-import java.util.Set;
-
 import co.aikar.timings.MinecraftTimings;
 import net.minecraft.server.AxisAlignedBB;
 import net.minecraft.server.Chunk;
