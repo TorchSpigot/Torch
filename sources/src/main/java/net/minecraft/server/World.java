@@ -416,7 +416,7 @@ public abstract class World implements IBlockAccess {
                 if (iblockdata.c() != iblockdata1.c() || iblockdata.d() != iblockdata1.d()) {
                     this.methodProfiler.a("checkLight");
                     chunk.lightingQueue.add(() -> this.w(blockposition)); // Paper - Queue light update
-                    this.methodProfiler.b();
+                    
                 }
 
                 /*
@@ -1562,7 +1562,7 @@ public abstract class World implements IBlockAccess {
                 }
             }
 
-            this.methodProfiler.b();
+            
             this.methodProfiler.a("remove");
             if (entity.dead) {
                 j = entity.ab;
@@ -1578,7 +1578,7 @@ public abstract class World implements IBlockAccess {
                 this.c(entity);
             }
 
-            this.methodProfiler.b();
+            
         }
         guardEntityList = false; // Spigot
 
@@ -1617,7 +1617,7 @@ public abstract class World implements IBlockAccess {
                         this.methodProfiler.a("ticking"/*tileentity.getClass().getSimpleName()*/); // CraftBukkit: SPIGOT-1900
                         tileentity.tickTimer.startTiming(); // Spigot
                         ((ITickable) tileentity).F_();
-                        this.methodProfiler.b();
+                        
                     } catch (Throwable throwable2) {
                         // Paper start - Prevent tile entity and entity crashes
                         String msg = "TileEntity threw exception at " + tileentity.world.getWorld().getName() + ":" + tileentity.position.getX() + "," + tileentity.position.getY() + "," + tileentity.position.getZ();
@@ -1691,8 +1691,8 @@ public abstract class World implements IBlockAccess {
 
         timings.tileEntityPending.stopTiming(); // Spigot
         co.aikar.timings.TimingHistory.tileEntityTicks += this.tileEntityListTick.size(); // Paper
-        this.methodProfiler.b();
-        this.methodProfiler.b();
+        
+        
     }
 
     protected void l() {}
@@ -1797,7 +1797,7 @@ public abstract class World implements IBlockAccess {
                 }
             }
 
-            this.methodProfiler.b();
+            
             if (flag && entity.aa) {
                 Iterator iterator = entity.bx().iterator();
 
@@ -2502,7 +2502,7 @@ public abstract class World implements IBlockAccess {
                 i = 0;
             }
 
-            this.methodProfiler.b();
+            
             this.methodProfiler.a("checkedPosition < toCheckCount");
 
             while (i < j) {
@@ -2551,7 +2551,7 @@ public abstract class World implements IBlockAccess {
                 }
             }
 
-            this.methodProfiler.b();
+            
             return true;
         }
     }

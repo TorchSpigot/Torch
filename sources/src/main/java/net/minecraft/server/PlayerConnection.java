@@ -187,7 +187,6 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
             this.sendPacket(new PacketPlayOutKeepAlive(this.f));
         }
 
-        this.minecraftServer.methodProfiler.b();
         // CraftBukkit start
         for (int spam; (spam = this.chatThrottle) > 0 && !chatSpamField.compareAndSet(this, spam, spam - 1); ) ;
         /* Use thread-safe field access instead

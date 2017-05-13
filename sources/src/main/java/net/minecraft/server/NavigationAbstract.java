@@ -85,7 +85,7 @@ public abstract class NavigationAbstract {
             ChunkCache chunkcache = new ChunkCache(this.b, blockposition1.a(-i, -i, -i), blockposition1.a(i, i, i), 0);
             PathEntity pathentity = this.r.a(chunkcache, this.a, this.q, f);
 
-            this.b.methodProfiler.b();
+            
             return pathentity;
         }
     }
@@ -111,7 +111,7 @@ public abstract class NavigationAbstract {
                 ChunkCache chunkcache = new ChunkCache(this.b, blockposition1.a(-i, -i, -i), blockposition1.a(i, i, i), 0);
                 PathEntity pathentity = this.r.a(chunkcache, this.a, entity, f);
 
-                this.b.methodProfiler.b();
+                
                 return pathentity;
             }
         }
@@ -192,7 +192,7 @@ public abstract class NavigationAbstract {
             }
 
             if (!this.n()) {
-                vec3d = this.c.a((Entity) this.a);
+                vec3d = this.c.a(this.a);
                 if (vec3d != null) {
                     BlockPosition blockposition = (new BlockPosition(vec3d)).down();
                     AxisAlignedBB axisalignedbb = this.b.getType(blockposition).d(this.b, blockposition);
@@ -209,7 +209,7 @@ public abstract class NavigationAbstract {
         int i = this.c.d();
 
         for (int j = this.c.e(); j < this.c.d(); ++j) {
-            if ((double) this.c.a(j).b != Math.floor(vec3d.y)) {
+            if (this.c.a(j).b != Math.floor(vec3d.y)) {
                 i = j;
                 break;
             }
@@ -255,10 +255,10 @@ public abstract class NavigationAbstract {
                 this.j = vec3d1;
                 double d0 = vec3d.f(this.j);
 
-                this.m = this.a.cq() > 0.0F ? d0 / (double) this.a.cq() * 1000.0D : 0.0D;
+                this.m = this.a.cq() > 0.0F ? d0 / this.a.cq() * 1000.0D : 0.0D;
             }
 
-            if (this.m > 0.0D && (double) this.k > this.m * 3.0D) {
+            if (this.m > 0.0D && this.k > this.m * 3.0D) {
                 this.j = Vec3D.a;
                 this.k = 0L;
                 this.m = 0.0D;

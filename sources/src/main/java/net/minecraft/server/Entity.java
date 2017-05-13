@@ -377,7 +377,7 @@ public abstract class Entity implements ICommandListener {
             }
 
             this.H();
-            this.world.methodProfiler.b();
+            
         }
     }
     // CraftBukkit end
@@ -437,7 +437,7 @@ public abstract class Entity implements ICommandListener {
             }
 
             this.H();
-            this.world.methodProfiler.b();
+            
         }
         */
 
@@ -480,7 +480,7 @@ public abstract class Entity implements ICommandListener {
         }
 
         this.justCreated = false;
-        this.world.methodProfiler.b();
+        
     }
 
     // Paper start - Configurable top of nether void damage
@@ -822,7 +822,7 @@ public abstract class Entity implements ICommandListener {
                 }
             }
 
-            this.world.methodProfiler.b();
+            
             this.world.methodProfiler.a("rest");
             this.recalcPosition();
             this.positionChanged = d7 != d0 || d9 != d2;
@@ -956,7 +956,7 @@ public abstract class Entity implements ICommandListener {
                 this.fireTicks = -this.getMaxFireTicks();
             }
 
-            this.world.methodProfiler.b();
+            
         }
     }
 
@@ -2367,7 +2367,7 @@ public abstract class Entity implements ICommandListener {
             exit = event.useTravelAgent() ? event.getPortalTravelAgent().findOrCreate(event.getTo()) : event.getTo();
             // Need to make sure the profiler state is reset afterwards (but we still want to time the call)
             Entity entity = this.teleportTo(exit, true);
-            this.world.methodProfiler.b();
+            
             return entity;
         }
         return null;
@@ -2458,10 +2458,10 @@ public abstract class Entity implements ICommandListener {
             }
 
             this.dead = true;
-            this.world.methodProfiler.b();
+            
             worldserver.m();
             worldserver1.m();
-            // this.world.methodProfiler.b(); // CraftBukkit: Moved up to keep balanced
+            //  // CraftBukkit: Moved up to keep balanced
             return entity;
         } else {
             return null;

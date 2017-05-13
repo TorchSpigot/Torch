@@ -192,7 +192,7 @@ public abstract class EntityInsentient extends EntityLiving {
             this.D();
         }
 
-        this.world.methodProfiler.b();
+        
     }
 
     @Override
@@ -527,7 +527,7 @@ public abstract class EntityInsentient extends EntityLiving {
             }
         }
 
-        this.world.methodProfiler.b();
+        
     }
 
     protected void a(EntityItem entityitem) {
@@ -656,7 +656,7 @@ public abstract class EntityInsentient extends EntityLiving {
         ++this.ticksFarFromPlayer;
         this.world.methodProfiler.a("checkDespawn");
         this.L();
-        this.world.methodProfiler.b();
+        
         // Spigot Start
         if ( this.fromMobSpawner )
         {
@@ -671,19 +671,19 @@ public abstract class EntityInsentient extends EntityLiving {
         // Spigot End
         this.world.methodProfiler.a("sensing");
         this.bv.a();
-        this.world.methodProfiler.b();
+        
         this.world.methodProfiler.a("targetSelector");
         this.targetSelector.a();
-        this.world.methodProfiler.b();
+        
         this.world.methodProfiler.a("goalSelector");
         this.goalSelector.a();
-        this.world.methodProfiler.b();
+        
         this.world.methodProfiler.a("navigation");
         this.navigation.l();
-        this.world.methodProfiler.b();
+        
         this.world.methodProfiler.a("mob tick");
         this.M();
-        this.world.methodProfiler.b();
+        
         if (this.isPassenger() && this.bB() instanceof EntityInsentient) {
             EntityInsentient entityinsentient = (EntityInsentient) this.bB();
 
@@ -698,8 +698,8 @@ public abstract class EntityInsentient extends EntityLiving {
         this.lookController.a();
         this.world.methodProfiler.c("jump");
         this.g.b();
-        this.world.methodProfiler.b();
-        this.world.methodProfiler.b();
+        
+        
     }
 
     protected void M() {}

@@ -276,7 +276,7 @@ public class Chunk {
                         }
 
                         if (flag) {
-                            this.world.methodProfiler.b();
+                            
                             return;
                         }
                     }
@@ -286,7 +286,7 @@ public class Chunk {
             this.m = false;
         }
 
-        this.world.methodProfiler.b();
+        
     }
 
     private void b(int i, int j, int k) {

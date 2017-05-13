@@ -265,7 +265,7 @@ public abstract class EntityMinecartAbstract extends Entity implements INamableT
                 --this.portalCooldown;
             }
 
-            this.world.methodProfiler.b();
+            
         }
 
         if (this.world.isClientSide) {

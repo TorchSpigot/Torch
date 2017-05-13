@@ -21,7 +21,7 @@ import org.bukkit.event.block.BlockExplodeEvent;
 // CraftBukkit end
 
 public class Explosion {
-
+    
     private final boolean a;
     private final boolean b;
     private final Random c = new LightRandom();

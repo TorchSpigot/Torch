@@ -309,7 +309,7 @@ public abstract class EntityLiving extends Entity {
         this.aQ = this.aP;
         this.lastYaw = this.yaw;
         this.lastPitch = this.pitch;
-        this.world.methodProfiler.b();
+        
     }
 
     // CraftBukkit start
@@ -1956,7 +1956,7 @@ public abstract class EntityLiving extends Entity {
         this.aX += (f3 - this.aX) * 0.3F;
         this.world.methodProfiler.a("headTurn");
         f2 = this.h(f1, f2);
-        this.world.methodProfiler.b();
+        
         this.world.methodProfiler.a("rangeChecks");
 
         while (this.yaw - this.lastYaw < -180.0F) {
@@ -1991,7 +1991,7 @@ public abstract class EntityLiving extends Entity {
             this.aQ += 360.0F;
         }
 
-        this.world.methodProfiler.b();
+        
         this.aY += f2;
         if (this.cH()) {
             ++this.bp;
@@ -2070,10 +2070,10 @@ public abstract class EntityLiving extends Entity {
         } else if (this.cu()) {
             this.world.methodProfiler.a("newAi");
             this.doTick();
-            this.world.methodProfiler.b();
+            
         }
 
-        this.world.methodProfiler.b();
+        
         this.world.methodProfiler.a("jump");
         if (this.bd) {
             if (this.isInWater()) {
@@ -2088,17 +2088,17 @@ public abstract class EntityLiving extends Entity {
             this.bC = 0;
         }
 
-        this.world.methodProfiler.b();
+        
         this.world.methodProfiler.a("travel");
         this.be *= 0.98F;
         this.bf *= 0.98F;
         this.bg *= 0.9F;
         this.r();
         this.g(this.be, this.bf);
-        this.world.methodProfiler.b();
+        
         this.world.methodProfiler.a("push");
         this.ct();
-        this.world.methodProfiler.b();
+        
     }
 
     private void r() {
