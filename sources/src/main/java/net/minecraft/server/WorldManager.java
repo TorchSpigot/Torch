@@ -21,18 +21,18 @@ public class WorldManager implements IWorldAccess, org.torch.api.TorchServant {
     }
 
     @Override
-    public void a(int i, boolean flag, double d0, double d1, double d2, double d3, double d4, double d5, int... aint) {}
+    public void a(int i, boolean flag, double d0, double d1, double d2, double d3, double d4, double d5, int... aint) {} // PAIL: spawnParticle
 
     @Override
-    public void a(int i, boolean flag, boolean flag1, double d0, double d1, double d2, double d3, double d4, double d5, int... aint) {}
+    public void a(int i, boolean flag, boolean flag1, double d0, double d1, double d2, double d3, double d4, double d5, int... aint) {} // PAIL: spawnParticle
 
     @Override
-    public void a(Entity entity) { // PAIL: spawnParticle
+    public void a(Entity entity) {
         reactor.onEntityAdded(entity);
     }
 
     @Override
-    public void b(Entity entity) { // PAIL: spawnParticle
+    public void b(Entity entity) {
         reactor.onEntityRemoved(entity);
     }
 

@@ -75,7 +75,7 @@ public abstract class World implements IBlockAccess {
     private final Set<TileEntity> tileEntityListUnload = HashObjSets.newMutableSet(); // Paper
     public final List<EntityHuman> players = Lists.newArrayList();
     public final List<Entity> j = Lists.newArrayList();
-    protected final HashIntObjMap<Entity> entitiesById = HashIntObjMaps.newMutableMap(); // Torch
+    protected final IntHashMap<Entity> entitiesById = new IntHashMap<Entity>();
     private final long I = 16777215L;
     private int J;
     protected int l = ThreadLocalRandom.current().nextInt();
