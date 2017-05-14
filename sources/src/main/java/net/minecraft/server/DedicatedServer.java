@@ -6,6 +6,7 @@ import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 import java.io.IOException;
 import java.net.Proxy;
 import java.util.List;
+import java.util.Queue;
 import java.util.regex.Pattern;
 import org.apache.logging.log4j.Logger;
 
@@ -34,7 +35,7 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
     /**
      * Server command queue -> serverCommandQueue
      */
-    private final List<ServerCommand> serverCommandQueue;
+    private final Queue<ServerCommand> serverCommandQueue; // Torch - List -> Queue
     /**
      * Rcon command listener -> remoteControlCommandListener
      */

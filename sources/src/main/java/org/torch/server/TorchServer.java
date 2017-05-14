@@ -48,6 +48,7 @@ import com.destroystokyo.paper.PaperConfig;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Queues;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
@@ -120,7 +121,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
     /**
      * Pending command queue
      */
-    private final List<ServerCommand> serverCommandQueue = Collections.synchronizedList(Lists.newArrayList());
+    private final Queue<ServerCommand> serverCommandQueue = new com.destroystokyo.paper.utils.CachedSizeConcurrentLinkedQueue<>();
     /**
      * The rcon console command listener
      */
@@ -908,14 +909,14 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         MinecraftTimings.bukkitSchedulerTimer.stopTiming();
 
         MinecraftTimings.minecraftSchedulerTimer.startTiming();
-        while (!futureTaskQueue.isEmpty()) {
+        while (futureTaskQueue.size() != 0) {
             SystemUtils.a(futureTaskQueue.remove(), logger);
         }
         MinecraftTimings.minecraftSchedulerTimer.stopTiming();
 
         MinecraftTimings.processQueueTimer.startTiming();
-        // Run tasks that are waiting on processing
-        while (!processQueue.isEmpty()) {
+        // Run tasks that are waiting on processing, queue size cached
+        while (processQueue.size() != 0) {
             processQueue.remove().run();
         }
         MinecraftTimings.processQueueTimer.stopTiming();
@@ -1671,8 +1672,8 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      */
     public void executePendingCommands() {
         MinecraftTimings.serverCommandTimer.startTiming();
-        while (!this.serverCommandQueue.isEmpty()) {
-            ServerCommand servercommand = this.serverCommandQueue.remove(0);
+        while (serverCommandQueue.size() != 0) { // Cached size, faster than check empty
+            ServerCommand servercommand = serverCommandQueue.poll();
             // Fire the server command event
             ServerCommandEvent event = new ServerCommandEvent(console, servercommand.command);
             craftServer.getPluginManager().callEvent(event);
@@ -1681,7 +1682,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             // Dispatch the final command
             craftServer.dispatchServerCommand(console, servercommand);
         }
-
+        
         MinecraftTimings.serverCommandTimer.stopTiming();
     }
 

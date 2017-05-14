@@ -49,6 +49,7 @@ public class ServerConnection {
             return new LocalEventLoopGroup(0, (new ThreadFactoryBuilder()).setNameFormat("Netty Local Server IO #%d").setDaemon(true).build());
         }
     };
+    
     private final MinecraftServer f;
     public volatile boolean d;
     private final List<ChannelFuture> g = Collections.synchronizedList(Lists.<ChannelFuture>newArrayList());

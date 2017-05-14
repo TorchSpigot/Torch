@@ -25,6 +25,8 @@ import org.torch.api.TorchReactor;
 import com.destroystokyo.paper.exception.ServerInternalException;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongArraySet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
 import static org.torch.server.TorchServer.logger;
@@ -41,7 +43,7 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
 
     public static final double UNLOAD_QUEUE_RESIZE_FACTOR = 0.96;
 
-    public final it.unimi.dsi.fastutil.longs.LongSet unloadQueue = new it.unimi.dsi.fastutil.longs.LongArraySet();
+    public final LongSet unloadQueue = new LongArraySet();
     public final ChunkGenerator chunkGenerator;
     private final IChunkLoader chunkLoader;
 
@@ -53,7 +55,7 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
     protected Chunk lastChunkByPos = null;
 
     public final WorldServer world;
-
+    
     /** Map of chunk Id's to Chunk instances */
     public Long2ObjectOpenHashMap<Chunk> chunks = new Long2ObjectOpenHashMap<Chunk>(8192) {
         private static final long serialVersionUID = -1L;
@@ -427,6 +429,6 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
 
     @Override @Deprecated public boolean e(int x, int z) { return this.isChunkGeneratedAt(x, z); } // Implement from net.minecraft.IChunkProvider
     @Override public boolean isChunkGeneratedAt(int chunkX, int chunkZ) {
-        return this.chunks.containsKey(ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ)) || this.chunkLoader.a(chunkX, chunkZ); // PAIL: isChunkGeneratedAt(x, z)
+        return this.chunks.containsKey(ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ)) || this.chunkLoader.a(chunkX, chunkZ); // PAIL: a -> isChunkGeneratedAt(x, z)
     }
 }
