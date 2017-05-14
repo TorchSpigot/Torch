@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Logger;
 import org.torch.api.Async;
-import org.torch.server.Caches;
+import org.torch.server.cache.Caches;
 
 import static org.torch.server.TorchServer.logger;
 

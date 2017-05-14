@@ -1,4 +1,4 @@
-package org.torch.server;
+package org.torch.server.cache;
 
 import com.destroystokyo.paper.PaperConfig;
 import com.github.benmanes.caffeine.cache.Cache;

@@ -1,4 +1,4 @@
-package org.torch.server;
+package org.torch.server.cache;
 
 import lombok.Getter;
 import net.minecraft.server.*;

@@ -1,4 +1,4 @@
-package org.torch.server;
+package org.torch.server.cache;
 
 public final class TorchIntCache {
     
@@ -11,7 +11,7 @@ public final class TorchIntCache {
     }
     
     public static String toReadableSize() {
-        return "Integer array cache disabled.";
+        return "Integer array caching disabled.";
     }
     
 }

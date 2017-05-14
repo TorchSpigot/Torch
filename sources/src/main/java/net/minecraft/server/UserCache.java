@@ -12,7 +12,7 @@ import java.util.Date;
 import javax.annotation.Nullable;
 import org.torch.api.Anaphase;
 import org.torch.api.Async;
-import org.torch.server.TorchUserCache;
+import org.torch.server.cache.TorchUserCache;
 
 public class UserCache implements org.torch.api.TorchServant {
     @Getter private final TorchUserCache reactor;

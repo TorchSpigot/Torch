@@ -42,6 +42,7 @@ import org.fusesource.jansi.AnsiConsole;
 import org.spigotmc.SlackActivityAccountant;
 import org.spigotmc.SpigotConfig;
 import org.torch.api.Anaphase;
+import org.torch.server.cache.TorchUserCache;
 
 import com.destroystokyo.paper.PaperConfig;
 import com.google.common.base.Charsets;
@@ -1913,13 +1914,13 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         this.gameMode = WorldSettings.a(i);
         logger.info("Default game type: {}", new Object[] { this.gameMode });
 
-        InetAddress inetaddress = null;
-        if (!this.getServerIp().isEmpty()) inetaddress = InetAddress.getByName(this.getServerIp());
+        InetAddress bindIp = null;
+        if (!this.getServerIp().isEmpty()) bindIp = InetAddress.getByName(this.getServerIp());
 
         if (this.getServerPort() < 0) {
             this.setServerPort(this.propertyManager.getInt("server-port", 25565));
         }
-
+        
         // Initial the craft server in player list
         this.setPlayerList(new DedicatedPlayerList(this.getDedicatedServer()).getReactor());
         this.getServant().setPlayerList(this.playerList);
@@ -1936,7 +1937,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
 
         if (!org.spigotmc.SpigotConfig.lateBind) {
             try {
-                this.getServerConnection().a(inetaddress, this.getServerPort());
+                this.getServerConnection().a(bindIp, this.getServerPort());
             } catch (IOException ioexception) {
                 logger.warn("**** FAILED TO BIND TO PORT!");
                 logger.warn("The exception was: {}", new Object[] { ioexception.toString()});
@@ -2041,7 +2042,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
 
         if (org.spigotmc.SpigotConfig.lateBind) {
             try {
-                this.getServerConnection().a(inetaddress, this.getServerPort());
+                this.getServerConnection().a(bindIp, this.getServerPort());
             } catch (IOException ioexception) {
                 logger.warn("**** FAILED TO BIND TO PORT!");
                 logger.warn("The exception was: {}", new Object[] { ioexception.toString()});

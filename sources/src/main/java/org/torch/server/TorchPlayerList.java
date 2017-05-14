@@ -42,6 +42,7 @@ import org.bukkit.util.Vector;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 import org.torch.api.Async;
 import org.torch.api.TorchReactor;
+import org.torch.server.cache.TorchUserCache;
 
 import net.minecraft.server.*;
 

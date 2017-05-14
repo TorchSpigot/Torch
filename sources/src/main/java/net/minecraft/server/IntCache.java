@@ -1,6 +1,6 @@
 package net.minecraft.server;
 
-import org.torch.server.TorchIntCache;
+import org.torch.server.cache.TorchIntCache;
 
 public class IntCache {
 

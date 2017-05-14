@@ -17,7 +17,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.apache.logging.log4j.Logger;
-import org.torch.server.Caches;
+import org.torch.server.cache.Caches;
 
 import static org.torch.server.TorchServer.logger;
 

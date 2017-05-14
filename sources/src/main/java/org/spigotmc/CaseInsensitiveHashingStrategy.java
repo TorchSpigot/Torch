@@ -2,7 +2,7 @@ package org.spigotmc;
 
 import java.util.Locale;
 
-import org.torch.server.Caches;
+import org.torch.server.cache.Caches;
 
 import gnu.trove.strategy.HashingStrategy;
 

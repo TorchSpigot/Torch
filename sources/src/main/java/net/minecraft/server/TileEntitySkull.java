@@ -7,7 +7,7 @@ import com.mojang.authlib.properties.Property;
 import java.util.UUID;
 import javax.annotation.Nullable;
 
-import org.torch.server.Caches;
+import org.torch.server.cache.Caches;
 
 import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;

@@ -20,8 +20,7 @@ import org.bukkit.event.player.PlayerBedLeaveEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerVelocityEvent;
 import org.bukkit.util.Vector;
-import org.torch.server.Caches;
-// CraftBukkit end
+import org.torch.server.cache.Caches;
 
 public abstract class EntityHuman extends EntityLiving {
 

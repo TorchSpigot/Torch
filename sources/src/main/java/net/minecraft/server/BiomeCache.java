@@ -1,6 +1,6 @@
 package net.minecraft.server;
 
-import org.torch.server.TorchBiomeCache;
+import org.torch.server.cache.TorchBiomeCache;
 
 import lombok.Getter;
 

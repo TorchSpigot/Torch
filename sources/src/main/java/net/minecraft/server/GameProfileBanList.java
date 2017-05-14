@@ -2,12 +2,13 @@ package net.minecraft.server;
 
 import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
+
+import static org.torch.server.cache.TorchUserCache.authUUID;
+
 import java.io.File;
 import java.util.Iterator;
 
-import org.torch.server.Caches;
-
-import static org.torch.server.TorchUserCache.authUUID;
+import org.torch.server.cache.Caches;
 
 public class GameProfileBanList extends JsonList<GameProfile, GameProfileBanEntry> {
 

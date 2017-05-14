@@ -1,4 +1,4 @@
-package org.torch.server;
+package org.torch.server.cache;
 
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
