@@ -5,7 +5,7 @@
 
 ### Introduction
 Torch is a fork of [Paper](https://github.com/PaperMC/Paper) with multi-thread computing and further optimizations.
-We aims to be stable and fast. 
+We aim to be stable and fast. 
 
 Features:
 + All features of Paper/Spigot are included
