@@ -1,6 +1,5 @@
 package net.minecraft.server;
 
-import com.google.common.collect.Maps;
 import com.koloboke.collect.map.hash.HashObjIntMaps;
 import com.koloboke.collect.Equivalence;
 import java.util.Map;

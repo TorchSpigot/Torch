@@ -13,6 +13,7 @@ import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.Location;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.torch.api.Anaphase;
+import org.torch.api.Async;
 import org.torch.server.TorchPlayerList;
 import org.torch.server.TorchServer;
 // CraftBukkit end
@@ -306,6 +307,7 @@ public abstract class PlayerList implements org.torch.api.TorchServant {
         return reactor.getPlayer(s);
     }
 
+    @Async
     public void sendPacketNearby(@Nullable EntityHuman entityhuman, double d0, double d1, double d2, double d3, int i, Packet<?> packet) {
         reactor.sendPacketNearby(entityhuman, d0, d1, d2, d3, i, packet);
     }

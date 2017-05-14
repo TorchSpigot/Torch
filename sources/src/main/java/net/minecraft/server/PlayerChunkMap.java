@@ -236,18 +236,18 @@ public class PlayerChunkMap {
     }
 
     public boolean a(int i, int j) {
-        long k = d(i, j);
+        long k = chunkIndex(i, j);
 
         return this.e.get(k) != null;
     }
 
     @Nullable
     public PlayerChunk getChunk(int i, int j) {
-        return this.e.get(d(i, j));
+        return this.e.get(chunkIndex(i, j));
     }
 
     private PlayerChunk c(int i, int j) {
-        long k = d(i, j);
+        long k = chunkIndex(i, j);
         PlayerChunk playerchunk = this.e.get(k);
 
         if (playerchunk == null) {
@@ -276,15 +276,15 @@ public class PlayerChunkMap {
     }
     // CraftBukkit end
 
-    public void flagDirty(BlockPosition blockposition) {
-        int i = blockposition.getX() >> 4;
-        int j = blockposition.getZ() >> 4;
-        PlayerChunk playerchunk = this.getChunk(i, j);
-
-        if (playerchunk != null) {
-            playerchunk.a(blockposition.getX() & 15, blockposition.getY(), blockposition.getZ() & 15);
-        }
-
+    /**
+     * Mark a block for update
+     */
+    public void flagDirty(BlockPosition position) {
+        int cx = position.getX() >> 4;
+        int cz = position.getZ() >> 4;
+        PlayerChunk playerchunk = this.getChunk(cx, cz);
+        
+        if (playerchunk != null) playerchunk.blockChanged(position.getX() & 15, position.getY(), position.getZ() & 15);
     }
 
     public void addPlayer(EntityPlayer entityplayer) {
@@ -471,6 +471,8 @@ public class PlayerChunkMap {
         return i * 16 - 16;
     }
 
+    /** Returns given chunk index */
+    public static long chunkIndex(int chunkX, int chunkZ) { return d(chunkX, chunkZ); } // OBFHELPER
     private static long d(int i, int j) {
         return i + 2147483647L | j + 2147483647L << 32;
     }
@@ -483,7 +485,7 @@ public class PlayerChunkMap {
     public void b(PlayerChunk playerchunk) {
         org.spigotmc.AsyncCatcher.catchOp("Async Player Chunk Remove"); // Paper
         ChunkCoordIntPair chunkcoordintpair = playerchunk.a();
-        long i = d(chunkcoordintpair.x, chunkcoordintpair.z);
+        long i = chunkIndex(chunkcoordintpair.x, chunkcoordintpair.z);
 
         playerchunk.c();
         this.e.remove(i);

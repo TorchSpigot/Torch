@@ -170,6 +170,7 @@ public class PlayerChunk {
         this.i = i;
     }
 
+    public void blockChanged(int x, int y, int z) { this.a(x, y, z); } // OBFHELPER
     public void a(int i, int j, int k) {
         if (this.done) {
             if (this.dirtyCount == 0) {
