@@ -2557,19 +2557,34 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
                     }
                     // CraftBukkit start
                     else if (packetplayincustompayload.a().equals("REGISTER")) {
-                        String channels = packetplayincustompayload.b().toString(com.google.common.base.Charsets.UTF_8);
-                        for (String channel : channels.split("\0")) {
-                            getPlayer().addChannel(channel);
+                        try {
+                            String channels = packetplayincustompayload.b().toString(com.google.common.base.Charsets.UTF_8);
+                            for (String channel : channels.split("\0")) {
+                                getPlayer().addChannel(channel);
+                            }
+                        } catch (Exception ex) {
+                            PlayerConnection.LOGGER.error("Couldn\'t register custom payload", ex);
+                            this.disconnect("Invalid payload REGISTER!");
                         }
                     } else if (packetplayincustompayload.a().equals("UNREGISTER")) {
-                        String channels = packetplayincustompayload.b().toString(com.google.common.base.Charsets.UTF_8);
-                        for (String channel : channels.split("\0")) {
-                            getPlayer().removeChannel(channel);
+                        try {
+                            String channels = packetplayincustompayload.b().toString(com.google.common.base.Charsets.UTF_8);
+                            for (String channel : channels.split("\0")) {
+                                getPlayer().removeChannel(channel);
+                            }
+                        } catch (Exception ex) {
+                            PlayerConnection.LOGGER.error("Couldn\'t unregister custom payload", ex);
+                            this.disconnect("Invalid payload UNREGISTER!");
                         }
                     } else {
-                        byte[] data = new byte[packetplayincustompayload.b().readableBytes()];
-                        packetplayincustompayload.b().readBytes(data);
-                        server.getMessenger().dispatchIncomingMessage(player.getBukkitEntity(), packetplayincustompayload.a(), data);
+                        try {
+                            byte[] data = new byte[packetplayincustompayload.b().readableBytes()];
+                            packetplayincustompayload.b().readBytes(data);
+                            server.getMessenger().dispatchIncomingMessage(player.getBukkitEntity(), packetplayincustompayload.a(), data);
+                        } catch (Exception ex) {
+                            PlayerConnection.LOGGER.error("Couldn\'t dispatch custom payload", ex);
+                            this.disconnect("Invalid custom payload!");
+                        }
                     }
                     // CraftBukkit end
                 }
