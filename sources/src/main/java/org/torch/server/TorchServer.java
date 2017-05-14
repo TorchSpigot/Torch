@@ -910,14 +910,14 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
 
         MinecraftTimings.minecraftSchedulerTimer.startTiming();
         while (futureTaskQueue.size() != 0) {
-            SystemUtils.a(futureTaskQueue.remove(), logger);
+            SystemUtils.a(futureTaskQueue.poll(), logger);
         }
         MinecraftTimings.minecraftSchedulerTimer.stopTiming();
 
         MinecraftTimings.processQueueTimer.startTiming();
         // Run tasks that are waiting on processing, queue size cached
         while (processQueue.size() != 0) {
-            processQueue.remove().run();
+            processQueue.poll().run();
         }
         MinecraftTimings.processQueueTimer.stopTiming();
 
