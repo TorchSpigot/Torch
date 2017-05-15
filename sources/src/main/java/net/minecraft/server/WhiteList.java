@@ -34,7 +34,7 @@ public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
     }
 
     protected String b(GameProfile profile) {
-        return authUUID() ? Caches.objectString(profile) : Caches.toLowerCase(profile.getName()); // Torch - use cache
+        return authUUID() ? profile.getId() : Caches.toLowerCase(profile.getName()); // Torch - use cache
     }
 
     public GameProfile a(String s) {
