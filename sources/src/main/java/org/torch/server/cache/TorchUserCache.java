@@ -234,7 +234,7 @@ public final class TorchUserCache implements TorchReactor {
             
             // The offered profile may has an incorrect case, this only happened on offline servers,
             // replace with an lower-case profile.
-            if (!isOnlineMode() && !entry.profile.getName().equals(profile.getName())) {
+            if (!authUUID() && !entry.profile.getName().equals(profile.getName())) {
                 entry = new UserCacheEntry(matchProfile(profileRepo, keyUsername), date);
             } else {
                 entry = refreshExpireDate(entry);
@@ -250,7 +250,6 @@ public final class TorchUserCache implements TorchReactor {
     
     /** Offer an entry, called on load caches */
     private void offerCache(UserCacheEntry entry) {
-        Validate.notNull(entry);
         if (isExpired(entry)) return;
         
         caches.put(authUUID() ? entry.profile.getName() : entry.profile.getName().toLowerCase(Locale.ROOT), entry);
@@ -274,7 +273,7 @@ public final class TorchUserCache implements TorchReactor {
                     if (entry != null) this.offerCache(entry);
                 }
                 
-                if(!SpigotConfig.saveUserCacheOnStopOnly) this.save();
+                this.save();
             }
             
         } catch (FileNotFoundException e) {
