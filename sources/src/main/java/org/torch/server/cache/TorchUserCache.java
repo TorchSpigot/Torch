@@ -208,7 +208,7 @@ public final class TorchUserCache implements TorchReactor {
     
     @Nullable
     public GameProfile peekCachedProfile(String username) {
-        UserCacheEntry entry = caches.getIfPresent(Caches.toLowerCase(profile.getName(), Locale.ROOT));
+        UserCacheEntry entry = caches.getIfPresent(Caches.toLowerCase(username, Locale.ROOT));
         
         return entry == null ? null : entry.profile;
     }
