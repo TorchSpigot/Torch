@@ -194,7 +194,7 @@ public final class TorchUserCache implements TorchReactor {
      */
     @Nullable
     public GameProfile requestProfile(String username) {
-        if (StringUtils.isBlank(username) return null;
+        if (StringUtils.isBlank(username)) return null;
         
         String keyUsername = Caches.toLowerCase(username, Locale.ROOT);
         UserCacheEntry cachedEntry = caches.getIfPresent(keyUsername);
