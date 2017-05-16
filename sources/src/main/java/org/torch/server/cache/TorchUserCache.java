@@ -118,7 +118,6 @@ public final class TorchUserCache implements TorchReactor {
     /**
      * Lookup the profile by the name from Mojang, triggering network operation
      */
-    @Nullable
     public static GameProfile matchProfile(GameProfileRepository profileRepo, String keyUsername) {
         // Keep current case for offline servers
         if (!authUUID()) {
@@ -185,7 +184,7 @@ public final class TorchUserCache implements TorchReactor {
         UserCacheEntry entry = new UserCacheEntry(matchProfile(profileRepo, keyUsername), date);
         caches.put(keyUsername, entry);
         
-        if(!org.spigotmc.SpigotConfig.saveUserCacheOnStopOnly) this.save();
+        if(!SpigotConfig.saveUserCacheOnStopOnly) this.save();
         
         return entry;
     }
@@ -195,39 +194,35 @@ public final class TorchUserCache implements TorchReactor {
      */
     @Nullable
     public GameProfile requestProfile(String username) {
-        if (StringUtils.isBlank(username)) return null;
+        if (StringUtils.isBlank(username) return null;
         
-        String keyUsername = authUUID() ? username : Caches.toLowerCase(username, Locale.ROOT);
+        String keyUsername = Caches.toLowerCase(username, Locale.ROOT);
         UserCacheEntry cachedEntry = caches.getIfPresent(keyUsername);
         
-        // Remove expired entry
-        if (cachedEntry != null) {
-            if (isExpired(cachedEntry)) {
-                caches.invalidate(keyUsername);
-                return null;
-            }
-        } else {
+        if (cachedEntry == null) {
             cachedEntry = putCache(keyUsername);
         }
         
-        return cachedEntry == null ? null : cachedEntry.profile;
+        return cachedEntry.profile;
     }
     
     @Nullable
     public GameProfile peekCachedProfile(String username) {
-        UserCacheEntry entry = caches.getIfPresent(username);
+        UserCacheEntry entry = caches.getIfPresent(Caches.toLowerCase(profile.getName(), Locale.ROOT));
         
         return entry == null ? null : entry.profile;
     }
     
-    /** Offer or replace the old cache if present */
+    /** Offer or replace the old cache if present, called on player login */
     public void offerCache(GameProfile profile) {
-        offerCache(profile, warpExpireDate(false));
+        offerCache(profile, (Date) null);
     }
     
     /** Offer or replace the old cache if present, with an expire date */
     public void offerCache(GameProfile profile, Date date) {
-        String keyUsername = authUUID() ? profile.getName() : Caches.toLowerCase(profile.getName(), Locale.ROOT);
+        if (date == null) date = warpExpireDate(false);
+        
+        String keyUsername = Caches.toLowerCase(profile.getName(), Locale.ROOT);
         UserCacheEntry entry = caches.getIfPresent(keyUsername);
         
         if (entry != null) {
@@ -252,7 +247,7 @@ public final class TorchUserCache implements TorchReactor {
     private void offerCache(UserCacheEntry entry) {
         if (isExpired(entry)) return;
         
-        caches.put(authUUID() ? entry.profile.getName() : entry.profile.getName().toLowerCase(Locale.ROOT), entry);
+        caches.put(entry.profile.getName().toLowerCase(Locale.ROOT), entry);
     }
     
     public String[] getCachedUsernames() {
