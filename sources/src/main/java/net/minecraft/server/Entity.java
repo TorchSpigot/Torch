@@ -53,7 +53,7 @@ public abstract class Entity implements ICommandListener {
         return tag.hasKey("Bukkit.updateLevel") && tag.getInt("Bukkit.updateLevel") >= level;
     }
 
-    protected CraftEntity bukkitEntity;
+    protected volatile CraftEntity bukkitEntity;
 
     EntityTrackerEntry tracker; // Paper
     public CraftEntity getBukkitEntity() {
