@@ -9,10 +9,12 @@ import java.io.File;
 import java.lang.reflect.ParameterizedType;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import javax.annotation.Nullable;
 import org.torch.api.Anaphase;
 import org.torch.api.Async;
 import org.torch.server.cache.TorchUserCache;
+import org.torch.server.cache.Caches;
 
 public class UserCache implements org.torch.api.TorchServant {
     @Getter private final TorchUserCache reactor;
@@ -41,7 +43,7 @@ public class UserCache implements org.torch.api.TorchServant {
     }
 
     private static GameProfile a(GameProfileRepository profileRepo, String name) {
-        return TorchUserCache.matchProfile(profileRepo, name);
+        return TorchUserCache.matchProfile(profileRepo, Caches.toLowerCase(name, Locale.ROOT));
     }
 
     public static void setOnlineMode(boolean flag) { a(flag); } // OBFHELPER
