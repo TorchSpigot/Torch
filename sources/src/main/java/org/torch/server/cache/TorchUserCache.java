@@ -148,7 +148,7 @@ public final class TorchUserCache implements TorchReactor {
      * */
     public static Date warpExpireDate(boolean force) {
         long now = System.currentTimeMillis();
-        if (force || (now - lastWarpExpireDate) > DATE_WARP_INTERVAL) {
+        if (force || (now - lastWarpExpireDate) => DATE_WARP_INTERVAL) {
             lastWarpExpireDate = now;
             Calendar calendar = Calendar.getInstance();
             
@@ -165,7 +165,7 @@ public final class TorchUserCache implements TorchReactor {
     }
     
     public boolean isExpired(UserCacheEntry entry) {
-        return System.currentTimeMillis() >= entry.expireDate.getTime();
+        return (System.currentTimeMillis() - entry.expireDate.getTime()) > DATE_WARP_INTERVAL;
     }
 
     /**
