@@ -52,7 +52,7 @@ public final class MCUtil {
     public static <T> T ensureMain(String reason, Supplier<T> run) {
         if (AsyncCatcher.enabled && !getServer().isMainThread()) {
             logger.warn( "Asynchronous " + reason + "! Blocking thread until it returns" );
-            ListenableFuture<Object> future = getServer().postToMainThread(() -> run.get());
+            ListenableFuture<Object> future = getServer().postToMainThreadMaybeAsync(() -> run.get());
             
             try {
                 return (T) future.get(9, TimeUnit.SECONDS); // TODO

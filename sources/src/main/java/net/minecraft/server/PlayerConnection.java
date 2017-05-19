@@ -253,12 +253,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
         this.a(chatcomponenttext); // CraftBukkit - fire quit instantly
         this.networkManager.stopReading();
         // CraftBukkit - Don't wait
-        this.minecraftServer.postToMainThread(new Runnable() {
-            @Override
-			public void run() {
-                PlayerConnection.this.networkManager.handleDisconnection();
-            }
-        });
+        this.minecraftServer.postToMainThread(() -> networkManager.handleDisconnection());
     }
 
     @Override

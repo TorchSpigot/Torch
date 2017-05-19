@@ -825,7 +825,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public <V> ListenableFuture<V> a(Callable<V> callable) {
-        return reactor.postToMainThread(callable);
+        return reactor.postToMainThreadMaybeAsync(callable);
     }
 
     @Override

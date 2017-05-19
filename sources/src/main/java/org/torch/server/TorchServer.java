@@ -1702,20 +1702,9 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
     public boolean isMainThread() {
         return Thread.currentThread() == this.serverThread;
     }
-    
-    /**
-     * Post a Runnable task to main thread(next tick), returns a listenable future task
-     */
-    public ListenableFuture<Object> postToMainThread(Runnable runnable) {
-        Validate.notNull(runnable);
-        return postToMainThread(Executors.callable(runnable));
-    }
 
-    /**
-     * Post a Callable task to main thread(next tick), returns a listenable future task
-     */
-    public <V> ListenableFuture<V> postToMainThread(Callable<V> callable) {
-        if (isMainThread()) {
+    public <V> ListenableFuture<V> postToMainThreadMaybeAsync(Callable<V> callable) {
+        if (!isMainThread()) {
             ListenableFutureTask<V> future = ListenableFutureTask.create(callable);
             
             futureTaskQueue.add(future);
@@ -1727,6 +1716,14 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
                 return Futures.immediateFailedCheckedFuture(ex);
             }
         }
+    }
+    
+    /**
+     * Post a Runnable task to main thread(next tick), returns a listenable future task
+     */
+    public ListenableFuture<Object> postToMainThread(Runnable runnable) {
+        Validate.notNull(runnable);
+        return postToMainThreadMaybeAsync(Executors.callable(runnable));
     }
 
     /**

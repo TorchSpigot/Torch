@@ -15,6 +15,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.torch.server.TorchServer;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
@@ -116,7 +117,7 @@ class Metrics {
         executor.scheduleAtFixedRate(() -> {
             // Nevertheless we want our code to run in the main thread, so we have to use the MC scheduler
             // Don't be afraid! The connection to the bStats server is still async, only the stats collection is sync ;)
-            MinecraftServer.getServer().postToMainThread(this::submitData);
+            TorchServer.getServer().postToMainThread(this::submitData);
         }, 5, 30, TimeUnit.MINUTES);
         // Submit the data every 30 minutes, first time after 5 minutes to give other plugins enough time to start
         // WARNING: Changing the frequency has no effect but your plugin WILL be blocked/deleted!

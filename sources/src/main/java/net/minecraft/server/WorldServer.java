@@ -28,12 +28,13 @@ import org.bukkit.craftbukkit.util.HashTreeSet;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.weather.LightningStrikeEvent;
 // CraftBukkit end
+import org.torch.server.TorchServer;
 
 public class WorldServer extends World implements IAsyncTaskHandler {
 
     private static final Logger a = LogManager.getLogger();
     boolean stopPhysicsEvent = false; // Paper
-    private final MinecraftServer server;
+    private final TorchServer server;
     public EntityTracker tracker;
     private final PlayerChunkMap manager;
     // private final Set<NextTickListEntry> nextTickListHash = Sets.newHashSet();
@@ -59,7 +60,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
         this.pvpMode = minecraftserver.getPVP();
         worlddata.world = this;
         // CraftBukkit end
-        this.server = minecraftserver;
+        this.server = minecraftserver.getReactor();
         this.tracker = new EntityTracker(this);
         this.manager = new PlayerChunkMap(this, spigotConfig.viewDistance); // Spigot
         this.worldProvider.a(this);
@@ -85,7 +86,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
         }
 
         if (getServer().getScoreboardManager() == null) { // CraftBukkit
-            this.scoreboard = new ScoreboardServer(this.server);
+            this.scoreboard = new ScoreboardServer(this.server.getServant());
             PersistentScoreboard persistentscoreboard = (PersistentScoreboard) this.worldMaps.get(PersistentScoreboard.class, "scoreboard");
 
             if (persistentscoreboard == null) {
@@ -831,11 +832,11 @@ public class WorldServer extends World implements IAsyncTaskHandler {
     // CraftBukkit end */
 
     private boolean getSpawnNPCs() {
-        return this.server.getSpawnNPCs();
+        return this.server.isSpawnNPCs();
     }
 
     private boolean getSpawnAnimals() {
-        return this.server.getSpawnAnimals();
+        return this.server.isSpawnAnimals();
     }
 
     @Override
@@ -894,7 +895,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
 
     @Override
     public boolean a(EntityHuman entityhuman, BlockPosition blockposition) {
-        return !this.server.a(this, blockposition, entityhuman) && this.getWorldBorder().a(blockposition);
+        return !this.server.isBlockProtected(this, blockposition, entityhuman) && this.getWorldBorder().a(blockposition);
     }
 
     @Override
@@ -1064,7 +1065,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
     protected void a() throws ExceptionWorldConflict {
         timings.worldSaveLevel.startTiming(); // Paper
         this.checkSession();
-        WorldServer[] aworldserver = this.server.worldServer;
+        WorldServer[] aworldserver = this.server.getWorldServers();
         int i = aworldserver.length;
 
         for (int j = 0; j < i; ++j) {
@@ -1090,7 +1091,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
         this.worldData.k(this.getWorldBorder().getWarningTime());
         this.worldData.b(this.getWorldBorder().j());
         this.worldData.e(this.getWorldBorder().i());
-        this.dataManager.saveWorldData(this.worldData, this.server.getPlayerList().t());
+        // this.dataManager.saveWorldData(this.worldData, this.server.getPlayerList().getHostPlayerData());
         this.worldMaps.a();
         timings.worldSaveLevel.stopTiming(); // Paper
     }
@@ -1342,7 +1343,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
     @Override
     @Nullable
     public MinecraftServer getMinecraftServer() {
-        return this.server;
+        return this.server.getMinecraftServer();
     }
 
     public EntityTracker getTracker() {
