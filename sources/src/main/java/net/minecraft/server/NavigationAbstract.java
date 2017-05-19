@@ -48,6 +48,7 @@ public abstract class NavigationAbstract {
         return this.o;
     }
 
+    public void updatePath() { j(); } // OBFHELPER
     public void j() {
         if (this.b.getTime() - this.p > 20L) {
             if (this.q != null) {
@@ -166,6 +167,7 @@ public abstract class NavigationAbstract {
         }
     }
 
+    public PathEntity getPath() { return k(); } // OBFHELPER
     @Nullable
     public PathEntity k() {
         return this.c;

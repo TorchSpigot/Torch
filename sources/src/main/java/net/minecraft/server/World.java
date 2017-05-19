@@ -31,8 +31,6 @@ import org.bukkit.generator.ChunkGenerator;
 // Paper start
 import java.util.Set;
 
-import com.koloboke.collect.map.hash.HashIntObjMap;
-import com.koloboke.collect.map.hash.HashIntObjMaps;
 // Paper end
 import com.koloboke.collect.map.hash.HashObjFloatMaps;
 import com.koloboke.collect.map.hash.HashObjObjMaps;
@@ -88,7 +86,10 @@ public abstract class World implements IBlockAccess {
     public final Random random = new Random();
     public WorldProvider worldProvider;
     protected NavigationListener t = new NavigationListener();
-    protected List<IWorldAccess> u;
+    // Torch start
+    // protected List<IWorldAccess> u;
+    protected Set<org.torch.api.IWorldAccess> worldListeners;
+    // Torch end
     protected IChunkProvider chunkProvider;
     protected final IDataManager dataManager;
     public WorldData worldData;
@@ -171,7 +172,10 @@ public abstract class World implements IBlockAccess {
         this.ticksPerAnimalSpawns = this.getServer().getTicksPerAnimalSpawns(); // CraftBukkit
         this.ticksPerMonsterSpawns = this.getServer().getTicksPerMonsterSpawns(); // CraftBukkit
         // CraftBukkit end
-        this.u = Lists.newArrayList(new IWorldAccess[] { this.t});
+        // Torch start
+        // this.u = Lists.newArrayList(new org.torch.api.IWorldAccess[] { this.t });
+        this.worldListeners = HashObjSets.newMutableSet(new org.torch.api.IWorldAccess[] { this.t.getReactor() });
+        // Torch end
         this.L = Calendar.getInstance();
         this.scoreboard = new Scoreboard();
         this.allowMonsters = true;
@@ -491,8 +495,8 @@ public abstract class World implements IBlockAccess {
     }
 
     public void notify(BlockPosition blockposition, IBlockData iblockdata, IBlockData iblockdata1, int i) {
-        for (int j = 0; j < this.u.size(); ++j) {
-            this.u.get(j).a(this, blockposition, iblockdata, iblockdata1, i);
+        for (org.torch.api.IWorldAccess access : worldListeners) {
+            access.notifyBlockUpdate(this, blockposition, iblockdata, iblockdata1);
         }
 
     }
@@ -531,11 +535,9 @@ public abstract class World implements IBlockAccess {
         this.b(blockposition.getX(), blockposition.getY(), blockposition.getZ(), blockposition1.getX(), blockposition1.getY(), blockposition1.getZ());
     }
 
+    // PAIL: markBlockRangeForRenderUpdate (client-side only)
     public void b(int i, int j, int k, int l, int i1, int j1) {
-        for (int k1 = 0; k1 < this.u.size(); ++k1) {
-            this.u.get(k1).a(i, j, k, l, i1, j1);
-        }
-
+        ;
     }
 
     public void c(BlockPosition blockposition, Block block) {
@@ -852,11 +854,9 @@ public abstract class World implements IBlockAccess {
         }
     }
 
+    // PAIL: notifyLightSet (client-side only)
     public void m(BlockPosition blockposition) {
-        for (int i = 0; i < this.u.size(); ++i) {
-            this.u.get(i).a(blockposition);
-        }
-
+        ;
     }
 
     public float n(BlockPosition blockposition) {
@@ -1072,37 +1072,30 @@ public abstract class World implements IBlockAccess {
     }
 
     public void a(@Nullable EntityHuman entityhuman, double d0, double d1, double d2, SoundEffect soundeffect, SoundCategory soundcategory, float f, float f1) {
-        for (int i = 0; i < this.u.size(); ++i) {
-            this.u.get(i).a(entityhuman, soundeffect, soundcategory, d0, d1, d2, f, f1);
+        for (org.torch.api.IWorldAccess access : worldListeners) {
+            access.playSoundNearbyExpect(entityhuman, soundeffect, soundcategory, d0, d1, d2, f, f1);
         }
-
     }
 
     public void a(double d0, double d1, double d2, SoundEffect soundeffect, SoundCategory soundcategory, float f, float f1, boolean flag) {}
 
+    // PAIL: playRecord (client-side only)
     public void a(BlockPosition blockposition, @Nullable SoundEffect soundeffect) {
-        for (int i = 0; i < this.u.size(); ++i) {
-            this.u.get(i).a(soundeffect, blockposition);
-        }
-
+        ;
     }
 
     public void addParticle(EnumParticle enumparticle, double d0, double d1, double d2, double d3, double d4, double d5, int... aint) {
         this.a(enumparticle.c(), enumparticle.e(), d0, d1, d2, d3, d4, d5, aint);
     }
 
+    // PAIL: spawnAlwaysVisibleParticle (client-side only)
     public void a(int i, double d0, double d1, double d2, double d3, double d4, double d5, int... aint) {
-        for (int j = 0; j < this.u.size(); ++j) {
-            this.u.get(j).a(i, false, true, d0, d1, d2, d3, d4, d5, aint);
-        }
-
+        ;
     }
 
+    // PAIL: spawnParticle (client-side only)
     private void a(int i, boolean flag, double d0, double d1, double d2, double d3, double d4, double d5, int... aint) {
-        for (int j = 0; j < this.u.size(); ++j) {
-            this.u.get(j).a(i, flag, d0, d1, d2, d3, d4, d5, aint);
-        }
-
+        ;
     }
 
     public boolean strikeLightning(Entity entity) {
@@ -1199,18 +1192,20 @@ public abstract class World implements IBlockAccess {
         }
     }
 
+    /** PAIL: onEntityAdded */
     protected void b(Entity entity) {
-        for (int i = 0; i < this.u.size(); ++i) {
-            this.u.get(i).a(entity);
+        for (org.torch.api.IWorldAccess access : worldListeners) {
+            access.onEntityAdded(entity);
         }
 
         entity.valid = true; // CraftBukkit
         new com.destroystokyo.paper.event.entity.EntityAddToWorldEvent(entity.getBukkitEntity()).callEvent(); // Paper - fire while valid
     }
 
+    /** PAIL: onEntityRemove */
     protected void c(Entity entity) {
-        for (int i = 0; i < this.u.size(); ++i) {
-            this.u.get(i).b(entity);
+        for (org.torch.api.IWorldAccess access : worldListeners) {
+            access.onEntityRemoved(entity);
         }
 
         new com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent(entity.getBukkitEntity()).callEvent(); // Paper - fire while valid
@@ -1283,8 +1278,11 @@ public abstract class World implements IBlockAccess {
         this.c(entity);
     }
 
-    public void addIWorldAccess(IWorldAccess iworldaccess) {
-        this.u.add(iworldaccess);
+    /**
+     * Add a world event listener
+     */
+    public void addIWorldAccess(org.torch.api.IWorldAccess access) {
+        this.worldListeners.add(access);
     }
 
     private boolean a(@Nullable Entity entity, AxisAlignedBB axisalignedbb, boolean flag, @Nullable List<AxisAlignedBB> list) {
@@ -3086,11 +3084,9 @@ public abstract class World implements IBlockAccess {
         return this.worldMaps.a(s);
     }
 
+    // PAIL: broadcastSound (not-implement)
     public void a(int i, BlockPosition blockposition, int j) {
-        for (int k = 0; k < this.u.size(); ++k) {
-            this.u.get(k).a(i, blockposition, j);
-        }
-
+        ;
     }
 
     public void triggerEffect(int i, BlockPosition blockposition, int j) {
@@ -3099,8 +3095,8 @@ public abstract class World implements IBlockAccess {
 
     public void a(@Nullable EntityHuman entityhuman, int i, BlockPosition blockposition, int j) {
         try {
-            for (int k = 0; k < this.u.size(); ++k) {
-                this.u.get(k).a(entityhuman, i, blockposition, j);
+            for (org.torch.api.IWorldAccess access : worldListeners) {
+                access.playWorldEventNearbyExpect(entityhuman, i, blockposition, j);
             }
 
         } catch (Throwable throwable) {
@@ -3166,10 +3162,8 @@ public abstract class World implements IBlockAccess {
     }
 
     public void c(int i, BlockPosition blockposition, int j) {
-        for (int k = 0; k < this.u.size(); ++k) {
-            IWorldAccess iworldaccess = this.u.get(k);
-
-            iworldaccess.b(i, blockposition, j);
+        for (org.torch.api.IWorldAccess access : worldListeners) {
+            access.sendBlockBreakProgress(i, blockposition, j);
         }
 
     }

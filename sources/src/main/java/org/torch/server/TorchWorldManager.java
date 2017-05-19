@@ -5,12 +5,14 @@ import net.minecraft.server.BlockPosition;
 import net.minecraft.server.Entity;
 import net.minecraft.server.EntityHuman;
 import net.minecraft.server.EntityPlayer;
+import net.minecraft.server.IBlockData;
 import net.minecraft.server.IWorldAccess;
 import net.minecraft.server.PacketPlayOutBlockBreakAnimation;
 import net.minecraft.server.PacketPlayOutNamedSoundEffect;
 import net.minecraft.server.PacketPlayOutWorldEvent;
 import net.minecraft.server.SoundCategory;
 import net.minecraft.server.SoundEffect;
+import net.minecraft.server.World;
 import net.minecraft.server.WorldServer;
 
 import org.torch.api.Async;
@@ -32,7 +34,7 @@ public final class TorchWorldManager implements org.torch.api.IWorldAccess, Torc
      * */
     private final WorldServer world;
     
-    public TorchWorldManager(TorchServer server, WorldServer worldserver, IWorldAccess legacy) {
+    public TorchWorldManager(TorchServer server, WorldServer worldserver, @Nullable IWorldAccess legacy) {
         servant = legacy;
         
         this.server = server;
@@ -63,7 +65,7 @@ public final class TorchWorldManager implements org.torch.api.IWorldAccess, Torc
     }
     
     @Override
-    public void notifyBlockUpdate(BlockPosition position) {
+    public void notifyBlockUpdate(World world, BlockPosition position, IBlockData oldData, IBlockData newData) {
         this.world.getPlayerChunkMap().flagDirty(position);
     }
     

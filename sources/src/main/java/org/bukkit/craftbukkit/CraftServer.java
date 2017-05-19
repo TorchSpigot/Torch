@@ -115,6 +115,7 @@ import org.bukkit.util.permissions.DefaultPermissions;
 import org.spigotmc.AsyncCatcher;
 import org.torch.server.TorchPlayerList;
 import org.torch.server.TorchServer;
+import org.torch.server.TorchWorldManager;
 import org.torch.server.cache.Caches;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
@@ -946,7 +947,7 @@ public final class CraftServer implements Server {
         internal.scoreboard = getScoreboardManager().getMainScoreboard().getHandle();
 
         internal.tracker = new EntityTracker(internal);
-        internal.addIWorldAccess(new WorldManager(console.getServant(), internal));
+        internal.addIWorldAccess(new TorchWorldManager(console, internal, null));
         internal.worldData.setDifficulty(EnumDifficulty.EASY);
         internal.setSpawnFlags(true, true);
         console.worlds.add(internal);

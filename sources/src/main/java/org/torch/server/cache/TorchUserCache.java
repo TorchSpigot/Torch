@@ -102,7 +102,7 @@ public final class TorchUserCache implements TorchReactor {
         return isOnlineMode() || (SpigotConfig.bungee && PaperConfig.bungeeOnlineMode);
     }
 
-    public TorchUserCache(GameProfileRepository repo, File file, UserCache legacy) {
+    public TorchUserCache(GameProfileRepository repo, File file, @Nullable UserCache legacy) {
         lastExpireDate = warpExpireDate(true);
         
         servant = legacy;
@@ -321,11 +321,6 @@ public final class TorchUserCache implements TorchReactor {
         private UserCacheEntry(GameProfile gameProfile, Date date) {
             this.profile = gameProfile;
             this.expireDate = date;
-        }
-        
-        @Deprecated
-        public UserCache.UserCacheEntry toLegacy() {
-            return servant.new UserCacheEntry(profile, expireDate);
         }
     }
     

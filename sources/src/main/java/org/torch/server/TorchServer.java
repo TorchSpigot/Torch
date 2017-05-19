@@ -813,7 +813,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
 
             this.craftServer.getPluginManager().callEvent(new org.bukkit.event.world.WorldInitEvent(world.getWorld()));
 
-            world.addIWorldAccess(new WorldManager(getMinecraftServer(), world));
+            world.addIWorldAccess(new TorchWorldManager(this, world, null));
             if (!this.isSinglePlayer()) world.getWorldData().setGameType(this.getGameMode());
 
             worlds.add(world);

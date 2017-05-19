@@ -46,7 +46,7 @@ public class WorldManager implements IWorldAccess, org.torch.api.TorchServant {
 
     @Override
     public void a(World world, BlockPosition blockposition, IBlockData iblockdata, IBlockData iblockdata1, int i) {
-        reactor.notifyBlockUpdate(blockposition);
+        reactor.notifyBlockUpdate(world, blockposition, iblockdata1, iblockdata1);
     }
 
     @Override

@@ -7,6 +7,8 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nullable;
+
 import org.torch.api.TorchReactor;
 
 @Getter
@@ -19,7 +21,7 @@ public final class TorchBiomeCache implements TorchReactor {
     /** Cached biome bases, ChunkCoordIntPair -> Biomes */
     private final Cache<Long, BiomeBase[]> caches = Caffeine.newBuilder().maximumSize(4096).expireAfterAccess(30, TimeUnit.SECONDS).build();
 
-    public TorchBiomeCache(WorldChunkManager worldChunkManager, BiomeCache legacy) {
+    public TorchBiomeCache(WorldChunkManager worldChunkManager, @Nullable BiomeCache legacy) {
         servant = legacy;
         chunkManager = worldChunkManager;
     }

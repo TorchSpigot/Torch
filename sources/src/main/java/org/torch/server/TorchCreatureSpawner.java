@@ -2,6 +2,9 @@ package org.torch.server;
 
 import java.util.List;
 import java.util.Random;
+
+import javax.annotation.Nullable;
+
 import lombok.Getter;
 
 import org.bukkit.craftbukkit.util.LongHash;
@@ -32,7 +35,7 @@ public final class TorchCreatureSpawner implements TorchReactor {
     /** The chunk area covered by each player, vanilla 17x17 */
     private static int CHUNKS_PER_PLAYER = (RANGE * 2 + 1) * (RANGE * 2 + 1);
 
-    public TorchCreatureSpawner(SpawnerCreature legacy) {
+    public TorchCreatureSpawner(@Nullable SpawnerCreature legacy) {
         servant = legacy;
     }
 
