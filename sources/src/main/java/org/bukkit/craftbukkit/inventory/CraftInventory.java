@@ -3,8 +3,6 @@ package org.bukkit.craftbukkit.inventory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Map;
-
 import net.minecraft.server.IHopper;
 import net.minecraft.server.IInventory;
 import net.minecraft.server.InventoryCrafting;
@@ -27,9 +25,6 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import com.google.common.collect.Maps;
-import com.koloboke.collect.map.hash.HashIntObjMaps;
-import com.koloboke.collect.map.hash.HashObjObjMaps;
-
 import org.bukkit.Material;
 
 public class CraftInventory implements Inventory {

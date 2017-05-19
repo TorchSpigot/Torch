@@ -15,6 +15,8 @@ import org.bukkit.util.StringUtil;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
+import com.koloboke.collect.set.hash.HashObjSets;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.URL;
@@ -150,7 +152,7 @@ public class VersionCommand extends BukkitCommand {
     private final ReentrantLock versionLock = new ReentrantLock();
     private boolean hasVersion = false;
     private String versionMessage = null;
-    private final Set<CommandSender> versionWaiters = new HashSet<CommandSender>();
+    private final Set<CommandSender> versionWaiters = HashObjSets.newMutableSet();
     private boolean versionTaskStarted = false;
     private long lastCheck = 0;
 

@@ -22,6 +22,7 @@ echo "Building Torch..."
 	yes|cp -rf "$basedir/sources/pom.xml" "$paperbasedir/Paper-Server/"
 	
 	yes|cp -rf "$basedir/sources/api/src" "$paperbasedir/Paper-API/"
+	yes|cp -rf "$basedir/sources/api/pom.xml" "$paperbasedir/Paper-API/"
 	
 	cd "$paperbasedir"
 	mvn clean install

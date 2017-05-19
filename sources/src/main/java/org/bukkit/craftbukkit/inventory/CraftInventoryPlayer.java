@@ -1,7 +1,6 @@
 package org.bukkit.craftbukkit.inventory;
 
 import com.google.common.base.Preconditions;
-import java.util.Arrays;
 import net.minecraft.server.EntityPlayer;
 import net.minecraft.server.PacketPlayOutHeldItemSlot;
 import net.minecraft.server.PacketPlayOutSetSlot;
