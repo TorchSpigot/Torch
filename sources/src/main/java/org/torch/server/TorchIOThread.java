@@ -37,6 +37,8 @@ public final class TorchIOThread { // TODO: configurable threads
             }
             
         } else {
+            queuedChunkCounter.decrementAndGet();
+            
             saveChunk(chunkSaver);
         }
     }
@@ -56,9 +58,9 @@ public final class TorchIOThread { // TODO: configurable threads
      */
     public static void waitForFinish() throws InterruptedException {
         isWaitingFinish.compareAndSet(false, true);
-
-        while (queuedChunkCounter.get() != 0) Thread.sleep(10L);
-
+        
+        while (queuedChunkCounter.get() != 0) Thread.sleep(9L);
+        
         isWaitingFinish.compareAndSet(true, false);
     }
 }
