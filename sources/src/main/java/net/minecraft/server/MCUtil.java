@@ -10,11 +10,9 @@ import org.spigotmc.AsyncCatcher;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
 import static org.torch.server.TorchServer.getServer;

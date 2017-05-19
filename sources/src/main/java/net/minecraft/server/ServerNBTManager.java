@@ -12,7 +12,7 @@ public class ServerNBTManager extends WorldNBTStorage {
     }
 
     @Override
-	public IChunkLoader createChunkLoader(WorldProvider worldprovider) {
+    public IChunkLoader createChunkLoader(WorldProvider worldprovider) {
         File file = this.getDirectory();
         File file1;
 
@@ -30,15 +30,15 @@ public class ServerNBTManager extends WorldNBTStorage {
     }
 
     @Override
-	public void saveWorldData(WorldData worlddata, @Nullable NBTTagCompound nbttagcompound) {
+    public void saveWorldData(WorldData worlddata, @Nullable NBTTagCompound nbttagcompound) {
         worlddata.e(19133);
         super.saveWorldData(worlddata, nbttagcompound);
     }
 
     @Override
-	public void a() {
+    public void a() {
         try {
-        	TorchIOThread.getInstance().waitForFinish();
+            TorchIOThread.waitForFinish();
         } catch (InterruptedException interruptedexception) {
             interruptedexception.printStackTrace();
         }

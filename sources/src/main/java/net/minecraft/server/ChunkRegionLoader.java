@@ -152,7 +152,7 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
         queuedSaves++; // Paper
         queue.add(new QueuedChunk(chunkcoordintpair, nbttagcompound)); // Paper - Chunk queue improvements
         
-        TorchIOThread.getInstance().queueChunkToSaving(this);
+        TorchIOThread.saveChunk(this);
     }
 
     @Override

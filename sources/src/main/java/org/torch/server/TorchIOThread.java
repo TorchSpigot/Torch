@@ -1,87 +1,64 @@
 package org.torch.server;
 
 import com.destroystokyo.paper.PaperConfig;
-import com.google.common.collect.Queues;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-import lombok.Getter;
-import net.minecraft.server.*;
+import net.minecraft.server.IAsyncChunkSaver;
 
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import org.torch.api.TorchReactor;
+import org.torch.api.Async;
 
-@Getter
-public final class TorchIOThread implements Runnable, TorchReactor {
-    /** The chunks need to save. */
-    private final LinkedBlockingQueue<IAsyncChunkSaver> chunkSaverQueue = Queues.newLinkedBlockingQueue();
-
-    private static final class LazyInstance {
-        private static TorchIOThread instance = new TorchIOThread();
-    }
-
-    private TorchIOThread() {
-        Thread thread = new Thread(this, "File IO Thread");
-
-        thread.setPriority(1);
-        thread.start();
-    }
-
-    /**
-     * Retrieves an instance of the TorchIOThread
-     */
-    public static TorchIOThread getInstance() {
-        return TorchIOThread.LazyInstance.instance;
-    }
-
-    @Override
-    public void run() {
-        this.processQueuedChunks();
-    }
-
-    /**
-     * Process the items that are in the queue
-     */
-    public void processQueuedChunks() {
-        try {
-            while (true) this.tryWriteChunk(chunkSaverQueue.take());
-        } catch (Throwable t) {
-            t.printStackTrace();
-            TorchServer.getServer().safeShutdown();
-        }
-    }
-
+public final class TorchIOThread { // TODO: configurable threads
+    private final static Executor ioExecutor = Executors.newFixedThreadPool(2, new ThreadFactoryBuilder().setNameFormat("File IO Thread - %1$d").setPriority(1).build());
+    
+    private final static AtomicBoolean isWaitingFinish = new AtomicBoolean(false);
+    
+    private final static AtomicInteger queuedChunkCounter = new AtomicInteger(0);
+    
+    private TorchIOThread() {}
+    
     /**
      * Process a chunk, re-add to the queue if unsuccessful
      */
-    private void tryWriteChunk(IAsyncChunkSaver chunkSaver) throws InterruptedException {
+    private static void writeChunk(IAsyncChunkSaver chunkSaver)  {
         if (!chunkSaver.c()) { // PAIL: WriteNextIO() -> Returns if the write was unsuccessful
-            this.getServant().incrementSavedChunkCounter(); // Port
-
-            if (PaperConfig.enableFileIOThreadSleep) Thread.sleep(this.getServant().isWaitingFinish() ? 0L : 2L); // Paper - Add toggle
+            queuedChunkCounter.decrementAndGet();
+            
+            if (PaperConfig.enableFileIOThreadSleep) {
+                try {
+                    Thread.sleep(isWaitingFinish.get() ? 0L : 2L);
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            
         } else {
-            chunkSaverQueue.add(chunkSaver);
+            saveChunk(chunkSaver);
         }
     }
-
-    public void queueChunkToSaving(IAsyncChunkSaver chunkSsaver) {
-        if (!this.chunkSaverQueue.contains(chunkSsaver)) {
-            this.chunkSaverQueue.add(chunkSsaver);
-            this.getServant().incrementWriteQueuedCounter(); // Port
-        }
+    
+    /**
+     * Posts a chunk for save
+     */
+    @Async
+    public static void saveChunk(IAsyncChunkSaver chunkSaver)  {
+        queuedChunkCounter.incrementAndGet();
+        
+        ioExecutor.execute(() -> writeChunk(chunkSaver));
     }
+    
+    /**
+     * Waits for all chunks to be saved
+     */
+    public static void waitForFinish() throws InterruptedException {
+        isWaitingFinish.compareAndSet(false, true);
 
-    public void waitForFinish() throws InterruptedException {
-        this.getServant().toggleWaitingFinish();
+        while (queuedChunkCounter.get() != 0) Thread.sleep(10L);
 
-        while (!chunkSaverQueue.isEmpty()) {
-            this.tryWriteChunk(chunkSaverQueue.take());
-        }
-
-        this.getServant().toggleWaitingFinish();
-    }
-
-    @Override
-    public FileIOThread getServant() {
-        return FileIOThread.a();
+        isWaitingFinish.compareAndSet(true, false);
     }
 }
