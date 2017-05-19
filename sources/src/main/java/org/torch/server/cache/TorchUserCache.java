@@ -165,7 +165,7 @@ public final class TorchUserCache implements TorchReactor {
     }
     
     public boolean isExpired(UserCacheEntry entry) {
-        return System.currentTimeMillis() >= entry.expireDate.getTime();
+        return (System.currentTimeMillis() - entry.expireDate.getTime()) > DATE_WARP_INTERVAL;
     }
 
     /**
