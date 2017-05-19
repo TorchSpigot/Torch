@@ -181,12 +181,12 @@ public class Main {
                 }
 
                 if (useJline) {
+                    System.setProperty( "library.jansi.version", "Torch" ); // Torch - set jansi library version to avoid crash
                     AnsiConsole.systemInstall();
                 } else {
                     // This ensures the terminal literal will always match the jline implementation
                     System.setProperty(jline.TerminalFactory.JLINE_TERMINAL, jline.UnsupportedTerminal.class.getName());
                 }
-
 
                 if (options.has("noconsole")) {
                     useConsole = false;
