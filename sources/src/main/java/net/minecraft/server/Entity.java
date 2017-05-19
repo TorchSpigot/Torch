@@ -1492,106 +1492,101 @@ public abstract class Entity implements ICommandListener {
         });
     }
 
-    public NBTTagCompound e(NBTTagCompound nbttagcompound) {
+    /** PAIL: writeToNBT */
+    public NBTTagCompound e(NBTTagCompound compound) {
         try {
-            nbttagcompound.set("Pos", this.a(new double[] { this.locX, this.locY, this.locZ}));
-            nbttagcompound.set("Motion", this.a(new double[] { this.motX, this.motY, this.motZ}));
+            compound.set("Pos", this.createDoubleList(new double[] { this.locX, this.locY, this.locZ }));
+            compound.set("Motion", this.createDoubleList(new double[] { this.motX, this.motY, this.motZ }));
 
             // CraftBukkit start - Checking for NaN pitch/yaw and resetting to zero
             // TODO: make sure this is the best way to address this.
             if (Float.isNaN(this.yaw)) {
                 this.yaw = 0;
             }
-
+            
             if (Float.isNaN(this.pitch)) {
                 this.pitch = 0;
             }
             // CraftBukkit end
 
-            nbttagcompound.set("Rotation", this.a(new float[] { this.yaw, this.pitch}));
-            nbttagcompound.setFloat("FallDistance", this.fallDistance);
-            nbttagcompound.setShort("Fire", (short) this.fireTicks);
-            nbttagcompound.setShort("Air", (short) this.getAirTicks());
-            nbttagcompound.setBoolean("OnGround", this.onGround);
-            nbttagcompound.setInt("Dimension", this.dimension);
-            nbttagcompound.setBoolean("Invulnerable", this.invulnerable);
-            nbttagcompound.setInt("PortalCooldown", this.portalCooldown);
-            nbttagcompound.a("UUID", this.getUniqueID());
+            compound.set("Rotation", this.createFloatList(new float[] { this.yaw, this.pitch }));
+            
+            compound.setFloat("FallDistance", this.fallDistance);
+            compound.setShort("Fire", (short) this.fireTicks);
+            compound.setShort("Air", (short) this.getAirTicks());
+            compound.setBoolean("OnGround", this.onGround);
+            compound.setInt("Dimension", this.dimension);
+            compound.setBoolean("Invulnerable", this.invulnerable);
+            compound.setInt("PortalCooldown", this.portalCooldown);
+            compound.setUUID("UUID", this.getUniqueID());
+            
             // CraftBukkit start
             // PAIL: Check above UUID reads 1.8 properly, ie: UUIDMost / UUIDLeast
-            nbttagcompound.setLong("WorldUUIDLeast", this.world.getDataManager().getUUID().getLeastSignificantBits());
-            nbttagcompound.setLong("WorldUUIDMost", this.world.getDataManager().getUUID().getMostSignificantBits());
-            nbttagcompound.setInt("Bukkit.updateLevel", CURRENT_LEVEL);
-            nbttagcompound.setInt("Spigot.ticksLived", this.ticksLived);
+            compound.setLong("WorldUUIDLeast", this.world.getDataManager().getUUID().getLeastSignificantBits());
+            compound.setLong("WorldUUIDMost", this.world.getDataManager().getUUID().getMostSignificantBits());
+            
+            compound.setInt("Bukkit.updateLevel", CURRENT_LEVEL);
+            compound.setInt("Spigot.ticksLived", this.ticksLived);
             // CraftBukkit end
+            
             if (this.hasCustomName()) {
-                nbttagcompound.setString("CustomName", this.getCustomName());
+                compound.setString("CustomName", this.getCustomName());
             }
 
             if (this.getCustomNameVisible()) {
-                nbttagcompound.setBoolean("CustomNameVisible", this.getCustomNameVisible());
+                compound.setBoolean("CustomNameVisible", this.getCustomNameVisible());
             }
 
-            this.aF.b(nbttagcompound);
+            this.aF.b(compound); // PAIL: cmdResultStats.writeStatsToNBT(compound);
+            
             if (this.isSilent()) {
-                nbttagcompound.setBoolean("Silent", this.isSilent());
+                compound.setBoolean("Silent", this.isSilent());
             }
 
             if (this.isNoGravity()) {
-                nbttagcompound.setBoolean("NoGravity", this.isNoGravity());
+                compound.setBoolean("NoGravity", this.isNoGravity());
             }
 
             if (this.glowing) {
-                nbttagcompound.setBoolean("Glowing", this.glowing);
+                compound.setBoolean("Glowing", this.glowing);
             }
 
-            NBTTagList nbttaglist;
-            Iterator iterator;
-
-            if (this.aG.size() > 0) {
-                nbttaglist = new NBTTagList();
-                iterator = this.aG.iterator();
-
-                while (iterator.hasNext()) {
-                    String s = (String) iterator.next();
-
-                    nbttaglist.add(new NBTTagString(s));
-                }
-
-                nbttagcompound.set("Tags", nbttaglist);
+            if (this.aG.size() > 0) { // PAIL: aG -> tags
+                NBTTagList tagList = new NBTTagList();
+                for (String tag : this.aG) tagList.add(new NBTTagString(tag));
+                
+                compound.set("Tags", tagList);
             }
-
-            this.b(nbttagcompound);
+            
+            this.b(compound); // PAIL: writeEntityToNBT
+            
             if (this.isVehicle()) {
-                nbttaglist = new NBTTagList();
-                iterator = this.bx().iterator();
+                NBTTagList tagList = new NBTTagList();
+                
+                for (Entity passenger : this.bx()) { // PAIL: bx() -> getPassengers()
+                    NBTTagCompound pCompound = new NBTTagCompound();
 
-                while (iterator.hasNext()) {
-                    Entity entity = (Entity) iterator.next();
-                    NBTTagCompound nbttagcompound1 = new NBTTagCompound();
-
-                    if (entity.c(nbttagcompound1)) {
-                        nbttaglist.add(nbttagcompound1);
+                    if (passenger.c(pCompound)) {
+                        tagList.add(pCompound);
                     }
                 }
-
-                if (!nbttaglist.isEmpty()) {
-                    nbttagcompound.set("Passengers", nbttaglist);
-                }
+                
+                if (!tagList.isEmpty()) compound.set("Passengers", tagList);
             }
 
             // Paper start - Save the entity's origin location
             if (origin != null) {
-                nbttagcompound.set("Paper.Origin", this.createList(origin.getX(), origin.getY(), origin.getZ()));
+                compound.set("Paper.Origin", this.createDoubleList(origin.getX(), origin.getY(), origin.getZ()));
             }
             // Paper end
-            return nbttagcompound;
-        } catch (Throwable throwable) {
-            CrashReport crashreport = CrashReport.a(throwable, "Saving entity NBT");
-            CrashReportSystemDetails crashreportsystemdetails = crashreport.a("Entity being saved");
-
-            this.appendEntityCrashDetails(crashreportsystemdetails);
-            throw new ReportedException(crashreport);
+            
+            return compound;
+        } catch (Throwable t) {
+            CrashReport report = CrashReport.a(t, "Saving entity NBT");
+            CrashReportSystemDetails details = report.a("Entity being saved");
+            
+            this.appendEntityCrashDetails(details);
+            throw new ReportedException(report);
         }
     }
 
@@ -1760,7 +1755,7 @@ public abstract class Entity implements ICommandListener {
 
     protected abstract void b(NBTTagCompound nbttagcompound);
 
-    protected NBTTagList createList(double... adouble) { return a(adouble); } // Paper - OBFHELPER
+    protected NBTTagList createDoubleList(double... adouble) { return a(adouble); } // Paper - OBFHELPER
     protected NBTTagList a(double... adouble) {
         NBTTagList nbttaglist = new NBTTagList();
         double[] adouble1 = adouble;
@@ -1775,6 +1770,7 @@ public abstract class Entity implements ICommandListener {
         return nbttaglist;
     }
 
+    protected NBTTagList createFloatList(float... afloat) { return a(afloat); } // OBFHELPER
     protected NBTTagList a(float... afloat) {
         NBTTagList nbttaglist = new NBTTagList();
         float[] afloat1 = afloat;

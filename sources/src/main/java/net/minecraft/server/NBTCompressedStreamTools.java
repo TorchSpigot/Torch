@@ -20,7 +20,7 @@ public class NBTCompressedStreamTools {
         NBTTagCompound nbttagcompound;
 
         try {
-            nbttagcompound = a((DataInput) datainputstream, NBTReadLimiter.a);
+            nbttagcompound = a(datainputstream, NBTReadLimiter.a);
         } finally {
             datainputstream.close();
         }
@@ -28,19 +28,23 @@ public class NBTCompressedStreamTools {
         return nbttagcompound;
     }
 
-    public static void a(NBTTagCompound nbttagcompound, OutputStream outputstream) throws IOException {
-        DataOutputStream dataoutputstream = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(outputstream)));
+    /**
+     * <b>PAIL: writeCompressed</b>
+     * <p>
+     * Write the compound, gzipped, to the output-stream
+     */
+    public static void a(NBTTagCompound compound, OutputStream outputStream) throws IOException {
+        DataOutputStream dataOutput = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(outputStream)));
 
         try {
-            a(nbttagcompound, (DataOutput) dataoutputstream);
+            a(compound, (DataOutput) dataOutput); // PAIL: write
         } finally {
-            dataoutputstream.close();
+            dataOutput.close();
         }
-
     }
 
     public static NBTTagCompound a(DataInputStream datainputstream) throws IOException {
-        return a((DataInput) datainputstream, NBTReadLimiter.a);
+        return a(datainputstream, NBTReadLimiter.a);
     }
 
     public static NBTTagCompound a(DataInput datainput, NBTReadLimiter nbtreadlimiter) throws IOException {
@@ -59,15 +63,18 @@ public class NBTCompressedStreamTools {
         }
     }
 
-    public static void a(NBTTagCompound nbttagcompound, DataOutput dataoutput) throws IOException {
-        a((NBTBase) nbttagcompound, dataoutput);
+    /** PAIL: write */
+    public static void a(NBTTagCompound compound, DataOutput dataOutput) throws IOException {
+        a((NBTBase) compound, dataOutput); // PAIL: writeTag
     }
 
-    private static void a(NBTBase nbtbase, DataOutput dataoutput) throws IOException {
-        dataoutput.writeByte(nbtbase.getTypeId());
-        if (nbtbase.getTypeId() != 0) {
-            dataoutput.writeUTF("");
-            nbtbase.write(dataoutput);
+    /** PAIL: writeTag */
+    private static void a(NBTBase tag, DataOutput dataOutput) throws IOException {
+        dataOutput.writeByte(tag.getTypeId());
+        
+        if (tag.getTypeId() != 0) {
+            dataOutput.writeUTF("");
+            tag.write(dataOutput);
         }
     }
 
@@ -87,8 +94,8 @@ public class NBTCompressedStreamTools {
                 CrashReport crashreport = CrashReport.a(ioexception, "Loading NBT data");
                 CrashReportSystemDetails crashreportsystemdetails = crashreport.a("NBT Tag");
 
-                crashreportsystemdetails.a("Tag name", (Object) "[UNNAMED TAG]");
-                crashreportsystemdetails.a("Tag type", (Object) Byte.valueOf(b0));
+                crashreportsystemdetails.a("Tag name", "[UNNAMED TAG]");
+                crashreportsystemdetails.a("Tag type", Byte.valueOf(b0));
                 throw new ReportedException(crashreport);
             }
         }

@@ -197,10 +197,10 @@ public final class TorchPlayerList implements TorchReactor {
         this.loadIPBanList();
         this.saveIPBanList();
         this.loadIPBanList();
-        this.readWhiteList();
         this.loadOpsList();
         this.saveOpsList();
-
+        
+        this.readWhiteList();
         // Save the whitelist file if doesn exist
         if (!this.getWhitelist().c().exists()) {
             this.saveWhiteList();
@@ -274,11 +274,12 @@ public final class TorchPlayerList implements TorchReactor {
      */
     public void savePlayerFile(EntityPlayer player) {
         player.lastSave = MinecraftServer.currentTick;
+        
         this.playerFileData.save(player);
-        ServerStatisticManager statisticManager = this.playerStatFiles.get(player.getUniqueID());
-
-        if (statisticManager != null) {
-            statisticManager.b(); // PAIL: b() -> Save the stat file
+        ServerStatisticManager statistic = this.playerStatFiles.get(player.getUniqueID());
+        
+        if (statistic != null) {
+            statistic.b(); // PAIL: b() -> Save the stat file
         }
     }
 
@@ -319,13 +320,11 @@ public final class TorchPlayerList implements TorchReactor {
     }
 
     public boolean isWhitelisted(GameProfile profile) {
-        // whitelistIsDisabled || isOP || isWhitelisted
         return !this.isWhitelistMode || this.operators.contains(profile) || this.whitelist.isWhitelisted(profile);
     }
 
     public boolean isOp(GameProfile gameprofile) {
-        // isOP || (isSinglePlayer && isCommandAllowed && isServerOwner) || isChestMode 
-        return this.operators.contains(gameprofile) /*|| this.server.isSinglePlayer() && this.server.worlds.get(0).getWorldData().u() && this.server.getServerOwner().equalsIgnoreCase(gameprofile.getName())*/ || this.allowedCommands;
+        return this.operators.contains(gameprofile) || this.allowedCommands;
     }
 
     public void addOp(GameProfile gameprofile) {
@@ -337,8 +336,6 @@ public final class TorchPlayerList implements TorchReactor {
         // Handle Bukkit permissions
         Player player = server.craftServer.getPlayer(gameprofile.getId());
         if (player != null) player.recalculatePermissions();
-        
-        // this.saveOpsList(); - Already saved in operators.add()
     }
 
     public void removeOp(GameProfile gameprofile) {
@@ -348,8 +345,6 @@ public final class TorchPlayerList implements TorchReactor {
         // Handle Bukkit permissions
         Player player = server.craftServer.getPlayer(gameprofile.getId());
         if (player != null) player.recalculatePermissions();
-
-        // this.saveOpsList(); - Already saved in operators.remove()
     }
 
     public void initializeConnectionToPlayer(NetworkManager networkmanager, EntityPlayer entityplayer) {
@@ -814,9 +809,7 @@ public final class TorchPlayerList implements TorchReactor {
 
         Regulator.post(() -> {
             for (MobEffect effect : oldPlayerEntity.getEffects()) {
-                if (newPlayerEntity.playerConnection != null) {
-                    if (!newPlayerEntity.playerConnection.isDisconnected()) newPlayerEntity.playerConnection.sendPacket(new PacketPlayOutEntityEffect(newPlayerEntity.getId(), effect));
-                }
+                if (!newPlayerEntity.playerConnection.isDisconnected()) newPlayerEntity.playerConnection.sendPacket(new PacketPlayOutEntityEffect(newPlayerEntity.getId(), effect));
             }
         });
 
@@ -916,9 +909,7 @@ public final class TorchPlayerList implements TorchReactor {
 
         Regulator.post(() -> {
             for (MobEffect mobeffect : player.getEffects()) {
-                if (player.playerConnection != null) {
-                    if (!player.playerConnection.isDisconnected()) player.playerConnection.sendPacket(new PacketPlayOutEntityEffect(player.getId(), mobeffect));
-                }
+                if (!player.playerConnection.isDisconnected()) player.playerConnection.sendPacket(new PacketPlayOutEntityEffect(player.getId(), mobeffect));
             }
         });
     }
@@ -1023,7 +1014,8 @@ public final class TorchPlayerList implements TorchReactor {
     /**
      * Send packet to all online players
      */
-    @Async public void sendAll(Packet<?> packet) {
+    @Async
+    public void sendAll(Packet<?> packet) {
         Regulator.post(() -> {
             for (EntityPlayer player : this.players) {
                 player.playerConnection.sendPacket(packet);
@@ -1034,7 +1026,8 @@ public final class TorchPlayerList implements TorchReactor {
     /**
      * Only send packet to the players who can see the key player
      */
-    @Async public void sendAll(Packet<?> packet, EntityHuman keyPlayer) {
+    @Async
+    public void sendAll(Packet<?> packet, EntityHuman keyPlayer) {
         Regulator.post(() -> {
             for (EntityPlayer target : this.players) {
                 if (keyPlayer != null && keyPlayer instanceof EntityPlayer && !target.getBukkitEntity().canSee(((EntityPlayer) keyPlayer).getBukkitEntity())) {
@@ -1048,7 +1041,8 @@ public final class TorchPlayerList implements TorchReactor {
     /**
      * Only send packet to the players in the world
      */
-    @Async public void sendAll(Packet<?> packet, World world) {
+    @Async
+    public void sendAll(Packet<?> packet, World world) {
         Regulator.post(() -> {
             for (EntityPlayer player : this.players) {
                 player.playerConnection.sendPacket(packet);
@@ -1070,7 +1064,8 @@ public final class TorchPlayerList implements TorchReactor {
     /**
      * The packet is not sent to the source player, but all other players who can see the source player within the search radius
      */
-    @Async public void sendPacketNearby(@Nullable EntityHuman sourcePlayer, double x, double y, double z, double radius, int dimension, Packet<?> packet) {
+    @Async
+    public void sendPacketNearby(@Nullable EntityHuman sourcePlayer, double x, double y, double z, double radius, int dimension, Packet<?> packet) {
         Regulator.post(() -> {
             for (EntityPlayer eachPlayer : this.players) {
                 // Test if player receiving packet can see the source of the packet
@@ -1100,7 +1095,7 @@ public final class TorchPlayerList implements TorchReactor {
 
     public void savePlayers(Integer interval) {
         // Ensure main
-        server.postToMainThread(() -> {
+        MCUtil.ensureMain("Save Players", () -> {
             long now = MinecraftServer.currentTick;
             MinecraftTimings.savePlayers.startTiming();
             for (EntityPlayer player : this.players) {
@@ -1115,14 +1110,10 @@ public final class TorchPlayerList implements TorchReactor {
 
     public void addWhitelist(GameProfile profile) {
         this.whitelist.add(new WhiteListEntry(profile));
-
-        this.saveWhiteList();
     }
 
     public void removeWhitelist(GameProfile profile) {
         this.whitelist.remove(profile);
-
-        this.saveWhiteList();
     }
 
     public String[] getWhitelistedPlayerNames() {

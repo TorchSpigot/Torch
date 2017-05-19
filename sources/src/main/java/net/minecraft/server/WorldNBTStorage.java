@@ -6,8 +6,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,9 +15,11 @@ import java.util.UUID;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 // CraftBukkit end
 
+import static org.torch.server.TorchServer.logger;
+
 public class WorldNBTStorage implements IDataManager, IPlayerFileData {
 
-    private static final Logger b = LogManager.getLogger();
+    private static final Logger b = logger;
     private final File baseDir;
     private final File playerDir;
     private final File dataDir;
@@ -147,23 +147,24 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
         this.saveWorldData(worlddata, (NBTTagCompound) null);
     }
 
+    /**
+     * Writes the player data to disk from the specified player
+     */
     @Override
-    public void save(EntityHuman entityhuman) {
+    public void save(EntityHuman player) {
         try {
-            NBTTagCompound nbttagcompound = entityhuman.e(new NBTTagCompound());
-            File file = new File(this.playerDir, entityhuman.bf() + ".dat.tmp");
-            File file1 = new File(this.playerDir, entityhuman.bf() + ".dat");
+            NBTTagCompound compound = player.e(new NBTTagCompound()); // PAIL: writeToNBT
+            File tempDataFile = new File(this.playerDir, player.getUUIDString() + ".dat.tmp");
+            File dataFile = new File(this.playerDir, player.getUUIDString() + ".dat");
 
-            NBTCompressedStreamTools.a(nbttagcompound, (new FileOutputStream(file)));
-            if (file1.exists()) {
-                file1.delete();
-            }
-
-            file.renameTo(file1);
-        } catch (Exception exception) {
-            WorldNBTStorage.b.warn("Failed to save player data for {}", new Object[] { entityhuman.getName()});
+            NBTCompressedStreamTools.a(compound, (new FileOutputStream(tempDataFile))); // PAIL: writeCompressed
+            
+            if (dataFile.exists()) dataFile.delete();
+            
+            tempDataFile.renameTo(dataFile);
+        } catch (Throwable t) {
+            logger.warn("Failed to save player data for {}", player.getName());
         }
-
     }
 
     @Override
@@ -198,8 +199,8 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
                 file.renameTo( new File( file.getPath() + ".offline-read" ) );
             }
             // Spigot End
-        } catch (Exception exception) {
-            WorldNBTStorage.b.warn("Failed to load player data for {}", new Object[] { entityhuman.getName()});
+        } catch (Throwable t) {
+            logger.warn("Failed to load player data for {}", new Object[] { entityhuman.getName()});
         }
 
         if (nbttagcompound != null) {
