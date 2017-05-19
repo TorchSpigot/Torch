@@ -1100,7 +1100,7 @@ public final class TorchPlayerList implements TorchReactor {
 
     public void savePlayers(Integer interval) {
         // Ensure main
-        server.postToMainThreadMaybeAsync(() -> {
+        server.postToMainThread(() -> {
             long now = MinecraftServer.currentTick;
             MinecraftTimings.savePlayers.startTiming();
             for (EntityPlayer player : this.players) {
@@ -1110,7 +1110,7 @@ public final class TorchPlayerList implements TorchReactor {
             }
             MinecraftTimings.savePlayers.stopTiming();
             return null;
-        }, true);
+        });
     }
 
     public void addWhitelist(GameProfile profile) {

@@ -1693,31 +1693,31 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
     public boolean isMainThread() {
         return Thread.currentThread() == this.serverThread;
     }
+    
+    /**
+     * Post a Runnable task to main thread(next tick), returns a listenable future task
+     */
+    public ListenableFuture<Object> postToMainThread(Runnable runnable) {
+        Validate.notNull(runnable);
+        return postToMainThread(Executors.callable(runnable));
+    }
 
     /**
-     * Post a callable task to main thread(next tick), also return a listenable future task
+     * Post a Callable task to main thread(next tick), returns a listenable future task
      */
-    public <V> ListenableFuture<V> postToMainThreadMaybeAsync(Callable<V> callable, boolean onlyPostOnAsync) {
-        if (onlyPostOnAsync && !this.isMainThread()) {
+    public <V> ListenableFuture<V> postToMainThread(Callable<V> callable) {
+        if (isMainThread()) {
             ListenableFutureTask<V> future = ListenableFutureTask.create(callable);
-
-            this.futureTaskQueue.add(future);
+            
+            futureTaskQueue.add(future);
             return future;
         } else {
             try {
                 return Futures.immediateFuture(callable.call());
-            } catch (Exception exception) {
-                return Futures.immediateFailedCheckedFuture(exception);
+            } catch (Exception ex) {
+                return Futures.immediateFailedCheckedFuture(ex);
             }
         }
-    }
-
-    /**
-     * Try to post a runnable task to main thread(next tick), or call it if in main thread, also return a listenable future task, the runnable can't be null
-     */
-    public ListenableFuture<Object> postToMainThread(Runnable runnable) {
-        Validate.notNull(runnable);
-        return this.postToMainThreadMaybeAsync(Executors.callable(runnable), true);
     }
 
     /**
