@@ -1,5 +1,7 @@
 package org.bukkit.craftbukkit;
 
+import static org.torch.server.TorchServer.getServer;
+
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,6 +19,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -109,6 +112,7 @@ import org.bukkit.plugin.messaging.StandardMessenger;
 import org.bukkit.scheduler.BukkitWorker;
 import org.bukkit.util.StringUtil;
 import org.bukkit.util.permissions.DefaultPermissions;
+import org.spigotmc.AsyncCatcher;
 import org.torch.server.TorchPlayerList;
 import org.torch.server.TorchServer;
 import org.torch.server.cache.Caches;
@@ -126,6 +130,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.koloboke.collect.set.hash.HashObjSets;
 import com.mojang.authlib.GameProfile;
 
@@ -648,24 +653,21 @@ public final class CraftServer implements Server {
         Validate.notNull(commandLine, "CommandLine cannot be null");
 
         // Paper Start
-        if (org.spigotmc.AsyncCatcher.enabled && !Bukkit.isPrimaryThread()) {
+        if (AsyncCatcher.enabled && !Bukkit.isPrimaryThread()) {
             final CommandSender fSender = sender;
             final String fCommandLine = commandLine;
-            Bukkit.getLogger().log(Level.SEVERE, "Command Dispatched Async: " + commandLine);
+            
+            Bukkit.getLogger().log(Level.SEVERE, "Command Dispatched Async: " + fCommandLine);
             Bukkit.getLogger().log(Level.SEVERE, "Please notify author of plugin causing this execution to fix this bug! see: http://bit.ly/1oSiM6C", new Throwable());
-            org.bukkit.craftbukkit.util.Waitable<Boolean> wait = new org.bukkit.craftbukkit.util.Waitable<Boolean>() {
-                @Override
-                protected Boolean evaluate() {
-                    return dispatchCommand(fSender, fCommandLine);
-                }
-            };
-            net.minecraft.server.MinecraftServer.getServer().processQueue.add(wait);
+            
+            ListenableFuture<Object> future = getServer().postToMainThread(() -> dispatchCommand(fSender, fCommandLine));
+            
             try {
-                return wait.get();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt(); // This is proper habit for java. If we aren't handling it, pass it on!
-            } catch (Exception e) {
-                throw new RuntimeException("Exception processing dispatch command", e.getCause());
+                return (boolean) future.get();
+            } catch (InterruptedException interrupt) {
+                Thread.currentThread().interrupt();
+            } catch (Throwable t) {
+                throw new RuntimeException("Exception processing dispatch command", t.getCause());
             }
         }
         // Paper End

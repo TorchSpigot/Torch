@@ -2,7 +2,7 @@ package org.torch.server.cache;
 
 public final class TorchIntCache {
     
-    public static int[] requestArray(int size) {
+    public static int[] requestArray(final int size) {
         return new int[size];
     }
     

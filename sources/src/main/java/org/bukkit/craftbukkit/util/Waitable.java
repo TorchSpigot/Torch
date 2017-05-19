@@ -2,7 +2,6 @@ package org.bukkit.craftbukkit.util;
 
 import java.util.concurrent.ExecutionException;
 
-
 public abstract class Waitable<T> implements Runnable {
     private enum Status {
         WAITING,
@@ -13,6 +12,7 @@ public abstract class Waitable<T> implements Runnable {
     T value = null;
     Status status = Status.WAITING;
 
+    @Override
     public final void run() {
         synchronized (this) {
             if (status != Status.WAITING) {

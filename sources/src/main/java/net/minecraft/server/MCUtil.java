@@ -1,5 +1,6 @@
 package net.minecraft.server;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bukkit.Location;
@@ -8,9 +9,16 @@ import org.spigotmc.AsyncCatcher;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
+
+import static org.torch.server.TorchServer.getServer;
+import static org.torch.server.TorchServer.logger;
 
 public final class MCUtil {
     private static final Executor asyncExecutor = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("Paper Async Task Handler Thread - %1$d").build());
@@ -44,21 +52,17 @@ public final class MCUtil {
      * @return
      */
     public static <T> T ensureMain(String reason, Supplier<T> run) {
-        AsyncCatcher.catchOp(reason);
-        /* new IllegalStateException( "Asynchronous " + reason + "! Blocking thread until it returns ").printStackTrace(); // This never return
-        Waitable<T> wait = new Waitable<T>() {
-            @Override
-            protected T evaluate() {
-                return run.get();
+        if (AsyncCatcher.enabled && !getServer().isMainThread()) {
+            logger.warn( "Asynchronous " + reason + "! Blocking thread until it returns" );
+            ListenableFuture<Object> future = getServer().postToMainThread(() -> run.get());
+            
+            try {
+                return (T) future.get(9, TimeUnit.SECONDS); // TODO
+            } catch (Throwable t) {
+                t.printStackTrace();
             }
-        };
-        MinecraftServer.getServer().processQueue.add(wait);
-        try {
-            return wait.get();
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
         }
-        return null; */
+        
         return run.get();
     }
 

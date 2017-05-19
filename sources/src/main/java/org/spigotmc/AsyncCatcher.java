@@ -1,13 +1,13 @@
 package org.spigotmc;
 
-import org.torch.server.TorchServer;
+import static org.torch.server.TorchServer.getServer;
 
 public class AsyncCatcher {
     public static boolean enabled = true;
 
     public static void catchOp(String reason) {
         if (enabled) {
-            if (!TorchServer.getServer().isMainThread()) throw new IllegalStateException( "Asynchronous " + reason + "!" );
+            if (!getServer().isMainThread()) throw new IllegalStateException( "Asynchronous " + reason + "!" );
         }
     }
 }
