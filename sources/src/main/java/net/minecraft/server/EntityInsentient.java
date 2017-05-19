@@ -75,7 +75,7 @@ public abstract class EntityInsentient extends EntityLiving {
     protected void r() {}
 
     @Override
-	protected void initAttributes() {
+    protected void initAttributes() {
         super.initAttributes();
         this.getAttributeMap().b(GenericAttributes.FOLLOW_RANGE).setValue(16.0D);
     }
@@ -165,7 +165,7 @@ public abstract class EntityInsentient extends EntityLiving {
     public void A() {}
 
     @Override
-	protected void i() {
+    protected void i() {
         super.i();
         this.datawatcher.register(EntityInsentient.a, Byte.valueOf((byte) 0));
     }
@@ -184,7 +184,7 @@ public abstract class EntityInsentient extends EntityLiving {
     }
 
     @Override
-	public void U() {
+    public void U() {
         super.U();
         this.world.methodProfiler.a("mobBaseTick");
         if (this.isAlive() && this.random.nextInt(1000) < this.a_++) {
@@ -192,11 +192,11 @@ public abstract class EntityInsentient extends EntityLiving {
             this.D();
         }
 
-        
+
     }
 
     @Override
-	protected void c(DamageSource damagesource) {
+    protected void c(DamageSource damagesource) {
         this.o();
         super.c(damagesource);
     }
@@ -206,7 +206,7 @@ public abstract class EntityInsentient extends EntityLiving {
     }
 
     @Override
-	protected int getExpValue(EntityHuman entityhuman) {
+    protected int getExpValue(EntityHuman entityhuman) {
         if (this.b_ > 0) {
             int i = this.b_;
 
@@ -247,7 +247,7 @@ public abstract class EntityInsentient extends EntityLiving {
     }
 
     @Override
-	public void A_() {
+    public void A_() {
         super.A_();
         if (!this.world.isClientSide) {
             this.cV();
@@ -264,7 +264,7 @@ public abstract class EntityInsentient extends EntityLiving {
     }
 
     @Override
-	protected float h(float f, float f1) {
+    protected float h(float f, float f1) {
         this.c.a();
         return f1;
     }
@@ -280,7 +280,7 @@ public abstract class EntityInsentient extends EntityLiving {
     }
 
     @Override
-	protected void dropDeathLoot(boolean flag, int i) {
+    protected void dropDeathLoot(boolean flag, int i) {
         Item item = this.getLoot();
 
         if (item != null) {
@@ -302,7 +302,7 @@ public abstract class EntityInsentient extends EntityLiving {
     }
 
     @Override
-	public void b(NBTTagCompound nbttagcompound) {
+    public void b(NBTTagCompound nbttagcompound) {
         super.b(nbttagcompound);
         nbttagcompound.setBoolean("CanPickUpLoot", this.cT());
         nbttagcompound.setBoolean("PersistenceRequired", this.persistent);
@@ -392,7 +392,7 @@ public abstract class EntityInsentient extends EntityLiving {
     }
 
     @Override
-	public void a(NBTTagCompound nbttagcompound) {
+    public void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
 
         // CraftBukkit start - If looting or persistence is false only use it if it was set after we started using it
@@ -463,7 +463,7 @@ public abstract class EntityInsentient extends EntityLiving {
     }
 
     @Override
-	protected void a(boolean flag, int i, DamageSource damagesource) {
+    protected void a(boolean flag, int i, DamageSource damagesource) {
         MinecraftKey minecraftkey = this.bB;
 
         if (minecraftkey == null) {
@@ -505,13 +505,13 @@ public abstract class EntityInsentient extends EntityLiving {
     }
 
     @Override
-	public void l(float f) {
+    public void l(float f) {
         super.l(f);
         this.o(f);
     }
 
     @Override
-	public void n() {
+    public void n() {
         super.n();
         this.world.methodProfiler.a("looting");
         if (!this.world.isClientSide && this.cT() && !this.aU && this.world.getGameRules().getBoolean("mobGriefing")) {
@@ -527,7 +527,7 @@ public abstract class EntityInsentient extends EntityLiving {
             }
         }
 
-        
+
     }
 
     protected void a(EntityItem entityitem) {
@@ -574,20 +574,20 @@ public abstract class EntityInsentient extends EntityLiving {
             double d0;
 
             switch (enumitemslot.a()) {
-            case HAND:
-                d0 = this.dropChanceHand[enumitemslot.b()];
-                break;
+                case HAND:
+                    d0 = this.dropChanceHand[enumitemslot.b()];
+                    break;
 
-            case ARMOR:
-                d0 = this.dropChanceArmor[enumitemslot.b()];
-                break;
+                case ARMOR:
+                    d0 = this.dropChanceArmor[enumitemslot.b()];
+                    break;
 
-            default:
-                d0 = 0.0D;
+                default:
+                    d0 = 0.0D;
             }
 
             if (!itemstack1.isEmpty() && this.random.nextFloat() - 0.1F < d0) {
-            	this.forceDrops = true; // CraftBukkit
+                this.forceDrops = true; // CraftBukkit
                 this.a(itemstack1, 0.0F);
                 this.forceDrops = false; // CraftBukkit
             }
@@ -602,12 +602,12 @@ public abstract class EntityInsentient extends EntityLiving {
 
             this.setSlot(enumitemslot, itemstack);
             switch (enumitemslot.a()) {
-            case HAND:
-                this.dropChanceHand[enumitemslot.b()] = 2.0F;
-                break;
+                case HAND:
+                    this.dropChanceHand[enumitemslot.b()] = 2.0F;
+                    break;
 
-            case ARMOR:
-                this.dropChanceArmor[enumitemslot.b()] = 2.0F;
+                case ARMOR:
+                    this.dropChanceArmor[enumitemslot.b()] = 2.0F;
             }
 
             this.persistent = true;
@@ -652,11 +652,11 @@ public abstract class EntityInsentient extends EntityLiving {
     }
 
     @Override
-	protected final void doTick() {
+    protected final void doTick() {
         ++this.ticksFarFromPlayer;
         this.world.methodProfiler.a("checkDespawn");
         this.L();
-        
+
         // Spigot Start
         if ( this.fromMobSpawner )
         {
@@ -671,19 +671,19 @@ public abstract class EntityInsentient extends EntityLiving {
         // Spigot End
         this.world.methodProfiler.a("sensing");
         this.bv.a();
-        
+
         this.world.methodProfiler.a("targetSelector");
         this.targetSelector.a();
-        
+
         this.world.methodProfiler.a("goalSelector");
         this.goalSelector.a();
-        
+
         this.world.methodProfiler.a("navigation");
         this.navigation.l();
-        
+
         this.world.methodProfiler.a("mob tick");
         this.M();
-        
+
         if (this.isPassenger() && this.bB() instanceof EntityInsentient) {
             EntityInsentient entityinsentient = (EntityInsentient) this.bB();
 
@@ -698,8 +698,8 @@ public abstract class EntityInsentient extends EntityLiving {
         this.lookController.a();
         this.world.methodProfiler.c("jump");
         this.g.b();
-        
-        
+
+
     }
 
     protected void M() {}
@@ -763,7 +763,7 @@ public abstract class EntityInsentient extends EntityLiving {
     }
 
     @Override
-	public int aY() {
+    public int aY() {
         if (this.getGoalTarget() == null) {
             return 3;
         } else {
@@ -779,44 +779,44 @@ public abstract class EntityInsentient extends EntityLiving {
     }
 
     @Override
-	public Iterable<ItemStack> aG() {
+    public Iterable<ItemStack> aG() {
         return this.bw;
     }
 
     @Override
-	public Iterable<ItemStack> getArmorItems() {
+    public Iterable<ItemStack> getArmorItems() {
         return this.bx;
     }
 
     @Override
-	public ItemStack getEquipment(EnumItemSlot enumitemslot) {
+    public ItemStack getEquipment(EnumItemSlot enumitemslot) {
         switch (enumitemslot.a()) {
-        case HAND:
-            return this.bw.get(enumitemslot.b());
+            case HAND:
+                return this.bw.get(enumitemslot.b());
 
-        case ARMOR:
-            return this.bx.get(enumitemslot.b());
+            case ARMOR:
+                return this.bx.get(enumitemslot.b());
 
-        default:
-            return ItemStack.a;
+            default:
+                return ItemStack.a;
         }
     }
 
     @Override
-	public void setSlot(EnumItemSlot enumitemslot, ItemStack itemstack) {
+    public void setSlot(EnumItemSlot enumitemslot, ItemStack itemstack) {
         switch (enumitemslot.a()) {
-        case HAND:
-            this.bw.set(enumitemslot.b(), itemstack);
-            break;
+            case HAND:
+                this.bw.set(enumitemslot.b(), itemstack);
+                break;
 
-        case ARMOR:
-            this.bx.set(enumitemslot.b(), itemstack);
+            case ARMOR:
+                this.bx.set(enumitemslot.b(), itemstack);
         }
 
     }
 
     @Override
-	protected void dropEquipment(boolean flag, int i) {
+    protected void dropEquipment(boolean flag, int i) {
         EnumItemSlot[] aenumitemslot = EnumItemSlot.values();
         int j = aenumitemslot.length;
 
@@ -826,16 +826,16 @@ public abstract class EntityInsentient extends EntityLiving {
             double d0;
 
             switch (enumitemslot.a()) {
-            case HAND:
-                d0 = this.dropChanceHand[enumitemslot.b()];
-                break;
+                case HAND:
+                    d0 = this.dropChanceHand[enumitemslot.b()];
+                    break;
 
-            case ARMOR:
-                d0 = this.dropChanceArmor[enumitemslot.b()];
-                break;
+                case ARMOR:
+                    d0 = this.dropChanceArmor[enumitemslot.b()];
+                    break;
 
-            default:
-                d0 = 0.0D;
+                default:
+                    d0 = 0.0D;
             }
 
             boolean flag1 = d0 > 1.0D;
@@ -903,60 +903,60 @@ public abstract class EntityInsentient extends EntityLiving {
     @Nullable
     public static Item a(EnumItemSlot enumitemslot, int i) {
         switch (enumitemslot) {
-        case HEAD:
-            if (i == 0) {
-                return Items.LEATHER_HELMET;
-            } else if (i == 1) {
-                return Items.GOLDEN_HELMET;
-            } else if (i == 2) {
-                return Items.CHAINMAIL_HELMET;
-            } else if (i == 3) {
-                return Items.IRON_HELMET;
-            } else if (i == 4) {
-                return Items.DIAMOND_HELMET;
-            }
+            case HEAD:
+                if (i == 0) {
+                    return Items.LEATHER_HELMET;
+                } else if (i == 1) {
+                    return Items.GOLDEN_HELMET;
+                } else if (i == 2) {
+                    return Items.CHAINMAIL_HELMET;
+                } else if (i == 3) {
+                    return Items.IRON_HELMET;
+                } else if (i == 4) {
+                    return Items.DIAMOND_HELMET;
+                }
 
-        case CHEST:
-            if (i == 0) {
-                return Items.LEATHER_CHESTPLATE;
-            } else if (i == 1) {
-                return Items.GOLDEN_CHESTPLATE;
-            } else if (i == 2) {
-                return Items.CHAINMAIL_CHESTPLATE;
-            } else if (i == 3) {
-                return Items.IRON_CHESTPLATE;
-            } else if (i == 4) {
-                return Items.DIAMOND_CHESTPLATE;
-            }
+            case CHEST:
+                if (i == 0) {
+                    return Items.LEATHER_CHESTPLATE;
+                } else if (i == 1) {
+                    return Items.GOLDEN_CHESTPLATE;
+                } else if (i == 2) {
+                    return Items.CHAINMAIL_CHESTPLATE;
+                } else if (i == 3) {
+                    return Items.IRON_CHESTPLATE;
+                } else if (i == 4) {
+                    return Items.DIAMOND_CHESTPLATE;
+                }
 
-        case LEGS:
-            if (i == 0) {
-                return Items.LEATHER_LEGGINGS;
-            } else if (i == 1) {
-                return Items.GOLDEN_LEGGINGS;
-            } else if (i == 2) {
-                return Items.CHAINMAIL_LEGGINGS;
-            } else if (i == 3) {
-                return Items.IRON_LEGGINGS;
-            } else if (i == 4) {
-                return Items.DIAMOND_LEGGINGS;
-            }
+            case LEGS:
+                if (i == 0) {
+                    return Items.LEATHER_LEGGINGS;
+                } else if (i == 1) {
+                    return Items.GOLDEN_LEGGINGS;
+                } else if (i == 2) {
+                    return Items.CHAINMAIL_LEGGINGS;
+                } else if (i == 3) {
+                    return Items.IRON_LEGGINGS;
+                } else if (i == 4) {
+                    return Items.DIAMOND_LEGGINGS;
+                }
 
-        case FEET:
-            if (i == 0) {
-                return Items.LEATHER_BOOTS;
-            } else if (i == 1) {
-                return Items.GOLDEN_BOOTS;
-            } else if (i == 2) {
-                return Items.CHAINMAIL_BOOTS;
-            } else if (i == 3) {
-                return Items.IRON_BOOTS;
-            } else if (i == 4) {
-                return Items.DIAMOND_BOOTS;
-            }
+            case FEET:
+                if (i == 0) {
+                    return Items.LEATHER_BOOTS;
+                } else if (i == 1) {
+                    return Items.GOLDEN_BOOTS;
+                } else if (i == 2) {
+                    return Items.CHAINMAIL_BOOTS;
+                } else if (i == 3) {
+                    return Items.IRON_BOOTS;
+                } else if (i == 4) {
+                    return Items.DIAMOND_BOOTS;
+                }
 
-        default:
-            return null;
+            default:
+                return null;
         }
     }
 
@@ -1006,12 +1006,12 @@ public abstract class EntityInsentient extends EntityLiving {
 
     public void a(EnumItemSlot enumitemslot, float f) {
         switch (enumitemslot.a()) {
-        case HAND:
-            this.dropChanceHand[enumitemslot.b()] = f;
-            break;
+            case HAND:
+                this.dropChanceHand[enumitemslot.b()] = f;
+                break;
 
-        case ARMOR:
-            this.dropChanceArmor[enumitemslot.b()] = f;
+            case ARMOR:
+                this.dropChanceArmor[enumitemslot.b()] = f;
         }
 
     }
@@ -1029,7 +1029,7 @@ public abstract class EntityInsentient extends EntityLiving {
     }
 
     @Override
-	public final boolean b(EntityHuman entityhuman, EnumHand enumhand) {
+    public final boolean b(EntityHuman entityhuman, EnumHand enumhand) {
         if (this.isLeashed() && this.getLeashHolder() == entityhuman) {
             // CraftBukkit start - fire PlayerUnleashEntityEvent
             if (CraftEventFactory.callPlayerUnleashEntityEvent(this, entityhuman).isCancelled()) {
@@ -1123,7 +1123,7 @@ public abstract class EntityInsentient extends EntityLiving {
     }
 
     @Override
-	public boolean a(Entity entity, boolean flag) {
+    public boolean a(Entity entity, boolean flag) {
         boolean flag1 = super.a(entity, flag);
 
         if (flag1 && this.isLeashed()) {
@@ -1167,7 +1167,7 @@ public abstract class EntityInsentient extends EntityLiving {
     }
 
     @Override
-	public boolean c(int i, ItemStack itemstack) {
+    public boolean c(int i, ItemStack itemstack) {
         EnumItemSlot enumitemslot;
 
         if (i == 98) {
@@ -1197,7 +1197,7 @@ public abstract class EntityInsentient extends EntityLiving {
     }
 
     @Override
-	public boolean bA() {
+    public boolean bA() {
         return this.cR() && super.bA();
     }
 
@@ -1208,7 +1208,7 @@ public abstract class EntityInsentient extends EntityLiving {
     }
 
     @Override
-	public boolean cu() {
+    public boolean cu() {
         return super.cu() && !this.hasAI();
     }
 
@@ -1233,7 +1233,7 @@ public abstract class EntityInsentient extends EntityLiving {
     }
 
     @Override
-	public EnumMainHand getMainHand() {
+    public EnumMainHand getMainHand() {
         return this.cZ() ? EnumMainHand.LEFT : EnumMainHand.RIGHT;
     }
 

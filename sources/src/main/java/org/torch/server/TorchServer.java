@@ -366,6 +366,10 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      * A Bukkit signal, which is used to stopping server
      */
     private final Object stopLock = new Object();
+    /**
+     * Flag to signify we're attempting to restart
+     */
+    private boolean isRestarting = false;
 
     ///////// TPS Stuffs
     /**
@@ -1054,7 +1058,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         if (this.playerList != null) {
             logger.info("Saving players");
             this.playerList.savePlayers(); // Save all players data
-            this.playerList.disconnectAllPlayers();;
+            this.playerList.disconnectAllPlayers(isRestarting);
             // SPIGOT-625 - give server at least a chance to send packets
             try { Thread.sleep(100); } catch (InterruptedException ex) {} // TODO: Packet sending
         }
@@ -1437,12 +1441,17 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         int size = this.propertyManager.getInt("max-world-size", 29999984);
         return (size < 1) ? 1 : 29999984;
     }
-
+    
     /**
      * Mark the server as non-running, then it will stop safety by itself
      */
     public void safeShutdown() {
+        safeShutdown(false);
+    }
+
+    public void safeShutdown(boolean isRestarting) {
         this.isRunning = false;
+        this.isRestarting = isRestarting;
     }
 
     /**

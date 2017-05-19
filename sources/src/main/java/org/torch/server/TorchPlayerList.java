@@ -39,6 +39,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.util.Vector;
+import org.spigotmc.SpigotConfig;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 import org.torch.api.Async;
 import org.torch.api.TorchReactor;
@@ -1295,15 +1296,20 @@ public final class TorchPlayerList implements TorchReactor {
         // Initialize(apply) game mode for the player
         player.playerInteractManager.b(world.getWorldData().getGameType());
     }
-
+    
     /**
      * Kicks everyone with 'Shutdown Message' as reason, also clear Paper collideRule team
      */
     public void disconnectAllPlayers() {
+        disconnectAllPlayers(false);
+    }
+
+    public void disconnectAllPlayers(boolean isRestarting) {
         // Disconnect safely
         for (EntityPlayer player : this.players) {
-            player.playerConnection.disconnect(this.server.craftServer.getShutdownMessage());
+            player.playerConnection.disconnect(isRestarting ? SpigotConfig.restartMessage : server.craftServer.getShutdownMessage());
         }
+        
         // Remove Paper collideRule team if it exists
         if (this.servant.getCollideRuleTeamName() != null) {
             final Scoreboard scoreboard = this.getServer().getWorld().getScoreboard();

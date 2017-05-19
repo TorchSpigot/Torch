@@ -4,9 +4,10 @@ import java.io.File;
 import net.minecraft.server.EntityPlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.torch.server.TorchServer;
 
 import com.google.common.collect.ImmutableList;
+
+import static org.torch.server.TorchServer.getServer;
 
 public class RestartCommand extends Command {
 
@@ -20,7 +21,7 @@ public class RestartCommand extends Command {
     @Override
     public boolean execute(CommandSender sender, String currentAlias, String[] args) {
         if (testPermission(sender)) {
-            TorchServer.getServer().processQueue.add(() -> restart());
+            getServer().processQueue.add(() -> restart());
         }
         return true;
     }
@@ -29,89 +30,110 @@ public class RestartCommand extends Command {
         restart(new File(SpigotConfig.restartScript));
     }
 
-    @SuppressWarnings("deprecation")
     public static void restart(final File script) {
         AsyncCatcher.enabled = false; // Disable async catcher incase it interferes with us
+
         try {
-            if (script.isFile()) {
+            // Paper - extract method and cleanup
+            boolean isRestarting = addShutdownHook(script);
+            if (isRestarting) {
                 System.out.println("Attempting to restart with " + SpigotConfig.restartScript);
-
-                // Disable Watchdog
-                WatchdogThread.doStop();
-                shutdownServer(); // Paper - Moved to function that will handle sync and async
-
-                // This will be done AFTER the server has completely halted
-                Thread shutdownHook = new Thread(() -> {
-                    try {
-                        String os = System.getProperty("os.name").toLowerCase(java.util.Locale.ENGLISH);
-                        if (os.contains("win")) {
-                            Runtime.getRuntime().exec("cmd /c start " + script.getPath());
-                        } else {
-                            Runtime.getRuntime().exec(new String[] { "sh", script.getPath() });
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                });
-
-                shutdownHook.setDaemon(true);
-                Runtime.getRuntime().addShutdownHook(shutdownHook);
             } else {
-                System.out.println("Startup script '" + SpigotConfig.restartScript + "' does not exist! Stopping server.");
-                
-                // Actually shutdown
-                try {
-                    TorchServer.getServer().stopServer();
-                } catch (Throwable t) {
-                    ;
-                }
+                System.out.println( "Startup script '" + SpigotConfig.restartScript + "' does not exist! Stopping server." );
             }
-            
-            TorchServer.getServer().systemExitNow();
-        } catch (Exception ex) {
-            ex.printStackTrace();
+
+            // Stop the watchdog
+            WatchdogThread.doStop();
+
+            shutdownServer(isRestarting);
+        } catch (Throwable t) {
+            t.printStackTrace();
         }
+
+        AsyncCatcher.enabled = true;
     }
 
     // Paper start - sync copied from above with minor changes, async added
-    @SuppressWarnings("deprecation")
-    private static void shutdownServer() {
-        if (TorchServer.getServer().isMainThread()) {
+    private static void shutdownServer(boolean isRestarting) {
+        if (getServer().isMainThread()) {
             // Kick all players
-            for (EntityPlayer player : ImmutableList.copyOf(TorchServer.getServer().getPlayerList().players)) {
+            for (EntityPlayer player : com.google.common.collect.ImmutableList.copyOf(getServer().getPlayerList().players)) {
                 player.playerConnection.disconnect(SpigotConfig.restartMessage);
             }
+
             // Give the socket a chance to send the packets
             try {
                 Thread.sleep(100);
-            } catch (InterruptedException ex) {
+            } catch (InterruptedException ignored) {
                 ;
             }
-
+            
             closeSocket();
 
             // Actually shutdown
             try {
-                TorchServer.getServer().stopServer();
+                getServer().stopServer();
             } catch (Throwable t) {
                 ;
             }
+
+            // Actually stop the JVM
+            System.exit(0);
         } else {
+            // Mark the server to shutdown at the end of the tick
+            getServer().safeShutdown(isRestarting);
+
+            // wait 10 seconds to see if we're actually going to try shutdown
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException ignored) {
+                ;
+            }
+
+            // Check if we've actually hit a state where the server is going to safely shutdown
+            // if we have, let the server stop as usual
+            if (getServer().isStopped()) return;
+
+            // If the server hasn't stopped by now, assume worse case and kill
             closeSocket();
-            TorchServer.getServer().getServerThread().stop();
+            System.exit( 0 );
         }
     }
 
     // Paper - Split from moved code
     private static void closeSocket() {
         // Close the socket so we can rebind with the new process
-        TorchServer.getServer().getServerConnection().b();
-        
+        getServer().getServerConnection().b();
+
         // Give time for it to kick in
         try {
             Thread.sleep(100);
         } catch (InterruptedException ex) {
             ;
+        }
+    }
+
+    // Paper - copied from above and modified to return if the hook registered
+    private static boolean addShutdownHook(final File script) {
+        if (script.isFile()) {
+            Thread shutdownHook = new Thread(() -> {
+                try {
+                    String os = System.getProperty("os.name").toLowerCase(java.util.Locale.ENGLISH);
+                    if (os.contains("win")) {
+                        Runtime.getRuntime().exec("cmd /c start " + script.getPath());
+                    } else {
+                        Runtime.getRuntime().exec(new String[] { "sh", script.getPath() });
+                    }
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
+            });
+
+            shutdownHook.setDaemon(true);
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
+            return true;
+        } else {
+            return false;
         }
     }
     // Paper end
