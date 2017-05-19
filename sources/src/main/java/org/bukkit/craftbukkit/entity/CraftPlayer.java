@@ -106,12 +106,12 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     }
 
     @Override
-	public boolean isOnline() {
+    public boolean isOnline() {
         return server.getPlayer(getUniqueId()) != null;
     }
 
     @Override
-	public InetSocketAddress getAddress() {
+    public InetSocketAddress getAddress() {
         if (getHandle().playerConnection == null) return null;
 
         SocketAddress addr = getHandle().playerConnection.networkManager.getSocketAddress();
@@ -341,21 +341,21 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
 
         String instrumentName = null;
         switch (instrument) {
-        case 0:
-            instrumentName = "harp";
-            break;
-        case 1:
-            instrumentName = "basedrum";
-            break;
-        case 2:
-            instrumentName = "snare";
-            break;
-        case 3:
-            instrumentName = "hat";
-            break;
-        case 4:
-            instrumentName = "bass";
-            break;
+            case 0:
+                instrumentName = "harp";
+                break;
+            case 1:
+                instrumentName = "basedrum";
+                break;
+            case 2:
+                instrumentName = "snare";
+                break;
+            case 3:
+                instrumentName = "hat";
+                break;
+            case 4:
+                instrumentName = "bass";
+                break;
         }
 
         float f = (float) Math.pow(2.0D, (note - 12.0D) / 12.0D);
@@ -525,7 +525,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
         getHandle().playerConnection.sendPacket(packet);
 
         return true;
-        */
+         */
 
         throw new NotImplementedException("Chunk changes do not yet work"); // TODO: Chunk changes.
     }
@@ -555,7 +555,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
         }
 
         if (entity.playerConnection == null) {
-           return false;
+            return false;
         }
 
         if (entity.isVehicle()) {
@@ -1198,7 +1198,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     }
 
     public void addChannel(String channel) {
-       com.google.common.base.Preconditions.checkState( channels.size() < 128, "Too many channels registered" ); // Spigot
+        com.google.common.base.Preconditions.checkState( channels.size() < 128, "Too many channels registered" ); // Spigot
         if (channels.add(channel)) {
             server.getPluginManager().callEvent(new PlayerRegisterChannelEvent(this, channel));
         }
@@ -1308,16 +1308,16 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
 
     @Override
     public int getNoDamageTicks() {
-    	// Torch start - fix incorrect calculation of getNoDamageTicks
-    	// see: https://github.com/TacoSpigot/TacoSpigot/blob/master/Paper-Server-Patches/0009-Fix-incorrect-getNoDamageTicks.patch
-    	/* if (getHandle().invulnerableTicks > 0) {
+        // Torch start - fix incorrect calculation of getNoDamageTicks
+        // see: https://github.com/TacoSpigot/TacoSpigot/blob/master/Paper-Server-Patches/0009-Fix-incorrect-getNoDamageTicks.patch
+        /* if (getHandle().invulnerableTicks > 0) {
     	if (getHandle().invulnerableTicks > 0) {
     		return Math.max(getHandle().invulnerableTicks, getHandle().noDamageTicks);
     	} else {
     		return getHandle().noDamageTicks;
     	} */
-    	return Math.max(getHandle().invulnerableTicks, Math.max(0, getHandle().noDamageTicks - getHandle().maxNoDamageTicks / 2));
-    	// Torch end
+        return Math.max(getHandle().invulnerableTicks, Math.max(0, getHandle().noDamageTicks - getHandle().maxNoDamageTicks / 2));
+        // Torch end
     }
 
     @Override
@@ -1728,12 +1728,12 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
 
         @Override
         public void sendMessage(BaseComponent component) {
-          sendMessage( new BaseComponent[] { component } );
+            sendMessage( new BaseComponent[] { component } );
         }
 
         @Override
         public void sendMessage(BaseComponent... components) {
-           if ( getHandle().playerConnection == null ) return;
+            if ( getHandle().playerConnection == null ) return;
 
             PacketPlayOutChat packet = new PacketPlayOutChat();
             packet.components = components;
@@ -1762,7 +1762,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     };
 
     @Override
-	public Player.Spigot spigot()
+    public Player.Spigot spigot()
     {
         return spigot;
     }

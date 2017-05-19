@@ -187,7 +187,7 @@ public final class CraftServer implements Server {
         ConfigurationSerialization.registerClass(CraftOfflinePlayer.class);
         CraftItemFactory.instance();
     }
-    
+
     public CraftServer(TorchServer console, TorchPlayerList playerList) {
         this.console = console;
         this.playerList = playerList;
@@ -773,11 +773,11 @@ public final class CraftServer implements Server {
                 author = plugin.getDescription().getAuthors().get(0);
             }
             getLogger().log(Level.SEVERE, String.format(
-                "Nag author: '%s' of '%s' about the following: %s",
-                author,
-                plugin.getDescription().getName(),
-                "This plugin is not properly shutting down its async tasks when it is being reloaded.  This may cause conflicts with the newly loaded version of the plugin"
-            ));
+                    "Nag author: '%s' of '%s' about the following: %s",
+                    author,
+                    plugin.getDescription().getName(),
+                    "This plugin is not properly shutting down its async tasks when it is being reloaded.  This may cause conflicts with the newly loaded version of the plugin"
+                    ));
         }
         loadPlugins();
         enablePlugins(PluginLoadOrder.STARTUP);
@@ -894,10 +894,10 @@ public final class CraftServer implements Server {
                 private long b = System.currentTimeMillis();
 
                 @Override
-				public void a(String s) {}
+                public void a(String s) {}
 
                 @Override
-				public void a(int i) {
+                public void a(int i) {
                     if (System.currentTimeMillis() - this.b >= 1000L) {
                         this.b = System.currentTimeMillis();
                         MinecraftServer.LOGGER.info("Converting... " + i + "%");
@@ -906,7 +906,7 @@ public final class CraftServer implements Server {
                 }
 
                 @Override
-				public void c(String s) {}
+                public void c(String s) {}
             });
         }
 
@@ -1336,7 +1336,7 @@ public final class CraftServer implements Server {
         if (result == null) {
             // Spigot Start
             GameProfile profile = null;
-            
+
             profile = console.getUserCache().requestProfile(name); // Torch
             result = getOfflinePlayer(profile); // Torch
         } else {
@@ -1405,11 +1405,11 @@ public final class CraftServer implements Server {
         Validate.notNull(type, "Type cannot be null");
 
         switch(type){
-        case IP:
-            return new CraftIpBanList(playerList.getBannedIPs());
-        case NAME:
-        default:
-            return new CraftProfileBanList(playerList.getBannedPlayers());
+            case IP:
+                return new CraftIpBanList(playerList.getBannedIPs());
+            case NAME:
+            default:
+                return new CraftProfileBanList(playerList.getBannedPlayers());
         }
     }
 
@@ -1628,7 +1628,7 @@ public final class CraftServer implements Server {
 
     public List<String> tabCompleteCommand(Player player, String message, BlockPosition pos) {
         // Spigot Start
-		if ( (org.spigotmc.SpigotConfig.tabComplete < 0 || message.length() <= org.spigotmc.SpigotConfig.tabComplete) && !message.contains( " " ) )
+        if ( (org.spigotmc.SpigotConfig.tabComplete < 0 || message.length() <= org.spigotmc.SpigotConfig.tabComplete) && !message.contains( " " ) )
         {
             return ImmutableList.of();
         }
@@ -1636,14 +1636,14 @@ public final class CraftServer implements Server {
 
         List<String> completions = null;
         try {
-        	if (message.startsWith("/")) {
+            if (message.startsWith("/")) {
                 // Trim leading '/' if present (won't always be present in command blocks)
                 message = message.substring(1);
             }
             if (pos == null) {
-            	completions = getCommandMap().tabComplete(player, message);
+                completions = getCommandMap().tabComplete(player, message);
             } else {
-            	completions = getCommandMap().tabComplete(player, message, new Location(player.getWorld(), pos.getX(), pos.getY(), pos.getZ()));
+                completions = getCommandMap().tabComplete(player, message, new Location(player.getWorld(), pos.getX(), pos.getY(), pos.getZ()));
             }
         } catch (CommandException ex) {
             player.sendMessage(ChatColor.RED + "An internal error occurred while attempting to tab-complete this command");
@@ -1822,7 +1822,7 @@ public final class CraftServer implements Server {
     };
 
     @Override
-	public Spigot spigot()
+    public Spigot spigot()
     {
         return spigot;
     }

@@ -48,7 +48,6 @@ import javax.annotation.concurrent.ThreadSafe;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.Validate;
 import org.spigotmc.SpigotConfig;
 import org.torch.api.Async;
 import org.torch.api.TorchReactor;
@@ -165,7 +164,7 @@ public final class TorchUserCache implements TorchReactor {
     }
     
     public boolean isExpired(UserCacheEntry entry) {
-        return (System.currentTimeMillis() - entry.expireDate.getTime()) > DATE_WARP_INTERVAL;
+        return System.currentTimeMillis() >= entry.expireDate.getTime();
     }
 
     /**
@@ -192,10 +191,7 @@ public final class TorchUserCache implements TorchReactor {
     /**
      * Also create new entry if not present
      */
-    @Nullable
     public GameProfile requestProfile(String username) {
-        if (StringUtils.isBlank(username)) return null;
-        
         String keyUsername = Caches.toLowerCase(username, Locale.ROOT);
         UserCacheEntry cachedEntry = caches.getIfPresent(keyUsername);
         
@@ -243,13 +239,6 @@ public final class TorchUserCache implements TorchReactor {
         if(!SpigotConfig.saveUserCacheOnStopOnly) this.save();
     }
     
-    /** Offer an entry, called on load caches */
-    private void offerCache(UserCacheEntry entry) {
-        if (isExpired(entry)) return;
-        
-        caches.put(entry.profile.getName().toLowerCase(Locale.ROOT), entry);
-    }
-    
     public String[] getCachedUsernames() {
         return caches.asMap().keySet().toArray(new String[caches.asMap().size()]);
     }
@@ -265,7 +254,9 @@ public final class TorchUserCache implements TorchReactor {
             
             if (entries != null) {
                 for (UserCacheEntry entry : Lists.reverse(entries)) {
-                    if (entry != null) this.offerCache(entry);
+                    if (entry != null && !isExpired(entry) && !StringUtils.isBlank(entry.profile.getName())) {
+                        caches.put(entry.profile.getName().toLowerCase(Locale.ROOT), entry);
+                    }
                 }
                 
                 this.save();
