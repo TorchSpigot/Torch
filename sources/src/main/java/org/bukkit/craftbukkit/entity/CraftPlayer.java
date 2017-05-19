@@ -4,6 +4,7 @@ import com.destroystokyo.paper.Title;
 import com.google.common.base.Preconditions;
 import com.koloboke.collect.set.hash.HashObjSets;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
 import com.mojang.authlib.GameProfile;
 import io.netty.buffer.Unpooled;
@@ -67,7 +68,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     private boolean hasPlayedBefore = false;
     private final ConversationTracker conversationTracker = new ConversationTracker();
     private final Set<String> channels = HashObjSets.newMutableSet();
-    private final Set<UUID> hiddenPlayers = HashObjSets.newMutableSet();
+    private final Set<UUID> hiddenPlayers = Sets.newConcurrentHashSet();
     private int hash = 0;
     private double health = 20;
     private boolean scaledHealth = false;

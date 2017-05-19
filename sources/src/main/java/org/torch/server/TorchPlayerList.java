@@ -45,6 +45,7 @@ import org.torch.api.TorchReactor;
 import org.torch.server.cache.TorchUserCache;
 
 import net.minecraft.server.*;
+import net.minecraft.server.PacketPlayOutPlayerInfo.EnumPlayerInfoAction;
 
 import static org.torch.server.TorchServer.logger;
 
@@ -525,13 +526,13 @@ public final class TorchPlayerList implements TorchReactor {
         });
     }
 
-    public void onPlayerJoin(EntityPlayer entityplayer, String joinMessage) {
-        this.players.add(entityplayer);
-        this.playersByName.put(entityplayer.getName(), entityplayer);
-        this.uuidToPlayerMap.put(entityplayer.getUniqueID(), entityplayer);
-        WorldServer worldserver = this.server.getWorldServer(entityplayer.dimension);
+    public void onPlayerJoin(EntityPlayer joinedPlayer, String joinMessage) {
+        this.players.add(joinedPlayer);
+        this.playersByName.put(joinedPlayer.getName(), joinedPlayer);
+        this.uuidToPlayerMap.put(joinedPlayer.getUniqueID(), joinedPlayer);
+        WorldServer world = this.server.getWorldServer(joinedPlayer.dimension);
 
-        PlayerJoinEvent playerJoinEvent = new PlayerJoinEvent(craftServer.getPlayer(entityplayer), joinMessage);
+        PlayerJoinEvent playerJoinEvent = new PlayerJoinEvent(craftServer.getPlayer(joinedPlayer), joinMessage);
         craftServer.getPluginManager().callEvent(playerJoinEvent);
 
         joinMessage = playerJoinEvent.getJoinMessage();
@@ -544,23 +545,21 @@ public final class TorchPlayerList implements TorchReactor {
         ChunkIOExecutor.adjustPoolSize(getPlayerCount());
 
         // sendAll above replaced with this loop
-        Regulator.post(() -> {
-            for (EntityPlayer eachPlayer : this.players) {
-                if (eachPlayer.getBukkitEntity().canSee(entityplayer.getBukkitEntity())) {
-                    eachPlayer.playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, entityplayer));
-                }
-
-                if (entityplayer.getBukkitEntity().canSee(eachPlayer.getBukkitEntity())) {
-                    entityplayer.playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, eachPlayer));
-                }
+        for (EntityPlayer eachPlayer : this.players) {
+            if (eachPlayer.getBukkitEntity().canSee(joinedPlayer.getBukkitEntity())) {
+                eachPlayer.playerConnection.sendPacket(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.ADD_PLAYER, joinedPlayer));
             }
-        });
-        entityplayer.sentListPacket = true;
+            
+            if (joinedPlayer.getBukkitEntity().canSee(eachPlayer.getBukkitEntity())) {
+                joinedPlayer.playerConnection.sendPacket(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.ADD_PLAYER, eachPlayer));
+            }
+        }
+        joinedPlayer.sentListPacket = true;
 
         // Only add if the player wasn't moved in the event
-        if (entityplayer.world == worldserver && !worldserver.players.contains(entityplayer)) {
-            worldserver.addEntity(entityplayer);
-            this.preparePlayer(entityplayer, (WorldServer) null);
+        if (joinedPlayer.world == world && !world.players.contains(joinedPlayer)) {
+            world.addEntity(joinedPlayer);
+            this.preparePlayer(joinedPlayer, (WorldServer) null);
         }
     }
 
@@ -996,7 +995,7 @@ public final class TorchPlayerList implements TorchReactor {
         if (++this.playerPingIndex > 600) {
             Regulator.post(() -> {
                 for (EntityPlayer target : this.players) {
-                    target.playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.UPDATE_LATENCY, Iterables.filter(this.players, new Predicate<EntityPlayer>() {
+                    target.playerConnection.sendPacket(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.UPDATE_LATENCY, Iterables.filter(this.players, new Predicate<EntityPlayer>() {
                         @Override
                         public boolean apply(EntityPlayer input) {
                             return target.getBukkitEntity().canSee(input.getBukkitEntity());
