@@ -312,7 +312,7 @@ public final class TorchUserCache implements TorchReactor {
     }
     
     @Getter
-    public final class UserCacheEntry {
+    public static final class UserCacheEntry {
         /** The player's GameProfile */
         private final GameProfile profile;
         /** The date that this entry will expire */

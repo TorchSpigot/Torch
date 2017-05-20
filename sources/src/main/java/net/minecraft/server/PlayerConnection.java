@@ -57,8 +57,6 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.util.NumberConversions;
 import org.torch.api.Async;
-import org.torch.server.Regulator;
-
 import com.destroystokyo.paper.event.player.IllegalPacketEvent; // Paper
 import co.aikar.timings.MinecraftTimings; // Paper
 // CraftBukkit end

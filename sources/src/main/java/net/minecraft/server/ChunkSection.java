@@ -36,6 +36,12 @@ public class ChunkSection {
         recalcBlockCounts();
     }
     // CraftBukkit end
+    
+    // Torch start
+    public IBlockData getType(int position) {
+        return this.blockIds.getType(position);
+    }
+    // Torch end
 
     public IBlockData getType(int i, int j, int k) {
         return this.blockIds.a(i, j, k);
@@ -94,22 +100,19 @@ public class ChunkSection {
     public void recalcBlockCounts() {
         this.nonEmptyBlockCount = 0;
         this.tickingBlockCount = 0;
-
-        for (int i = 0; i < 16; ++i) {
-            for (int j = 0; j < 16; ++j) {
-                for (int k = 0; k < 16; ++k) {
-                    Block block = this.getType(i, j, k).getBlock();
-
-                    if (block != Blocks.AIR) {
-                        ++this.nonEmptyBlockCount;
-                        if (block.isTicking()) {
-                            ++this.tickingBlockCount;
-                        }
-                    }
+        
+        // Torch start
+        for (int i = 0; i < 4096; i++) {
+            Block block = this.getType(i).getBlock();
+            
+            if (block != Blocks.AIR) {
+                this.nonEmptyBlockCount++;
+                if (block.isTicking()) {
+                    this.tickingBlockCount++;
                 }
             }
         }
-
+        // Torch end
     }
 
     public DataPaletteBlock getBlocks() {

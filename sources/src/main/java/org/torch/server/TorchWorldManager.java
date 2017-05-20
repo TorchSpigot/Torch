@@ -90,16 +90,16 @@ public final class TorchWorldManager implements org.torch.api.IWorldAccess, Torc
     public void sendBlockBreakProgress(int breakerEntityId, BlockPosition position, int progress) {
         Entity breakerEntity = world.getEntity(breakerEntityId); // TODO: not precisly safe
         
-        EntityHuman breakerPlayer_ = null;
-        if (breakerEntity instanceof EntityHuman) breakerPlayer_ = (EntityHuman) breakerEntity;
-        EntityHuman breakerPlayer = breakerPlayer_;
+        EntityHuman breakerPlayer = null;
+        if (breakerEntity instanceof EntityHuman) breakerPlayer = (EntityHuman) breakerEntity;
+        EntityHuman fBreakerPlayer = breakerPlayer;
         
         Regulator.post(() -> {
             for (EntityPlayer eachPlayer : server.getPlayerList().players) {
                 if (eachPlayer == null || eachPlayer.world != world || eachPlayer.getId() == breakerEntityId) continue;
                 
                 // CraftBukkit - only send packet to who can see the breaker
-                if (breakerPlayer != null && breakerPlayer instanceof EntityPlayer && !eachPlayer.getBukkitEntity().canSee(((EntityPlayer) breakerPlayer).getBukkitEntity())) {
+                if (fBreakerPlayer != null && fBreakerPlayer instanceof EntityPlayer && !eachPlayer.getBukkitEntity().canSee(((EntityPlayer) fBreakerPlayer).getBukkitEntity())) {
                     continue;
                 }
                 

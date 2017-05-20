@@ -111,35 +111,35 @@ public class RegionFile {
                     return null;
                 } else {
                     int l = k >> 8;
-                    int i1 = k & 255;
+            int i1 = k & 255;
 
-                    if (l + i1 > this.f.size()) {
-                        return null;
+            if (l + i1 > this.f.size()) {
+                return null;
+            } else {
+                this.c.seek(l * 4096);
+                int j1 = this.c.readInt();
+
+                if (j1 > 4096 * i1) {
+                    return null;
+                } else if (j1 <= 0) {
+                    return null;
+                } else {
+                    byte b0 = this.c.readByte();
+                    byte[] abyte;
+
+                    if (b0 == 1) {
+                        abyte = new byte[j1 - 1];
+                        this.c.read(abyte);
+                        return new DataInputStream(new BufferedInputStream(new GZIPInputStream(new ByteArrayInputStream(abyte))));
+                    } else if (b0 == 2) {
+                        abyte = new byte[j1 - 1];
+                        this.c.read(abyte);
+                        return new DataInputStream(new BufferedInputStream(new InflaterInputStream(new ByteArrayInputStream(abyte))));
                     } else {
-                        this.c.seek(l * 4096);
-                        int j1 = this.c.readInt();
-
-                        if (j1 > 4096 * i1) {
-                            return null;
-                        } else if (j1 <= 0) {
-                            return null;
-                        } else {
-                            byte b0 = this.c.readByte();
-                            byte[] abyte;
-
-                            if (b0 == 1) {
-                                abyte = new byte[j1 - 1];
-                                this.c.read(abyte);
-                                return new DataInputStream(new BufferedInputStream(new GZIPInputStream(new ByteArrayInputStream(abyte))));
-                            } else if (b0 == 2) {
-                                abyte = new byte[j1 - 1];
-                                this.c.read(abyte);
-                                return new DataInputStream(new BufferedInputStream(new InflaterInputStream(new ByteArrayInputStream(abyte))));
-                            } else {
-                                return null;
-                            }
-                        }
+                        return null;
                     }
+                }
+            }
                 }
             } catch (IOException ioexception) {
                 return null;
@@ -156,70 +156,70 @@ public class RegionFile {
         try {
             int l = this.e(i, j);
             int i1 = l >> 8;
-            int j1 = l & 255;
-            int k1 = (k + 5) / 4096 + 1;
+                int j1 = l & 255;
+                int k1 = (k + 5) / 4096 + 1;
 
-            if (k1 >= 256) {
-                return;
-            }
-
-            if (i1 != 0 && j1 == k1) {
-                this.a(i1, abyte, k);
-            } else {
-                int l1;
-
-                for (l1 = 0; l1 < j1; ++l1) {
-                    this.f.set(i1 + l1, Boolean.valueOf(true));
+                if (k1 >= 256) {
+                    return;
                 }
 
-                l1 = this.f.indexOf(Boolean.valueOf(true));
-                int i2 = 0;
-                int j2;
-
-                if (l1 != -1) {
-                    for (j2 = l1; j2 < this.f.size(); ++j2) {
-                        if (i2 != 0) {
-                            if (this.f.get(j2).booleanValue()) {
-                                ++i2;
-                            } else {
-                                i2 = 0;
-                            }
-                        } else if (this.f.get(j2).booleanValue()) {
-                            l1 = j2;
-                            i2 = 1;
-                        }
-
-                        if (i2 >= k1) {
-                            break;
-                        }
-                    }
-                }
-
-                if (i2 >= k1) {
-                    i1 = l1;
-                    this.a(i, j, l1 << 8 | k1);
-
-                    for (j2 = 0; j2 < k1; ++j2) {
-                        this.f.set(i1 + j2, Boolean.valueOf(false));
-                    }
-
+                if (i1 != 0 && j1 == k1) {
                     this.a(i1, abyte, k);
                 } else {
-                    this.c.seek(this.c.length());
-                    i1 = this.f.size();
+                    int l1;
 
-                    for (j2 = 0; j2 < k1; ++j2) {
-                        this.c.write(RegionFile.a);
-                        this.f.add(Boolean.valueOf(false));
+                    for (l1 = 0; l1 < j1; ++l1) {
+                        this.f.set(i1 + l1, Boolean.valueOf(true));
                     }
 
-                    this.g += 4096 * k1;
-                    this.a(i1, abyte, k);
-                    this.a(i, j, i1 << 8 | k1);
-                }
-            }
+                    l1 = this.f.indexOf(Boolean.valueOf(true));
+                    int i2 = 0;
+                    int j2;
 
-            this.b(i, j, (int) (MinecraftServer.aw() / 1000L));
+                    if (l1 != -1) {
+                        for (j2 = l1; j2 < this.f.size(); ++j2) {
+                            if (i2 != 0) {
+                                if (this.f.get(j2).booleanValue()) {
+                                    ++i2;
+                                } else {
+                                    i2 = 0;
+                                }
+                            } else if (this.f.get(j2).booleanValue()) {
+                                l1 = j2;
+                                i2 = 1;
+                            }
+
+                            if (i2 >= k1) {
+                                break;
+                            }
+                        }
+                    }
+
+                    if (i2 >= k1) {
+                        i1 = l1;
+                        this.a(i, j, l1 << 8 | k1);
+
+                        for (j2 = 0; j2 < k1; ++j2) {
+                            this.f.set(i1 + j2, Boolean.valueOf(false));
+                        }
+
+                        this.a(i1, abyte, k);
+                    } else {
+                        this.c.seek(this.c.length());
+                        i1 = this.f.size();
+
+                        for (j2 = 0; j2 < k1; ++j2) {
+                            this.c.write(RegionFile.a);
+                            this.f.add(Boolean.valueOf(false));
+                        }
+
+                        this.g += 4096 * k1;
+                        this.a(i1, abyte, k);
+                        this.a(i, j, i1 << 8 | k1);
+                    }
+                }
+
+                this.b(i, j, (int) (MinecraftServer.aw() / 1000L));
         } catch (IOException ioexception) {
             org.spigotmc.SneakyThrow.sneaky(ioexception); // Paper - we want the upper try/catch to retry this
         }
@@ -258,11 +258,9 @@ public class RegionFile {
         this.c.writeInt(k);
     }
 
-    public void c() throws IOException {
-        if (this.c != null) {
-            this.c.close();
-        }
-
+    public void c() throws IOException { close(); } // OBFHELPER
+    public void close() throws IOException {
+        if (this.c != null) this.c.close();
     }
 
     class ChunkBuffer extends ByteArrayOutputStream {
@@ -277,7 +275,7 @@ public class RegionFile {
         }
 
         @Override
-		public void close() {
+        public void close() {
             RegionFile.this.a(this.b, this.c, this.buf, this.count);
         }
     }

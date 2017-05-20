@@ -36,6 +36,7 @@ public class DataPaletteBlock implements DataPaletteExpandable {
         }
     }
 
+    @Override
     public int a(int i, IBlockData iblockdata) {
         DataBits databits = this.b;
         DataPalette datapalette = this.c;
@@ -67,6 +68,7 @@ public class DataPaletteBlock implements DataPaletteExpandable {
         return this.a(b(i, j, k));
     }
 
+    public IBlockData getType(int position) { return a(position); } // OBFHELPER
     protected IBlockData a(int i) {
         IBlockData iblockdata = this.c.a(this.b.a(i));
 

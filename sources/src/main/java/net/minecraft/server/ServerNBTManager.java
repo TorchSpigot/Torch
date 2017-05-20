@@ -39,10 +39,10 @@ public class ServerNBTManager extends WorldNBTStorage {
     public void a() {
         try {
             TorchIOThread.waitForFinish();
-        } catch (InterruptedException interruptedexception) {
-            interruptedexception.printStackTrace();
+        } catch (InterruptedException interrupted) {
+            interrupted.printStackTrace();
         }
 
-        RegionFileCache.a();
+        RegionFileCache.trimCache();
     }
 }

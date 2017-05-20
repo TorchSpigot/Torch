@@ -57,10 +57,10 @@ public final class TorchIOThread { // TODO: configurable threads
      * Waits for all chunks to be saved
      */
     public static void waitForFinish() throws InterruptedException {
-        isWaitingFinish.compareAndSet(false, true);
+        isWaitingFinish.getAndSet(true);
         
         while (queuedChunkCounter.get() != 0) Thread.sleep(9L);
         
-        isWaitingFinish.compareAndSet(true, false);
+        isWaitingFinish.getAndSet(false);
     }
 }

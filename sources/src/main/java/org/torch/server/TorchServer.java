@@ -42,6 +42,7 @@ import org.spigotmc.SlackActivityAccountant;
 import org.torch.api.Anaphase;
 import org.torch.server.cache.TorchUserCache;
 
+import com.destroystokyo.paper.utils.CachedSizeConcurrentLinkedQueue;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
@@ -309,7 +310,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
 
     private long nanoTimeSinceStatusRefresh;
 
-    protected final Queue<FutureTask<?>> futureTaskQueue = new com.destroystokyo.paper.utils.CachedSizeConcurrentLinkedQueue<>();
+    protected final Queue<FutureTask<?>> futureTaskQueue = new CachedSizeConcurrentLinkedQueue<>();
     /**
      * The main server thread
      */
@@ -323,7 +324,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
     /**
      * The worlds
      */
-    public List<WorldServer> worlds = new ArrayList<WorldServer>();
+    public List<WorldServer> worlds = Lists.newArrayList();
     /**
      * The auto save period
      */
@@ -349,7 +350,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
      */
     @Anaphase @Setter public ConsoleReader reader;
 
-    public java.util.Queue<Runnable> processQueue = new com.destroystokyo.paper.utils.CachedSizeConcurrentLinkedQueue<>();
+    public java.util.Queue<Runnable> processQueue = new CachedSizeConcurrentLinkedQueue<>();
     /**
      * A singal of Paper, which is used to judge if the server should be auto saved
      */

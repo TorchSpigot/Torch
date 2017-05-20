@@ -123,7 +123,7 @@ public class ServerConnection {
     }
 
     public void c() {
-        List list = this.h;
+        // List list = this.h;
 
         synchronized (this.h) {
             // Spigot Start

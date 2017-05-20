@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import java.util.concurrent.ConcurrentLinkedQueue; // Paper
+import java.util.concurrent.atomic.LongAdder;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.torch.server.TorchIOThread;
@@ -32,7 +34,7 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
     // CraftBukkit start
     // Paper start
     private long queuedSaves = 0;
-    private final java.util.concurrent.atomic.AtomicLong processedSaves = new java.util.concurrent.atomic.AtomicLong(0L);
+    private final LongAdder processedSaves = new LongAdder();
     public int getQueueSize() { return queue.size(); }
     public long getQueuedSaves() { return queuedSaves; }
     public long getProcessedSaves() { return processedSaves.longValue(); }
@@ -168,7 +170,7 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
             return false;
         } else {
             ChunkCoordIntPair chunkcoordintpair = chunk.coords; // Paper - Chunk queue improvements
-            processedSaves.incrementAndGet(); // Paper
+            processedSaves.increment(); // Paper
 
             boolean flag;
 

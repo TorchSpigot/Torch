@@ -1,7 +1,5 @@
 package org.bukkit.craftbukkit;
 
-import static org.torch.server.TorchServer.getServer;
-
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,7 +17,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -127,6 +124,7 @@ import com.avaje.ebean.config.DataSourceConfig;
 import com.avaje.ebean.config.ServerConfig;
 import com.avaje.ebean.config.dbplatform.SQLitePlatform;
 import com.avaje.ebeaninternal.server.lib.sql.TransactionIsolation;
+import com.destroystokyo.paper.exception.ServerInternalException;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -1028,29 +1026,25 @@ public final class CraftServer implements Server {
         console.worlds.remove(console.worlds.indexOf(handle));
 
         File parentFolder = world.getWorldFolder().getAbsoluteFile();
-
-        // Synchronized because access to RegionFileCache.a is guarded by this lock.
-        synchronized (RegionFileCache.class) {
-            // RegionFileCache.a should be RegionFileCache.cache
-            Iterator<Map.Entry<File, RegionFile>> i = RegionFileCache.a.entrySet().iterator();
-            while(i.hasNext()) {
-                Map.Entry<File, RegionFile> entry = i.next();
+        Iterator<Map.Entry<File, RegionFile>> itr = RegionFileCache.regions.asMap().entrySet().iterator();
+        try {
+            while(itr.hasNext()) {
+                Map.Entry<File, RegionFile> entry = itr.next();
                 File child = entry.getKey().getAbsoluteFile();
                 while (child != null) {
                     if (child.equals(parentFolder)) {
-                        i.remove();
-                        try {
-                            entry.getValue().c(); // Should be RegionFile.close();
-                        } catch (IOException ex) {
-                            getLogger().log(Level.SEVERE, null, ex);
-                        }
+                        itr.remove();
+                        entry.getValue().close(); // Should be RegionFile.close();
                         break;
                     }
                     child = child.getParentFile();
                 }
             }
+        } catch (IOException io) {
+            io.printStackTrace();
+            ServerInternalException.reportInternalException(io); // Paper
         }
-
+        
         return true;
     }
 

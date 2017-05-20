@@ -66,18 +66,14 @@ public class ChunkProviderHell implements ChunkGenerator {
     }
 
     public void a(int i, int j, ChunkSnapshot chunksnapshot) {
-        boolean flag = true;
         int k = this.n.K() / 2 + 1;
-        boolean flag1 = true;
-        boolean flag2 = true;
-        boolean flag3 = true;
 
         this.t = this.a(this.t, i * 4, 0, j * 4, 5, 17, 5);
 
         for (int l = 0; l < 4; ++l) {
             for (int i1 = 0; i1 < 4; ++i1) {
                 for (int j1 = 0; j1 < 16; ++j1) {
-                    double d0 = 0.125D;
+                    // double d0 = 0.125D;
                     double d1 = this.t[((l + 0) * 5 + i1 + 0) * 17 + j1 + 0];
                     double d2 = this.t[((l + 0) * 5 + i1 + 1) * 17 + j1 + 0];
                     double d3 = this.t[((l + 1) * 5 + i1 + 0) * 17 + j1 + 0];
@@ -88,14 +84,14 @@ public class ChunkProviderHell implements ChunkGenerator {
                     double d8 = (this.t[((l + 1) * 5 + i1 + 1) * 17 + j1 + 1] - d4) * 0.125D;
 
                     for (int k1 = 0; k1 < 8; ++k1) {
-                        double d9 = 0.25D;
+                        // double d9 = 0.25D;
                         double d10 = d1;
                         double d11 = d2;
                         double d12 = (d3 - d1) * 0.25D;
                         double d13 = (d4 - d2) * 0.25D;
 
                         for (int l1 = 0; l1 < 4; ++l1) {
-                            double d14 = 0.25D;
+                            // double d14 = 0.25D;
                             double d15 = d10;
                             double d16 = (d11 - d10) * 0.25D;
 
@@ -135,7 +131,7 @@ public class ChunkProviderHell implements ChunkGenerator {
 
     public void b(int i, int j, ChunkSnapshot chunksnapshot) {
         int k = this.n.K() + 1;
-        double d0 = 0.03125D;
+        // double d0 = 0.03125D;
 
         this.q = this.x.a(this.q, i * 16, j * 16, 0, 16, 16, 1, 0.03125D, 0.03125D, 1.0D);
         this.r = this.x.a(this.r, i * 16, 109, j * 16, 16, 1, 16, 0.03125D, 1.0D, 0.03125D);
@@ -204,8 +200,9 @@ public class ChunkProviderHell implements ChunkGenerator {
 
     }
 
+    @Override
     public Chunk getOrCreateChunk(int i, int j) {
-        this.p.setSeed((long) i * 341873128712L + (long) j * 132897987541L);
+        this.p.setSeed(i * 341873128712L + j * 132897987541L);
         ChunkSnapshot chunksnapshot = new ChunkSnapshot();
 
         this.a(i, j, chunksnapshot);
@@ -232,8 +229,8 @@ public class ChunkProviderHell implements ChunkGenerator {
             adouble = new double[l * i1 * j1];
         }
 
-        double d0 = 684.412D;
-        double d1 = 2053.236D;
+        // double d0 = 684.412D;
+        // double d1 = 2053.236D;
 
         this.l = this.g.a(this.l, i, j, k, l, 1, j1, 1.0D, 0.0D, 1.0D);
         this.m = this.h.a(this.m, i, j, k, l, 1, j1, 100.0D, 0.0D, 100.0D);
@@ -246,11 +243,11 @@ public class ChunkProviderHell implements ChunkGenerator {
         int l1;
 
         for (l1 = 0; l1 < i1; ++l1) {
-            adouble1[l1] = Math.cos((double) l1 * 3.141592653589793D * 6.0D / (double) i1) * 2.0D;
-            double d2 = (double) l1;
+            adouble1[l1] = Math.cos(l1 * 3.141592653589793D * 6.0D / i1) * 2.0D;
+            double d2 = l1;
 
             if (l1 > i1 / 2) {
-                d2 = (double) (i1 - 1 - l1);
+                d2 = i1 - 1 - l1;
             }
 
             if (d2 < 4.0D) {
@@ -261,7 +258,7 @@ public class ChunkProviderHell implements ChunkGenerator {
 
         for (l1 = 0; l1 < l; ++l1) {
             for (int i2 = 0; i2 < j1; ++i2) {
-                double d3 = 0.0D;
+                // double d3 = 0.0D;
 
                 for (int j2 = 0; j2 < i1; ++j2) {
                     double d4 = adouble1[j2];
@@ -282,12 +279,12 @@ public class ChunkProviderHell implements ChunkGenerator {
                     double d9;
 
                     if (j2 > i1 - 4) {
-                        d9 = (double) ((float) (j2 - (i1 - 4)) / 3.0F);
+                        d9 = (j2 - (i1 - 4)) / 3.0F;
                         d8 = d8 * (1.0D - d9) + -10.0D * d9;
                     }
 
-                    if ((double) j2 < 0.0D) {
-                        d9 = (0.0D - (double) j2) / 4.0D;
+                    if (j2 < 0.0D) {
+                        d9 = (0.0D - j2) / 4.0D;
                         d9 = MathHelper.a(d9, 0.0D, 1.0D);
                         d8 = d8 * (1.0D - d9) + -10.0D * d9;
                     }
@@ -301,6 +298,7 @@ public class ChunkProviderHell implements ChunkGenerator {
         return adouble;
     }
 
+    @Override
     public void recreateStructures(int i, int j) {
         BlockFalling.instaFall = true;
         int k = i * 16;
@@ -357,10 +355,12 @@ public class ChunkProviderHell implements ChunkGenerator {
         BlockFalling.instaFall = false;
     }
 
+    @Override
     public boolean a(Chunk chunk, int i, int j) {
         return false;
     }
 
+    @Override
     public List<BiomeBase.BiomeMeta> getMobsFor(EnumCreatureType enumcreaturetype, BlockPosition blockposition) {
         if (enumcreaturetype == EnumCreatureType.MONSTER) {
             if (this.I.b(blockposition)) {
@@ -377,11 +377,13 @@ public class ChunkProviderHell implements ChunkGenerator {
         return biomebase.getMobs(enumcreaturetype);
     }
 
+    @Override
     @Nullable
     public BlockPosition findNearestMapFeature(World world, String s, BlockPosition blockposition, boolean flag) {
         return "Fortress".equals(s) && this.I != null ? this.I.getNearestGeneratedFeature(world, blockposition, flag) : null;
     }
 
+    @Override
     public void recreateStructures(Chunk chunk, int i, int j) {
         if (this.n.paperConfig.generateFortress) this.I.a(this.n, i, j, (ChunkSnapshot) null);
     }

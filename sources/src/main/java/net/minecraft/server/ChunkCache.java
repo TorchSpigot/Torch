@@ -41,26 +41,27 @@ public class ChunkCache implements IBlockAccess {
 
     }
 
-    @Nullable
+    @Override @Nullable
     public TileEntity getTileEntity(BlockPosition blockposition) {
         return this.a(blockposition, Chunk.EnumTileEntityState.IMMEDIATE);
     }
 
     @Nullable
-    public TileEntity a(BlockPosition blockposition, Chunk.EnumTileEntityState chunk_enumtileentitystate) {
-        int i = (blockposition.getX() >> 4) - this.a;
-        int j = (blockposition.getZ() >> 4) - this.b;
-
-        return this.c[i][j].a(blockposition, chunk_enumtileentitystate);
+    public TileEntity a(BlockPosition position, Chunk.EnumTileEntityState state) {
+        int arrayX = (position.getX() >> 4) - this.a;
+        int arrayY = (position.getZ() >> 4) - this.b;
+        
+        return this.c[arrayX][arrayY].a(position, state);
     }
 
+    @Override
     public IBlockData getType(BlockPosition blockposition) {
         if (blockposition.getY() >= 0 && blockposition.getY() < 256) {
-            int i = (blockposition.getX() >> 4) - this.a;
-            int j = (blockposition.getZ() >> 4) - this.b;
+            int arrayX = (blockposition.getX() >> 4) - this.a;
+            int arrayY = (blockposition.getZ() >> 4) - this.b;
 
-            if (i >= 0 && i < this.c.length && j >= 0 && j < this.c[i].length) {
-                Chunk chunk = this.c[i][j];
+            if (arrayX >= 0 && arrayX < this.c.length && arrayY >= 0 && arrayY < this.c[arrayX].length) {
+                Chunk chunk = this.c[arrayX][arrayY];
 
                 if (chunk != null) {
                     return chunk.getBlockData(blockposition);
@@ -71,10 +72,12 @@ public class ChunkCache implements IBlockAccess {
         return Blocks.AIR.getBlockData();
     }
 
+    @Override
     public boolean isEmpty(BlockPosition blockposition) {
         return this.getType(blockposition).getMaterial() == Material.AIR;
     }
 
+    @Override
     public int getBlockPower(BlockPosition blockposition, EnumDirection enumdirection) {
         return this.getType(blockposition).b(this, blockposition, enumdirection);
     }

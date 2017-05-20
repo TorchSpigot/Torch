@@ -440,11 +440,9 @@ public final class TorchPlayerList implements TorchReactor {
             entityplayer.setResourcePack(this.server.getResourcePackUrl(), this.server.getResourcePackHash());
         }
 
-        Regulator.post(() -> {
-            for (MobEffect effect : entityplayer.getEffects()) {
-                if (!playerconnection.isDisconnected()) playerconnection.sendPacket(new PacketPlayOutEntityEffect(entityplayer.getId(), effect));
-            }
-        });
+        for (MobEffect effect : entityplayer.getEffects()) {
+            playerconnection.sendPacket(new PacketPlayOutEntityEffect(entityplayer.getId(), effect));
+        }
 
         if (nbttagcompound != null && nbttagcompound.hasKeyOfType("RootVehicle", 10)) {
             NBTTagCompound rootVehicle = nbttagcompound.getCompound("RootVehicle");
@@ -714,11 +712,11 @@ public final class TorchPlayerList implements TorchReactor {
         this.playersByName.remove(oldPlayerEntity.getName());
         this.server.getWorldServer(oldPlayerEntity.dimension).removeEntity(oldPlayerEntity);
         BlockPosition bedPosition = oldPlayerEntity.getBed();
-
+        
         EntityPlayer newPlayerEntity = oldPlayerEntity;
         org.bukkit.World fromWorld = oldPlayerEntity.getBukkitEntity().getWorld();
         oldPlayerEntity.viewingCredits = false;
-
+        
         // newPlayerEntity.playerConnection = oldPlayerEntity.playerConnection;
         // Clone the player
         newPlayerEntity.copyTo(oldPlayerEntity, conqueredEnd);
@@ -907,11 +905,9 @@ public final class TorchPlayerList implements TorchReactor {
         this.updateTimeAndWeatherForPlayer(player, targetWorld);
         this.syncPlayerInventoryHealth(player);
 
-        Regulator.post(() -> {
-            for (MobEffect mobeffect : player.getEffects()) {
-                if (!player.playerConnection.isDisconnected()) player.playerConnection.sendPacket(new PacketPlayOutEntityEffect(player.getId(), mobeffect));
-            }
-        });
+        for (MobEffect mobeffect : player.getEffects()) {
+            player.playerConnection.sendPacket(new PacketPlayOutEntityEffect(player.getId(), mobeffect));
+        }
     }
 
     /**

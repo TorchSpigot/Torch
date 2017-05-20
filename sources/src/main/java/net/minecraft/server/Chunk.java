@@ -2,14 +2,12 @@ package net.minecraft.server;
 
 import com.destroystokyo.paper.exception.ServerInternalException;
 import com.google.common.base.Predicate;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 import com.koloboke.collect.map.hash.HashObjIntMap;
 import com.koloboke.collect.map.hash.HashObjIntMaps;
 import com.koloboke.collect.map.hash.HashObjObjMaps;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
