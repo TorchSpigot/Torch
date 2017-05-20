@@ -1363,11 +1363,21 @@ public class Chunk {
         return this.heightMap;
     }
 
-    public void a(int[] aint) {
-        if (this.heightMap.length != aint.length) {
-            Chunk.e.warn("Could not set level chunk heightmap, array length is {} instead of {}", new Object[] { Integer.valueOf(aint.length), Integer.valueOf(this.heightMap.length)});
+    public void a(int[] newHeightMap) {
+        if (this.heightMap.length != newHeightMap.length) {
+            Chunk.e.warn("Could not set level chunk heightmap, array length is {} instead of {}", new Object[] { Integer.valueOf(newHeightMap.length), Integer.valueOf(this.heightMap.length)});
         } else {
-            System.arraycopy(aint, 0, this.heightMap, 0, this.heightMap.length);
+            // Torch start - Update minimum height map, see MC-117412
+            // System.arraycopy(newHeightMap, 0, this.heightMap, 0, this.heightMap.length);
+            int min = this.v;
+            
+            for (int i = 0; i < newHeightMap.length; i++) {
+                this.heightMap[i] = newHeightMap[i];
+                if(newHeightMap[i] < min) min = newHeightMap[i];
+            }
+            
+            this.v = min;
+            // Torch end
         }
     }
 
