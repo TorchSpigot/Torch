@@ -47,10 +47,15 @@ public class ChunkSection {
         return this.blockIds.a(i, j, k);
     }
 
-    public void setType(int i, int j, int k, IBlockData iblockdata) {
-        IBlockData iblockdata1 = this.getType(i, j, k);
+    public void setType(int x, int y, int z, IBlockData iblockdata) {
+        IBlockData iblockdata1 = this.getType(x, y, z);
         Block block = iblockdata1.getBlock();
         Block block1 = iblockdata.getBlock();
+        
+        if (block == block1) {
+            this.blockIds.setBlock(x, y, z, iblockdata);
+            return;
+        }
 
         if (block != Blocks.AIR) {
             --this.nonEmptyBlockCount;
@@ -66,7 +71,7 @@ public class ChunkSection {
             }
         }
 
-        this.blockIds.setBlock(i, j, k, iblockdata);
+        this.blockIds.setBlock(x, y,z, iblockdata);
     }
 
     public boolean a() {

@@ -219,22 +219,22 @@ public class BlockPosition extends BaseBlockPosition {
                             this.pos = new MutableBlockPosition(x, y, z);
                             return this.pos;
                         
-                        // Paper start - b, c, d, refer to x, y, z, and as such, x(a), y(b), z(c) of BaseBlockPosition
+                        // Paper start - b, c, d, refer to x, y, z, and as such, a, b, c of BaseBlockPosition
                         } else if (((BaseBlockPosition) this.pos).getX() == endX && ((BaseBlockPosition) this.pos).getY() == endY && ((BaseBlockPosition)this.pos).getZ() == endZ) {
                             return this.endOfData();
                         } else {
                             if (((BaseBlockPosition) this.pos).getX() < endX) {
-                                ((BaseBlockPosition) this.pos).x.incrementAndGet();
+                                ((BaseBlockPosition) this.pos).a++;
                                 
                             } else if (((BaseBlockPosition) this.pos).getY() < endY) {
-                                ((BaseBlockPosition) this.pos).x.getAndSet(x);
-                                ((BaseBlockPosition) this.pos).y.incrementAndGet();
+                                ((BaseBlockPosition) this.pos).a = x;
+                                ((BaseBlockPosition) this.pos).b++;
                                 
                             } else if (((BaseBlockPosition) this.pos).getZ() < endZ) {
-                                ((BaseBlockPosition) this.pos).x.getAndSet(y);
-                                ((BaseBlockPosition) this.pos).y.getAndSet(z);
+                                ((BaseBlockPosition) this.pos).a = x;
+                                ((BaseBlockPosition) this.pos).b = y;
                                 
-                                ((BaseBlockPosition) this.pos).z.incrementAndGet();
+                                ((BaseBlockPosition) this.pos).c++;
                             }
                             // Paper end
                             
@@ -253,8 +253,7 @@ public class BlockPosition extends BaseBlockPosition {
     }
 
     public static final class PooledBlockPosition extends MutableBlockPosition {
-        // private boolean f;
-        private volatile boolean pooled;
+        private boolean f;
         // private static final List<PooledBlockPosition> g = Lists.newArrayList();
         private static final Queue<PooledBlockPosition> g = new CachedSizeConcurrentLinkedQueue<PooledBlockPosition>();
         
@@ -278,8 +277,8 @@ public class BlockPosition extends BaseBlockPosition {
                 if (g.size() != 0) {
                     PooledBlockPosition pooledPosition = g.poll();
                     
-                    if (pooledPosition != null && pooledPosition.pooled) {
-                        pooledPosition.pooled = false;
+                    if (pooledPosition != null && pooledPosition.f) {
+                        pooledPosition.f = false;
                         pooledPosition.f(x, y, z);
                         return pooledPosition;
                     }
@@ -298,14 +297,14 @@ public class BlockPosition extends BaseBlockPosition {
                     g.add(this);
                 }
                 
-                this.pooled = true;
+                this.f = true;
             //}
         }
 
         public BlockPosition.PooledBlockPosition f(int i, int j, int k) {
-            if (this.pooled) {
+            if (this.f) {
                 logger.error("PooledMutableBlockPosition modified after it was released.", new Throwable());
-                this.pooled = false;
+                this.f = false;
             }
             
             return (BlockPosition.PooledBlockPosition) super.c(i, j, k);
@@ -382,9 +381,9 @@ public class BlockPosition extends BaseBlockPosition {
         public MutableBlockPosition(int x, int y, int z) {
             super(0, 0, 0);
             // Paper start - Modify base position variables
-            ((BaseBlockPosition) this).x.getAndSet(x);
-            ((BaseBlockPosition) this).y.getAndSet(y);
-            ((BaseBlockPosition) this).z.getAndSet(z);
+            ((BaseBlockPosition) this).a = x;
+            ((BaseBlockPosition) this).b = y;
+            ((BaseBlockPosition) this).c = z;
             // Paper end
         }
 
@@ -427,9 +426,9 @@ public class BlockPosition extends BaseBlockPosition {
         public void setValues(int x, int y, int z) { c(x, y, z); } // Paper - OBFHELPER
         public BlockPosition.MutableBlockPosition c(int x, int y, int z) {
             // Paper start - Modify base position variables
-            ((BaseBlockPosition) this).x.getAndSet(x);
-            ((BaseBlockPosition) this).y.getAndSet(y);
-            ((BaseBlockPosition) this).z.getAndSet(z);
+            ((BaseBlockPosition) this).a = x;
+            ((BaseBlockPosition) this).b = y;
+            ((BaseBlockPosition) this).c = z;
             // Paper end
             return this;
         }
@@ -450,8 +449,8 @@ public class BlockPosition extends BaseBlockPosition {
             return this.c(this.getX() + enumdirection.getAdjacentX() * i, this.getY() + enumdirection.getAdjacentY() * i, this.getZ() + enumdirection.getAdjacentZ() * i); // Paper - USE THE BLEEPING GETTERS
         }
 
-        public void p(int i) {
-            ((BaseBlockPosition) this).x.getAndSet(i); // Paper - Modify base variable
+        public void p(int x) {
+            ((BaseBlockPosition) this).a = x; // Paper - Modify base variable
         }
 
         @Override

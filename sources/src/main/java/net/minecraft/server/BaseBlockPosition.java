@@ -2,8 +2,6 @@ package net.minecraft.server;
 
 import com.google.common.base.Objects;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
@@ -12,26 +10,23 @@ public class BaseBlockPosition implements Comparable<BaseBlockPosition> {
     public static final BaseBlockPosition ZERO = new BaseBlockPosition(0, 0, 0);
     // Paper start - Make mutable and protected for MutableBlockPos and PooledBlockPos
     // Torch start
-    /* protected int a;
+    protected int a;
     protected int b;
-    protected int c; */
-    protected AtomicInteger x;
-    protected AtomicInteger y;
-    protected AtomicInteger z;
+    protected int c;
     // Torch end
 
     public final boolean isValidLocation() {
-        return x.get() >= -30000000 && z.get() >= -30000000 && x.get() < 30000000 && z.get() < 30000000 && y.get() >= 0 && y.get() < 256;
+        return a >= -30000000 && c >= -30000000 && a < 30000000 && c < 30000000 && b >= 0 && b < 256;
     }
     public boolean isInvalidYLocation() {
-        return y.get() < 0 || y.get() >= 256;
+        return b < 0 || b >= 256;
     }
     // Paper end
 
     public BaseBlockPosition(int x, int y, int z) {
-        this.x = new AtomicInteger(x);
-        this.y = new AtomicInteger(y);
-        this.z = new AtomicInteger(z);
+        this.a = x;
+        this.b = y;
+        this.c = z;
     }
 
     public BaseBlockPosition(double x, double y, double z) {
@@ -62,15 +57,15 @@ public class BaseBlockPosition implements Comparable<BaseBlockPosition> {
 
     // Paper start - Only allow a single implementation
     public final int getX() {
-        return x.get();
+        return a;
     }
 
     public final int getY() {
-        return y.get();
+        return b;
     }
 
     public final int getZ() {
-        return z.get();
+        return c;
     }
     // Paper end
 
