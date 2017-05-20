@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
-
+import org.torch.api.Anaphase;
 // CraftBukkit end
 import org.torch.server.TorchChunkProvider;
 
@@ -20,8 +20,9 @@ public class ChunkProviderServer implements IChunkProvider, org.torch.api.TorchS
     private static final double UNLOAD_QUEUE_RESIZE_FACTOR = TorchChunkProvider.UNLOAD_QUEUE_RESIZE_FACTOR;
 
     public final WorldServer world;
-    public final ChunkGenerator chunkGenerator;
-    public final IChunkLoader chunkLoader;
+    
+    @Anaphase public final ChunkGenerator chunkGenerator;
+    @Anaphase public final IChunkLoader chunkLoader;
 
     // TODO: port
     // private long lastQueuedSaves = 0L;

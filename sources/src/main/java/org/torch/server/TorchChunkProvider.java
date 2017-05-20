@@ -24,6 +24,7 @@ import org.torch.api.TorchReactor;
 
 import com.destroystokyo.paper.exception.ServerInternalException;
 
+import co.aikar.timings.Timing;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArraySet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -44,8 +45,6 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
     public static final double UNLOAD_QUEUE_RESIZE_FACTOR = 0.96;
 
     public final LongSet unloadQueue = new LongArraySet();
-    public final ChunkGenerator chunkGenerator;
-    private final IChunkLoader chunkLoader;
 
     // Paper - Chunk save stats
     private long lastQueuedSaves = 0L; 
@@ -81,8 +80,6 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
         this.servant = servant;
 
         this.world = world;
-        this.chunkLoader = loader;
-        this.chunkGenerator = generator;
     }
 
     public Collection<Chunk> getLoadedChunks() {
@@ -127,8 +124,8 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
         if (chunk == null) {
             ChunkRegionLoader loader = null;
 
-            if (this.chunkLoader instanceof ChunkRegionLoader) {
-                loader = (ChunkRegionLoader) this.chunkLoader;
+            if (servant.chunkLoader instanceof ChunkRegionLoader) {
+                loader = (ChunkRegionLoader) servant.chunkLoader;
             }
             if (loader != null && loader.chunkExists(x, z)) {
                 chunk = ChunkIOExecutor.syncChunkLoad(world, loader, servant, x, z);
@@ -147,7 +144,7 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
             if (chunk != null) {
                 this.chunks.put(ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ), chunk);
                 chunk.addEntities();
-                chunk.loadNearby(servant, this.chunkGenerator, false);
+                chunk.loadNearby(servant, servant.chunkGenerator, false);
             }
         }
 
@@ -167,8 +164,8 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
         Chunk chunk = getChunkIfLoaded(i, j, false);
         ChunkRegionLoader loader = null;
 
-        if (this.chunkLoader instanceof ChunkRegionLoader) {
-            loader = (ChunkRegionLoader) this.chunkLoader;
+        if (servant.chunkLoader instanceof ChunkRegionLoader) {
+            loader = (ChunkRegionLoader) servant.chunkLoader;
         }
 
         // We can only use the queue for already generated chunks
@@ -197,20 +194,21 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
             long chunkPos = ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ);
 
             try {
-                chunk = this.chunkGenerator.getOrCreateChunk(chunkX, chunkZ);
+                chunk = servant.chunkGenerator.getOrCreateChunk(chunkX, chunkZ);
             } catch (Throwable t) {
                 CrashReport crashReport = CrashReport.a(t, "Exception generating new chunk");
-                CrashReportSystemDetails systemDetails = crashReport.a("Chunk to be generated");
+                CrashReportSystemDetails details = crashReport.a("Chunk to be generated");
 
-                systemDetails.a("Location", String.format("%d,%d", new Object[] { Integer.valueOf(chunkX), Integer.valueOf(chunkZ)}));
-                systemDetails.a("Position hash", Long.valueOf(chunkPos));
-                systemDetails.a("Generator", this.chunkGenerator);
+                details.a("Location", String.format("%d,%d", new Object[] { Integer.valueOf(chunkX), Integer.valueOf(chunkZ)}));
+                details.a("Position hash", Long.valueOf(chunkPos));
+                details.a("Generator", servant.chunkGenerator);
                 throw new ReportedException(crashReport);
             }
 
             this.chunks.put(chunkPos, chunk);
             chunk.addEntities();
-            chunk.loadNearby(servant, this.chunkGenerator, true);
+            chunk.loadNearby(servant, servant.chunkGenerator, true);
+            
             world.timings.syncChunkLoadTimer.stopTiming();
         }
 
@@ -220,11 +218,11 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
     @Nullable
     public Chunk loadChunkFromFile(int i, int j) {
         try {
-            Chunk chunk = this.chunkLoader.a(this.world, i, j);
+            Chunk chunk = servant.chunkLoader.a(this.world, i, j);
 
             if (chunk != null) {
                 chunk.setLastSaved(this.world.getTime());
-                this.chunkGenerator.recreateStructures(chunk, i, j);
+                servant.chunkGenerator.recreateStructures(chunk, i, j);
             }
 
             return chunk;
@@ -236,8 +234,8 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
     }
 
     public void saveChunkExtraData(Chunk chunk) {
-        try (co.aikar.timings.Timing timed = world.timings.chunkSaveNop.startTiming()) {
-            this.chunkLoader.b(this.world, chunk); // saveChunkExtraData
+        try (Timing timed = world.timings.chunkSaveNop.startTiming()) {
+            servant.chunkLoader.b(this.world, chunk); // PAIL: saveChunkExtraData
         } catch (Throwable t) {
             logger.error("Couldn\'t save entities", t);
             ServerInternalException.reportInternalException(t);
@@ -245,9 +243,9 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
     }
 
     public void saveChunkData(Chunk chunk) {
-        try (co.aikar.timings.Timing timed = world.timings.chunkSaveData.startTiming()) {
+        try (Timing timed = world.timings.chunkSaveData.startTiming()) {
             chunk.setLastSaved(this.world.getTime());
-            this.chunkLoader.a(this.world, chunk); // saveChunkData
+            servant.chunkLoader.a(this.world, chunk); // PAIL: saveChunkData
         } catch (IOException io) {
             logger.error("Couldn\'t save chunk", io);
             ServerInternalException.reportInternalException(io);
@@ -308,7 +306,7 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
      * Not saved during autosave, only during world unload. Currently unimplemented.
      */
     public void saveExtraData() {
-        this.chunkLoader.b(); // PAIL: saveExtraData()
+        servant.chunkLoader.b(); // PAIL: saveExtraData()
     }
 
     /**
@@ -355,7 +353,7 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
             }
         }
 
-        this.chunkLoader.a(); // PAIL: chunkTick()
+        servant.chunkLoader.a(); // PAIL: chunkTick()
 
         return false;
     }
@@ -408,12 +406,12 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
     }
 
     public List<BiomeBase.BiomeMeta> getPossibleCreatures(EnumCreatureType creatureType, BlockPosition position) {
-        return this.chunkGenerator.getMobsFor(creatureType, position);
+        return servant.chunkGenerator.getMobsFor(creatureType, position);
     }
 
     @Nullable
     public BlockPosition findNearestMapFeature(World world, String structureName, BlockPosition position, boolean flag) {
-        return this.chunkGenerator.findNearestMapFeature(world, structureName, position, flag);
+        return servant.chunkGenerator.findNearestMapFeature(world, structureName, position, flag);
     }
 
     public int getLoadedChunkCount() {
@@ -429,6 +427,6 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
 
     @Override @Deprecated public boolean e(int x, int z) { return this.isChunkGeneratedAt(x, z); } // Implement from net.minecraft.IChunkProvider
     @Override public boolean isChunkGeneratedAt(int chunkX, int chunkZ) {
-        return this.chunks.containsKey(ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ)) || this.chunkLoader.a(chunkX, chunkZ); // PAIL: a -> isChunkGeneratedAt(x, z)
+        return this.chunks.containsKey(ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ)) || servant.chunkLoader.a(chunkX, chunkZ); // PAIL: a -> isChunkGeneratedAt(x, z)
     }
 }

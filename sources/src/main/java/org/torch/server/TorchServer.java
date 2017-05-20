@@ -1924,7 +1924,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         
         // Initial the craft server in player list
         this.setPlayerList(new DedicatedPlayerList(this.getDedicatedServer()).getReactor());
-        this.getServant().setPlayerList(this.playerList);
+        MinecraftServer.getServer().setPlayerList(this.playerList);
 
         org.spigotmc.SpigotConfig.init((File) options.valueOf("spigot-settings"));
         org.spigotmc.SpigotConfig.registerCommands();
@@ -1979,7 +1979,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         String levelType = this.propertyManager.getString("level-type", "DEFAULT");
         String generatorSettings = this.propertyManager.getString("generator-settings", "");
         // The generator seed we final used
-        long generatorSeed = (new Random()).nextLong();
+        long generatorSeed = this.random.nextLong();
         if (!levelSeed.isEmpty()) {
             try {
                 long seed = Long.parseLong(levelSeed);
