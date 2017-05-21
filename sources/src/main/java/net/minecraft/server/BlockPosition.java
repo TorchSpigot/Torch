@@ -253,7 +253,7 @@ public class BlockPosition extends BaseBlockPosition {
     }
 
     public static final class PooledBlockPosition extends MutableBlockPosition {
-        private boolean f;
+        private volatile boolean f;
         // private static final List<PooledBlockPosition> g = Lists.newArrayList();
         private static final Queue<PooledBlockPosition> g = new CachedSizeConcurrentLinkedQueue<PooledBlockPosition>();
         
@@ -450,7 +450,7 @@ public class BlockPosition extends BaseBlockPosition {
         }
 
         public void p(int x) {
-            ((BaseBlockPosition) this).a = x; // Paper - Modify base variable
+            ((BaseBlockPosition) this).b = x; // Paper - Modify base variable
         }
 
         @Override
