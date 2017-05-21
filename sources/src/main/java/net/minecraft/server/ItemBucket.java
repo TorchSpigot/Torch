@@ -18,6 +18,7 @@ public class ItemBucket extends Item {
         this.a(CreativeModeTab.f);
     }
 
+    @Override
     public InteractionResultWrapper<ItemStack> a(World world, EntityHuman entityhuman, EnumHand enumhand) {
         boolean flag = this.a == Blocks.AIR;
         ItemStack itemstack = entityhuman.b(enumhand);
@@ -39,7 +40,7 @@ public class ItemBucket extends Item {
                     IBlockData iblockdata = world.getType(blockposition);
                     Material material = iblockdata.getMaterial();
 
-                    if (material == Material.WATER && ((Integer) iblockdata.get(BlockFluids.LEVEL)).intValue() == 0) {
+                    if (material == Material.WATER && iblockdata.get(BlockFluids.LEVEL).intValue() == 0) {
                         // CraftBukkit start
                         PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent(entityhuman, blockposition.getX(), blockposition.getY(), blockposition.getZ(), null, itemstack, Items.WATER_BUCKET);
  
@@ -48,10 +49,10 @@ public class ItemBucket extends Item {
                         }
                         // CraftBukkit end
                         world.setTypeAndData(blockposition, Blocks.AIR.getBlockData(), 11);
-                        entityhuman.b(StatisticList.b((Item) this));
+                        entityhuman.b(StatisticList.b(this));
                         entityhuman.a(SoundEffects.P, 1.0F, 1.0F);
                         return new InteractionResultWrapper(EnumInteractionResult.SUCCESS, this.a(itemstack, entityhuman, Items.WATER_BUCKET, event.getItemStack())); // CraftBukkit
-                    } else if (material == Material.LAVA && ((Integer) iblockdata.get(BlockFluids.LEVEL)).intValue() == 0) {
+                    } else if (material == Material.LAVA && iblockdata.get(BlockFluids.LEVEL).intValue() == 0) {
                         // CraftBukkit start
                         PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent(entityhuman, blockposition.getX(), blockposition.getY(), blockposition.getZ(), null, itemstack, Items.LAVA_BUCKET);
 
@@ -61,20 +62,20 @@ public class ItemBucket extends Item {
                         // CraftBukkit end
                         entityhuman.a(SoundEffects.Q, 1.0F, 1.0F);
                         world.setTypeAndData(blockposition, Blocks.AIR.getBlockData(), 11);
-                        entityhuman.b(StatisticList.b((Item) this));
+                        entityhuman.b(StatisticList.b(this));
                         return new InteractionResultWrapper(EnumInteractionResult.SUCCESS, this.a(itemstack, entityhuman, Items.LAVA_BUCKET, event.getItemStack())); // CraftBukkit
                     } else {
                         return new InteractionResultWrapper(EnumInteractionResult.FAIL, itemstack);
                     }
                 }
             } else {
-                boolean flag1 = world.getType(blockposition).getBlock().a((IBlockAccess) world, blockposition);
+                boolean flag1 = world.getType(blockposition).getBlock().a(world, blockposition);
                 BlockPosition blockposition1 = flag1 && movingobjectposition.direction == EnumDirection.UP ? blockposition : blockposition.shift(movingobjectposition.direction);
 
                 if (!entityhuman.a(blockposition1, movingobjectposition.direction, itemstack)) {
                     return new InteractionResultWrapper(EnumInteractionResult.FAIL, itemstack);
                 } else if (this.a(entityhuman, world, blockposition1, movingobjectposition.direction, blockposition, itemstack)) { // CraftBukkit
-                    entityhuman.b(StatisticList.b((Item) this));
+                    entityhuman.b(StatisticList.b(this));
                     return !entityhuman.abilities.canInstantlyBuild ? new InteractionResultWrapper(EnumInteractionResult.SUCCESS, new ItemStack(Items.BUCKET)) : new InteractionResultWrapper(EnumInteractionResult.SUCCESS, itemstack);
                 } else {
                     return new InteractionResultWrapper(EnumInteractionResult.FAIL, itemstack);
@@ -116,7 +117,7 @@ public class ItemBucket extends Item {
             IBlockData iblockdata = world.getType(blockposition);
             Material material = iblockdata.getMaterial();
             boolean flag = !material.isBuildable();
-            boolean flag1 = iblockdata.getBlock().a((IBlockAccess) world, blockposition);
+            boolean flag1 = iblockdata.getBlock().a(world, blockposition);
 
             if (!world.isEmpty(blockposition) && !flag && !flag1) {
                 return false;
@@ -138,10 +139,10 @@ public class ItemBucket extends Item {
                     world.a(entityhuman, blockposition, SoundEffects.bH, SoundCategory.BLOCKS, 0.5F, 2.6F + (world.random.nextFloat() - world.random.nextFloat()) * 0.8F);
 
                     for (int l = 0; l < 8; ++l) {
-                        world.addParticle(EnumParticle.SMOKE_LARGE, (double) i + Math.random(), (double) j + Math.random(), (double) k + Math.random(), 0.0D, 0.0D, 0.0D, new int[0]);
+                        world.addParticle(EnumParticle.SMOKE_LARGE, i + Math.random(), j + Math.random(), k + Math.random(), 0.0D, 0.0D, 0.0D, new int[0]);
                     }
                 } else {
-                    if (!world.isClientSide && (flag || flag1) && !material.isLiquid()) {
+                    if ((flag || flag1) && !material.isLiquid()) {
                         world.setAir(blockposition, true);
                     }
 

@@ -14,7 +14,7 @@ public class EntityLeash extends EntityHanging {
 
     public EntityLeash(World world, BlockPosition blockposition) {
         super(world, blockposition);
-        this.setPosition((double) blockposition.getX() + 0.5D, (double) blockposition.getY() + 0.5D, (double) blockposition.getZ() + 0.5D);
+        this.setPosition(blockposition.getX() + 0.5D, blockposition.getY() + 0.5D, blockposition.getZ() + 0.5D);
         float f = 0.125F;
         float f1 = 0.1875F;
         float f2 = 0.25F;
@@ -23,99 +23,107 @@ public class EntityLeash extends EntityHanging {
         this.attachedToPlayer = true;
     }
 
+    @Override
     public void setPosition(double d0, double d1, double d2) {
-        super.setPosition((double) MathHelper.floor(d0) + 0.5D, (double) MathHelper.floor(d1) + 0.5D, (double) MathHelper.floor(d2) + 0.5D);
+        super.setPosition(MathHelper.floor(d0) + 0.5D, MathHelper.floor(d1) + 0.5D, MathHelper.floor(d2) + 0.5D);
     }
 
+    @Override
     protected void updateBoundingBox() {
-        this.locX = (double) this.blockPosition.getX() + 0.5D;
-        this.locY = (double) this.blockPosition.getY() + 0.5D;
-        this.locZ = (double) this.blockPosition.getZ() + 0.5D;
+        this.locX = this.blockPosition.getX() + 0.5D;
+        this.locY = this.blockPosition.getY() + 0.5D;
+        this.locZ = this.blockPosition.getZ() + 0.5D;
     }
 
+    @Override
     public void setDirection(EnumDirection enumdirection) {}
 
+    @Override
     public int getWidth() {
         return 9;
     }
 
+    @Override
     public int getHeight() {
         return 9;
     }
 
+    @Override
     public float getHeadHeight() {
         return -0.0625F;
     }
 
+    @Override
     public void a(@Nullable Entity entity) {
         this.a(SoundEffects.dt, 1.0F, 1.0F);
     }
 
+    @Override
     public boolean d(NBTTagCompound nbttagcompound) {
         return false;
     }
 
+    @Override
     public void b(NBTTagCompound nbttagcompound) {}
 
+    @Override
     public void a(NBTTagCompound nbttagcompound) {}
 
+    @Override
     public boolean b(EntityHuman entityhuman, EnumHand enumhand) {
-        if (this.world.isClientSide) {
-            return true;
-        } else {
-            boolean flag = false;
-            double d0 = 7.0D;
-            List list = this.world.a(EntityInsentient.class, new AxisAlignedBB(this.locX - 7.0D, this.locY - 7.0D, this.locZ - 7.0D, this.locX + 7.0D, this.locY + 7.0D, this.locZ + 7.0D));
-            Iterator iterator = list.iterator();
+        boolean flag = false;
+        double d0 = 7.0D;
+        List list = this.world.a(EntityInsentient.class, new AxisAlignedBB(this.locX - 7.0D, this.locY - 7.0D, this.locZ - 7.0D, this.locX + 7.0D, this.locY + 7.0D, this.locZ + 7.0D));
+        Iterator iterator = list.iterator();
 
-            EntityInsentient entityinsentient;
+        EntityInsentient entityinsentient;
 
-            while (iterator.hasNext()) {
-                entityinsentient = (EntityInsentient) iterator.next();
-                if (entityinsentient.isLeashed() && entityinsentient.getLeashHolder() == entityhuman) {
-                    // CraftBukkit start
-                    if (CraftEventFactory.callPlayerLeashEntityEvent(entityinsentient, this, entityhuman).isCancelled()) {
-                        ((EntityPlayer) entityhuman).playerConnection.sendPacket(new PacketPlayOutAttachEntity(entityinsentient, entityinsentient.getLeashHolder()));
-                        continue;
-                    }
-                    // CraftBukkit end
-                    entityinsentient.setLeashHolder(this, true);
-                    flag = true;
+        while (iterator.hasNext()) {
+            entityinsentient = (EntityInsentient) iterator.next();
+            if (entityinsentient.isLeashed() && entityinsentient.getLeashHolder() == entityhuman) {
+                // CraftBukkit start
+                if (CraftEventFactory.callPlayerLeashEntityEvent(entityinsentient, this, entityhuman).isCancelled()) {
+                    ((EntityPlayer) entityhuman).playerConnection.sendPacket(new PacketPlayOutAttachEntity(entityinsentient, entityinsentient.getLeashHolder()));
+                    continue;
                 }
-            }
-
-            if (!flag) {
-                // CraftBukkit start - Move below
-                // this.die();
-                boolean die = true;
                 // CraftBukkit end
-                if (true || entityhuman.abilities.canInstantlyBuild) { // CraftBukkit - Process for non-creative as well
-                    iterator = list.iterator();
-
-                    while (iterator.hasNext()) {
-                        entityinsentient = (EntityInsentient) iterator.next();
-                        if (entityinsentient.isLeashed() && entityinsentient.getLeashHolder() == this) {
-                            // CraftBukkit start
-                            if (CraftEventFactory.callPlayerUnleashEntityEvent(entityinsentient, entityhuman).isCancelled()) {
-                                die = false;
-                                continue;
-                            }
-                            entityinsentient.unleash(true, !entityhuman.abilities.canInstantlyBuild); // false -> survival mode boolean
-                            // CraftBukkit end
-                        }
-                    }
-                    // CraftBukkit start
-                    if (die) {
-                        this.die();
-                    }
-                    // CraftBukkit end
-                }
+                entityinsentient.setLeashHolder(this, true);
+                flag = true;
             }
-
-            return true;
         }
+
+        if (!flag) {
+            // CraftBukkit start - Move below
+            // this.die();
+            boolean die = true;
+            // CraftBukkit end
+            if (true || entityhuman.abilities.canInstantlyBuild) { // CraftBukkit - Process for non-creative as well
+                iterator = list.iterator();
+
+                while (iterator.hasNext()) {
+                    entityinsentient = (EntityInsentient) iterator.next();
+                    if (entityinsentient.isLeashed() && entityinsentient.getLeashHolder() == this) {
+                        // CraftBukkit start
+                        if (CraftEventFactory.callPlayerUnleashEntityEvent(entityinsentient, entityhuman).isCancelled()) {
+                            die = false;
+                            continue;
+                        }
+                        entityinsentient.unleash(true, !entityhuman.abilities.canInstantlyBuild); // false -> survival mode boolean
+                        // CraftBukkit end
+                    }
+                }
+                // CraftBukkit start
+                if (die) {
+                    this.die();
+                }
+                // CraftBukkit end
+            }
+        }
+
+        return true;
     }
 
+    @Override
     public boolean survives() {
         return this.world.getType(this.blockPosition).getBlock() instanceof BlockFence;
     }
@@ -133,7 +141,7 @@ public class EntityLeash extends EntityHanging {
         int i = blockposition.getX();
         int j = blockposition.getY();
         int k = blockposition.getZ();
-        List list = world.a(EntityLeash.class, new AxisAlignedBB((double) i - 1.0D, (double) j - 1.0D, (double) k - 1.0D, (double) i + 1.0D, (double) j + 1.0D, (double) k + 1.0D));
+        List list = world.a(EntityLeash.class, new AxisAlignedBB(i - 1.0D, j - 1.0D, k - 1.0D, i + 1.0D, j + 1.0D, k + 1.0D));
         Iterator iterator = list.iterator();
 
         EntityLeash entityleash;
@@ -149,6 +157,7 @@ public class EntityLeash extends EntityHanging {
         return entityleash;
     }
 
+    @Override
     public void o() {
         this.a(SoundEffects.du, 1.0F, 1.0F);
     }

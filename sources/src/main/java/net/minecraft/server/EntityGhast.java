@@ -35,7 +35,7 @@ public class EntityGhast extends EntityFlying implements IMonster {
     @Override
 	public void A_() {
         super.A_();
-        if (!this.world.isClientSide && this.world.getDifficulty() == EnumDifficulty.PEACEFUL) {
+        if (this.world.getDifficulty() == EnumDifficulty.PEACEFUL) {
             this.die();
         }
 

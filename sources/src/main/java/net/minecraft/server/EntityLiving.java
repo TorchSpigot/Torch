@@ -171,7 +171,7 @@ public abstract class EntityLiving extends Entity {
             this.ak();
         }
 
-        if (!this.world.isClientSide && this.fallDistance > 3.0F && flag) {
+        if (this.fallDistance > 3.0F && flag) {
             float f = MathHelper.f(this.fallDistance - 3.0F);
 
             if (iblockdata.getMaterial() != Material.AIR) {
@@ -219,7 +219,7 @@ public abstract class EntityLiving extends Entity {
             }
         }
 
-        if (this.isFireProof() || this.world.isClientSide) {
+        if (this.isFireProof()) {
             this.extinguish();
         }
 
@@ -244,7 +244,7 @@ public abstract class EntityLiving extends Entity {
                     }
                 }
 
-                if (!this.world.isClientSide && this.isPassenger() && this.bB() instanceof EntityLiving) {
+                if (this.isPassenger() && this.bB() instanceof EntityLiving) {
                     this.stopRiding();
                 }
             } else {
@@ -255,13 +255,11 @@ public abstract class EntityLiving extends Entity {
                 // CraftBukkit end
             }
 
-            if (!this.world.isClientSide) {
-                BlockPosition blockposition = new BlockPosition(this);
+            BlockPosition blockposition = new BlockPosition(this);
 
-                if (!Objects.equal(this.bE, blockposition)) {
-                    this.bE = blockposition;
-                    this.b(blockposition);
-                }
+            if (!Objects.equal(this.bE, blockposition)) {
+                this.bE = blockposition;
+                this.b(blockposition);
             }
         }
 
@@ -313,7 +311,7 @@ public abstract class EntityLiving extends Entity {
     public int getExpReward() {
         int exp = this.getExpValue(this.killer);
 
-        if (!this.world.isClientSide && (this.lastDamageByPlayerTime > 0 || this.alwaysGivesExp()) && this.isDropExperience() && this.world.getGameRules().getBoolean("doMobLoot")) {
+        if ((this.lastDamageByPlayerTime > 0 || this.alwaysGivesExp()) && this.isDropExperience() && this.world.getGameRules().getBoolean("doMobLoot")) {
             return exp;
         } else {
             return 0;
@@ -495,7 +493,7 @@ public abstract class EntityLiving extends Entity {
         }
         this.setAbsorptionHearts(absorptionAmount);
         // Paper end
-        if (nbttagcompound.hasKeyOfType("Attributes", 9) && this.world != null && !this.world.isClientSide) {
+        if (nbttagcompound.hasKeyOfType("Attributes", 9) && this.world != null) {
             GenericAttributes.a(this.getAttributeMap(), nbttagcompound.getList("Attributes", 10));
         }
 
@@ -560,10 +558,8 @@ public abstract class EntityLiving extends Entity {
                 MobEffect mobeffect = this.effects.get(mobeffectlist);
 
                 if (!mobeffect.tick(this)) {
-                    if (!this.world.isClientSide) {
-                        iterator.remove();
-                        this.b(mobeffect);
-                    }
+                    iterator.remove();
+                    this.b(mobeffect);
                 } else if (mobeffect.getDuration() % 600 == 0) {
                     this.a(mobeffect, false);
                 }
@@ -584,9 +580,7 @@ public abstract class EntityLiving extends Entity {
         // CraftBukkit end
 
         if (this.updateEffects) {
-            if (!this.world.isClientSide) {
-                this.F();
-            }
+            this.F();
 
             this.updateEffects = false;
         }
@@ -654,14 +648,11 @@ public abstract class EntityLiving extends Entity {
     }
 
     public void removeAllEffects() {
-        if (!this.world.isClientSide) {
-            Iterator iterator = this.effects.values().iterator();
+        Iterator iterator = this.effects.values().iterator();
 
-            while (iterator.hasNext()) {
-                this.b((MobEffect) iterator.next());
-                iterator.remove();
-            }
-
+        while (iterator.hasNext()) {
+            this.b((MobEffect) iterator.next());
+            iterator.remove();
         }
     }
 
@@ -738,15 +729,13 @@ public abstract class EntityLiving extends Entity {
 
     protected void a(MobEffect mobeffect) {
         this.updateEffects = true;
-        if (!this.world.isClientSide) {
-            mobeffect.getMobEffect().b(this, this.getAttributeMap(), mobeffect.getAmplifier());
-        }
+        mobeffect.getMobEffect().b(this, this.getAttributeMap(), mobeffect.getAmplifier());
 
     }
 
     protected void a(MobEffect mobeffect, boolean flag) {
         this.updateEffects = true;
-        if (flag && !this.world.isClientSide) {
+        if (flag) {
             MobEffectList mobeffectlist = mobeffect.getMobEffect();
 
             mobeffectlist.a(this, this.getAttributeMap(), mobeffect.getAmplifier());
@@ -757,9 +746,7 @@ public abstract class EntityLiving extends Entity {
 
     protected void b(MobEffect mobeffect) {
         this.updateEffects = true;
-        if (!this.world.isClientSide) {
-            mobeffect.getMobEffect().a(this, this.getAttributeMap(), mobeffect.getAmplifier());
-        }
+        mobeffect.getMobEffect().a(this, this.getAttributeMap(), mobeffect.getAmplifier());
 
     }
 
@@ -825,8 +812,6 @@ public abstract class EntityLiving extends Entity {
     @Override
     public boolean damageEntity(DamageSource damagesource, float f) {
         if (this.isInvulnerable(damagesource)) {
-            return false;
-        } else if (this.world.isClientSide) {
             return false;
         } else {
             this.ticksFarFromPlayer = 0;
@@ -1092,24 +1077,22 @@ public abstract class EntityLiving extends Entity {
 
             this.aU = true;
             this.getCombatTracker().g();
-            if (!this.world.isClientSide) {
-                int i = 0;
+            
+            int i = 0;
+            if (entity instanceof EntityHuman) {
+                i = EnchantmentManager.g((EntityLiving) entity);
+            }
 
-                if (entity instanceof EntityHuman) {
-                    i = EnchantmentManager.g((EntityLiving) entity);
-                }
+            if (this.isDropExperience() && this.world.getGameRules().getBoolean("doMobLoot")) {
+                boolean flag = this.lastDamageByPlayerTime > 0;
 
-                if (this.isDropExperience() && this.world.getGameRules().getBoolean("doMobLoot")) {
-                    boolean flag = this.lastDamageByPlayerTime > 0;
-
-                    this.a(flag, i, damagesource);
-                    // CraftBukkit start - Call death event
-                    CraftEventFactory.callEntityDeathEvent(this, this.drops);
-                    this.drops = new ArrayList<org.bukkit.inventory.ItemStack>();
-                } else {
-                    CraftEventFactory.callEntityDeathEvent(this);
-                    // CraftBukkit end
-                }
+                this.a(flag, i, damagesource);
+                // CraftBukkit start - Call death event
+                CraftEventFactory.callEntityDeathEvent(this, this.drops);
+                this.drops = new ArrayList<org.bukkit.inventory.ItemStack>();
+            } else {
+                CraftEventFactory.callEntityDeathEvent(this);
+                // CraftBukkit end
             }
 
             this.world.broadcastEntityEffect(this, (byte) 3);
@@ -1743,7 +1726,7 @@ public abstract class EntityLiving extends Entity {
                     this.motY *= 0.9800000190734863D;
                     this.motZ *= 0.9900000095367432D;
                     this.move(EnumMoveType.SELF, this.motX, this.motY, this.motZ);
-                    if (this.positionChanged && !this.world.isClientSide) {
+                    if (this.positionChanged) {
                         d4 = Math.sqrt(this.motX * this.motX + this.motZ * this.motZ);
                         double d5 = d2 - d4;
                         float f7 = (float) (d5 * 10.0D - 3.0D);
@@ -1755,7 +1738,7 @@ public abstract class EntityLiving extends Entity {
                     }
                 } // Paper end - Elyta Wall Damage if statement
 
-                if (this.onGround && !this.world.isClientSide) {
+                if (this.onGround) {
                     if (getFlag(7) && !CraftEventFactory.callToggleGlideEvent(this, false).isCancelled()) // CraftBukkit
                         this.setFlag(7, false);
                 }
@@ -1805,13 +1788,13 @@ public abstract class EntityLiving extends Entity {
                     this.motY += (0.05D * (this.getEffect(MobEffects.LEVITATION).getAmplifier() + 1) - this.motY) * 0.2D;
                 } else {
                     blockposition_pooledblockposition.e(this.locX, 0.0D, this.locZ);
-                    if (this.world.isClientSide && (!this.world.isLoaded(blockposition_pooledblockposition) || !this.world.getChunkAtWorldCoords(blockposition_pooledblockposition).p())) {
+                    /* if (this.world.isClientSide && (!this.world.isLoaded(blockposition_pooledblockposition) || !this.world.getChunkAtWorldCoords(blockposition_pooledblockposition).p())) {
                         if (this.locY > 0.0D) {
                             this.motY = -0.1D;
                         } else {
                             this.motY = 0.0D;
                         }
-                    } else if (!this.isNoGravity()) {
+                    } else */ if (!this.isNoGravity()) {
                         this.motY -= 0.08D;
                     }
                 }
@@ -1856,73 +1839,71 @@ public abstract class EntityLiving extends Entity {
     public void A_() {
         super.A_();
         this.cA();
-        if (!this.world.isClientSide) {
-            int i = this.cc();
+        int i = this.cc();
 
-            if (i > 0) {
-                if (this.ax <= 0) {
-                    this.ax = 20 * (30 - i);
-                }
-
-                --this.ax;
-                if (this.ax <= 0) {
-                    this.f(i - 1);
-                }
+        if (i > 0) {
+            if (this.ax <= 0) {
+                this.ax = 20 * (30 - i);
             }
 
-            EnumItemSlot[] aenumitemslot = EnumItemSlot.values();
-            int j = aenumitemslot.length;
+            --this.ax;
+            if (this.ax <= 0) {
+                this.f(i - 1);
+            }
+        }
 
-            for (int k = 0; k < j; ++k) {
-                EnumItemSlot enumitemslot = aenumitemslot[k];
-                ItemStack itemstack;
+        EnumItemSlot[] aenumitemslot = EnumItemSlot.values();
+        int j = aenumitemslot.length;
+
+        for (int k = 0; k < j; ++k) {
+            EnumItemSlot enumitemslot = aenumitemslot[k];
+            ItemStack itemstack;
+
+            switch (enumitemslot.a()) {
+                case HAND:
+                    itemstack = this.bu.get(enumitemslot.b());
+                    break;
+
+                case ARMOR:
+                    itemstack = this.bv.get(enumitemslot.b());
+                    break;
+
+                default:
+                    continue;
+            }
+
+            ItemStack itemstack1 = this.getEquipment(enumitemslot);
+
+            if (!ItemStack.matches(itemstack1, itemstack)) {
+                ((WorldServer) this.world).getTracker().a(this, (new PacketPlayOutEntityEquipment(this.getId(), enumitemslot, itemstack1)));
+                if (!itemstack.isEmpty()) {
+                    this.getAttributeMap().a(itemstack.a(enumitemslot));
+                }
+
+                if (!itemstack1.isEmpty()) {
+                    this.getAttributeMap().b(itemstack1.a(enumitemslot));
+                }
 
                 switch (enumitemslot.a()) {
                     case HAND:
-                        itemstack = this.bu.get(enumitemslot.b());
+                        this.bu.set(enumitemslot.b(), itemstack1.isEmpty() ? ItemStack.a : itemstack1.cloneItemStack());
                         break;
 
                     case ARMOR:
-                        itemstack = this.bv.get(enumitemslot.b());
-                        break;
-
-                    default:
-                        continue;
-                }
-
-                ItemStack itemstack1 = this.getEquipment(enumitemslot);
-
-                if (!ItemStack.matches(itemstack1, itemstack)) {
-                    ((WorldServer) this.world).getTracker().a(this, (new PacketPlayOutEntityEquipment(this.getId(), enumitemslot, itemstack1)));
-                    if (!itemstack.isEmpty()) {
-                        this.getAttributeMap().a(itemstack.a(enumitemslot));
-                    }
-
-                    if (!itemstack1.isEmpty()) {
-                        this.getAttributeMap().b(itemstack1.a(enumitemslot));
-                    }
-
-                    switch (enumitemslot.a()) {
-                        case HAND:
-                            this.bu.set(enumitemslot.b(), itemstack1.isEmpty() ? ItemStack.a : itemstack1.cloneItemStack());
-                            break;
-
-                        case ARMOR:
-                            this.bv.set(enumitemslot.b(), itemstack1.isEmpty() ? ItemStack.a : itemstack1.cloneItemStack());
-                    }
+                        this.bv.set(enumitemslot.b(), itemstack1.isEmpty() ? ItemStack.a : itemstack1.cloneItemStack());
                 }
             }
+        }
 
-            if (this.ticksLived % 20 == 0) {
-                this.getCombatTracker().g();
-            }
+        if (this.ticksLived % 20 == 0) {
+            this.getCombatTracker().g();
+        }
 
-            if (!this.glowing) {
-                boolean flag = this.hasEffect(MobEffects.GLOWING);
+        if (!this.glowing) {
+            boolean flag = this.hasEffect(MobEffects.GLOWING);
 
-                if (this.getFlag(6) != flag) {
-                    this.setFlag(6, flag);
-                }
+            if (this.getFlag(6) != flag) {
+                this.setFlag(6, flag);
             }
         }
 
@@ -2106,7 +2087,7 @@ public abstract class EntityLiving extends Entity {
 
             if (itemstack.getItem() == Items.cS && ItemElytra.d(itemstack)) {
                 flag = true;
-                if (!this.world.isClientSide && (this.bp + 1) % 20 == 0) {
+                if ((this.bp + 1) % 20 == 0) {
                     itemstack.damage(1, this);
                 }
             } else {
@@ -2116,11 +2097,9 @@ public abstract class EntityLiving extends Entity {
             flag = false;
         }
 
-        if (!this.world.isClientSide) {
-            if (flag != this.getFlag(7) && !CraftEventFactory.callToggleGlideEvent(this, flag).isCancelled()) // CraftBukkit
-                this.setFlag(7, flag);
+        if (flag != this.getFlag(7) && !CraftEventFactory.callToggleGlideEvent(this, flag).isCancelled()) { // CraftBukkit
+            this.setFlag(7, flag);
         }
-
     }
 
     protected void doTick() {}
@@ -2167,7 +2146,7 @@ public abstract class EntityLiving extends Entity {
         Entity entity = this.bB();
 
         super.stopRiding();
-        if (entity != null && entity != this.bB() && !this.world.isClientSide) {
+        if (entity != null && entity != this.bB()) {
             this.A(entity);
         }
 
@@ -2185,15 +2164,14 @@ public abstract class EntityLiving extends Entity {
         this.bd = flag;
     }
 
-    public void receive(Entity entity, int i) {
-        if (!entity.dead && !this.world.isClientSide) {
+    public void receive(Entity entity, int quantity) {
+        if (!entity.dead) {
             EntityTracker entitytracker = ((WorldServer) this.world).getTracker();
 
             if (entity instanceof EntityItem || entity instanceof EntityArrow || entity instanceof EntityExperienceOrb) {
-                entitytracker.a(entity, (new PacketPlayOutCollect(entity.getId(), this.getId(), i)));
+                entitytracker.a(entity, (new PacketPlayOutCollect(entity.getId(), this.getId(), quantity)));
             }
         }
-
     }
 
     public boolean hasLineOfSight(Entity entity) {
@@ -2218,7 +2196,7 @@ public abstract class EntityLiving extends Entity {
     }
 
     public boolean cu() {
-        return !this.world.isClientSide;
+        return true;//!this.world.isClientSide;
     }
 
     @Override
@@ -2290,7 +2268,7 @@ public abstract class EntityLiving extends Entity {
                     this.a(this.activeItem, 5);
                 }
 
-                if (--this.bo == 0 && !this.world.isClientSide) {
+                if (--this.bo == 0) {
                     this.v();
                 }
             } else {
@@ -2306,15 +2284,13 @@ public abstract class EntityLiving extends Entity {
         if (!itemstack.isEmpty() && !this.isHandRaised()) {
             this.activeItem = itemstack;
             this.bo = itemstack.m();
-            if (!this.world.isClientSide) {
-                int i = 1;
+            int i = 1;
 
-                if (enumhand == EnumHand.OFF_HAND) {
-                    i |= 2;
-                }
-
-                this.datawatcher.set(EntityLiving.at, Byte.valueOf((byte) i));
+            if (enumhand == EnumHand.OFF_HAND) {
+                i |= 2;
             }
+
+            this.datawatcher.set(EntityLiving.at, Byte.valueOf((byte) i));
 
         }
     }
@@ -2322,7 +2298,7 @@ public abstract class EntityLiving extends Entity {
     @Override
     public void a(DataWatcherObject<?> datawatcherobject) {
         super.a(datawatcherobject);
-        if (EntityLiving.at.equals(datawatcherobject) && this.world.isClientSide) {
+        /* if (EntityLiving.at.equals(datawatcherobject) && this.world.isClientSide) {
             if (this.isHandRaised() && this.activeItem.isEmpty()) {
                 this.activeItem = this.b(this.cz());
                 if (!this.activeItem.isEmpty()) {
@@ -2332,7 +2308,7 @@ public abstract class EntityLiving extends Entity {
                 this.activeItem = ItemStack.a;
                 this.bo = 0;
             }
-        }
+        } */
 
     }
 
@@ -2430,9 +2406,7 @@ public abstract class EntityLiving extends Entity {
     }
 
     public void cF() {
-        if (!this.world.isClientSide) {
-            this.datawatcher.set(EntityLiving.at, Byte.valueOf((byte) 0));
-        }
+        this.datawatcher.set(EntityLiving.at, Byte.valueOf((byte) 0));
 
         this.activeItem = ItemStack.a;
         this.bo = 0;

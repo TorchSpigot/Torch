@@ -39,34 +39,41 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
     private NonNullList<ItemStack> items;
     private boolean b;
     private MinecraftKey c;
-    private long d;public long getLootTableSeed() { return d; } // Paper - OBFHELPER
+    private long d;@Override
+    public long getLootTableSeed() { return d; } // Paper - OBFHELPER
 
     // CraftBukkit start
     public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
     private int maxStack = MAX_STACK;
 
+    @Override
     public List<ItemStack> getContents() {
         return this.items;
     }
 
+    @Override
     public void onOpen(CraftHumanEntity who) {
         transaction.add(who);
     }
 
+    @Override
     public void onClose(CraftHumanEntity who) {
         transaction.remove(who);
     }
 
+    @Override
     public List<HumanEntity> getViewers() {
         return transaction;
     }
 
+    @Override
     public InventoryHolder getOwner() {
         org.bukkit.entity.Entity cart = getBukkitEntity();
         if(cart instanceof InventoryHolder) return (InventoryHolder) cart;
         return null;
     }
 
+    @Override
     public void setMaxStackSize(int size) {
         maxStack = size;
     }
@@ -89,6 +96,7 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
         this.b = true;
     }
 
+    @Override
     public void a(DamageSource damagesource) {
         super.a(damagesource);
         if (this.world.getGameRules().getBoolean("doEntityDrops")) {
@@ -97,6 +105,7 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
 
     }
 
+    @Override
     public boolean w_() {
         Iterator iterator = this.items.iterator();
 
@@ -113,19 +122,22 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
         return false;
     }
 
+    @Override
     public ItemStack getItem(int i) {
         this.f((EntityHuman) null);
-        return (ItemStack) this.items.get(i);
+        return this.items.get(i);
     }
 
+    @Override
     public ItemStack splitStack(int i, int j) {
         this.f((EntityHuman) null);
         return ContainerUtil.a(this.items, i, j);
     }
 
+    @Override
     public ItemStack splitWithoutUpdate(int i) {
         this.f((EntityHuman) null);
-        ItemStack itemstack = (ItemStack) this.items.get(i);
+        ItemStack itemstack = this.items.get(i);
 
         if (itemstack.isEmpty()) {
             return ItemStack.a;
@@ -135,6 +147,7 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
         }
     }
 
+    @Override
     public void setItem(int i, ItemStack itemstack) {
         this.f((EntityHuman) null);
         this.items.set(i, itemstack);
@@ -144,30 +157,38 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
 
     }
 
+    @Override
     public void update() {}
 
+    @Override
     public boolean a(EntityHuman entityhuman) {
         return this.dead ? false : entityhuman.h(this) <= 64.0D;
     }
 
+    @Override
     public void startOpen(EntityHuman entityhuman) {}
 
+    @Override
     public void closeContainer(EntityHuman entityhuman) {}
 
+    @Override
     public boolean b(int i, ItemStack itemstack) {
         return true;
     }
 
+    @Override
     public int getMaxStackSize() {
         return maxStack; // CraftBukkit
     }
 
+    @Override
     @Nullable
     public Entity c(int i) {
         this.b = false;
         return super.c(i);
     }
 
+    @Override
     public void die() {
         if (this.b) {
             InventoryUtils.dropEntity(this.world, this, this);
@@ -176,15 +197,17 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
         super.die();
     }
 
+    @Override
     public void b(boolean flag) {
         this.b = flag;
     }
 
     public static void b(DataConverterManager dataconvertermanager, Class<?> oclass) {
         EntityMinecartAbstract.a(dataconvertermanager, oclass);
-        dataconvertermanager.a(DataConverterTypes.ENTITY, (DataInspector) (new DataInspectorItemList(oclass, new String[] { "Items"})));
+        dataconvertermanager.a(DataConverterTypes.ENTITY, (new DataInspectorItemList(oclass, new String[] { "Items"})));
     }
 
+    @Override
     protected void b(NBTTagCompound nbttagcompound) {
         super.b(nbttagcompound);
         lootableData.saveNbt(nbttagcompound); // Paper
@@ -199,6 +222,7 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
 
     }
 
+    @Override
     protected void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
         this.items = NonNullList.a(this.getSize(), ItemStack.a);
@@ -211,44 +235,50 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
 
     }
 
+    @Override
     public boolean b(EntityHuman entityhuman, EnumHand enumhand) {
-        if (!this.world.isClientSide) {
-            entityhuman.openContainer(this);
-        }
+        entityhuman.openContainer(this);
 
         return true;
     }
 
+    @Override
     protected void r() {
         float f = 0.98F;
 
         if (this.c == null) {
-            int i = 15 - Container.b((IInventory) this);
+            int i = 15 - Container.b(this);
 
-            f += (float) i * 0.001F;
+            f += i * 0.001F;
         }
 
-        this.motX *= (double) f;
+        this.motX *= f;
         this.motY *= 0.0D;
-        this.motZ *= (double) f;
+        this.motZ *= f;
     }
 
+    @Override
     public int getProperty(int i) {
         return 0;
     }
 
+    @Override
     public void setProperty(int i, int j) {}
 
+    @Override
     public int h() {
         return 0;
     }
 
+    @Override
     public boolean isLocked() {
         return false;
     }
 
+    @Override
     public void a(ChestLock chestlock) {}
 
+    @Override
     public ChestLock getLock() {
         return ChestLock.a;
     }
@@ -277,6 +307,7 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
 
     }
 
+    @Override
     public void clear() {
         this.f((EntityHuman) null);
         this.items.clear();
@@ -290,6 +321,7 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
 
 
     public MinecraftKey getLootTableKey() { return b(); } // Paper - OBFHELPER
+    @Override
     public MinecraftKey b() {
         return this.c;
     }
@@ -312,6 +344,7 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
         return this.world;
     }
 
+    @Override
     public String getLootTableName() {
         final MinecraftKey key = getLootTableKey();
         return key != null ? key.toString() : null;
@@ -327,7 +360,7 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
     @Override
     public void clearLootTable() {
         //noinspection RedundantCast
-        this.c = (MinecraftKey) null;
+        this.c = null;
     }
     // Paper end
 }

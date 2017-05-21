@@ -21,41 +21,50 @@ public abstract class BlockPressurePlateAbstract extends Block {
         this.a(true);
     }
 
+    @Override
     public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         boolean flag = this.getPower(iblockdata) > 0;
 
         return flag ? BlockPressurePlateAbstract.a : BlockPressurePlateAbstract.b;
     }
 
+    @Override
     public int a(World world) {
         return 20;
     }
 
+    @Override
     @Nullable
     public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return BlockPressurePlateAbstract.k;
     }
 
+    @Override
     public boolean b(IBlockData iblockdata) {
         return false;
     }
 
+    @Override
     public boolean c(IBlockData iblockdata) {
         return false;
     }
 
+    @Override
     public boolean b(IBlockAccess iblockaccess, BlockPosition blockposition) {
         return true;
     }
 
+    @Override
     public boolean d() {
         return true;
     }
 
+    @Override
     public boolean canPlace(World world, BlockPosition blockposition) {
         return this.i(world, blockposition.down());
     }
 
+    @Override
     public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
         if (!this.i(world, blockposition.down())) {
             this.b(world, blockposition, iblockdata, 0);
@@ -68,27 +77,24 @@ public abstract class BlockPressurePlateAbstract extends Block {
         return world.getType(blockposition).r() || world.getType(blockposition).getBlock() instanceof BlockFence;
     }
 
+    @Override
     public void a(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {}
 
+    @Override
     public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
-        if (!world.isClientSide) {
-            int i = this.getPower(iblockdata);
+        int i = this.getPower(iblockdata);
 
-            if (i > 0) {
-                this.a(world, blockposition, iblockdata, i);
-            }
-
+        if (i > 0) {
+            this.a(world, blockposition, iblockdata, i);
         }
     }
 
+    @Override
     public void a(World world, BlockPosition blockposition, IBlockData iblockdata, Entity entity) {
-        if (!world.isClientSide) {
-            int i = this.getPower(iblockdata);
+        int i = this.getPower(iblockdata);
 
-            if (i == 0) {
-                this.a(world, blockposition, iblockdata, i);
-            }
-
+        if (i == 0) {
+            this.a(world, blockposition, iblockdata, i);
         }
     }
 
@@ -124,7 +130,7 @@ public abstract class BlockPressurePlateAbstract extends Block {
         }
 
         if (flag1) {
-            world.a(new BlockPosition(blockposition), (Block) this, this.a(world));
+            world.a(new BlockPosition(blockposition), this, this.a(world));
         }
 
     }
@@ -133,6 +139,7 @@ public abstract class BlockPressurePlateAbstract extends Block {
 
     protected abstract void c(World world, BlockPosition blockposition);
 
+    @Override
     public void remove(World world, BlockPosition blockposition, IBlockData iblockdata) {
         if (this.getPower(iblockdata) > 0) {
             this.d(world, blockposition);
@@ -146,18 +153,22 @@ public abstract class BlockPressurePlateAbstract extends Block {
         world.applyPhysics(blockposition.down(), this, false);
     }
 
+    @Override
     public int b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition, EnumDirection enumdirection) {
         return this.getPower(iblockdata);
     }
 
+    @Override
     public int c(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition, EnumDirection enumdirection) {
         return enumdirection == EnumDirection.UP ? this.getPower(iblockdata) : 0;
     }
 
+    @Override
     public boolean isPowerSource(IBlockData iblockdata) {
         return true;
     }
 
+    @Override
     public EnumPistonReaction h(IBlockData iblockdata) {
         return EnumPistonReaction.DESTROY;
     }

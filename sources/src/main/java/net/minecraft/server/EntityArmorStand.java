@@ -314,7 +314,7 @@ public class EntityArmorStand extends EntityLiving {
         ItemStack itemstack = entityhuman.b(enumhand);
 
         if (!this.isMarker() && itemstack.getItem() != Items.NAME_TAG) {
-            if (!this.world.isClientSide && !entityhuman.isSpectator()) {
+            if (!entityhuman.isSpectator()) {
                 EnumItemSlot enumitemslot = EntityInsentient.d(itemstack);
 
                 if (itemstack.isEmpty()) {
@@ -415,7 +415,7 @@ public class EntityArmorStand extends EntityLiving {
             return false;
         }
         // CraftBukkit end
-        if (!this.world.isClientSide && !this.dead) {
+        if (!this.dead) {
             if (DamageSource.OUT_OF_WORLD.equals(damagesource)) {
                 this.Q(); // CraftBukkit - this.die() -> this.Q()
                 return false;

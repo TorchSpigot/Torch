@@ -23,7 +23,7 @@ public class EntityLightning extends EntityWeather {
         this.d = flag;
         BlockPosition blockposition = new BlockPosition(this);
 
-        if (!flag && !world.isClientSide && world.getGameRules().getBoolean("doFireTick") && (world.getDifficulty() == EnumDifficulty.NORMAL || world.getDifficulty() == EnumDifficulty.HARD) && world.areChunksLoaded(blockposition, 10)) {
+        if (!flag && world.getGameRules().getBoolean("doFireTick") && (world.getDifficulty() == EnumDifficulty.NORMAL || world.getDifficulty() == EnumDifficulty.HARD) && world.areChunksLoaded(blockposition, 10)) {
             if (world.getType(blockposition).getMaterial() == Material.AIR && Blocks.FIRE.canPlace(world, blockposition)) {
                 // CraftBukkit start
                 if (!CraftEventFactory.callBlockIgniteEvent(world, blockposition.getX(), blockposition.getY(), blockposition.getZ(), this).isCancelled()) {
@@ -55,10 +55,12 @@ public class EntityLightning extends EntityWeather {
     }
     // Spigot end
 
+    @Override
     public SoundCategory bC() {
         return SoundCategory.WEATHER;
     }
 
+    @Override
     public void A_() {
         super.A_();
         if (!isSilent && this.lifeTicks == 2) { // Spigot
@@ -90,7 +92,7 @@ public class EntityLightning extends EntityWeather {
             } else if (this.lifeTicks < -this.random.nextInt(10)) {
                 --this.c;
                 this.lifeTicks = 1;
-                if (!this.d && !this.world.isClientSide) {
+                if (!this.d) {
                     this.a = this.random.nextLong();
                     BlockPosition blockposition = new BlockPosition(this);
 
@@ -106,9 +108,7 @@ public class EntityLightning extends EntityWeather {
         }
 
         if (this.lifeTicks >= 0 && !this.isEffect) { // CraftBukkit - add !this.isEffect
-            if (this.world.isClientSide) {
-                this.world.d(2);
-            } else if (!this.d) {
+            if (!this.d) {
                 double d0 = 3.0D;
                 List list = this.world.getEntities(this, new AxisAlignedBB(this.locX - 3.0D, this.locY - 3.0D, this.locZ - 3.0D, this.locX + 3.0D, this.locY + 6.0D + 3.0D, this.locZ + 3.0D));
 
@@ -122,9 +122,12 @@ public class EntityLightning extends EntityWeather {
 
     }
 
+    @Override
     protected void i() {}
 
+    @Override
     protected void a(NBTTagCompound nbttagcompound) {}
 
+    @Override
     protected void b(NBTTagCompound nbttagcompound) {}
 }

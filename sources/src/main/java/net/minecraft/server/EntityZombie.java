@@ -104,7 +104,7 @@ public class EntityZombie extends EntityMonster {
 
     public void setBaby(boolean flag) {
         this.getDataWatcher().set(EntityZombie.bw, Boolean.valueOf(flag));
-        if (this.world != null && !this.world.isClientSide) {
+        if (this.world != null) {
             AttributeInstance attributeinstance = this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED);
 
             attributeinstance.c(this.c);
@@ -127,7 +127,7 @@ public class EntityZombie extends EntityMonster {
 
     @Override
 	public void n() {
-        if (this.world.B() && !this.world.isClientSide && !this.isBaby() && this.o()) {
+        if (this.world.B() && !this.isBaby() && this.o()) {
             float f = this.e(1.0F);
 
             if (f > 0.5F && this.random.nextFloat() * 30.0F < (f - 0.4F) * 2.0F && this.world.h(new BlockPosition(this.locX, this.locY + this.getHeadHeight(), this.locZ))) {

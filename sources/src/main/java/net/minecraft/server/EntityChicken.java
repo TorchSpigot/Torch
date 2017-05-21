@@ -70,7 +70,7 @@ public class EntityChicken extends EntityAnimal {
         }
 
         this.bw += this.bB * 2.0F;
-        if (!this.world.isClientSide && !this.isBaby() && !this.isChickenJockey() && --this.bC <= 0) {
+        if (!this.isBaby() && !this.isChickenJockey() && --this.bC <= 0) {
             this.a(SoundEffects.ac, 1.0F, (this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F);
             this.forceDrops = true; // CraftBukkit
             this.a(Items.EGG, 1);

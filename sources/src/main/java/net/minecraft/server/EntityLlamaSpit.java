@@ -17,10 +17,11 @@ public class EntityLlamaSpit extends Entity implements IProjectile {
     public EntityLlamaSpit(World world, EntityLlama entityllama) {
         super(world);
         this.shooter = entityllama;
-        this.setPosition(entityllama.locX - (double) (entityllama.width + 1.0F) * 0.5D * (double) MathHelper.sin(entityllama.aN * 0.017453292F), entityllama.locY + (double) entityllama.getHeadHeight() - 0.10000000149011612D, entityllama.locZ + (double) (entityllama.width + 1.0F) * 0.5D * (double) MathHelper.cos(entityllama.aN * 0.017453292F));
+        this.setPosition(entityllama.locX - (entityllama.width + 1.0F) * 0.5D * MathHelper.sin(entityllama.aN * 0.017453292F), entityllama.locY + entityllama.getHeadHeight() - 0.10000000149011612D, entityllama.locZ + (entityllama.width + 1.0F) * 0.5D * MathHelper.cos(entityllama.aN * 0.017453292F));
         this.setSize(0.25F, 0.25F);
     }
 
+    @Override
     public void A_() {
         super.A_();
         if (this.b != null) {
@@ -54,7 +55,7 @@ public class EntityLlamaSpit extends Entity implements IProjectile {
 
         this.yaw = (float) (MathHelper.c(this.motX, this.motZ) * 57.2957763671875D);
 
-        for (this.pitch = (float) (MathHelper.c(this.motY, (double) f) * 57.2957763671875D); this.pitch - this.lastPitch < -180.0F; this.lastPitch -= 360.0F) {
+        for (this.pitch = (float) (MathHelper.c(this.motY, f) * 57.2957763671875D); this.pitch - this.lastPitch < -180.0F; this.lastPitch -= 360.0F) {
             ;
         }
 
@@ -119,25 +120,26 @@ public class EntityLlamaSpit extends Entity implements IProjectile {
         return entity;
     }
 
+    @Override
     public void shoot(double d0, double d1, double d2, float f, float f1) {
         float f2 = MathHelper.sqrt(d0 * d0 + d1 * d1 + d2 * d2);
 
-        d0 /= (double) f2;
-        d1 /= (double) f2;
-        d2 /= (double) f2;
-        d0 += this.random.nextGaussian() * 0.007499999832361937D * (double) f1;
-        d1 += this.random.nextGaussian() * 0.007499999832361937D * (double) f1;
-        d2 += this.random.nextGaussian() * 0.007499999832361937D * (double) f1;
-        d0 *= (double) f;
-        d1 *= (double) f;
-        d2 *= (double) f;
+        d0 /= f2;
+        d1 /= f2;
+        d2 /= f2;
+        d0 += this.random.nextGaussian() * 0.007499999832361937D * f1;
+        d1 += this.random.nextGaussian() * 0.007499999832361937D * f1;
+        d2 += this.random.nextGaussian() * 0.007499999832361937D * f1;
+        d0 *= f;
+        d1 *= f;
+        d2 *= f;
         this.motX = d0;
         this.motY = d1;
         this.motZ = d2;
         float f3 = MathHelper.sqrt(d0 * d0 + d2 * d2);
 
         this.yaw = (float) (MathHelper.c(d0, d2) * 57.2957763671875D);
-        this.pitch = (float) (MathHelper.c(d1, (double) f3) * 57.2957763671875D);
+        this.pitch = (float) (MathHelper.c(d1, f3) * 57.2957763671875D);
         this.lastYaw = this.yaw;
         this.lastPitch = this.pitch;
     }
@@ -147,14 +149,14 @@ public class EntityLlamaSpit extends Entity implements IProjectile {
             movingobjectposition.entity.damageEntity(DamageSource.a(this, this.shooter).b(), 1.0F);
         }
 
-        if (!this.world.isClientSide) {
-            this.die();
-        }
+        this.die();
 
     }
 
+    @Override
     protected void i() {}
 
+    @Override
     protected void a(NBTTagCompound nbttagcompound) {
         if (nbttagcompound.hasKeyOfType("Owner", 10)) {
             this.b = nbttagcompound.getCompound("Owner");
@@ -162,6 +164,7 @@ public class EntityLlamaSpit extends Entity implements IProjectile {
 
     }
 
+    @Override
     protected void b(NBTTagCompound nbttagcompound) {
         if (this.shooter != null) {
             NBTTagCompound nbttagcompound1 = new NBTTagCompound();

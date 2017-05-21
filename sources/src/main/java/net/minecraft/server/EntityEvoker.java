@@ -17,6 +17,7 @@ public class EntityEvoker extends EntityMonster {
         this.b_ = 10;
     }
 
+    @Override
     protected void r() {
         super.r();
         this.goalSelector.a(0, new PathfinderGoalFloat(this));
@@ -34,6 +35,7 @@ public class EntityEvoker extends EntityMonster {
         this.targetSelector.a(3, new PathfinderGoalNearestAttackableTarget(this, EntityIronGolem.class, false));
     }
 
+    @Override
     protected void initAttributes() {
         super.initAttributes();
         this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).setValue(0.5D);
@@ -41,6 +43,7 @@ public class EntityEvoker extends EntityMonster {
         this.getAttributeInstance(GenericAttributes.maxHealth).setValue(24.0D);
     }
 
+    @Override
     protected void i() {
         super.i();
         this.datawatcher.register(EntityEvoker.a, Byte.valueOf((byte) 0));
@@ -50,26 +53,30 @@ public class EntityEvoker extends EntityMonster {
         EntityInsentient.a(dataconvertermanager, EntityEvoker.class);
     }
 
+    @Override
     public void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
         this.b = nbttagcompound.getInt("SpellTicks");
     }
 
+    @Override
     public void b(NBTTagCompound nbttagcompound) {
         super.b(nbttagcompound);
         nbttagcompound.setInt("SpellTicks", this.b);
     }
 
+    @Override
     public EnumMonsterType getMonsterType() {
         return EnumMonsterType.ILLAGER;
     }
 
+    @Override
     protected MinecraftKey J() {
         return LootTables.au;
     }
 
     public boolean o() {
-        return this.world.isClientSide ? ((Byte) this.datawatcher.get(EntityEvoker.a)).byteValue() > 0 : this.b > 0;
+        return this.b > 0;
     }
 
     public void a(int i) {
@@ -86,6 +93,7 @@ public class EntityEvoker extends EntityMonster {
         return this.b;
     }
 
+    @Override
     protected void M() {
         super.M();
         if (this.b > 0) {
@@ -94,10 +102,11 @@ public class EntityEvoker extends EntityMonster {
 
     }
 
+    @Override
     public void A_() {
         super.A_();
-        if (this.world.isClientSide && this.o()) {
-            byte b0 = ((Byte) this.datawatcher.get(EntityEvoker.a)).byteValue();
+        /* if (this.world.isClientSide && this.o()) {
+            byte b0 = this.datawatcher.get(EntityEvoker.a).byteValue();
             double d0 = 0.7D;
             double d1 = 0.5D;
             double d2 = 0.2D;
@@ -112,28 +121,32 @@ public class EntityEvoker extends EntityMonster {
                 d2 = 0.8D;
             }
 
-            float f = this.aN * 0.017453292F + MathHelper.cos((float) this.ticksLived * 0.6662F) * 0.25F;
+            float f = this.aN * 0.017453292F + MathHelper.cos(this.ticksLived * 0.6662F) * 0.25F;
             float f1 = MathHelper.cos(f);
             float f2 = MathHelper.sin(f);
 
-            this.world.addParticle(EnumParticle.SPELL_MOB, this.locX + (double) f1 * 0.6D, this.locY + 1.8D, this.locZ + (double) f2 * 0.6D, d0, d1, d2, new int[0]);
-            this.world.addParticle(EnumParticle.SPELL_MOB, this.locX - (double) f1 * 0.6D, this.locY + 1.8D, this.locZ - (double) f2 * 0.6D, d0, d1, d2, new int[0]);
-        }
+            this.world.addParticle(EnumParticle.SPELL_MOB, this.locX + f1 * 0.6D, this.locY + 1.8D, this.locZ + f2 * 0.6D, d0, d1, d2, new int[0]);
+            this.world.addParticle(EnumParticle.SPELL_MOB, this.locX - f1 * 0.6D, this.locY + 1.8D, this.locZ - f2 * 0.6D, d0, d1, d2, new int[0]);
+        } */
 
     }
 
+    @Override
     public boolean r(Entity entity) {
         return entity == null ? false : (entity == this ? true : (super.r(entity) ? true : (entity instanceof EntityVex ? this.r(((EntityVex) entity).o()) : (entity instanceof EntityLiving && ((EntityLiving) entity).getMonsterType() == EnumMonsterType.ILLAGER ? this.aQ() == null && entity.aQ() == null : false))));
     }
 
+    @Override
     protected SoundEffect G() {
         return SoundEffects.bm;
     }
 
+    @Override
     protected SoundEffect bX() {
         return SoundEffects.bo;
     }
 
+    @Override
     protected SoundEffect bW() {
         return SoundEffects.bp;
     }
@@ -154,6 +167,7 @@ public class EntityEvoker extends EntityMonster {
                 return entitysheep.getColor() == EnumColor.BLUE;
             }
 
+            @Override
             public boolean apply(Object object) {
                 return this.a((EntitySheep) object);
             }
@@ -163,6 +177,7 @@ public class EntityEvoker extends EntityMonster {
             super(null);
         }
 
+        @Override
         public boolean a() {
             if (EntityEvoker.this.getGoalTarget() != null) {
                 return false;
@@ -184,15 +199,18 @@ public class EntityEvoker extends EntityMonster {
             }
         }
 
+        @Override
         public boolean b() {
             return EntityEvoker.this.dj() != null && this.b > 0;
         }
 
+        @Override
         public void d() {
             super.d();
             EntityEvoker.this.a((EntitySheep) null);
         }
 
+        @Override
         protected void j() {
             EntitySheep entitysheep = EntityEvoker.this.dj();
 
@@ -202,22 +220,27 @@ public class EntityEvoker extends EntityMonster {
 
         }
 
+        @Override
         protected int m() {
             return 40;
         }
 
+        @Override
         protected int f() {
             return 60;
         }
 
+        @Override
         protected int i() {
             return 140;
         }
 
+        @Override
         protected SoundEffect k() {
             return SoundEffects.bs;
         }
 
+        @Override
         protected int l() {
             return 3;
         }
@@ -229,6 +252,7 @@ public class EntityEvoker extends EntityMonster {
             super(null);
         }
 
+        @Override
         public boolean a() {
             if (!super.a()) {
                 return false;
@@ -239,14 +263,17 @@ public class EntityEvoker extends EntityMonster {
             }
         }
 
+        @Override
         protected int f() {
             return 100;
         }
 
+        @Override
         protected int i() {
             return 340;
         }
 
+        @Override
         protected void j() {
             for (int i = 0; i < 3; ++i) {
                 BlockPosition blockposition = (new BlockPosition(EntityEvoker.this)).a(-2 + EntityEvoker.this.random.nextInt(5), 1, -2 + EntityEvoker.this.random.nextInt(5));
@@ -254,7 +281,7 @@ public class EntityEvoker extends EntityMonster {
 
                 entityvex.setPositionRotation(blockposition, 0.0F, 0.0F);
                 entityvex.prepare(EntityEvoker.this.world.D(blockposition), (GroupDataEntity) null);
-                entityvex.a((EntityInsentient) EntityEvoker.this);
+                entityvex.a(EntityEvoker.this);
                 entityvex.g(blockposition);
                 entityvex.a(20 * (30 + EntityEvoker.this.random.nextInt(90)));
                 EntityEvoker.this.world.addEntity(entityvex);
@@ -262,10 +289,12 @@ public class EntityEvoker extends EntityMonster {
 
         }
 
+        @Override
         protected SoundEffect k() {
             return SoundEffects.br;
         }
 
+        @Override
         protected int l() {
             return 1;
         }
@@ -281,14 +310,17 @@ public class EntityEvoker extends EntityMonster {
             super(null);
         }
 
+        @Override
         protected int f() {
             return 40;
         }
 
+        @Override
         protected int i() {
             return 100;
         }
 
+        @Override
         protected void j() {
             EntityLiving entityliving = EntityEvoker.this.getGoalTarget();
             double d0 = Math.min(entityliving.locY, EntityEvoker.this.locY);
@@ -296,24 +328,24 @@ public class EntityEvoker extends EntityMonster {
             float f = (float) MathHelper.c(entityliving.locZ - EntityEvoker.this.locZ, entityliving.locX - EntityEvoker.this.locX);
             int i;
 
-            if (EntityEvoker.this.h((Entity) entityliving) < 9.0D) {
+            if (EntityEvoker.this.h(entityliving) < 9.0D) {
                 float f1;
 
                 for (i = 0; i < 5; ++i) {
-                    f1 = f + (float) i * 3.1415927F * 0.4F;
-                    this.a(EntityEvoker.this.locX + (double) MathHelper.cos(f1) * 1.5D, EntityEvoker.this.locZ + (double) MathHelper.sin(f1) * 1.5D, d0, d1, f1, 0);
+                    f1 = f + i * 3.1415927F * 0.4F;
+                    this.a(EntityEvoker.this.locX + MathHelper.cos(f1) * 1.5D, EntityEvoker.this.locZ + MathHelper.sin(f1) * 1.5D, d0, d1, f1, 0);
                 }
 
                 for (i = 0; i < 8; ++i) {
-                    f1 = f + (float) i * 3.1415927F * 2.0F / 8.0F + 1.2566371F;
-                    this.a(EntityEvoker.this.locX + (double) MathHelper.cos(f1) * 2.5D, EntityEvoker.this.locZ + (double) MathHelper.sin(f1) * 2.5D, d0, d1, f1, 3);
+                    f1 = f + i * 3.1415927F * 2.0F / 8.0F + 1.2566371F;
+                    this.a(EntityEvoker.this.locX + MathHelper.cos(f1) * 2.5D, EntityEvoker.this.locZ + MathHelper.sin(f1) * 2.5D, d0, d1, f1, 3);
                 }
             } else {
                 for (i = 0; i < 16; ++i) {
-                    double d2 = 1.25D * (double) (i + 1);
+                    double d2 = 1.25D * (i + 1);
                     int j = 1 * i;
 
-                    this.a(EntityEvoker.this.locX + (double) MathHelper.cos(f) * d2, EntityEvoker.this.locZ + (double) MathHelper.sin(f) * d2, d0, d1, f, j);
+                    this.a(EntityEvoker.this.locX + MathHelper.cos(f) * d2, EntityEvoker.this.locZ + MathHelper.sin(f) * d2, d0, d1, f, j);
                 }
             }
 
@@ -343,17 +375,19 @@ public class EntityEvoker extends EntityMonster {
             } while (blockposition.getY() >= MathHelper.floor(d2) - 1);
 
             if (flag) {
-                EntityEvokerFangs entityevokerfangs = new EntityEvokerFangs(EntityEvoker.this.world, d0, (double) blockposition.getY() + d4, d1, f, i, EntityEvoker.this);
+                EntityEvokerFangs entityevokerfangs = new EntityEvokerFangs(EntityEvoker.this.world, d0, blockposition.getY() + d4, d1, f, i, EntityEvoker.this);
 
                 EntityEvoker.this.world.addEntity(entityevokerfangs);
             }
 
         }
 
+        @Override
         protected SoundEffect k() {
             return SoundEffects.bq;
         }
 
+        @Override
         protected int l() {
             return 2;
         }
@@ -370,14 +404,17 @@ public class EntityEvoker extends EntityMonster {
 
         private d() {}
 
+        @Override
         public boolean a() {
             return EntityEvoker.this.getGoalTarget() == null ? false : (EntityEvoker.this.o() ? false : EntityEvoker.this.ticksLived >= this.c);
         }
 
+        @Override
         public boolean b() {
             return EntityEvoker.this.getGoalTarget() != null && this.b > 0;
         }
 
+        @Override
         public void c() {
             this.b = this.m();
             EntityEvoker.this.b = this.f();
@@ -386,6 +423,7 @@ public class EntityEvoker extends EntityMonster {
             EntityEvoker.this.c = this.l();
         }
 
+        @Override
         public void e() {
             --this.b;
             if (this.b == 0) {
@@ -420,26 +458,30 @@ public class EntityEvoker extends EntityMonster {
             this.a(3);
         }
 
+        @Override
         public boolean a() {
             return EntityEvoker.this.di() > 0;
         }
 
+        @Override
         public void c() {
             super.c();
             EntityEvoker.this.a(EntityEvoker.this.c);
             EntityEvoker.this.navigation.o();
         }
 
+        @Override
         public void d() {
             super.d();
             EntityEvoker.this.a(0);
         }
 
+        @Override
         public void e() {
             if (EntityEvoker.this.getGoalTarget() != null) {
-                EntityEvoker.this.getControllerLook().a(EntityEvoker.this.getGoalTarget(), (float) EntityEvoker.this.cL(), (float) EntityEvoker.this.N());
+                EntityEvoker.this.getControllerLook().a(EntityEvoker.this.getGoalTarget(), EntityEvoker.this.cL(), EntityEvoker.this.N());
             } else if (EntityEvoker.this.dj() != null) {
-                EntityEvoker.this.getControllerLook().a(EntityEvoker.this.dj(), (float) EntityEvoker.this.cL(), (float) EntityEvoker.this.N());
+                EntityEvoker.this.getControllerLook().a(EntityEvoker.this.dj(), EntityEvoker.this.cL(), EntityEvoker.this.N());
             }
 
         }

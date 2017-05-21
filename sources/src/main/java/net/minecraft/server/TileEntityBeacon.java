@@ -5,7 +5,6 @@ import com.koloboke.collect.set.hash.HashObjSets;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -88,8 +87,8 @@ public class TileEntityBeacon extends TileEntityContainer implements ITickable, 
 
     public void n() {
         if (this.world != null) {
-            this.addEffects();
             this.checkStructure();
+            this.applyEffects();
         }
     }
 
@@ -198,9 +197,9 @@ public class TileEntityBeacon extends TileEntityContainer implements ITickable, 
         return false;
     }
     
-    private void E() { addEffects(); }
-    public void addEffects() {
-        if (this.j && this.levels > 0 && !this.world.isClientSide && this.primaryEffect != null) {
+    private void E() { applyEffects(); }
+    public void applyEffects() {
+        if (this.j && this.levels > 0 && this.primaryEffect != null) {
             byte amplifier = getAmplification();
 
             final int duration = getLevel();

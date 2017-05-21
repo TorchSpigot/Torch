@@ -505,11 +505,7 @@ public class Chunk {
 
             chunksection.setType(i, j & 15, k, iblockdata);
             if (block1 != block) {
-                if (!this.world.isClientSide) {
-                    block1.remove(this.world, blockposition, iblockdata1);
-                } else if (block1 instanceof ITileEntity) {
-                    this.world.s(blockposition);
-                }
+                block1.remove(this.world, blockposition, iblockdata1);
             }
 
             if (chunksection.getType(i, j & 15, k).getBlock() != block) {
@@ -545,7 +541,7 @@ public class Chunk {
                 }
 
                 // CraftBukkit - Don't place while processing the BlockPlaceEvent, unless it's a BlockContainer. Prevents blocks such as TNT from activating when cancelled.
-                if (!this.world.isClientSide && block1 != block  && (!this.world.captureBlockStates || block instanceof BlockTileEntity)) {
+                if (block1 != block  && (!this.world.captureBlockStates || block instanceof BlockTileEntity)) {
                     block.onPlace(this.world, blockposition, iblockdata);
                 }
 

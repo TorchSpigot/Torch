@@ -17,11 +17,11 @@ public interface IWorldAccess {
     
     abstract void notifyBlockUpdate(World world, BlockPosition position, IBlockData oldData, IBlockData newData);
     
-    abstract void playSoundNearbyExpect(@Nullable EntityHuman expect, SoundEffect effect, SoundCategory category, double x, double y, double z, float volume, float pitch);
+    @Async abstract void playSoundNearbyExpect(@Nullable EntityHuman expect, SoundEffect effect, SoundCategory category, double x, double y, double z, float volume, float pitch);
     
-    abstract void playWorldEventNearbyExpect(EntityHuman expect, int type, BlockPosition position, int data);
+    @Async abstract void playWorldEventNearbyExpect(EntityHuman expect, int type, BlockPosition position, int data);
     
-    abstract void playWorldEvent(int type, BlockPosition position, int data);
+    @Async abstract void playWorldEvent(int type, BlockPosition position, int data);
     
-    abstract void sendBlockBreakProgress(int breakerEntityId, BlockPosition position, int progress);
+    @Async abstract void sendBlockBreakProgress(int breakerEntityId, BlockPosition position, int progress);
 }

@@ -32,6 +32,7 @@ public class EntityWither extends EntityMonster implements IRangedEntity {
             return entity instanceof EntityLiving && ((EntityLiving) entity).getMonsterType() != EnumMonsterType.UNDEAD && ((EntityLiving) entity).cK();
         }
 
+        @Override
         public boolean apply(@Nullable Object object) {
             return this.a((Entity) object);
         }
@@ -47,6 +48,7 @@ public class EntityWither extends EntityMonster implements IRangedEntity {
         this.b_ = 50;
     }
 
+    @Override
     protected void r() {
         this.goalSelector.a(0, new EntityWither.a());
         this.goalSelector.a(1, new PathfinderGoalFloat(this));
@@ -58,6 +60,7 @@ public class EntityWither extends EntityMonster implements IRangedEntity {
         this.targetSelector.a(2, new PathfinderGoalNearestAttackableTarget(this, EntityInsentient.class, 0, false, false, EntityWither.bG));
     }
 
+    @Override
     protected void i() {
         super.i();
         this.datawatcher.register(EntityWither.a, Integer.valueOf(0));
@@ -70,11 +73,13 @@ public class EntityWither extends EntityMonster implements IRangedEntity {
         EntityInsentient.a(dataconvertermanager, EntityWither.class);
     }
 
+    @Override
     public void b(NBTTagCompound nbttagcompound) {
         super.b(nbttagcompound);
         nbttagcompound.setInt("Invul", this.dh());
     }
 
+    @Override
     public void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
         this.g(nbttagcompound.getInt("Invul"));
@@ -84,30 +89,35 @@ public class EntityWither extends EntityMonster implements IRangedEntity {
 
     }
 
+    @Override
     public void setCustomName(String s) {
         super.setCustomName(s);
         this.bF.a(this.getScoreboardDisplayName());
     }
 
+    @Override
     protected SoundEffect G() {
         return SoundEffects.hy;
     }
 
+    @Override
     protected SoundEffect bW() {
         return SoundEffects.hB;
     }
 
+    @Override
     protected SoundEffect bX() {
         return SoundEffects.hA;
     }
 
+    @Override
     public void n() {
         this.motY *= 0.6000000238418579D;
         double d0;
         double d1;
         double d2;
 
-        if (!this.world.isClientSide && this.m(0) > 0) {
+        if (this.m(0) > 0) {
             Entity entity = this.world.getEntity(this.m(0));
 
             if (entity != null) {
@@ -124,7 +134,7 @@ public class EntityWither extends EntityMonster implements IRangedEntity {
                 d0 = entity.locZ - this.locZ;
                 d1 = d3 * d3 + d0 * d0;
                 if (d1 > 9.0D) {
-                    d2 = (double) MathHelper.sqrt(d1);
+                    d2 = MathHelper.sqrt(d1);
                     this.motX += (d3 / d2 * 0.5D - this.motX) * 0.6000000238418579D;
                     this.motZ += (d0 / d2 * 0.5D - this.motZ) * 0.6000000238418579D;
                 }
@@ -159,9 +169,9 @@ public class EntityWither extends EntityMonster implements IRangedEntity {
                 d1 = this.o(i + 1);
                 d2 = this.p(i + 1);
                 double d4 = entity1.locX - d0;
-                double d5 = entity1.locY + (double) entity1.getHeadHeight() - d1;
+                double d5 = entity1.locY + entity1.getHeadHeight() - d1;
                 double d6 = entity1.locZ - d2;
-                double d7 = (double) MathHelper.sqrt(d4 * d4 + d6 * d6);
+                double d7 = MathHelper.sqrt(d4 * d4 + d6 * d6);
                 float f = (float) (MathHelper.c(d6, d4) * 57.2957763671875D) - 90.0F;
                 float f1 = (float) (-(MathHelper.c(d5, d7) * 57.2957763671875D));
 
@@ -187,12 +197,13 @@ public class EntityWither extends EntityMonster implements IRangedEntity {
 
         if (this.dh() > 0) {
             for (j = 0; j < 3; ++j) {
-                this.world.addParticle(EnumParticle.SPELL_MOB, this.locX + this.random.nextGaussian(), this.locY + (double) (this.random.nextFloat() * 3.3F), this.locZ + this.random.nextGaussian(), 0.699999988079071D, 0.699999988079071D, 0.8999999761581421D, new int[0]);
+                this.world.addParticle(EnumParticle.SPELL_MOB, this.locX + this.random.nextGaussian(), this.locY + this.random.nextFloat() * 3.3F, this.locZ + this.random.nextGaussian(), 0.699999988079071D, 0.699999988079071D, 0.8999999761581421D, new int[0]);
             }
         }
 
     }
 
+    @Override
     protected void M() {
         int i;
 
@@ -205,7 +216,7 @@ public class EntityWither extends EntityMonster implements IRangedEntity {
                 this.world.getServer().getPluginManager().callEvent(event);
 
                 if (!event.isCancelled()) {
-                    this.world.createExplosion(this, this.locX, this.locY + (double) this.getHeadHeight(), this.locZ, event.getRadius(), event.getFire(), this.world.getGameRules().getBoolean("mobGriefing"));
+                    this.world.createExplosion(this, this.locX, this.locY + this.getHeadHeight(), this.locZ, event.getRadius(), event.getFire(), this.world.getGameRules().getBoolean("mobGriefing"));
                 }
                 // CraftBukkit end
 
@@ -360,13 +371,16 @@ public class EntityWither extends EntityMonster implements IRangedEntity {
         this.setHealth(this.getMaxHealth() / 3.0F);
     }
 
+    @Override
     public void aS() {}
 
+    @Override
     public void b(EntityPlayer entityplayer) {
         super.b(entityplayer);
         this.bF.addPlayer(entityplayer);
     }
 
+    @Override
     public void c(EntityPlayer entityplayer) {
         super.c(entityplayer);
         this.bF.removePlayer(entityplayer);
@@ -376,10 +390,10 @@ public class EntityWither extends EntityMonster implements IRangedEntity {
         if (i <= 0) {
             return this.locX;
         } else {
-            float f = (this.aN + (float) (180 * (i - 1))) * 0.017453292F;
+            float f = (this.aN + 180 * (i - 1)) * 0.017453292F;
             float f1 = MathHelper.cos(f);
 
-            return this.locX + (double) f1 * 1.3D;
+            return this.locX + f1 * 1.3D;
         }
     }
 
@@ -391,10 +405,10 @@ public class EntityWither extends EntityMonster implements IRangedEntity {
         if (i <= 0) {
             return this.locZ;
         } else {
-            float f = (this.aN + (float) (180 * (i - 1))) * 0.017453292F;
+            float f = (this.aN + 180 * (i - 1)) * 0.017453292F;
             float f1 = MathHelper.sin(f);
 
-            return this.locZ + (double) f1 * 1.3D;
+            return this.locZ + f1 * 1.3D;
         }
     }
 
@@ -413,7 +427,7 @@ public class EntityWither extends EntityMonster implements IRangedEntity {
     }
 
     private void a(int i, EntityLiving entityliving) {
-        this.a(i, entityliving.locX, entityliving.locY + (double) entityliving.getHeadHeight() * 0.5D, entityliving.locZ, i == 0 && this.random.nextFloat() < 0.001F);
+        this.a(i, entityliving.locX, entityliving.locY + entityliving.getHeadHeight() * 0.5D, entityliving.locZ, i == 0 && this.random.nextFloat() < 0.001F);
     }
 
     private void a(int i, double d0, double d1, double d2, boolean flag) {
@@ -436,10 +450,12 @@ public class EntityWither extends EntityMonster implements IRangedEntity {
         this.world.addEntity(entitywitherskull);
     }
 
+    @Override
     public void a(EntityLiving entityliving, float f) {
         this.a(0, entityliving);
     }
 
+    @Override
     public boolean damageEntity(DamageSource damagesource, float f) {
         if (this.isInvulnerable(damagesource)) {
             return false;
@@ -476,6 +492,7 @@ public class EntityWither extends EntityMonster implements IRangedEntity {
         }
     }
 
+    @Override
     protected void dropDeathLoot(boolean flag, int i) {
         EntityItem entityitem = this.a(Items.NETHER_STAR, 1);
 
@@ -483,26 +500,28 @@ public class EntityWither extends EntityMonster implements IRangedEntity {
             entityitem.v();
         }
 
-        if (!this.world.isClientSide) {
-            Iterator iterator = this.world.a(EntityHuman.class, this.getBoundingBox().grow(50.0D, 100.0D, 50.0D)).iterator();
+        Iterator iterator = this.world.a(EntityHuman.class, this.getBoundingBox().grow(50.0D, 100.0D, 50.0D)).iterator();
 
-            while (iterator.hasNext()) {
-                EntityHuman entityhuman = (EntityHuman) iterator.next();
+        while (iterator.hasNext()) {
+            EntityHuman entityhuman = (EntityHuman) iterator.next();
 
-                entityhuman.b((Statistic) AchievementList.J);
-            }
+            entityhuman.b(AchievementList.J);
         }
 
     }
 
+    @Override
     protected void L() {
         this.ticksFarFromPlayer = 0;
     }
 
+    @Override
     public void e(float f, float f1) {}
 
+    @Override
     public void addEffect(MobEffect mobeffect) {}
 
+    @Override
     protected void initAttributes() {
         super.initAttributes();
         this.getAttributeInstance(GenericAttributes.maxHealth).setValue(300.0D);
@@ -512,7 +531,7 @@ public class EntityWither extends EntityMonster implements IRangedEntity {
     }
 
     public int dh() {
-        return ((Integer) this.datawatcher.get(EntityWither.bx)).intValue();
+        return this.datawatcher.get(EntityWither.bx).intValue();
     }
 
     public void g(int i) {
@@ -520,7 +539,7 @@ public class EntityWither extends EntityMonster implements IRangedEntity {
     }
 
     public int m(int i) {
-        return ((Integer) this.datawatcher.get(EntityWither.bw[i])).intValue();
+        return this.datawatcher.get(EntityWither.bw[i]).intValue();
     }
 
     public void a(int i, int j) {
@@ -531,14 +550,17 @@ public class EntityWither extends EntityMonster implements IRangedEntity {
         return this.getHealth() <= this.getMaxHealth() / 2.0F;
     }
 
+    @Override
     public EnumMonsterType getMonsterType() {
         return EnumMonsterType.UNDEAD;
     }
 
+    @Override
     protected boolean n(Entity entity) {
         return false;
     }
 
+    @Override
     public boolean aX() {
         return false;
     }
@@ -549,6 +571,7 @@ public class EntityWither extends EntityMonster implements IRangedEntity {
             this.a(7);
         }
 
+        @Override
         public boolean a() {
             return EntityWither.this.dh() > 0;
         }

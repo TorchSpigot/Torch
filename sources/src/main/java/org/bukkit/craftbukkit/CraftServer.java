@@ -391,7 +391,7 @@ public final class CraftServer implements Server {
 
     @Override
     public String getVersion() {
-        return serverVersion + " (MC: " + console.getMinecraftVersion() + ")";
+        return serverVersion + " (MC: " + TorchServer.GAME_VERSION + ")";
     }
 
     @Override
@@ -846,7 +846,7 @@ public final class CraftServer implements Server {
 
     @Override
     public String toString() {
-        return "CraftServer{" + "serverName=" + serverName + ",serverVersion=" + serverVersion + ",minecraftVersion=" + console.getMinecraftVersion() + '}';
+        return "CraftServer{" + "serverName=" + serverName + ",serverVersion=" + serverVersion + ",minecraftVersion=" + TorchServer.GAME_VERSION + '}';
     }
 
     public World createWorld(String name, World.Environment environment) {

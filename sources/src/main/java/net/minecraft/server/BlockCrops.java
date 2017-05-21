@@ -18,10 +18,12 @@ public class BlockCrops extends BlockPlant implements IBlockFragilePlantElement 
         this.p();
     }
 
+    @Override
     public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
-        return BlockCrops.a[((Integer) iblockdata.get(this.e())).intValue()];
+        return BlockCrops.a[iblockdata.get(this.e()).intValue()];
     }
 
+    @Override
     protected boolean i(IBlockData iblockdata) {
         return iblockdata.getBlock() == Blocks.FARMLAND;
     }
@@ -35,7 +37,7 @@ public class BlockCrops extends BlockPlant implements IBlockFragilePlantElement 
     }
 
     protected int z(IBlockData iblockdata) {
-        return ((Integer) iblockdata.get(this.e())).intValue();
+        return iblockdata.get(this.e()).intValue();
     }
 
     public IBlockData setAge(int i) {
@@ -43,16 +45,17 @@ public class BlockCrops extends BlockPlant implements IBlockFragilePlantElement 
     }
 
     public boolean A(IBlockData iblockdata) {
-        return ((Integer) iblockdata.get(this.e())).intValue() >= this.g();
+        return iblockdata.get(this.e()).intValue() >= this.g();
     }
 
+    @Override
     public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
         super.b(world, blockposition, iblockdata, random);
         if (world.isLightLevel(blockposition.up(), 9)) { // Paper
             int i = this.z(iblockdata);
 
             if (i < this.g()) {
-                float f = a((Block) this, world, blockposition);
+                float f = a(this, world, blockposition);
 
                 if (random.nextInt((int) ((100.0F / world.spigotConfig.wheatModifier) * (25.0F / f)) + 1) == 0) { // Spigot
                     // CraftBukkit start
@@ -94,7 +97,7 @@ public class BlockCrops extends BlockPlant implements IBlockFragilePlantElement 
 
                 if (iblockdata.getBlock() == Blocks.FARMLAND) {
                     f1 = 1.0F;
-                    if (((Integer) iblockdata.get(BlockSoil.MOISTURE)).intValue() > 0) {
+                    if (iblockdata.get(BlockSoil.MOISTURE).intValue() > 0) {
                         f1 = 3.0F;
                     }
                 }
@@ -127,6 +130,7 @@ public class BlockCrops extends BlockPlant implements IBlockFragilePlantElement 
         return f;
     }
 
+    @Override
     public boolean f(World world, BlockPosition blockposition, IBlockData iblockdata) {
         return (world.j(blockposition) >= 8 || world.h(blockposition)) && this.i(world.getType(blockposition.down()));
     }
@@ -139,52 +143,59 @@ public class BlockCrops extends BlockPlant implements IBlockFragilePlantElement 
         return Items.WHEAT;
     }
 
+    @Override
     public void dropNaturally(World world, BlockPosition blockposition, IBlockData iblockdata, float f, int i) {
         super.dropNaturally(world, blockposition, iblockdata, f, 0);
-        if (!world.isClientSide) {
-            int j = this.z(iblockdata);
+        
+        int j = this.z(iblockdata);
 
-            if (j >= this.g()) {
-                int k = 3 + i;
+        if (j >= this.g()) {
+            int k = 3 + i;
 
-                for (int l = 0; l < k; ++l) {
-                    if (world.random.nextInt(2 * this.g()) <= j) {
-                        a(world, blockposition, new ItemStack(this.h()));
-                    }
+            for (int l = 0; l < k; ++l) {
+                if (world.random.nextInt(2 * this.g()) <= j) {
+                    a(world, blockposition, new ItemStack(this.h()));
                 }
             }
-
         }
     }
 
+    @Override
     public Item getDropType(IBlockData iblockdata, Random random, int i) {
         return this.A(iblockdata) ? this.i() : this.h();
     }
 
+    @Override
     public ItemStack a(World world, BlockPosition blockposition, IBlockData iblockdata) {
         return new ItemStack(this.h());
     }
 
+    @Override
     public boolean a(World world, BlockPosition blockposition, IBlockData iblockdata, boolean flag) {
         return !this.A(iblockdata);
     }
 
+    @Override
     public boolean a(World world, Random random, BlockPosition blockposition, IBlockData iblockdata) {
         return true;
     }
 
+    @Override
     public void b(World world, Random random, BlockPosition blockposition, IBlockData iblockdata) {
         this.g(world, blockposition, iblockdata);
     }
 
+    @Override
     public IBlockData fromLegacyData(int i) {
         return this.setAge(i);
     }
 
+    @Override
     public int toLegacyData(IBlockData iblockdata) {
         return this.z(iblockdata);
     }
 
+    @Override
     protected BlockStateList getStateList() {
         return new BlockStateList(this, new IBlockState[] { BlockCrops.AGE});
     }

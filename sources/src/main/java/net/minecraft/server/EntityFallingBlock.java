@@ -30,7 +30,7 @@ public class EntityFallingBlock extends Entity {
         this.block = iblockdata;
         this.i = true;
         this.setSize(0.98F, 0.98F);
-        this.setPosition(d0, d1 + (double) ((1.0F - this.length) / 2.0F), d2);
+        this.setPosition(d0, d1 + (1.0F - this.length) / 2.0F, d2);
         this.motX = 0.0D;
         this.motY = 0.0D;
         this.motZ = 0.0D;
@@ -44,18 +44,22 @@ public class EntityFallingBlock extends Entity {
         this.datawatcher.set(EntityFallingBlock.d, blockposition);
     }
 
+    @Override
     protected boolean playStepSound() {
         return false;
     }
 
+    @Override
     protected void i() {
         this.datawatcher.register(EntityFallingBlock.d, BlockPosition.ZERO);
     }
 
+    @Override
     public boolean isInteractable() {
         return !this.dead;
     }
 
+    @Override
     public void A_() {
         Block block = this.block.getBlock();
 
@@ -71,7 +75,7 @@ public class EntityFallingBlock extends Entity {
                 blockposition = new BlockPosition(this);
                 if (this.world.getType(blockposition).getBlock() == block && !CraftEventFactory.callEntityChangeBlockEvent(this, blockposition, Blocks.AIR, 0).isCancelled()) {
                     this.world.setAir(blockposition);
-                } else if (!this.world.isClientSide) {
+                } else {
                     this.die();
                     return;
                 }
@@ -95,66 +99,65 @@ public class EntityFallingBlock extends Entity {
             this.motX *= 0.9800000190734863D;
             this.motY *= 0.9800000190734863D;
             this.motZ *= 0.9800000190734863D;
-            if (!this.world.isClientSide) {
-                blockposition = new BlockPosition(this);
-                if (this.onGround) {
-                    IBlockData iblockdata = this.world.getType(blockposition);
-                    if (!isOnGround()) {
-                        this.onGround = false;
-                        if (this.world.paperConfig.altFallingBlockOnGround) return; // Paper
-                    }
-
-                    this.motX *= 0.699999988079071D;
-                    this.motZ *= 0.699999988079071D;
-                    this.motY *= -0.5D;
-                    if (iblockdata.getBlock() != Blocks.PISTON_EXTENSION) {
-                        this.die();
-                        if (!this.f) {
-                            // CraftBukkit start
-                            if (this.world.a(block, blockposition, true, EnumDirection.UP, (Entity) null) && !BlockFalling.i(this.world.getType(blockposition.down()))) {
-                                if (CraftEventFactory.callEntityChangeBlockEvent(this, blockposition, this.block.getBlock(), this.block.getBlock().toLegacyData(this.block)).isCancelled()) {
-                                    return;
-                                }
-                                this.world.setTypeAndData(blockposition, this.block, 3);
-                                // CraftBukkit end
-                                if (block instanceof BlockFalling) {
-                                    ((BlockFalling) block).a_(this.world, blockposition);
-                                }
-
-                                if (this.tileEntityData != null && block instanceof ITileEntity) {
-                                    TileEntity tileentity = this.world.getTileEntity(blockposition);
-
-                                    if (tileentity != null) {
-                                        NBTTagCompound nbttagcompound = tileentity.save(new NBTTagCompound());
-                                        Iterator iterator = this.tileEntityData.c().iterator();
-
-                                        while (iterator.hasNext()) {
-                                            String s = (String) iterator.next();
-                                            NBTBase nbtbase = this.tileEntityData.get(s);
-
-                                            if (!"x".equals(s) && !"y".equals(s) && !"z".equals(s)) {
-                                                nbttagcompound.set(s, nbtbase.clone());
-                                            }
-                                        }
-
-                                        tileentity.a(nbttagcompound);
-                                        tileentity.update();
-                                    }
-                                }
-                            } else if (this.dropItem && this.world.getGameRules().getBoolean("doEntityDrops")) {
-                                this.a(new ItemStack(block, 1, block.getDropData(this.block)), 0.0F);
-                            }
-                        } else if (block instanceof BlockFalling) {
-                            ((BlockFalling) block).b(this.world, blockposition);
-                        }
-                    }
-                } else if (this.ticksLived > 100 && !this.world.isClientSide && (blockposition.getY() < 1 || blockposition.getY() > 256) || this.ticksLived > 600) {
-                    if (this.dropItem && this.world.getGameRules().getBoolean("doEntityDrops")) {
-                        this.a(new ItemStack(block, 1, block.getDropData(this.block)), 0.0F);
-                    }
-
-                    this.die();
+            
+            blockposition = new BlockPosition(this);
+            if (this.onGround) {
+                IBlockData iblockdata = this.world.getType(blockposition);
+                if (!isOnGround()) {
+                    this.onGround = false;
+                    if (this.world.paperConfig.altFallingBlockOnGround) return; // Paper
                 }
+
+                this.motX *= 0.699999988079071D;
+                this.motZ *= 0.699999988079071D;
+                this.motY *= -0.5D;
+                if (iblockdata.getBlock() != Blocks.PISTON_EXTENSION) {
+                    this.die();
+                    if (!this.f) {
+                        // CraftBukkit start
+                        if (this.world.a(block, blockposition, true, EnumDirection.UP, (Entity) null) && !BlockFalling.i(this.world.getType(blockposition.down()))) {
+                            if (CraftEventFactory.callEntityChangeBlockEvent(this, blockposition, this.block.getBlock(), this.block.getBlock().toLegacyData(this.block)).isCancelled()) {
+                                return;
+                            }
+                            this.world.setTypeAndData(blockposition, this.block, 3);
+                            // CraftBukkit end
+                            if (block instanceof BlockFalling) {
+                                ((BlockFalling) block).a_(this.world, blockposition);
+                            }
+
+                            if (this.tileEntityData != null && block instanceof ITileEntity) {
+                                TileEntity tileentity = this.world.getTileEntity(blockposition);
+
+                                if (tileentity != null) {
+                                    NBTTagCompound nbttagcompound = tileentity.save(new NBTTagCompound());
+                                    Iterator iterator = this.tileEntityData.c().iterator();
+
+                                    while (iterator.hasNext()) {
+                                        String s = (String) iterator.next();
+                                        NBTBase nbtbase = this.tileEntityData.get(s);
+
+                                        if (!"x".equals(s) && !"y".equals(s) && !"z".equals(s)) {
+                                            nbttagcompound.set(s, nbtbase.clone());
+                                        }
+                                    }
+
+                                    tileentity.a(nbttagcompound);
+                                    tileentity.update();
+                                }
+                            }
+                        } else if (this.dropItem && this.world.getGameRules().getBoolean("doEntityDrops")) {
+                            this.a(new ItemStack(block, 1, block.getDropData(this.block)), 0.0F);
+                        }
+                    } else if (block instanceof BlockFalling) {
+                        ((BlockFalling) block).b(this.world, blockposition);
+                    }
+                }
+            } else if (this.ticksLived > 100 && (blockposition.getY() < 1 || blockposition.getY() > 256) || this.ticksLived > 600) {
+                if (this.dropItem && this.world.getGameRules().getBoolean("doEntityDrops")) {
+                    this.a(new ItemStack(block, 1, block.getDropData(this.block)), 0.0F);
+                }
+
+                this.die();
             }
 
         }
@@ -186,6 +189,7 @@ public class EntityFallingBlock extends Entity {
     }
     // Paper end
 
+    @Override
     public void e(float f, float f1) {
         Block block = this.block.getBlock();
 
@@ -202,12 +206,12 @@ public class EntityFallingBlock extends Entity {
                     Entity entity = (Entity) iterator.next();
 
                     CraftEventFactory.entityDamage = this; // CraftBukkit
-                    entity.damageEntity(damagesource, (float) Math.min(MathHelper.d((float) i * this.fallHurtAmount), this.fallHurtMax));
+                    entity.damageEntity(damagesource, Math.min(MathHelper.d(i * this.fallHurtAmount), this.fallHurtMax));
                     CraftEventFactory.entityDamage = null; // CraftBukkit
                 }
 
-                if (flag && (double) this.random.nextFloat() < 0.05000000074505806D + (double) i * 0.05D) {
-                    int j = ((Integer) this.block.get(BlockAnvil.DAMAGE)).intValue();
+                if (flag && this.random.nextFloat() < 0.05000000074505806D + i * 0.05D) {
+                    int j = this.block.get(BlockAnvil.DAMAGE).intValue();
 
                     ++j;
                     if (j > 2) {
@@ -223,9 +227,10 @@ public class EntityFallingBlock extends Entity {
 
     public static void a(DataConverterManager dataconvertermanager) {}
 
+    @Override
     protected void b(NBTTagCompound nbttagcompound) {
         Block block = this.block != null ? this.block.getBlock() : Blocks.AIR;
-        MinecraftKey minecraftkey = (MinecraftKey) Block.REGISTRY.b(block);
+        MinecraftKey minecraftkey = Block.REGISTRY.b(block);
 
         nbttagcompound.setString("Block", minecraftkey == null ? "" : minecraftkey.toString());
         nbttagcompound.setByte("Data", (byte) block.toLegacyData(this.block));
@@ -240,6 +245,7 @@ public class EntityFallingBlock extends Entity {
 
     }
 
+    @Override
     protected void a(NBTTagCompound nbttagcompound) {
         int i = nbttagcompound.getByte("Data") & 255;
 
@@ -296,13 +302,14 @@ public class EntityFallingBlock extends Entity {
         this.hurtEntities = flag;
     }
 
+    @Override
     public void appendEntityCrashDetails(CrashReportSystemDetails crashreportsystemdetails) {
         super.appendEntityCrashDetails(crashreportsystemdetails);
         if (this.block != null) {
             Block block = this.block.getBlock();
 
-            crashreportsystemdetails.a("Immitating block ID", (Object) Integer.valueOf(Block.getId(block)));
-            crashreportsystemdetails.a("Immitating block data", (Object) Integer.valueOf(block.toLegacyData(this.block)));
+            crashreportsystemdetails.a("Immitating block ID", Integer.valueOf(Block.getId(block)));
+            crashreportsystemdetails.a("Immitating block data", Integer.valueOf(block.toLegacyData(this.block)));
         }
 
     }
@@ -312,6 +319,7 @@ public class EntityFallingBlock extends Entity {
         return this.block;
     }
 
+    @Override
     public boolean bu() {
         return true;
     }
@@ -325,7 +333,7 @@ public class EntityFallingBlock extends Entity {
         double newY = this.locY + this.getHeadHeight() - d1;
         double newZ = this.locZ - d2;
 
-        return (double) MathHelper.sqrt(newX * newX + newY * newY + newZ * newZ);
+        return MathHelper.sqrt(newX * newX + newY * newY + newZ * newZ);
     }
 
 

@@ -12,40 +12,44 @@ public class BlockShulkerBox extends BlockTileEntity {
         this.y(this.blockStateList.getBlockData().set(BlockShulkerBox.a, EnumDirection.UP));
     }
 
+    @Override
     public TileEntity a(World world, int i) {
         return new TileEntityShulkerBox(this.b);
     }
 
+    @Override
     public boolean b(IBlockData iblockdata) {
         return false;
     }
 
+    @Override
     public boolean u(IBlockData iblockdata) {
         return true;
     }
 
+    @Override
     public boolean c(IBlockData iblockdata) {
         return false;
     }
 
+    @Override
     public EnumRenderType a(IBlockData iblockdata) {
         return EnumRenderType.ENTITYBLOCK_ANIMATED;
     }
 
+    @Override
     public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
-        if (world.isClientSide) {
-            return true;
-        } else if (entityhuman.isSpectator()) {
+        if (entityhuman.isSpectator()) {
             return true;
         } else {
             TileEntity tileentity = world.getTileEntity(blockposition);
 
             if (tileentity instanceof TileEntityShulkerBox) {
-                EnumDirection enumdirection1 = (EnumDirection) iblockdata.get(BlockShulkerBox.a);
+                EnumDirection enumdirection1 = iblockdata.get(BlockShulkerBox.a);
                 boolean flag;
 
                 if (((TileEntityShulkerBox) tileentity).p() == TileEntityShulkerBox.AnimationPhase.CLOSED) {
-                    AxisAlignedBB axisalignedbb = BlockShulkerBox.j.b((double) (0.5F * (float) enumdirection1.getAdjacentX()), (double) (0.5F * (float) enumdirection1.getAdjacentY()), (double) (0.5F * (float) enumdirection1.getAdjacentZ())).a((double) enumdirection1.getAdjacentX(), (double) enumdirection1.getAdjacentY(), (double) enumdirection1.getAdjacentZ());
+                    AxisAlignedBB axisalignedbb = BlockShulkerBox.j.b(0.5F * enumdirection1.getAdjacentX(), 0.5F * enumdirection1.getAdjacentY(), 0.5F * enumdirection1.getAdjacentZ()).a(enumdirection1.getAdjacentX(), enumdirection1.getAdjacentY(), enumdirection1.getAdjacentZ());
 
                     flag = !world.a(axisalignedbb.a(blockposition.shift(enumdirection1)));
                 } else {
@@ -64,24 +68,29 @@ public class BlockShulkerBox extends BlockTileEntity {
         }
     }
 
+    @Override
     public IBlockData getPlacedState(World world, BlockPosition blockposition, EnumDirection enumdirection, float f, float f1, float f2, int i, EntityLiving entityliving) {
         return this.getBlockData().set(BlockShulkerBox.a, enumdirection);
     }
 
+    @Override
     protected BlockStateList getStateList() {
         return new BlockStateList(this, new IBlockState[] { BlockShulkerBox.a});
     }
 
+    @Override
     public int toLegacyData(IBlockData iblockdata) {
-        return ((EnumDirection) iblockdata.get(BlockShulkerBox.a)).a();
+        return iblockdata.get(BlockShulkerBox.a).a();
     }
 
+    @Override
     public IBlockData fromLegacyData(int i) {
         EnumDirection enumdirection = EnumDirection.fromType1(i);
 
         return this.getBlockData().set(BlockShulkerBox.a, enumdirection);
     }
 
+    @Override
     public void a(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman) {
         TileEntityShulkerBox tileentityshulkerbox = (TileEntityShulkerBox) world.getTileEntity(blockposition);
 
@@ -90,6 +99,7 @@ public class BlockShulkerBox extends BlockTileEntity {
     }
 
     // CraftBukkit start - override to prevent duplication when dropping
+    @Override
     public void dropNaturally(World world, BlockPosition blockposition, IBlockData iblockdata, float f, int i) {
         TileEntity tileentity = world.getTileEntity(blockposition);
 
@@ -117,6 +127,7 @@ public class BlockShulkerBox extends BlockTileEntity {
     }
     // CraftBukkit end
 
+    @Override
     public void postPlace(World world, BlockPosition blockposition, IBlockData iblockdata, EntityLiving entityliving, ItemStack itemstack) {
         if (itemstack.hasName()) {
             TileEntity tileentity = world.getTileEntity(blockposition);
@@ -128,6 +139,7 @@ public class BlockShulkerBox extends BlockTileEntity {
 
     }
 
+    @Override
     public void remove(World world, BlockPosition blockposition, IBlockData iblockdata) {
         TileEntity tileentity = world.getTileEntity(blockposition);
 
@@ -155,31 +167,36 @@ public class BlockShulkerBox extends BlockTileEntity {
         super.remove(world, blockposition, iblockdata);
     }
 
+    @Override
     public EnumPistonReaction h(IBlockData iblockdata) {
         return EnumPistonReaction.DESTROY;
     }
 
+    @Override
     public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         TileEntity tileentity = iblockaccess.getTileEntity(blockposition);
 
         return tileentity instanceof TileEntityShulkerBox ? ((TileEntityShulkerBox) tileentity).a(iblockdata) : BlockShulkerBox.j;
     }
 
+    @Override
     public boolean isComplexRedstone(IBlockData iblockdata) {
         return true;
     }
 
+    @Override
     public int c(IBlockData iblockdata, World world, BlockPosition blockposition) {
         return Container.b((IInventory) world.getTileEntity(blockposition));
     }
 
+    @Override
     public ItemStack a(World world, BlockPosition blockposition, IBlockData iblockdata) {
         ItemStack itemstack = super.a(world, blockposition, iblockdata);
         TileEntityShulkerBox tileentityshulkerbox = (TileEntityShulkerBox) world.getTileEntity(blockposition);
         NBTTagCompound nbttagcompound = tileentityshulkerbox.f(new NBTTagCompound());
 
         if (!nbttagcompound.isEmpty()) {
-            itemstack.a("BlockEntityTag", (NBTBase) nbttagcompound);
+            itemstack.a("BlockEntityTag", nbttagcompound);
         }
 
         return itemstack;
@@ -242,11 +259,13 @@ public class BlockShulkerBox extends BlockTileEntity {
         return new ItemStack(a(enumcolor));
     }
 
+    @Override
     public IBlockData a(IBlockData iblockdata, EnumBlockRotation enumblockrotation) {
-        return iblockdata.set(BlockShulkerBox.a, enumblockrotation.a((EnumDirection) iblockdata.get(BlockShulkerBox.a)));
+        return iblockdata.set(BlockShulkerBox.a, enumblockrotation.a(iblockdata.get(BlockShulkerBox.a)));
     }
 
+    @Override
     public IBlockData a(IBlockData iblockdata, EnumBlockMirror enumblockmirror) {
-        return iblockdata.a(enumblockmirror.a((EnumDirection) iblockdata.get(BlockShulkerBox.a)));
+        return iblockdata.a(enumblockmirror.a(iblockdata.get(BlockShulkerBox.a)));
     }
 }

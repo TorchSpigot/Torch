@@ -15,6 +15,7 @@ public class EntityMushroomCow extends EntityCow {
         EntityInsentient.a(dataconvertermanager, EntityMushroomCow.class);
     }
 
+    @Override
     public boolean a(EntityHuman entityhuman, EnumHand enumhand) {
         ItemStack itemstack = entityhuman.b(enumhand);
 
@@ -37,26 +38,24 @@ public class EntityMushroomCow extends EntityCow {
             }
             // CraftBukkit end
             this.die();
-            this.world.addParticle(EnumParticle.EXPLOSION_LARGE, this.locX, this.locY + (double) (this.length / 2.0F), this.locZ, 0.0D, 0.0D, 0.0D, new int[0]);
-            if (!this.world.isClientSide) {
-                EntityCow entitycow = new EntityCow(this.world);
+            this.world.addParticle(EnumParticle.EXPLOSION_LARGE, this.locX, this.locY + this.length / 2.0F, this.locZ, 0.0D, 0.0D, 0.0D, new int[0]);
+            EntityCow entitycow = new EntityCow(this.world);
 
-                entitycow.setPositionRotation(this.locX, this.locY, this.locZ, this.yaw, this.pitch);
-                entitycow.setHealth(this.getHealth());
-                entitycow.aN = this.aN;
-                if (this.hasCustomName()) {
-                    entitycow.setCustomName(this.getCustomName());
-                }
-
-                this.world.addEntity(entitycow);
-
-                for (int i = 0; i < 5; ++i) {
-                    this.world.addEntity(new EntityItem(this.world, this.locX, this.locY + (double) this.length, this.locZ, new ItemStack(Blocks.RED_MUSHROOM)));
-                }
-
-                itemstack.damage(1, entityhuman);
-                this.a(SoundEffects.dV, 1.0F, 1.0F);
+            entitycow.setPositionRotation(this.locX, this.locY, this.locZ, this.yaw, this.pitch);
+            entitycow.setHealth(this.getHealth());
+            entitycow.aN = this.aN;
+            if (this.hasCustomName()) {
+                entitycow.setCustomName(this.getCustomName());
             }
+
+            this.world.addEntity(entitycow);
+
+            for (int i = 0; i < 5; ++i) {
+                this.world.addEntity(new EntityItem(this.world, this.locX, this.locY + this.length, this.locZ, new ItemStack(Blocks.RED_MUSHROOM)));
+            }
+
+            itemstack.damage(1, entityhuman);
+            this.a(SoundEffects.dV, 1.0F, 1.0F);
 
             return true;
         } else {
@@ -68,15 +67,18 @@ public class EntityMushroomCow extends EntityCow {
         return new EntityMushroomCow(this.world);
     }
 
+    @Override
     @Nullable
     protected MinecraftKey J() {
         return LootTables.M;
     }
 
+    @Override
     public EntityCow b(EntityAgeable entityageable) {
         return this.c(entityageable);
     }
 
+    @Override
     public EntityAgeable createChild(EntityAgeable entityageable) {
         return this.c(entityageable);
     }

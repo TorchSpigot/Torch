@@ -36,22 +36,22 @@ public class EntityTNTPrimed extends Entity {
     }
 
     @Override
-	protected void i() {
+    protected void i() {
         this.datawatcher.register(EntityTNTPrimed.FUSE_TICKS, Integer.valueOf(80));
     }
 
     @Override
-	protected boolean playStepSound() {
+    protected boolean playStepSound() {
         return false;
     }
 
     @Override
-	public boolean isInteractable() {
+    public boolean isInteractable() {
         return !this.dead;
     }
 
     @Override
-	public void A_() {
+    public void A_() {
         if (world.spigotConfig.currentPrimedTnt++ > world.spigotConfig.maxTntTicksPerTick) { return; } // Spigot
         this.lastX = this.locX;
         this.lastY = this.locY;
@@ -81,9 +81,7 @@ public class EntityTNTPrimed extends Entity {
         if (this.c <= 0) {
             // CraftBukkit start - Need to reverse the order of the explosion and the entity death so we have a location for the event
             // this.die();
-            if (!this.world.isClientSide) {
-                this.explode();
-            }
+            this.explode();
             this.die();
             // CraftBukkit end
         } else {
@@ -108,12 +106,12 @@ public class EntityTNTPrimed extends Entity {
     }
 
     @Override
-	protected void b(NBTTagCompound nbttagcompound) {
+    protected void b(NBTTagCompound nbttagcompound) {
         nbttagcompound.setShort("Fuse", (short) this.getFuseTicks());
     }
 
     @Override
-	protected void a(NBTTagCompound nbttagcompound) {
+    protected void a(NBTTagCompound nbttagcompound) {
         this.setFuseTicks(nbttagcompound.getShort("Fuse"));
         // Paper start - Try and load origin location from the old NBT tags for backwards compatibility
         if (nbttagcompound.hasKey("SourceLoc_x")) {
@@ -131,7 +129,7 @@ public class EntityTNTPrimed extends Entity {
     }
 
     @Override
-	public float getHeadHeight() {
+    public float getHeadHeight() {
         return world.paperConfig.oldCannonBehaviors ? this.length / 16F : 0.0F; // Paper - Old TNT cannon behaviors
     }
 
@@ -141,7 +139,7 @@ public class EntityTNTPrimed extends Entity {
     }
 
     @Override
-	public void a(DataWatcherObject<?> datawatcherobject) {
+    public void a(DataWatcherObject<?> datawatcherobject) {
         if (EntityTNTPrimed.FUSE_TICKS.equals(datawatcherobject)) {
             this.c = this.k();
         }

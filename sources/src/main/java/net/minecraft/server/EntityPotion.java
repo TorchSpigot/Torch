@@ -25,7 +25,7 @@ public class EntityPotion extends EntityProjectile {
         }
 
         @Override
-		public boolean apply(@Nullable Object object) {
+        public boolean apply(@Nullable Object object) {
             return this.a((EntityLiving) object);
         }
     };
@@ -48,7 +48,7 @@ public class EntityPotion extends EntityProjectile {
     }
 
     @Override
-	protected void i() {
+    protected void i() {
         this.getDataWatcher().register(EntityPotion.e, ItemStack.a);
     }
 
@@ -72,46 +72,44 @@ public class EntityPotion extends EntityProjectile {
     }
 
     @Override
-	protected float j() {
+    protected float j() {
         return 0.05F;
     }
 
     @Override
-	protected void a(MovingObjectPosition movingobjectposition) {
-        if (!this.world.isClientSide) {
-            ItemStack itemstack = this.getItem();
-            PotionRegistry potionregistry = PotionUtil.d(itemstack);
-            List list = PotionUtil.getEffects(itemstack);
-            boolean flag = potionregistry == Potions.b && list.isEmpty();
+    protected void a(MovingObjectPosition movingobjectposition) {
+        ItemStack itemstack = this.getItem();
+        PotionRegistry potionregistry = PotionUtil.d(itemstack);
+        List list = PotionUtil.getEffects(itemstack);
+        boolean flag = potionregistry == Potions.b && list.isEmpty();
 
-            if (movingobjectposition.type == MovingObjectPosition.EnumMovingObjectType.BLOCK && flag) {
-                BlockPosition blockposition = movingobjectposition.a().shift(movingobjectposition.direction);
+        if (movingobjectposition.type == MovingObjectPosition.EnumMovingObjectType.BLOCK && flag) {
+            BlockPosition blockposition = movingobjectposition.a().shift(movingobjectposition.direction);
 
-                this.a(blockposition);
-                Iterator iterator = EnumDirection.EnumDirectionLimit.HORIZONTAL.iterator();
+            this.a(blockposition);
+            Iterator iterator = EnumDirection.EnumDirectionLimit.HORIZONTAL.iterator();
 
-                while (iterator.hasNext()) {
-                    EnumDirection enumdirection = (EnumDirection) iterator.next();
+            while (iterator.hasNext()) {
+                EnumDirection enumdirection = (EnumDirection) iterator.next();
 
-                    this.a(blockposition.shift(enumdirection));
-                }
+                this.a(blockposition.shift(enumdirection));
             }
-
-            if (flag) {
-                this.n();
-            } else if (true || !list.isEmpty()) { // CraftBukkit - Call event even if no effects to apply
-                if (this.isLingering()) {
-                    this.a(itemstack, potionregistry);
-                } else {
-                    this.a(movingobjectposition, list);
-                }
-            }
-
-            int i = potionregistry.c() ? 2007 : 2002;
-
-            this.world.triggerEffect(i, new BlockPosition(this), PotionUtil.c(itemstack));
-            this.die();
         }
+
+        if (flag) {
+            this.n();
+        } else if (true || !list.isEmpty()) { // CraftBukkit - Call event even if no effects to apply
+            if (this.isLingering()) {
+                this.a(itemstack, potionregistry);
+            } else {
+                this.a(movingobjectposition, list);
+            }
+        }
+
+        int i = potionregistry.c() ? 2007 : 2002;
+
+        this.world.triggerEffect(i, new BlockPosition(this), PotionUtil.c(itemstack));
+        this.die();
     }
 
     private void n() {
@@ -253,7 +251,7 @@ public class EntityPotion extends EntityProjectile {
     }
 
     @Override
-	public void a(NBTTagCompound nbttagcompound) {
+    public void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
         ItemStack itemstack = new ItemStack(nbttagcompound.getCompound("Potion"));
 
@@ -266,7 +264,7 @@ public class EntityPotion extends EntityProjectile {
     }
 
     @Override
-	public void b(NBTTagCompound nbttagcompound) {
+    public void b(NBTTagCompound nbttagcompound) {
         super.b(nbttagcompound);
         ItemStack itemstack = this.getItem();
 

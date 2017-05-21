@@ -2,7 +2,7 @@ package net.minecraft.server;
 
 import java.util.Random;
 
-public class TileEntityEnchantTable extends TileEntity implements ITickable, ITileEntityContainer {
+public class TileEntityEnchantTable extends TileEntity implements /*ITickable,*/ ITileEntityContainer {
 
     public int a;
     public float f;
@@ -19,6 +19,7 @@ public class TileEntityEnchantTable extends TileEntity implements ITickable, ITi
 
     public TileEntityEnchantTable() {}
 
+    @Override
     public NBTTagCompound save(NBTTagCompound nbttagcompound) {
         super.save(nbttagcompound);
         if (this.hasCustomName()) {
@@ -28,6 +29,7 @@ public class TileEntityEnchantTable extends TileEntity implements ITickable, ITi
         return nbttagcompound;
     }
 
+    @Override
     public void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
         if (nbttagcompound.hasKeyOfType("CustomName", 8)) {
@@ -99,10 +101,12 @@ public class TileEntityEnchantTable extends TileEntity implements ITickable, ITi
 	*/
     }
 
+    @Override
     public String getName() {
         return this.hasCustomName() ? this.p : "container.enchant";
     }
 
+    @Override
     public boolean hasCustomName() {
         return this.p != null && !this.p.isEmpty();
     }
@@ -111,14 +115,17 @@ public class TileEntityEnchantTable extends TileEntity implements ITickable, ITi
         this.p = s;
     }
 
+    @Override
     public IChatBaseComponent getScoreboardDisplayName() {
-        return (IChatBaseComponent) (this.hasCustomName() ? new ChatComponentText(this.getName()) : new ChatMessage(this.getName(), new Object[0]));
+        return this.hasCustomName() ? new ChatComponentText(this.getName()) : new ChatMessage(this.getName(), new Object[0]);
     }
 
+    @Override
     public Container createContainer(PlayerInventory playerinventory, EntityHuman entityhuman) {
         return new ContainerEnchantTable(playerinventory, this.world, this.position);
     }
 
+    @Override
     public String getContainerName() {
         return "minecraft:enchanting_table";
     }

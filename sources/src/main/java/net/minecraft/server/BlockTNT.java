@@ -10,6 +10,7 @@ public class BlockTNT extends Block {
         this.a(CreativeModeTab.d);
     }
 
+    @Override
     public void onPlace(World world, BlockPosition blockposition, IBlockData iblockdata) {
         super.onPlace(world, blockposition, iblockdata);
         if (world.isBlockIndirectlyPowered(blockposition)) {
@@ -19,6 +20,7 @@ public class BlockTNT extends Block {
 
     }
 
+    @Override
     public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
         if (world.isBlockIndirectlyPowered(blockposition)) {
             this.postBreak(world, blockposition, iblockdata.set(BlockTNT.EXPLODE, Boolean.valueOf(true)));
@@ -27,39 +29,37 @@ public class BlockTNT extends Block {
 
     }
 
+    @Override
     public void wasExploded(World world, BlockPosition blockposition, Explosion explosion) {
-        if (!world.isClientSide) {
-            // Paper start - Old TNT cannon behaviors
-            double y = blockposition.getY();
-            if (!world.paperConfig.oldCannonBehaviors) y += 0.5;
-            EntityTNTPrimed entitytntprimed = new EntityTNTPrimed(world, (double) ((float) blockposition.getX() + 0.5F), y, (double) ((float) blockposition.getZ() + 0.5F), explosion.getSource());
-            // Paper end
+        // Paper start - Old TNT cannon behaviors
+        double y = blockposition.getY();
+        if (!world.paperConfig.oldCannonBehaviors) y += 0.5;
+        EntityTNTPrimed entitytntprimed = new EntityTNTPrimed(world, blockposition.getX() + 0.5F, y, blockposition.getZ() + 0.5F, explosion.getSource());
+        // Paper end
 
-            entitytntprimed.setFuseTicks((short) (world.random.nextInt(entitytntprimed.getFuseTicks() / 4) + entitytntprimed.getFuseTicks() / 8));
-            world.addEntity(entitytntprimed);
-        }
+        entitytntprimed.setFuseTicks((short) (world.random.nextInt(entitytntprimed.getFuseTicks() / 4) + entitytntprimed.getFuseTicks() / 8));
+        world.addEntity(entitytntprimed);
     }
 
+    @Override
     public void postBreak(World world, BlockPosition blockposition, IBlockData iblockdata) {
         this.a(world, blockposition, iblockdata, (EntityLiving) null);
     }
 
     public void a(World world, BlockPosition blockposition, IBlockData iblockdata, EntityLiving entityliving) {
-        if (!world.isClientSide) {
-            if (((Boolean) iblockdata.get(BlockTNT.EXPLODE)).booleanValue()) {
-                // Paper start - Old TNT cannon behaviors
-                double y = blockposition.getY();
-                if (!world.paperConfig.oldCannonBehaviors) y += 0.5;
-                EntityTNTPrimed entitytntprimed = new EntityTNTPrimed(world, (double) ((float) blockposition.getX() + 0.5F), y, (double) ((float) blockposition.getZ() + 0.5F), entityliving);
-                // Paper end
+        if (iblockdata.get(BlockTNT.EXPLODE).booleanValue()) {
+            // Paper start - Old TNT cannon behaviors
+            double y = blockposition.getY();
+            if (!world.paperConfig.oldCannonBehaviors) y += 0.5;
+            EntityTNTPrimed entitytntprimed = new EntityTNTPrimed(world, blockposition.getX() + 0.5F, y, blockposition.getZ() + 0.5F, entityliving);
+            // Paper end
 
-                world.addEntity(entitytntprimed);
-                world.a((EntityHuman) null, entitytntprimed.locX, entitytntprimed.locY, entitytntprimed.locZ, SoundEffects.gV, SoundCategory.BLOCKS, 1.0F, 1.0F);
-            }
-
+            world.addEntity(entitytntprimed);
+            world.a((EntityHuman) null, entitytntprimed.locX, entitytntprimed.locY, entitytntprimed.locZ, SoundEffects.gV, SoundCategory.BLOCKS, 1.0F, 1.0F);
         }
     }
 
+    @Override
     public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
         ItemStack itemstack = entityhuman.b(enumhand);
 
@@ -78,8 +78,9 @@ public class BlockTNT extends Block {
         }
     }
 
+    @Override
     public void a(World world, BlockPosition blockposition, IBlockData iblockdata, Entity entity) {
-        if (!world.isClientSide && entity instanceof EntityArrow) {
+        if (entity instanceof EntityArrow) {
             EntityArrow entityarrow = (EntityArrow) entity;
 
             if (entityarrow.isBurning()) {
@@ -95,18 +96,22 @@ public class BlockTNT extends Block {
 
     }
 
+    @Override
     public boolean a(Explosion explosion) {
         return false;
     }
 
+    @Override
     public IBlockData fromLegacyData(int i) {
         return this.getBlockData().set(BlockTNT.EXPLODE, Boolean.valueOf((i & 1) > 0));
     }
 
+    @Override
     public int toLegacyData(IBlockData iblockdata) {
-        return ((Boolean) iblockdata.get(BlockTNT.EXPLODE)).booleanValue() ? 1 : 0;
+        return iblockdata.get(BlockTNT.EXPLODE).booleanValue() ? 1 : 0;
     }
 
+    @Override
     protected BlockStateList getStateList() {
         return new BlockStateList(this, new IBlockState[] { BlockTNT.EXPLODE});
     }

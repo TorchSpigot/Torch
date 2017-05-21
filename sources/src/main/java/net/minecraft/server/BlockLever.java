@@ -22,23 +22,28 @@ public class BlockLever extends Block {
         this.a(CreativeModeTab.d);
     }
 
+    @Override
     @Nullable
     public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return BlockLever.k;
     }
 
+    @Override
     public boolean b(IBlockData iblockdata) {
         return false;
     }
 
+    @Override
     public boolean c(IBlockData iblockdata) {
         return false;
     }
 
+    @Override
     public boolean canPlace(World world, BlockPosition blockposition, EnumDirection enumdirection) {
         return a(world, blockposition, enumdirection.opposite());
     }
 
+    @Override
     public boolean canPlace(World world, BlockPosition blockposition) {
         EnumDirection[] aenumdirection = EnumDirection.values();
         int i = aenumdirection.length;
@@ -58,6 +63,7 @@ public class BlockLever extends Block {
         return BlockButtonAbstract.a(world, blockposition, enumdirection);
     }
 
+    @Override
     public IBlockData getPlacedState(World world, BlockPosition blockposition, EnumDirection enumdirection, float f, float f1, float f2, int i, EntityLiving entityliving) {
         IBlockData iblockdata = this.getBlockData().set(BlockLever.POWERED, Boolean.valueOf(false));
 
@@ -84,8 +90,9 @@ public class BlockLever extends Block {
         }
     }
 
+    @Override
     public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
-        if (this.e(world, blockposition, iblockdata) && !a(world, blockposition, ((BlockLever.EnumLeverPosition) iblockdata.get(BlockLever.FACING)).c().opposite())) {
+        if (this.e(world, blockposition, iblockdata) && !a(world, blockposition, iblockdata.get(BlockLever.FACING).c().opposite())) {
             this.b(world, blockposition, iblockdata, 0);
             world.setAir(blockposition);
         }
@@ -102,8 +109,9 @@ public class BlockLever extends Block {
         }
     }
 
+    @Override
     public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
-        switch ((BlockLever.EnumLeverPosition) iblockdata.get(BlockLever.FACING)) {
+        switch (iblockdata.get(BlockLever.FACING)) {
         case EAST:
         default:
             return BlockLever.f;
@@ -127,41 +135,39 @@ public class BlockLever extends Block {
         }
     }
 
+    @Override
     public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
-        if (world.isClientSide) {
-            return true;
-        } else {
-            // CraftBukkit start - Interact Lever
-            boolean powered = iblockdata.get(POWERED);
-            org.bukkit.block.Block block = world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
-            int old = (powered) ? 15 : 0;
-            int current = (!powered) ? 15 : 0;
+        // CraftBukkit start - Interact Lever
+        boolean powered = iblockdata.get(POWERED);
+        org.bukkit.block.Block block = world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
+        int old = (powered) ? 15 : 0;
+        int current = (!powered) ? 15 : 0;
 
-            BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(block, old, current);
-            world.getServer().getPluginManager().callEvent(eventRedstone);
+        BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(block, old, current);
+        world.getServer().getPluginManager().callEvent(eventRedstone);
 
-            if ((eventRedstone.getNewCurrent() > 0) != (!powered)) {
-                return true;
-            }
-            // CraftBukkit end
-
-            iblockdata = iblockdata.a((IBlockState) BlockLever.POWERED);
-            world.setTypeAndData(blockposition, iblockdata, 3);
-            float f3 = ((Boolean) iblockdata.get(BlockLever.POWERED)).booleanValue() ? 0.6F : 0.5F;
-
-            world.a((EntityHuman) null, blockposition, SoundEffects.dv, SoundCategory.BLOCKS, 0.3F, f3);
-            world.applyPhysics(blockposition, this, false);
-            EnumDirection enumdirection1 = ((BlockLever.EnumLeverPosition) iblockdata.get(BlockLever.FACING)).c();
-
-            world.applyPhysics(blockposition.shift(enumdirection1.opposite()), this, false);
+        if ((eventRedstone.getNewCurrent() > 0) != (!powered)) {
             return true;
         }
+        // CraftBukkit end
+
+        iblockdata = iblockdata.a((IBlockState) BlockLever.POWERED);
+        world.setTypeAndData(blockposition, iblockdata, 3);
+        float f3 = iblockdata.get(BlockLever.POWERED).booleanValue() ? 0.6F : 0.5F;
+
+        world.a((EntityHuman) null, blockposition, SoundEffects.dv, SoundCategory.BLOCKS, 0.3F, f3);
+        world.applyPhysics(blockposition, this, false);
+        EnumDirection enumdirection1 = iblockdata.get(BlockLever.FACING).c();
+
+        world.applyPhysics(blockposition.shift(enumdirection1.opposite()), this, false);
+        return true;
     }
 
+    @Override
     public void remove(World world, BlockPosition blockposition, IBlockData iblockdata) {
-        if (((Boolean) iblockdata.get(BlockLever.POWERED)).booleanValue()) {
+        if (iblockdata.get(BlockLever.POWERED).booleanValue()) {
             world.applyPhysics(blockposition, this, false);
-            EnumDirection enumdirection = ((BlockLever.EnumLeverPosition) iblockdata.get(BlockLever.FACING)).c();
+            EnumDirection enumdirection = iblockdata.get(BlockLever.FACING).c();
 
             world.applyPhysics(blockposition.shift(enumdirection.opposite()), this, false);
         }
@@ -169,37 +175,43 @@ public class BlockLever extends Block {
         super.remove(world, blockposition, iblockdata);
     }
 
+    @Override
     public int b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition, EnumDirection enumdirection) {
-        return ((Boolean) iblockdata.get(BlockLever.POWERED)).booleanValue() ? 15 : 0;
+        return iblockdata.get(BlockLever.POWERED).booleanValue() ? 15 : 0;
     }
 
+    @Override
     public int c(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition, EnumDirection enumdirection) {
-        return !((Boolean) iblockdata.get(BlockLever.POWERED)).booleanValue() ? 0 : (((BlockLever.EnumLeverPosition) iblockdata.get(BlockLever.FACING)).c() == enumdirection ? 15 : 0);
+        return !iblockdata.get(BlockLever.POWERED).booleanValue() ? 0 : (iblockdata.get(BlockLever.FACING).c() == enumdirection ? 15 : 0);
     }
 
+    @Override
     public boolean isPowerSource(IBlockData iblockdata) {
         return true;
     }
 
+    @Override
     public IBlockData fromLegacyData(int i) {
         return this.getBlockData().set(BlockLever.FACING, BlockLever.EnumLeverPosition.a(i & 7)).set(BlockLever.POWERED, Boolean.valueOf((i & 8) > 0));
     }
 
+    @Override
     public int toLegacyData(IBlockData iblockdata) {
         byte b0 = 0;
-        int i = b0 | ((BlockLever.EnumLeverPosition) iblockdata.get(BlockLever.FACING)).a();
+        int i = b0 | iblockdata.get(BlockLever.FACING).a();
 
-        if (((Boolean) iblockdata.get(BlockLever.POWERED)).booleanValue()) {
+        if (iblockdata.get(BlockLever.POWERED).booleanValue()) {
             i |= 8;
         }
 
         return i;
     }
 
+    @Override
     public IBlockData a(IBlockData iblockdata, EnumBlockRotation enumblockrotation) {
         switch (enumblockrotation) {
         case CLOCKWISE_180:
-            switch ((BlockLever.EnumLeverPosition) iblockdata.get(BlockLever.FACING)) {
+            switch (iblockdata.get(BlockLever.FACING)) {
             case EAST:
                 return iblockdata.set(BlockLever.FACING, BlockLever.EnumLeverPosition.WEST);
 
@@ -217,7 +229,7 @@ public class BlockLever extends Block {
             }
 
         case COUNTERCLOCKWISE_90:
-            switch ((BlockLever.EnumLeverPosition) iblockdata.get(BlockLever.FACING)) {
+            switch (iblockdata.get(BlockLever.FACING)) {
             case EAST:
                 return iblockdata.set(BlockLever.FACING, BlockLever.EnumLeverPosition.NORTH);
 
@@ -244,7 +256,7 @@ public class BlockLever extends Block {
             }
 
         case CLOCKWISE_90:
-            switch ((BlockLever.EnumLeverPosition) iblockdata.get(BlockLever.FACING)) {
+            switch (iblockdata.get(BlockLever.FACING)) {
             case EAST:
                 return iblockdata.set(BlockLever.FACING, BlockLever.EnumLeverPosition.SOUTH);
 
@@ -275,10 +287,12 @@ public class BlockLever extends Block {
         }
     }
 
+    @Override
     public IBlockData a(IBlockData iblockdata, EnumBlockMirror enumblockmirror) {
-        return iblockdata.a(enumblockmirror.a(((BlockLever.EnumLeverPosition) iblockdata.get(BlockLever.FACING)).c()));
+        return iblockdata.a(enumblockmirror.a(iblockdata.get(BlockLever.FACING).c()));
     }
 
+    @Override
     protected BlockStateList getStateList() {
         return new BlockStateList(this, new IBlockState[] { BlockLever.FACING, BlockLever.POWERED});
     }
@@ -306,6 +320,7 @@ public class BlockLever extends Block {
             return this.l;
         }
 
+        @Override
         public String toString() {
             return this.k;
         }
@@ -361,6 +376,7 @@ public class BlockLever extends Block {
             }
         }
 
+        @Override
         public String getName() {
             return this.k;
         }

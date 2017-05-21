@@ -13,6 +13,7 @@ public class EntityZombieVillager extends EntityZombie {
         super(world);
     }
 
+    @Override
     protected void i() {
         super.i();
         this.datawatcher.register(EntityZombieVillager.b, Boolean.valueOf(false));
@@ -24,19 +25,21 @@ public class EntityZombieVillager extends EntityZombie {
     }
 
     public int getProfession() {
-        return Math.max(((Integer) this.datawatcher.get(EntityZombieVillager.c)).intValue() % 6, 0);
+        return Math.max(this.datawatcher.get(EntityZombieVillager.c).intValue() % 6, 0);
     }
 
     public static void a(DataConverterManager dataconvertermanager) {
         EntityInsentient.a(dataconvertermanager, EntityZombieVillager.class);
     }
 
+    @Override
     public void b(NBTTagCompound nbttagcompound) {
         super.b(nbttagcompound);
         nbttagcompound.setInt("Profession", this.getProfession());
         nbttagcompound.setInt("ConversionTime", this.isConverting() ? this.conversionTime : -1);
     }
 
+    @Override
     public void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
         this.setProfession(nbttagcompound.getInt("Profession"));
@@ -46,14 +49,16 @@ public class EntityZombieVillager extends EntityZombie {
 
     }
 
+    @Override
     @Nullable
     public GroupDataEntity prepare(DifficultyDamageScaler difficultydamagescaler, @Nullable GroupDataEntity groupdataentity) {
         this.setProfession(this.world.random.nextInt(6));
         return super.prepare(difficultydamagescaler, groupdataentity);
     }
 
+    @Override
     public void A_() {
-        if (!this.world.isClientSide && this.isConverting()) {
+        if (this.isConverting()) {
             int i = this.dq();
             // CraftBukkit start - Use wall time instead of ticks for villager conversion
             int elapsedTicks = MinecraftServer.currentTick - this.lastTick;
@@ -70,6 +75,7 @@ public class EntityZombieVillager extends EntityZombie {
         super.A_();
     }
 
+    @Override
     public boolean a(EntityHuman entityhuman, EnumHand enumhand) {
         ItemStack itemstack = entityhuman.b(enumhand);
 
@@ -78,9 +84,7 @@ public class EntityZombieVillager extends EntityZombie {
                 itemstack.subtract(1);
             }
 
-            if (!this.world.isClientSide) {
-                this.b(this.random.nextInt(2401) + 3600);
-            }
+            this.b(this.random.nextInt(2401) + 3600);
 
             return true;
         } else {
@@ -88,12 +92,13 @@ public class EntityZombieVillager extends EntityZombie {
         }
     }
 
+    @Override
     protected boolean isTypeNotPersistent() {
         return !this.isConverting();
     }
 
     public boolean isConverting() {
-        return ((Boolean) this.getDataWatcher().get(EntityZombieVillager.b)).booleanValue();
+        return this.getDataWatcher().get(EntityZombieVillager.b).booleanValue();
     }
 
     protected void b(int i) {
@@ -154,31 +159,38 @@ public class EntityZombieVillager extends EntityZombie {
         return i;
     }
 
+    @Override
     protected float cj() {
         return this.isBaby() ? (this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 2.0F : (this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F;
     }
 
+    @Override
     public SoundEffect G() {
         return SoundEffects.it;
     }
 
+    @Override
     public SoundEffect bW() {
         return SoundEffects.ix;
     }
 
+    @Override
     public SoundEffect bX() {
         return SoundEffects.iw;
     }
 
+    @Override
     public SoundEffect di() {
         return SoundEffects.iy;
     }
 
+    @Override
     @Nullable
     protected MinecraftKey J() {
         return LootTables.as;
     }
 
+    @Override
     protected ItemStack dj() {
         return ItemStack.a;
     }

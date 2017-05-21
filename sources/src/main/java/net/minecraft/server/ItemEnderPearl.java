@@ -7,20 +7,19 @@ public class ItemEnderPearl extends Item {
         this.a(CreativeModeTab.f);
     }
 
+    @Override
     public InteractionResultWrapper<ItemStack> a(World world, EntityHuman entityhuman, EnumHand enumhand) {
         ItemStack itemstack = entityhuman.b(enumhand);
 
         // CraftBukkit start - change order
-        if (!world.isClientSide) {
-            EntityEnderPearl entityenderpearl = new EntityEnderPearl(world, entityhuman);
+        EntityEnderPearl entityenderpearl = new EntityEnderPearl(world, entityhuman);
 
-            entityenderpearl.a(entityhuman, entityhuman.pitch, entityhuman.yaw, 0.0F, 1.5F, 1.0F);
-            if (!world.addEntity(entityenderpearl)) {
-                if (entityhuman instanceof EntityPlayer) {
-                    ((EntityPlayer) entityhuman).getBukkitEntity().updateInventory();
-                }
-                return new InteractionResultWrapper(EnumInteractionResult.FAIL, itemstack);
+        entityenderpearl.a(entityhuman, entityhuman.pitch, entityhuman.yaw, 0.0F, 1.5F, 1.0F);
+        if (!world.addEntity(entityenderpearl)) {
+            if (entityhuman instanceof EntityPlayer) {
+                ((EntityPlayer) entityhuman).getBukkitEntity().updateInventory();
             }
+            return new InteractionResultWrapper(EnumInteractionResult.FAIL, itemstack);
         }
 
         if (!entityhuman.abilities.canInstantlyBuild) {
@@ -31,7 +30,7 @@ public class ItemEnderPearl extends Item {
         entityhuman.di().a(this, 20);
         // CraftBukkit end
 
-        entityhuman.b(StatisticList.b((Item) this));
+        entityhuman.b(StatisticList.b(this));
         return new InteractionResultWrapper(EnumInteractionResult.SUCCESS, itemstack);
     }
 }

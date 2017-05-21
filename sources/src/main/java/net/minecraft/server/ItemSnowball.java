@@ -7,6 +7,7 @@ public class ItemSnowball extends Item {
         this.a(CreativeModeTab.f);
     }
 
+    @Override
     public InteractionResultWrapper<ItemStack> a(World world, EntityHuman entityhuman, EnumHand enumhand) {
         ItemStack itemstack = entityhuman.b(enumhand);
 
@@ -18,23 +19,21 @@ public class ItemSnowball extends Item {
 
         world.a((EntityHuman) null, entityhuman.locX, entityhuman.locY, entityhuman.locZ, SoundEffects.go, SoundCategory.NEUTRAL, 0.5F, 0.4F / (ItemSnowball.j.nextFloat() * 0.4F + 0.8F));
         */
-        if (!world.isClientSide) {
-            EntitySnowball entitysnowball = new EntitySnowball(world, entityhuman);
+        EntitySnowball entitysnowball = new EntitySnowball(world, entityhuman);
 
-            entitysnowball.a(entityhuman, entityhuman.pitch, entityhuman.yaw, 0.0F, 1.5F, 1.0F);
-            if (world.addEntity(entitysnowball)) {
-                if (!entityhuman.abilities.canInstantlyBuild) {
-                    itemstack.subtract(1);
-                }
-
-                world.a((EntityHuman) null, entityhuman.locX, entityhuman.locY, entityhuman.locZ, SoundEffects.go, SoundCategory.NEUTRAL, 0.5F, 0.4F / (ItemSnowball.j.nextFloat() * 0.4F + 0.8F));
-            } else if (entityhuman instanceof EntityPlayer) {
-                ((EntityPlayer) entityhuman).getBukkitEntity().updateInventory();
+        entitysnowball.a(entityhuman, entityhuman.pitch, entityhuman.yaw, 0.0F, 1.5F, 1.0F);
+        if (world.addEntity(entitysnowball)) {
+            if (!entityhuman.abilities.canInstantlyBuild) {
+                itemstack.subtract(1);
             }
+
+            world.a((EntityHuman) null, entityhuman.locX, entityhuman.locY, entityhuman.locZ, SoundEffects.go, SoundCategory.NEUTRAL, 0.5F, 0.4F / (ItemSnowball.j.nextFloat() * 0.4F + 0.8F));
+        } else if (entityhuman instanceof EntityPlayer) {
+            ((EntityPlayer) entityhuman).getBukkitEntity().updateInventory();
         }
         // CraftBukkit end
 
-        entityhuman.b(StatisticList.b((Item) this));
+        entityhuman.b(StatisticList.b(this));
         return new InteractionResultWrapper(EnumInteractionResult.SUCCESS, itemstack);
     }
 }

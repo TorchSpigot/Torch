@@ -130,12 +130,10 @@ public abstract class EntityHuman extends EntityLiving {
                 this.sleepTicks = 100;
             }
 
-            if (!this.world.isClientSide) {
-                if (!this.r()) {
-                    this.a(true, true, false);
-                } else if (this.world.B()) {
-                    this.a(false, true, true);
-                }
+            if (!this.r()) {
+                this.a(true, true, false);
+            } else if (this.world.B()) {
+                this.a(false, true, true);
             }
         } else if (this.sleepTicks > 0) {
             ++this.sleepTicks;
@@ -145,7 +143,7 @@ public abstract class EntityHuman extends EntityLiving {
         }
 
         super.A_();
-        if (!this.world.isClientSide && this.activeContainer != null && !this.activeContainer.a(this)) {
+        if (this.activeContainer != null && !this.activeContainer.a(this)) {
             this.closeInventory();
             this.activeContainer = this.defaultContainer;
         }
@@ -159,16 +157,14 @@ public abstract class EntityHuman extends EntityLiving {
             this.g = null;
         }
 
-        if (!this.world.isClientSide) {
-            this.foodData.a(this);
-            this.b(StatisticList.g);
-            if (this.isAlive()) {
-                this.b(StatisticList.h);
-            }
+        this.foodData.a(this);
+        this.b(StatisticList.g);
+        if (this.isAlive()) {
+            this.b(StatisticList.h);
+        }
 
-            if (this.isSneaking()) {
-                this.b(StatisticList.i);
-            }
+        if (this.isSneaking()) {
+            this.b(StatisticList.i);
         }
 
         int i = 29999999;
@@ -313,7 +309,7 @@ public abstract class EntityHuman extends EntityLiving {
 
     @Override
     public void aw() {
-        if (!this.world.isClientSide && this.isSneaking() && this.isPassenger()) {
+        if (this.isSneaking() && this.isPassenger()) {
             this.stopRiding();
             this.setSneaking(false);
         } else {
@@ -365,9 +361,7 @@ public abstract class EntityHuman extends EntityLiving {
         super.n();
         AttributeInstance attributeinstance = this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED);
 
-        if (!this.world.isClientSide) {
-            attributeinstance.setValue(this.abilities.b());
-        }
+        attributeinstance.setValue(this.abilities.b());
 
         this.aR = this.bP;
         if (this.isSprinting()) {
@@ -791,7 +785,7 @@ public abstract class EntityHuman extends EntityLiving {
             if (this.getHealth() <= 0.0F) {
                 return false;
             } else {
-                if (this.isSleeping() && !this.world.isClientSide) {
+                if (this.isSleeping()) {
                     this.a(true, true, false);
                 }
 
@@ -1257,30 +1251,28 @@ public abstract class EntityHuman extends EntityLiving {
     public EntityHuman.EnumBedResult a(BlockPosition blockposition) {
         EnumDirection enumdirection = this.world.getType(blockposition).get(BlockFacingHorizontal.FACING);
 
-        if (!this.world.isClientSide) {
-            if (this.isSleeping() || !this.isAlive()) {
-                return EntityHuman.EnumBedResult.OTHER_PROBLEM;
-            }
+        if (this.isSleeping() || !this.isAlive()) {
+            return EntityHuman.EnumBedResult.OTHER_PROBLEM;
+        }
 
-            if (!this.world.worldProvider.d()) {
-                return EntityHuman.EnumBedResult.NOT_POSSIBLE_HERE;
-            }
+        if (!this.world.worldProvider.d()) {
+            return EntityHuman.EnumBedResult.NOT_POSSIBLE_HERE;
+        }
 
-            if (this.world.B()) {
-                return EntityHuman.EnumBedResult.NOT_POSSIBLE_NOW;
-            }
+        if (this.world.B()) {
+            return EntityHuman.EnumBedResult.NOT_POSSIBLE_NOW;
+        }
 
-            if (!this.a(blockposition, enumdirection)) {
-                return EntityHuman.EnumBedResult.TOO_FAR_AWAY;
-            }
+        if (!this.a(blockposition, enumdirection)) {
+            return EntityHuman.EnumBedResult.TOO_FAR_AWAY;
+        }
 
-            double d0 = 8.0D;
-            double d1 = 5.0D;
-            List list = this.world.a(EntityMonster.class, new AxisAlignedBB(blockposition.getX() - 8.0D, blockposition.getY() - 5.0D, blockposition.getZ() - 8.0D, blockposition.getX() + 8.0D, blockposition.getY() + 5.0D, blockposition.getZ() + 8.0D));
+        double d0 = 8.0D;
+        double d1 = 5.0D;
+        List list = this.world.a(EntityMonster.class, new AxisAlignedBB(blockposition.getX() - 8.0D, blockposition.getY() - 5.0D, blockposition.getZ() - 8.0D, blockposition.getX() + 8.0D, blockposition.getY() + 5.0D, blockposition.getZ() + 8.0D));
 
-            if (!list.isEmpty()) {
-                return EntityHuman.EnumBedResult.NOT_SAFE;
-            }
+        if (!list.isEmpty()) {
+            return EntityHuman.EnumBedResult.NOT_SAFE;
         }
 
         if (this.isPassenger()) {
@@ -1318,9 +1310,7 @@ public abstract class EntityHuman extends EntityLiving {
         this.motX = 0.0D;
         this.motY = 0.0D;
         this.motZ = 0.0D;
-        if (!this.world.isClientSide) {
-            this.world.everyoneSleeping();
-        }
+        this.world.everyoneSleeping();
 
         return EntityHuman.EnumBedResult.OK;
     }
@@ -1356,7 +1346,7 @@ public abstract class EntityHuman extends EntityLiving {
         }
 
         this.sleeping = false;
-        if (!this.world.isClientSide && flag1) {
+        if (flag1) {
             this.world.everyoneSleeping();
         }
 
@@ -1662,9 +1652,7 @@ public abstract class EntityHuman extends EntityLiving {
 
     public void applyExhaustion(float f) {
         if (!this.abilities.isInvulnerable) {
-            if (!this.world.isClientSide) {
-                this.foodData.a(f);
-            }
+            this.foodData.a(f);
 
         }
     }

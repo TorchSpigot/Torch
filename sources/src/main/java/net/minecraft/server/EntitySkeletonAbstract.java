@@ -68,7 +68,7 @@ public abstract class EntitySkeletonAbstract extends EntityMonster implements IR
 
     @Override
 	public void n() {
-        if (this.world.B() && !this.world.isClientSide) {
+        if (this.world.B()) {
             float f = this.e(1.0F);
             BlockPosition blockposition = this.bB() instanceof EntityBoat ? (new BlockPosition(this.locX, Math.round(this.locY), this.locZ)).up() : new BlockPosition(this.locX, Math.round(this.locY), this.locZ);
 
@@ -158,7 +158,7 @@ public abstract class EntitySkeletonAbstract extends EntityMonster implements IR
     }
 
     public void dh() {
-        if (this.world != null && !this.world.isClientSide) {
+        if (this.world != null) {
             this.goalSelector.a(this.c);
             this.goalSelector.a(this.b);
             ItemStack itemstack = this.getItemInMainHand();
@@ -219,7 +219,7 @@ public abstract class EntitySkeletonAbstract extends EntityMonster implements IR
     @Override
 	public void setSlot(EnumItemSlot enumitemslot, ItemStack itemstack) {
         super.setSlot(enumitemslot, itemstack);
-        if (!this.world.isClientSide && enumitemslot == EnumItemSlot.MAINHAND) {
+        if (enumitemslot == EnumItemSlot.MAINHAND) {
             this.dh();
         }
 

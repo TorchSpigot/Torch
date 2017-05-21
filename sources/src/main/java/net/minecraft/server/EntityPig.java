@@ -24,7 +24,7 @@ public class EntityPig extends EntityAnimal {
     }
 
     @Override
-	protected void r() {
+    protected void r() {
         this.goalSelector.a(0, new PathfinderGoalFloat(this));
         this.goalSelector.a(1, new PathfinderGoalPanic(this, 1.25D));
         this.goalSelector.a(3, new PathfinderGoalBreed(this, 1.0D));
@@ -37,20 +37,20 @@ public class EntityPig extends EntityAnimal {
     }
 
     @Override
-	protected void initAttributes() {
+    protected void initAttributes() {
         super.initAttributes();
         this.getAttributeInstance(GenericAttributes.maxHealth).setValue(10.0D);
         this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).setValue(0.25D);
     }
 
     @Override
-	@Nullable
+    @Nullable
     public Entity bw() {
         return this.bx().isEmpty() ? null : (Entity) this.bx().get(0);
     }
 
     @Override
-	public boolean cR() {
+    public boolean cR() {
         Entity entity = this.bw();
 
         if (!(entity instanceof EntityHuman)) {
@@ -63,18 +63,18 @@ public class EntityPig extends EntityAnimal {
     }
 
     @Override
-	public void a(DataWatcherObject<?> datawatcherobject) {
-        if (EntityPig.bx.equals(datawatcherobject) && this.world.isClientSide) {
+    public void a(DataWatcherObject<?> datawatcherobject) {
+        /* if (EntityPig.bx.equals(datawatcherobject) && this.world.isClientSide) {
             this.bA = true;
             this.bB = 0;
             this.bC = this.datawatcher.get(EntityPig.bx).intValue();
-        }
+        } */
 
         super.a(datawatcherobject);
     }
 
     @Override
-	protected void i() {
+    protected void i() {
         super.i();
         this.datawatcher.register(EntityPig.bw, Boolean.valueOf(false));
         this.datawatcher.register(EntityPig.bx, Integer.valueOf(0));
@@ -85,39 +85,39 @@ public class EntityPig extends EntityAnimal {
     }
 
     @Override
-	public void b(NBTTagCompound nbttagcompound) {
+    public void b(NBTTagCompound nbttagcompound) {
         super.b(nbttagcompound);
         nbttagcompound.setBoolean("Saddle", this.hasSaddle());
     }
 
     @Override
-	public void a(NBTTagCompound nbttagcompound) {
+    public void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
         this.setSaddle(nbttagcompound.getBoolean("Saddle"));
     }
 
     @Override
-	protected SoundEffect G() {
+    protected SoundEffect G() {
         return SoundEffects.ep;
     }
 
     @Override
-	protected SoundEffect bW() {
+    protected SoundEffect bW() {
         return SoundEffects.er;
     }
 
     @Override
-	protected SoundEffect bX() {
+    protected SoundEffect bX() {
         return SoundEffects.eq;
     }
 
     @Override
-	protected void a(BlockPosition blockposition, Block block) {
+    protected void a(BlockPosition blockposition, Block block) {
         this.a(SoundEffects.et, 0.15F, 1.0F);
     }
 
     @Override
-	public boolean a(EntityHuman entityhuman, EnumHand enumhand) {
+    public boolean a(EntityHuman entityhuman, EnumHand enumhand) {
         if (!super.a(entityhuman, enumhand)) {
             ItemStack itemstack = entityhuman.b(enumhand);
 
@@ -125,9 +125,7 @@ public class EntityPig extends EntityAnimal {
                 itemstack.a(entityhuman, this, enumhand);
                 return true;
             } else if (this.hasSaddle() && !this.isVehicle()) {
-                if (!this.world.isClientSide) {
-                    entityhuman.startRiding(this);
-                }
+                entityhuman.startRiding(this);
 
                 return true;
             } else if (itemstack.getItem() == Items.SADDLE) {
@@ -142,19 +140,16 @@ public class EntityPig extends EntityAnimal {
     }
 
     @Override
-	public void die(DamageSource damagesource) {
+    public void die(DamageSource damagesource) {
         // super.die(damagesource); // CraftBukkit - Moved to end
-        if (!this.world.isClientSide) {
-            if (this.hasSaddle()) {
-                this.a(Items.SADDLE, 1);
-            }
-
+        if (this.hasSaddle()) {
+            this.a(Items.SADDLE, 1);
         }
         super.die(damagesource); // CraftBukkit - Moved from above
     }
 
     @Override
-	@Nullable
+    @Nullable
     protected MinecraftKey J() {
         return LootTables.E;
     }
@@ -173,8 +168,8 @@ public class EntityPig extends EntityAnimal {
     }
 
     @Override
-	public void onLightningStrike(EntityLightning entitylightning) {
-        if (!this.world.isClientSide && !this.dead) {
+    public void onLightningStrike(EntityLightning entitylightning) {
+        if (!this.dead) {
             EntityPigZombie entitypigzombie = new EntityPigZombie(this.world);
 
             // Paper start
@@ -204,7 +199,7 @@ public class EntityPig extends EntityAnimal {
     }
 
     @Override
-	public void e(float f, float f1) {
+    public void e(float f, float f1) {
         super.e(f, f1);
         if (f > 5.0F) {
             Iterator iterator = this.b(EntityHuman.class).iterator();
@@ -219,7 +214,7 @@ public class EntityPig extends EntityAnimal {
     }
 
     @Override
-	public void g(float f, float f1) {
+    public void g(float f, float f1) {
         Entity entity = this.bx().isEmpty() ? null : (Entity) this.bx().get(0);
 
         if (this.isVehicle() && this.cR()) {
@@ -285,12 +280,12 @@ public class EntityPig extends EntityAnimal {
     }
 
     @Override
-	public boolean e(ItemStack itemstack) {
+    public boolean e(ItemStack itemstack) {
         return EntityPig.by.contains(itemstack.getItem());
     }
 
     @Override
-	public EntityAgeable createChild(EntityAgeable entityageable) {
+    public EntityAgeable createChild(EntityAgeable entityageable) {
         return this.b(entityageable);
     }
 }

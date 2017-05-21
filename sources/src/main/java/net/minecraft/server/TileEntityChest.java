@@ -200,7 +200,7 @@ public class TileEntityChest extends TileEntityLootable { // Paper - Remove ITic
         ++this.q;
         float f;
 
-        if (!this.world.isClientSide && this.l != 0 && (this.q + i + j + k) % 200 == 0) {
+        if (this.l != 0 && (this.q + i + j + k) % 200 == 0) {
             this.l = 0;
             f = 5.0F;
             List list = this.world.a(EntityHuman.class, new AxisAlignedBB((double) ((float) i - 5.0F), (double) ((float) j - 5.0F), (double) ((float) k - 5.0F), (double) ((float) (i + 1) + 5.0F), (double) ((float) (j + 1) + 5.0F), (double) ((float) (k + 1) + 5.0F)));

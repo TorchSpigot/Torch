@@ -123,7 +123,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
 
     @Override
 	public void F_() {
-        if (this.world != null && !this.world.isClientSide) {
+        if (this.world != null) {
             --this.f;
             this.g = this.world.getTime();
             if (!this.J()) {
@@ -140,7 +140,7 @@ public class TileEntityHopper extends TileEntityLootable implements IHopper, ITi
 
     private boolean o() {
         mayAcceptItems = false; // Paper - at the beginning of a tick, assume we can't accept items
-        if (this.world != null && !this.world.isClientSide) {
+        if (this.world != null) {
             if (!this.J() && BlockHopper.f(this.v())) {
                 boolean flag = false;
 

@@ -59,7 +59,7 @@ public abstract class EntityFireball extends Entity {
     }
 
     public void A_() {
-        if (!this.world.isClientSide && (this.shooter != null && this.shooter.dead || !this.world.isLoaded(new BlockPosition(this)))) {
+        if ((this.shooter != null && this.shooter.dead || !this.world.isLoaded(new BlockPosition(this)))) {
             this.die();
         } else {
             super.A_();

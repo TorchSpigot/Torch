@@ -86,16 +86,12 @@ public class EntitySquid extends EntityWaterAnimal {
         this.by = this.bx;
         this.bv += this.bA;
         if (this.bv > 6.283185307179586D) {
-            if (this.world.isClientSide) {
-                this.bv = 6.2831855F;
-            } else {
-                this.bv = (float) (this.bv - 6.283185307179586D);
-                if (this.random.nextInt(10) == 0) {
-                    this.bA = 1.0F / (this.random.nextFloat() + 1.0F) * 0.2F;
-                }
-
-                this.world.broadcastEntityEffect(this, (byte) 19);
+            this.bv = (float) (this.bv - 6.283185307179586D);
+            if (this.random.nextInt(10) == 0) {
+                this.bA = 1.0F / (this.random.nextFloat() + 1.0F) * 0.2F;
             }
+
+            this.world.broadcastEntityEffect(this, (byte) 19);
         }
 
         if (this.inWater) {
@@ -116,11 +112,9 @@ public class EntitySquid extends EntityWaterAnimal {
                 this.bB *= 0.99F;
             }
 
-            if (!this.world.isClientSide) {
-                this.motX = this.bC * this.bz;
-                this.motY = this.bD * this.bz;
-                this.motZ = this.bE * this.bz;
-            }
+            this.motX = this.bC * this.bz;
+            this.motY = this.bD * this.bz;
+            this.motZ = this.bE * this.bz;
 
             f = MathHelper.sqrt(this.motX * this.motX + this.motZ * this.motZ);
             this.aN += (-((float) MathHelper.c(this.motX, this.motZ)) * 57.295776F - this.aN) * 0.1F;
@@ -129,17 +123,15 @@ public class EntitySquid extends EntityWaterAnimal {
             this.a += (-((float) MathHelper.c(f, this.motY)) * 57.295776F - this.a) * 0.1F;
         } else {
             this.bx = MathHelper.e(MathHelper.sin(this.bv)) * 3.1415927F * 0.25F;
-            if (!this.world.isClientSide) {
-                this.motX = 0.0D;
-                this.motZ = 0.0D;
-                if (this.hasEffect(MobEffects.LEVITATION)) {
-                    this.motY += 0.05D * (this.getEffect(MobEffects.LEVITATION).getAmplifier() + 1) - this.motY;
-                } else if (!this.isNoGravity()) {
-                    this.motY -= 0.08D;
-                }
-
-                this.motY *= 0.9800000190734863D;
+            this.motX = 0.0D;
+            this.motZ = 0.0D;
+            if (this.hasEffect(MobEffects.LEVITATION)) {
+                this.motY += 0.05D * (this.getEffect(MobEffects.LEVITATION).getAmplifier() + 1) - this.motY;
+            } else if (!this.isNoGravity()) {
+                this.motY -= 0.08D;
             }
+
+            this.motY *= 0.9800000190734863D;
 
             this.a = (float) (this.a + (-90.0F - this.a) * 0.02D);
         }

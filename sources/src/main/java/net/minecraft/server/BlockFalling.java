@@ -15,18 +15,19 @@ public class BlockFalling extends Block {
         super(material);
     }
 
+    @Override
     public void onPlace(World world, BlockPosition blockposition, IBlockData iblockdata) {
-        world.a(blockposition, (Block) this, this.a(world));
+        world.a(blockposition, this, this.a(world));
     }
 
+    @Override
     public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
-        world.a(blockposition, (Block) this, this.a(world));
+        world.a(blockposition, this, this.a(world));
     }
 
+    @Override
     public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
-        if (!world.isClientSide) {
-            this.c(world, blockposition);
-        }
+        this.c(world, blockposition);
 
     }
 
@@ -35,12 +36,10 @@ public class BlockFalling extends Block {
             boolean flag = true;
 
             if (!BlockFalling.instaFall && world.areChunksLoadedBetween(blockposition.a(-32, -32, -32), blockposition.a(32, 32, 32))) {
-                if (!world.isClientSide) {
-                    EntityFallingBlock entityfallingblock = new EntityFallingBlock(world, (double) blockposition.getX() + 0.5D, (double) blockposition.getY(), (double) blockposition.getZ() + 0.5D, world.getType(blockposition));
+                EntityFallingBlock entityfallingblock = new EntityFallingBlock(world, blockposition.getX() + 0.5D, blockposition.getY(), blockposition.getZ() + 0.5D, world.getType(blockposition));
 
-                    this.a(entityfallingblock);
-                    world.addEntity(entityfallingblock);
-                }
+                this.a(entityfallingblock);
+                world.addEntity(entityfallingblock);
             } else {
                 world.setAir(blockposition);
 
@@ -60,6 +59,7 @@ public class BlockFalling extends Block {
 
     protected void a(EntityFallingBlock entityfallingblock) {}
 
+    @Override
     public int a(World world) {
         return 2;
     }

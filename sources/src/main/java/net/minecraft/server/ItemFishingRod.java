@@ -12,6 +12,7 @@ public class ItemFishingRod extends Item {
         });
     }
 
+    @Override
     public InteractionResultWrapper<ItemStack> a(World world, EntityHuman entityhuman, EnumHand enumhand) {
         ItemStack itemstack = entityhuman.b(enumhand);
 
@@ -21,41 +22,40 @@ public class ItemFishingRod extends Item {
             itemstack.damage(i, entityhuman);
             entityhuman.a(enumhand);
         } else {
-            if (!world.isClientSide) {
-                EntityFishingHook entityfishinghook = new EntityFishingHook(world, entityhuman);
-                int j = EnchantmentManager.c(itemstack);
+            EntityFishingHook entityfishinghook = new EntityFishingHook(world, entityhuman);
+            int j = EnchantmentManager.c(itemstack);
 
-                if (j > 0) {
-                    entityfishinghook.a(j);
-                }
-
-                int k = EnchantmentManager.b(itemstack);
-
-                if (k > 0) {
-                    entityfishinghook.b(k);
-                }
-
-                // CraftBukkit start
-                PlayerFishEvent playerFishEvent = new PlayerFishEvent((org.bukkit.entity.Player) entityhuman.getBukkitEntity(), null, (org.bukkit.entity.Fish) entityfishinghook.getBukkitEntity(), PlayerFishEvent.State.FISHING);
-                world.getServer().getPluginManager().callEvent(playerFishEvent);
-
-                if (playerFishEvent.isCancelled()) {
-                    entityhuman.hookedFish = null;
-                    return new InteractionResultWrapper(EnumInteractionResult.PASS, itemstack);
-                }
-                world.a((EntityHuman) null, entityhuman.locX, entityhuman.locY, entityhuman.locZ, SoundEffects.I, SoundCategory.NEUTRAL, 0.5F, 0.4F / (ItemFishingRod.j.nextFloat() * 0.4F + 0.8F));
-                // CraftBukkit end
-
-                world.addEntity(entityfishinghook);
+            if (j > 0) {
+                entityfishinghook.a(j);
             }
 
+            int k = EnchantmentManager.b(itemstack);
+
+            if (k > 0) {
+                entityfishinghook.b(k);
+            }
+
+            // CraftBukkit start
+            PlayerFishEvent playerFishEvent = new PlayerFishEvent((org.bukkit.entity.Player) entityhuman.getBukkitEntity(), null, (org.bukkit.entity.Fish) entityfishinghook.getBukkitEntity(), PlayerFishEvent.State.FISHING);
+            world.getServer().getPluginManager().callEvent(playerFishEvent);
+
+            if (playerFishEvent.isCancelled()) {
+                entityhuman.hookedFish = null;
+                return new InteractionResultWrapper(EnumInteractionResult.PASS, itemstack);
+            }
+            world.a((EntityHuman) null, entityhuman.locX, entityhuman.locY, entityhuman.locZ, SoundEffects.I, SoundCategory.NEUTRAL, 0.5F, 0.4F / (ItemFishingRod.j.nextFloat() * 0.4F + 0.8F));
+            // CraftBukkit end
+
+            world.addEntity(entityfishinghook);
+
             entityhuman.a(enumhand);
-            entityhuman.b(StatisticList.b((Item) this));
+            entityhuman.b(StatisticList.b(this));
         }
 
         return new InteractionResultWrapper(EnumInteractionResult.SUCCESS, itemstack);
     }
 
+    @Override
     public int c() {
         return 1;
     }

@@ -20,14 +20,17 @@ public class EntityWitherSkull extends EntityFireball {
         EntityFireball.a(dataconvertermanager, "WitherSkull");
     }
 
+    @Override
     protected float l() {
         return this.isCharged() ? 0.73F : super.l();
     }
 
+    @Override
     public boolean isBurning() {
         return false;
     }
 
+    @Override
     public float a(Explosion explosion, World world, BlockPosition blockposition, IBlockData iblockdata) {
         float f = super.a(explosion, world, blockposition, iblockdata);
         Block block = iblockdata.getBlock();
@@ -39,74 +42,77 @@ public class EntityWitherSkull extends EntityFireball {
         return f;
     }
 
+    @Override
     protected void a(MovingObjectPosition movingobjectposition) {
-        if (!this.world.isClientSide) {
-            if (movingobjectposition.entity != null) {
-                // Spigot start
-                boolean didDamage = false;
-                if (this.shooter != null) {
-                    didDamage = movingobjectposition.entity.damageEntity(DamageSource.projectile(this, shooter), 8.0F);
-                    if (didDamage) { // CraftBukkit
-                        if (movingobjectposition.entity.isAlive()) {
-                            this.a(this.shooter, movingobjectposition.entity);
-                        } else {
-                            this.shooter.heal(5.0F, org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason.WITHER); // CraftBukkit
-                        }
-                    }
-                } else {
-                    didDamage = movingobjectposition.entity.damageEntity(DamageSource.MAGIC, 5.0F);
-                }
-
-                if (didDamage && movingobjectposition.entity instanceof EntityLiving) {
-                // Spigot end
-                    byte b0 = 0;
-
-                    if (this.world.getDifficulty() == EnumDifficulty.NORMAL) {
-                        b0 = 10;
-                    } else if (this.world.getDifficulty() == EnumDifficulty.HARD) {
-                        b0 = 40;
-                    }
-
-                    if (b0 > 0) {
-                        ((EntityLiving) movingobjectposition.entity).addEffect(new MobEffect(MobEffects.WITHER, 20 * b0, 1));
+        if (movingobjectposition.entity != null) {
+            // Spigot start
+            boolean didDamage = false;
+            if (this.shooter != null) {
+                didDamage = movingobjectposition.entity.damageEntity(DamageSource.projectile(this, shooter), 8.0F);
+                if (didDamage) { // CraftBukkit
+                    if (movingobjectposition.entity.isAlive()) {
+                        this.a(this.shooter, movingobjectposition.entity);
+                    } else {
+                        this.shooter.heal(5.0F, org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason.WITHER); // CraftBukkit
                     }
                 }
+            } else {
+                didDamage = movingobjectposition.entity.damageEntity(DamageSource.MAGIC, 5.0F);
             }
 
-            // CraftBukkit start
-            // this.world.createExplosion(this, this.locX, this.locY, this.locZ, 1.0F, false, this.world.getGameRules().getBoolean("mobGriefing"));
-            ExplosionPrimeEvent event = new ExplosionPrimeEvent(this.getBukkitEntity(), 1.0F, false);
-            this.world.getServer().getPluginManager().callEvent(event);
+            if (didDamage && movingobjectposition.entity instanceof EntityLiving) {
+            // Spigot end
+                byte b0 = 0;
 
-            if (!event.isCancelled()) {
-                this.world.createExplosion(this, this.locX, this.locY, this.locZ, event.getRadius(), event.getFire(), this.world.getGameRules().getBoolean("mobGriefing"));
+                if (this.world.getDifficulty() == EnumDifficulty.NORMAL) {
+                    b0 = 10;
+                } else if (this.world.getDifficulty() == EnumDifficulty.HARD) {
+                    b0 = 40;
+                }
+
+                if (b0 > 0) {
+                    ((EntityLiving) movingobjectposition.entity).addEffect(new MobEffect(MobEffects.WITHER, 20 * b0, 1));
+                }
             }
-            // CraftBukkit end
-            this.die();
         }
+
+        // CraftBukkit start
+        // this.world.createExplosion(this, this.locX, this.locY, this.locZ, 1.0F, false, this.world.getGameRules().getBoolean("mobGriefing"));
+        ExplosionPrimeEvent event = new ExplosionPrimeEvent(this.getBukkitEntity(), 1.0F, false);
+        this.world.getServer().getPluginManager().callEvent(event);
+
+        if (!event.isCancelled()) {
+            this.world.createExplosion(this, this.locX, this.locY, this.locZ, event.getRadius(), event.getFire(), this.world.getGameRules().getBoolean("mobGriefing"));
+        }
+        // CraftBukkit end
+        this.die();
 
     }
 
+    @Override
     public boolean isInteractable() {
         return false;
     }
 
+    @Override
     public boolean damageEntity(DamageSource damagesource, float f) {
         return false;
     }
 
+    @Override
     protected void i() {
         this.datawatcher.register(EntityWitherSkull.e, Boolean.valueOf(false));
     }
 
     public boolean isCharged() {
-        return ((Boolean) this.datawatcher.get(EntityWitherSkull.e)).booleanValue();
+        return this.datawatcher.get(EntityWitherSkull.e).booleanValue();
     }
 
     public void setCharged(boolean flag) {
         this.datawatcher.set(EntityWitherSkull.e, Boolean.valueOf(flag));
     }
 
+    @Override
     protected boolean k() {
         return false;
     }

@@ -24,6 +24,7 @@ public class EntityEnderPearl extends EntityProjectile {
         EntityProjectile.a(dataconvertermanager, "ThrownEnderpearl");
     }
 
+    @Override
     protected void a(MovingObjectPosition movingobjectposition) {
         EntityLiving entityliving = this.getShooter();
 
@@ -43,12 +44,12 @@ public class EntityEnderPearl extends EntityProjectile {
                 TileEntityEndGateway tileentityendgateway = (TileEntityEndGateway) tileentity;
 
                 if (entityliving != null) {
-                    tileentityendgateway.a((Entity) entityliving);
+                    tileentityendgateway.a(entityliving);
                     this.die();
                     return;
                 }
 
-                tileentityendgateway.a((Entity) this);
+                tileentityendgateway.a(this);
                 return;
             }
         }
@@ -57,51 +58,50 @@ public class EntityEnderPearl extends EntityProjectile {
             this.world.addParticle(EnumParticle.PORTAL, this.locX, this.locY + this.random.nextDouble() * 2.0D, this.locZ, this.random.nextGaussian(), 0.0D, this.random.nextGaussian(), new int[0]);
         }
 
-        if (!this.world.isClientSide) {
-            if (entityliving instanceof EntityPlayer) {
-                EntityPlayer entityplayer = (EntityPlayer) entityliving;
+        if (entityliving instanceof EntityPlayer) {
+            EntityPlayer entityplayer = (EntityPlayer) entityliving;
 
-                if (entityplayer.playerConnection.a().isConnected() && entityplayer.world == this.world && !entityplayer.isSleeping()) {
-                    // CraftBukkit start - Fire PlayerTeleportEvent
-                    org.bukkit.craftbukkit.entity.CraftPlayer player = entityplayer.getBukkitEntity();
-                    org.bukkit.Location location = getBukkitEntity().getLocation();
-                    location.setPitch(player.getLocation().getPitch());
-                    location.setYaw(player.getLocation().getYaw());
+            if (entityplayer.playerConnection.a().isConnected() && entityplayer.world == this.world && !entityplayer.isSleeping()) {
+                // CraftBukkit start - Fire PlayerTeleportEvent
+                org.bukkit.craftbukkit.entity.CraftPlayer player = entityplayer.getBukkitEntity();
+                org.bukkit.Location location = getBukkitEntity().getLocation();
+                location.setPitch(player.getLocation().getPitch());
+                location.setYaw(player.getLocation().getYaw());
 
-                    PlayerTeleportEvent teleEvent = new PlayerTeleportEvent(player, player.getLocation(), location, PlayerTeleportEvent.TeleportCause.ENDER_PEARL);
-                    Bukkit.getPluginManager().callEvent(teleEvent);
+                PlayerTeleportEvent teleEvent = new PlayerTeleportEvent(player, player.getLocation(), location, PlayerTeleportEvent.TeleportCause.ENDER_PEARL);
+                Bukkit.getPluginManager().callEvent(teleEvent);
 
-                    if (!teleEvent.isCancelled() && !entityplayer.playerConnection.isDisconnected()) {
-                        if (this.random.nextFloat() < 0.05F && this.world.getGameRules().getBoolean("doMobSpawning")) {
-                            EntityEndermite entityendermite = new EntityEndermite(this.world);
+                if (!teleEvent.isCancelled() && !entityplayer.playerConnection.isDisconnected()) {
+                    if (this.random.nextFloat() < 0.05F && this.world.getGameRules().getBoolean("doMobSpawning")) {
+                        EntityEndermite entityendermite = new EntityEndermite(this.world);
 
-                            entityendermite.a(true);
-                            entityendermite.setPositionRotation(entityliving.locX, entityliving.locY, entityliving.locZ, entityliving.yaw, entityliving.pitch);
-                            this.world.addEntity(entityendermite, CreatureSpawnEvent.SpawnReason.ENDER_PEARL);
-                        }
-
-                        if (entityliving.isPassenger()) {
-                            entityliving.stopRiding();
-                        }
-
-                        entityplayer.playerConnection.teleport(teleEvent.getTo());
-                        entityliving.fallDistance = 0.0F;
-                        CraftEventFactory.entityDamage = this;
-                        entityliving.damageEntity(DamageSource.FALL, 5.0F);
-                        CraftEventFactory.entityDamage = null;
+                        entityendermite.a(true);
+                        entityendermite.setPositionRotation(entityliving.locX, entityliving.locY, entityliving.locZ, entityliving.yaw, entityliving.pitch);
+                        this.world.addEntity(entityendermite, CreatureSpawnEvent.SpawnReason.ENDER_PEARL);
                     }
-                    // CraftBukkit end
-                }
-            } else if (entityliving != null) {
-                entityliving.enderTeleportTo(this.locX, this.locY, this.locZ);
-                entityliving.fallDistance = 0.0F;
-            }
 
-            this.die();
+                    if (entityliving.isPassenger()) {
+                        entityliving.stopRiding();
+                    }
+
+                    entityplayer.playerConnection.teleport(teleEvent.getTo());
+                    entityliving.fallDistance = 0.0F;
+                    CraftEventFactory.entityDamage = this;
+                    entityliving.damageEntity(DamageSource.FALL, 5.0F);
+                    CraftEventFactory.entityDamage = null;
+                }
+                // CraftBukkit end
+            }
+        } else if (entityliving != null) {
+            entityliving.enderTeleportTo(this.locX, this.locY, this.locZ);
+            entityliving.fallDistance = 0.0F;
         }
+
+        this.die();
 
     }
 
+    @Override
     public void A_() {
         EntityLiving entityliving = this.getShooter();
 

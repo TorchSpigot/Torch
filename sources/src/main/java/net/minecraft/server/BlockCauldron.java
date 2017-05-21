@@ -19,6 +19,7 @@ public class BlockCauldron extends Block {
         this.y(this.blockStateList.getBlockData().set(BlockCauldron.LEVEL, Integer.valueOf(0)));
     }
 
+    @Override
     public void a(IBlockData iblockdata, World world, BlockPosition blockposition, AxisAlignedBB axisalignedbb, List<AxisAlignedBB> list, @Nullable Entity entity, boolean flag) {
         a(blockposition, axisalignedbb, list, BlockCauldron.b);
         a(blockposition, axisalignedbb, list, BlockCauldron.f);
@@ -27,23 +28,27 @@ public class BlockCauldron extends Block {
         a(blockposition, axisalignedbb, list, BlockCauldron.d);
     }
 
+    @Override
     public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return BlockCauldron.j;
     }
 
+    @Override
     public boolean b(IBlockData iblockdata) {
         return false;
     }
 
+    @Override
     public boolean c(IBlockData iblockdata) {
         return false;
     }
 
+    @Override
     public void a(World world, BlockPosition blockposition, IBlockData iblockdata, Entity entity) {
-        int i = ((Integer) iblockdata.get(BlockCauldron.LEVEL)).intValue();
-        float f = (float) blockposition.getY() + (6.0F + (float) (3 * i)) / 16.0F;
+        int i = iblockdata.get(BlockCauldron.LEVEL).intValue();
+        float f = blockposition.getY() + (6.0F + 3 * i) / 16.0F;
 
-        if (!world.isClientSide && entity.isBurning() && i > 0 && entity.getBoundingBox().b <= (double) f) {
+        if (entity.isBurning() && i > 0 && entity.getBoundingBox().b <= f) {
             // CraftBukkit start
             if (!this.changeLevel(world, blockposition, iblockdata, i - 1, entity, CauldronLevelChangeEvent.ChangeReason.EXTINGUISH)) {
                 return;
@@ -55,17 +60,18 @@ public class BlockCauldron extends Block {
 
     }
 
+    @Override
     public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
         ItemStack itemstack = entityhuman.b(enumhand);
 
         if (itemstack.isEmpty()) {
             return true;
         } else {
-            int i = ((Integer) iblockdata.get(BlockCauldron.LEVEL)).intValue();
+            int i = iblockdata.get(BlockCauldron.LEVEL).intValue();
             Item item = itemstack.getItem();
 
             if (item == Items.WATER_BUCKET) {
-                if (i < 3 && !world.isClientSide) {
+                if (i < 3) {
                     // CraftBukkit start
                     if (!this.changeLevel(world, blockposition, iblockdata, 3, entityhuman, CauldronLevelChangeEvent.ChangeReason.BUCKET_EMPTY)) {
                         return true;
@@ -82,7 +88,7 @@ public class BlockCauldron extends Block {
 
                 return true;
             } else if (item == Items.BUCKET) {
-                if (i == 3 && !world.isClientSide) {
+                if (i == 3) {
                     // CraftBukkit start
                     if (!this.changeLevel(world, blockposition, iblockdata, 0, entityhuman, CauldronLevelChangeEvent.ChangeReason.BUCKET_FILL)) {
                         return true;
@@ -107,7 +113,7 @@ public class BlockCauldron extends Block {
                 ItemStack itemstack1;
 
                 if (item == Items.GLASS_BOTTLE) {
-                    if (i > 0 && !world.isClientSide) {
+                    if (i > 0) {
                         // CraftBukkit start
                         if (!this.changeLevel(world, blockposition, iblockdata, i - 1, entityhuman, CauldronLevelChangeEvent.ChangeReason.BOTTLE_FILL)) {
                             return true;
@@ -132,7 +138,7 @@ public class BlockCauldron extends Block {
 
                     return true;
                 } else if (item == Items.POTION && PotionUtil.d(itemstack) == Potions.b) {
-                    if (i < 3 && !world.isClientSide) {
+                    if (i < 3) {
                         // CraftBukkit start
                         if (!this.changeLevel(world, blockposition, iblockdata, i + 1, entityhuman, CauldronLevelChangeEvent.ChangeReason.BOTTLE_EMPTY)) {
                             return true;
@@ -156,7 +162,7 @@ public class BlockCauldron extends Block {
                     if (i > 0 && item instanceof ItemArmor) {
                         ItemArmor itemarmor = (ItemArmor) item;
 
-                        if (itemarmor.d() == ItemArmor.EnumArmorMaterial.LEATHER && itemarmor.e_(itemstack) && !world.isClientSide) {
+                        if (itemarmor.d() == ItemArmor.EnumArmorMaterial.LEATHER && itemarmor.e_(itemstack)) {
                             // CraftBukkit start
                             if (!this.changeLevel(world, blockposition, iblockdata, i - 1, entityhuman, CauldronLevelChangeEvent.ChangeReason.ARMOR_WASH)) {
                                 return true;
@@ -170,7 +176,7 @@ public class BlockCauldron extends Block {
                     }
 
                     if (i > 0 && item instanceof ItemBanner) {
-                        if (TileEntityBanner.b(itemstack) > 0 && !world.isClientSide) {
+                        if (TileEntityBanner.b(itemstack) > 0) {
                             // CraftBukkit start
                             if (!this.changeLevel(world, blockposition, iblockdata, i - 1, entityhuman, CauldronLevelChangeEvent.ChangeReason.BANNER_WASH)) {
                                 return true;
@@ -224,6 +230,7 @@ public class BlockCauldron extends Block {
         // CraftBukkit end
     }
 
+    @Override
     public void h(World world, BlockPosition blockposition) {
         if (world.random.nextInt(20) == 1) {
             float f = world.getBiome(blockposition).a(blockposition);
@@ -231,7 +238,7 @@ public class BlockCauldron extends Block {
             if (world.getWorldChunkManager().a(f, blockposition.getY()) >= 0.15F) {
                 IBlockData iblockdata = world.getType(blockposition);
 
-                if (((Integer) iblockdata.get(BlockCauldron.LEVEL)).intValue() < 3) {
+                if (iblockdata.get(BlockCauldron.LEVEL).intValue() < 3) {
                     this.a(world, blockposition, iblockdata.a((IBlockState) BlockCauldron.LEVEL), 2); // CraftBukkit
                 }
 
@@ -239,34 +246,42 @@ public class BlockCauldron extends Block {
         }
     }
 
+    @Override
     public Item getDropType(IBlockData iblockdata, Random random, int i) {
         return Items.CAULDRON;
     }
 
+    @Override
     public ItemStack a(World world, BlockPosition blockposition, IBlockData iblockdata) {
         return new ItemStack(Items.CAULDRON);
     }
 
+    @Override
     public boolean isComplexRedstone(IBlockData iblockdata) {
         return true;
     }
 
+    @Override
     public int c(IBlockData iblockdata, World world, BlockPosition blockposition) {
-        return ((Integer) iblockdata.get(BlockCauldron.LEVEL)).intValue();
+        return iblockdata.get(BlockCauldron.LEVEL).intValue();
     }
 
+    @Override
     public IBlockData fromLegacyData(int i) {
         return this.getBlockData().set(BlockCauldron.LEVEL, Integer.valueOf(i));
     }
 
+    @Override
     public int toLegacyData(IBlockData iblockdata) {
-        return ((Integer) iblockdata.get(BlockCauldron.LEVEL)).intValue();
+        return iblockdata.get(BlockCauldron.LEVEL).intValue();
     }
 
+    @Override
     protected BlockStateList getStateList() {
         return new BlockStateList(this, new IBlockState[] { BlockCauldron.LEVEL});
     }
 
+    @Override
     public boolean b(IBlockAccess iblockaccess, BlockPosition blockposition) {
         return true;
     }

@@ -29,7 +29,7 @@ public class BlockRedstoneWire extends Block {
     }
 
     @Override
-	public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+    public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return BlockRedstoneWire.f[z(iblockdata.b(iblockaccess, blockposition))];
     }
 
@@ -60,7 +60,7 @@ public class BlockRedstoneWire extends Block {
     }
 
     @Override
-	public IBlockData updateState(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+    public IBlockData updateState(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         iblockdata = iblockdata.set(BlockRedstoneWire.WEST, this.b(iblockaccess, blockposition, EnumDirection.WEST));
         iblockdata = iblockdata.set(BlockRedstoneWire.EAST, this.b(iblockaccess, blockposition, EnumDirection.EAST));
         iblockdata = iblockdata.set(BlockRedstoneWire.NORTH, this.b(iblockaccess, blockposition, EnumDirection.NORTH));
@@ -94,23 +94,23 @@ public class BlockRedstoneWire extends Block {
     }
 
     @Override
-	@Nullable
+    @Nullable
     public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return BlockRedstoneWire.k;
     }
 
     @Override
-	public boolean b(IBlockData iblockdata) {
+    public boolean b(IBlockData iblockdata) {
         return false;
     }
 
     @Override
-	public boolean c(IBlockData iblockdata) {
+    public boolean c(IBlockData iblockdata) {
         return false;
     }
 
     @Override
-	public boolean canPlace(World world, BlockPosition blockposition) {
+    public boolean canPlace(World world, BlockPosition blockposition) {
         return world.getType(blockposition.down()).r() || world.getType(blockposition.down()).getBlock() == Blocks.GLOWSTONE;
     }
 
@@ -245,77 +245,71 @@ public class BlockRedstoneWire extends Block {
     }
 
     @Override
-	public void onPlace(World world, BlockPosition blockposition, IBlockData iblockdata) {
-        if (!world.isClientSide) {
-            this.e(world, blockposition, iblockdata);
-            Iterator iterator = EnumDirection.EnumDirectionLimit.VERTICAL.iterator();
+    public void onPlace(World world, BlockPosition blockposition, IBlockData iblockdata) {
+        this.e(world, blockposition, iblockdata);
+        Iterator iterator = EnumDirection.EnumDirectionLimit.VERTICAL.iterator();
 
-            EnumDirection enumdirection;
+        EnumDirection enumdirection;
 
-            while (iterator.hasNext()) {
-                enumdirection = (EnumDirection) iterator.next();
-                world.applyPhysics(blockposition.shift(enumdirection), this, false);
+        while (iterator.hasNext()) {
+            enumdirection = (EnumDirection) iterator.next();
+            world.applyPhysics(blockposition.shift(enumdirection), this, false);
+        }
+
+        iterator = EnumDirection.EnumDirectionLimit.HORIZONTAL.iterator();
+
+        while (iterator.hasNext()) {
+            enumdirection = (EnumDirection) iterator.next();
+            this.b(world, blockposition.shift(enumdirection));
+        }
+
+        iterator = EnumDirection.EnumDirectionLimit.HORIZONTAL.iterator();
+
+        while (iterator.hasNext()) {
+            enumdirection = (EnumDirection) iterator.next();
+            BlockPosition blockposition1 = blockposition.shift(enumdirection);
+
+            if (world.getType(blockposition1).m()) {
+                this.b(world, blockposition1.up());
+            } else {
+                this.b(world, blockposition1.down());
             }
-
-            iterator = EnumDirection.EnumDirectionLimit.HORIZONTAL.iterator();
-
-            while (iterator.hasNext()) {
-                enumdirection = (EnumDirection) iterator.next();
-                this.b(world, blockposition.shift(enumdirection));
-            }
-
-            iterator = EnumDirection.EnumDirectionLimit.HORIZONTAL.iterator();
-
-            while (iterator.hasNext()) {
-                enumdirection = (EnumDirection) iterator.next();
-                BlockPosition blockposition1 = blockposition.shift(enumdirection);
-
-                if (world.getType(blockposition1).m()) {
-                    this.b(world, blockposition1.up());
-                } else {
-                    this.b(world, blockposition1.down());
-                }
-            }
-
         }
     }
 
     @Override
-	public void remove(World world, BlockPosition blockposition, IBlockData iblockdata) {
+    public void remove(World world, BlockPosition blockposition, IBlockData iblockdata) {
         super.remove(world, blockposition, iblockdata);
-        if (!world.isClientSide) {
-            EnumDirection[] aenumdirection = EnumDirection.values();
-            int i = aenumdirection.length;
+        EnumDirection[] aenumdirection = EnumDirection.values();
+        int i = aenumdirection.length;
 
-            for (int j = 0; j < i; ++j) {
-                EnumDirection enumdirection = aenumdirection[j];
+        for (int j = 0; j < i; ++j) {
+            EnumDirection enumdirection = aenumdirection[j];
 
-                world.applyPhysics(blockposition.shift(enumdirection), this, false);
+            world.applyPhysics(blockposition.shift(enumdirection), this, false);
+        }
+
+        this.e(world, blockposition, iblockdata);
+        Iterator iterator = EnumDirection.EnumDirectionLimit.HORIZONTAL.iterator();
+
+        EnumDirection enumdirection1;
+
+        while (iterator.hasNext()) {
+            enumdirection1 = (EnumDirection) iterator.next();
+            this.b(world, blockposition.shift(enumdirection1));
+        }
+
+        iterator = EnumDirection.EnumDirectionLimit.HORIZONTAL.iterator();
+
+        while (iterator.hasNext()) {
+            enumdirection1 = (EnumDirection) iterator.next();
+            BlockPosition blockposition1 = blockposition.shift(enumdirection1);
+
+            if (world.getType(blockposition1).m()) {
+                this.b(world, blockposition1.up());
+            } else {
+                this.b(world, blockposition1.down());
             }
-
-            this.e(world, blockposition, iblockdata);
-            Iterator iterator = EnumDirection.EnumDirectionLimit.HORIZONTAL.iterator();
-
-            EnumDirection enumdirection1;
-
-            while (iterator.hasNext()) {
-                enumdirection1 = (EnumDirection) iterator.next();
-                this.b(world, blockposition.shift(enumdirection1));
-            }
-
-            iterator = EnumDirection.EnumDirectionLimit.HORIZONTAL.iterator();
-
-            while (iterator.hasNext()) {
-                enumdirection1 = (EnumDirection) iterator.next();
-                BlockPosition blockposition1 = blockposition.shift(enumdirection1);
-
-                if (world.getType(blockposition1).m()) {
-                    this.b(world, blockposition1.up());
-                } else {
-                    this.b(world, blockposition1.down());
-                }
-            }
-
         }
     }
 
@@ -330,30 +324,27 @@ public class BlockRedstoneWire extends Block {
     }
 
     @Override
-	public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
-        if (!world.isClientSide) {
-            if (this.canPlace(world, blockposition)) {
-                this.e(world, blockposition, iblockdata);
-            } else {
-                this.b(world, blockposition, iblockdata, 0);
-                world.setAir(blockposition);
-            }
-
+    public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
+        if (this.canPlace(world, blockposition)) {
+            this.e(world, blockposition, iblockdata);
+        } else {
+            this.b(world, blockposition, iblockdata, 0);
+            world.setAir(blockposition);
         }
     }
 
     @Override
-	public Item getDropType(IBlockData iblockdata, Random random, int i) {
+    public Item getDropType(IBlockData iblockdata, Random random, int i) {
         return Items.REDSTONE;
     }
 
     @Override
-	public int c(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition, EnumDirection enumdirection) {
+    public int c(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition, EnumDirection enumdirection) {
         return !this.g ? 0 : iblockdata.a(iblockaccess, blockposition, enumdirection);
     }
 
     @Override
-	public int b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition, EnumDirection enumdirection) {
+    public int b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition, EnumDirection enumdirection) {
         if (!this.g) {
             return 0;
         } else {
@@ -418,58 +409,58 @@ public class BlockRedstoneWire extends Block {
     }
 
     @Override
-	public boolean isPowerSource(IBlockData iblockdata) {
+    public boolean isPowerSource(IBlockData iblockdata) {
         return this.g;
     }
 
     @Override
-	public ItemStack a(World world, BlockPosition blockposition, IBlockData iblockdata) {
+    public ItemStack a(World world, BlockPosition blockposition, IBlockData iblockdata) {
         return new ItemStack(Items.REDSTONE);
     }
 
     @Override
-	public IBlockData fromLegacyData(int i) {
+    public IBlockData fromLegacyData(int i) {
         return this.getBlockData().set(BlockRedstoneWire.POWER, Integer.valueOf(i));
     }
 
     @Override
-	public int toLegacyData(IBlockData iblockdata) {
+    public int toLegacyData(IBlockData iblockdata) {
         return iblockdata.get(BlockRedstoneWire.POWER).intValue();
     }
 
     @Override
-	public IBlockData a(IBlockData iblockdata, EnumBlockRotation enumblockrotation) {
+    public IBlockData a(IBlockData iblockdata, EnumBlockRotation enumblockrotation) {
         switch (enumblockrotation) {
-        case CLOCKWISE_180:
-            return iblockdata.set(BlockRedstoneWire.NORTH, iblockdata.get(BlockRedstoneWire.SOUTH)).set(BlockRedstoneWire.EAST, iblockdata.get(BlockRedstoneWire.WEST)).set(BlockRedstoneWire.SOUTH, iblockdata.get(BlockRedstoneWire.NORTH)).set(BlockRedstoneWire.WEST, iblockdata.get(BlockRedstoneWire.EAST));
+            case CLOCKWISE_180:
+                return iblockdata.set(BlockRedstoneWire.NORTH, iblockdata.get(BlockRedstoneWire.SOUTH)).set(BlockRedstoneWire.EAST, iblockdata.get(BlockRedstoneWire.WEST)).set(BlockRedstoneWire.SOUTH, iblockdata.get(BlockRedstoneWire.NORTH)).set(BlockRedstoneWire.WEST, iblockdata.get(BlockRedstoneWire.EAST));
 
-        case COUNTERCLOCKWISE_90:
-            return iblockdata.set(BlockRedstoneWire.NORTH, iblockdata.get(BlockRedstoneWire.EAST)).set(BlockRedstoneWire.EAST, iblockdata.get(BlockRedstoneWire.SOUTH)).set(BlockRedstoneWire.SOUTH, iblockdata.get(BlockRedstoneWire.WEST)).set(BlockRedstoneWire.WEST, iblockdata.get(BlockRedstoneWire.NORTH));
+            case COUNTERCLOCKWISE_90:
+                return iblockdata.set(BlockRedstoneWire.NORTH, iblockdata.get(BlockRedstoneWire.EAST)).set(BlockRedstoneWire.EAST, iblockdata.get(BlockRedstoneWire.SOUTH)).set(BlockRedstoneWire.SOUTH, iblockdata.get(BlockRedstoneWire.WEST)).set(BlockRedstoneWire.WEST, iblockdata.get(BlockRedstoneWire.NORTH));
 
-        case CLOCKWISE_90:
-            return iblockdata.set(BlockRedstoneWire.NORTH, iblockdata.get(BlockRedstoneWire.WEST)).set(BlockRedstoneWire.EAST, iblockdata.get(BlockRedstoneWire.NORTH)).set(BlockRedstoneWire.SOUTH, iblockdata.get(BlockRedstoneWire.EAST)).set(BlockRedstoneWire.WEST, iblockdata.get(BlockRedstoneWire.SOUTH));
+            case CLOCKWISE_90:
+                return iblockdata.set(BlockRedstoneWire.NORTH, iblockdata.get(BlockRedstoneWire.WEST)).set(BlockRedstoneWire.EAST, iblockdata.get(BlockRedstoneWire.NORTH)).set(BlockRedstoneWire.SOUTH, iblockdata.get(BlockRedstoneWire.EAST)).set(BlockRedstoneWire.WEST, iblockdata.get(BlockRedstoneWire.SOUTH));
 
-        default:
-            return iblockdata;
+            default:
+                return iblockdata;
         }
     }
 
     @Override
-	public IBlockData a(IBlockData iblockdata, EnumBlockMirror enumblockmirror) {
+    public IBlockData a(IBlockData iblockdata, EnumBlockMirror enumblockmirror) {
         switch (enumblockmirror) {
-        case LEFT_RIGHT:
-            return iblockdata.set(BlockRedstoneWire.NORTH, iblockdata.get(BlockRedstoneWire.SOUTH)).set(BlockRedstoneWire.SOUTH, iblockdata.get(BlockRedstoneWire.NORTH));
+            case LEFT_RIGHT:
+                return iblockdata.set(BlockRedstoneWire.NORTH, iblockdata.get(BlockRedstoneWire.SOUTH)).set(BlockRedstoneWire.SOUTH, iblockdata.get(BlockRedstoneWire.NORTH));
 
-        case FRONT_BACK:
-            return iblockdata.set(BlockRedstoneWire.EAST, iblockdata.get(BlockRedstoneWire.WEST)).set(BlockRedstoneWire.WEST, iblockdata.get(BlockRedstoneWire.EAST));
+            case FRONT_BACK:
+                return iblockdata.set(BlockRedstoneWire.EAST, iblockdata.get(BlockRedstoneWire.WEST)).set(BlockRedstoneWire.WEST, iblockdata.get(BlockRedstoneWire.EAST));
 
-        default:
-            return super.a(iblockdata, enumblockmirror);
+            default:
+                return super.a(iblockdata, enumblockmirror);
         }
     }
 
     @Override
-	protected BlockStateList getStateList() {
+    protected BlockStateList getStateList() {
         return new BlockStateList(this, new IBlockState[] { BlockRedstoneWire.NORTH, BlockRedstoneWire.EAST, BlockRedstoneWire.SOUTH, BlockRedstoneWire.WEST, BlockRedstoneWire.POWER});
     }
 
@@ -484,12 +475,12 @@ public class BlockRedstoneWire extends Block {
         }
 
         @Override
-		public String toString() {
+        public String toString() {
             return this.getName();
         }
 
         @Override
-		public String getName() {
+        public String getName() {
             return this.d;
         }
     }

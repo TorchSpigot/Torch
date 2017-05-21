@@ -71,9 +71,7 @@ public class EntityAreaEffectCloud extends Entity {
 
         this.setSize(f * 2.0F, 0.5F);
         this.setPosition(d0, d1, d2);
-        if (!this.world.isClientSide) {
-            this.getDataWatcher().set(EntityAreaEffectCloud.a, Float.valueOf(f));
-        }
+        this.getDataWatcher().set(EntityAreaEffectCloud.a, Float.valueOf(f));
 
     }
 
@@ -177,171 +175,109 @@ public class EntityAreaEffectCloud extends Entity {
         boolean flag = this.q();
         float f = this.getRadius();
 
-        if (this.world.isClientSide) {
-            EnumParticle enumparticle = this.getParticle();
-            int[] aint = new int[enumparticle.d()];
+        if (this.ticksLived >= this.waitTime + this.au) {
+            this.die();
+            return;
+        }
 
-            if (aint.length > 0) {
-                aint[0] = this.n();
-            }
+        boolean flag1 = this.ticksLived < this.waitTime;
 
-            if (aint.length > 1) {
-                aint[1] = this.o();
-            }
+        if (flag != flag1) {
+            this.a(flag1);
+        }
 
-            float f1;
-            float f2;
-            float f3;
-            int i;
-            int j;
-            int k;
+        if (flag1) {
+            return;
+        }
 
-            if (flag) {
-                if (this.random.nextBoolean()) {
-                    for (int l = 0; l < 2; ++l) {
-                        float f4 = this.random.nextFloat() * 6.2831855F;
-
-                        f1 = MathHelper.c(this.random.nextFloat()) * 0.2F;
-                        f2 = MathHelper.cos(f4) * f1;
-                        f3 = MathHelper.sin(f4) * f1;
-                        if (enumparticle == EnumParticle.SPELL_MOB) {
-                            int i1 = this.random.nextBoolean() ? 16777215 : this.getColor();
-
-                            i = i1 >> 16 & 255;
-                            j = i1 >> 8 & 255;
-                            k = i1 & 255;
-                            this.world.a(EnumParticle.SPELL_MOB.c(), this.locX + f2, this.locY, this.locZ + f3, i / 255.0F, j / 255.0F, k / 255.0F, new int[0]);
-                        } else {
-                            this.world.a(enumparticle.c(), this.locX + f2, this.locY, this.locZ + f3, 0.0D, 0.0D, 0.0D, aint);
-                        }
-                    }
-                }
-            } else {
-                float f5 = 3.1415927F * f * f;
-
-                for (int j1 = 0; j1 < f5; ++j1) {
-                    f1 = this.random.nextFloat() * 6.2831855F;
-                    f2 = MathHelper.c(this.random.nextFloat()) * f;
-                    f3 = MathHelper.cos(f1) * f2;
-                    float f6 = MathHelper.sin(f1) * f2;
-
-                    if (enumparticle == EnumParticle.SPELL_MOB) {
-                        i = this.getColor();
-                        j = i >> 16 & 255;
-                        k = i >> 8 & 255;
-                        int k1 = i & 255;
-
-                        this.world.a(EnumParticle.SPELL_MOB.c(), this.locX + f3, this.locY, this.locZ + f6, j / 255.0F, k / 255.0F, k1 / 255.0F, new int[0]);
-                    } else {
-                        this.world.a(enumparticle.c(), this.locX + f3, this.locY, this.locZ + f6, (0.5D - this.random.nextDouble()) * 0.15D, 0.009999999776482582D, (0.5D - this.random.nextDouble()) * 0.15D, aint);
-                    }
-                }
-            }
-        } else {
-            if (this.ticksLived >= this.waitTime + this.au) {
+        if (this.radiusPerTick != 0.0F) {
+            f += this.radiusPerTick;
+            if (f < 0.5F) {
                 this.die();
                 return;
             }
 
-            boolean flag1 = this.ticksLived < this.waitTime;
+            this.setRadius(f);
+        }
 
-            if (flag != flag1) {
-                this.a(flag1);
+        if (this.ticksLived % 5 == 0) {
+            Iterator iterator = this.at.entrySet().iterator();
+
+            while (iterator.hasNext()) {
+                Entry entry = (Entry) iterator.next();
+
+                if (this.ticksLived >= ((Integer) entry.getValue()).intValue()) {
+                    iterator.remove();
+                }
             }
 
-            if (flag1) {
-                return;
+            ArrayList arraylist = Lists.newArrayList();
+            Iterator iterator1 = this.potionRegistry.a().iterator();
+
+            while (iterator1.hasNext()) {
+                MobEffect mobeffect = (MobEffect) iterator1.next();
+
+                arraylist.add(new MobEffect(mobeffect.getMobEffect(), mobeffect.getDuration() / 4, mobeffect.getAmplifier(), mobeffect.isAmbient(), mobeffect.isShowParticles()));
             }
 
-            if (this.radiusPerTick != 0.0F) {
-                f += this.radiusPerTick;
-                if (f < 0.5F) {
-                    this.die();
-                    return;
-                }
+            arraylist.addAll(this.effects);
+            if (arraylist.isEmpty()) {
+                this.at.clear();
+            } else {
+                List list = this.world.a(EntityLiving.class, this.getBoundingBox());
 
-                this.setRadius(f);
-            }
+                if (!list.isEmpty()) {
+                    Iterator iterator2 = list.iterator();
 
-            if (this.ticksLived % 5 == 0) {
-                Iterator iterator = this.at.entrySet().iterator();
+                    List<LivingEntity> entities = new ArrayList<LivingEntity>(); // CraftBukkit
+                    while (iterator2.hasNext()) {
+                        EntityLiving entityliving = (EntityLiving) iterator2.next();
 
-                while (iterator.hasNext()) {
-                    Entry entry = (Entry) iterator.next();
+                        if (!this.at.containsKey(entityliving) && entityliving.cJ()) {
+                            double d0 = entityliving.locX - this.locX;
+                            double d1 = entityliving.locZ - this.locZ;
+                            double d2 = d0 * d0 + d1 * d1;
 
-                    if (this.ticksLived >= ((Integer) entry.getValue()).intValue()) {
-                        iterator.remove();
-                    }
-                }
-
-                ArrayList arraylist = Lists.newArrayList();
-                Iterator iterator1 = this.potionRegistry.a().iterator();
-
-                while (iterator1.hasNext()) {
-                    MobEffect mobeffect = (MobEffect) iterator1.next();
-
-                    arraylist.add(new MobEffect(mobeffect.getMobEffect(), mobeffect.getDuration() / 4, mobeffect.getAmplifier(), mobeffect.isAmbient(), mobeffect.isShowParticles()));
-                }
-
-                arraylist.addAll(this.effects);
-                if (arraylist.isEmpty()) {
-                    this.at.clear();
-                } else {
-                    List list = this.world.a(EntityLiving.class, this.getBoundingBox());
-
-                    if (!list.isEmpty()) {
-                        Iterator iterator2 = list.iterator();
-
-                        List<LivingEntity> entities = new ArrayList<LivingEntity>(); // CraftBukkit
-                        while (iterator2.hasNext()) {
-                            EntityLiving entityliving = (EntityLiving) iterator2.next();
-
-                            if (!this.at.containsKey(entityliving) && entityliving.cJ()) {
-                                double d0 = entityliving.locX - this.locX;
-                                double d1 = entityliving.locZ - this.locZ;
-                                double d2 = d0 * d0 + d1 * d1;
-
-                                if (d2 <= f * f) {
-                                    // CraftBukkit start
-                                    entities.add((LivingEntity) entityliving.getBukkitEntity());
-                                }
+                            if (d2 <= f * f) {
+                                // CraftBukkit start
+                                entities.add((LivingEntity) entityliving.getBukkitEntity());
                             }
                         }
-                        org.bukkit.event.entity.AreaEffectCloudApplyEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callAreaEffectCloudApplyEvent(this, entities);
-                        if (true) { // Preserve NMS spacing and bracket count for smallest diff
-                            for (LivingEntity entity : event.getAffectedEntities()) {
-                                if (entity instanceof CraftLivingEntity) {
-                                    EntityLiving entityliving = ((CraftLivingEntity) entity).getHandle();
-                                    // CraftBukkit end
-                                    this.at.put(entityliving, Integer.valueOf(this.ticksLived + this.reapplicationDelay));
-                                    Iterator iterator3 = arraylist.iterator();
+                    }
+                    org.bukkit.event.entity.AreaEffectCloudApplyEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callAreaEffectCloudApplyEvent(this, entities);
+                    if (true) { // Preserve NMS spacing and bracket count for smallest diff
+                        for (LivingEntity entity : event.getAffectedEntities()) {
+                            if (entity instanceof CraftLivingEntity) {
+                                EntityLiving entityliving = ((CraftLivingEntity) entity).getHandle();
+                                // CraftBukkit end
+                                this.at.put(entityliving, Integer.valueOf(this.ticksLived + this.reapplicationDelay));
+                                Iterator iterator3 = arraylist.iterator();
 
-                                    while (iterator3.hasNext()) {
-                                        MobEffect mobeffect1 = (MobEffect) iterator3.next();
+                                while (iterator3.hasNext()) {
+                                    MobEffect mobeffect1 = (MobEffect) iterator3.next();
 
-                                        if (mobeffect1.getMobEffect().isInstant()) {
-                                            mobeffect1.getMobEffect().applyInstantEffect(this, this.y(), entityliving, mobeffect1.getAmplifier(), 0.5D);
-                                        } else {
-                                            entityliving.addEffect(new MobEffect(mobeffect1));
-                                        }
+                                    if (mobeffect1.getMobEffect().isInstant()) {
+                                        mobeffect1.getMobEffect().applyInstantEffect(this, this.y(), entityliving, mobeffect1.getAmplifier(), 0.5D);
+                                    } else {
+                                        entityliving.addEffect(new MobEffect(mobeffect1));
+                                    }
+                                }
+
+                                if (this.radiusOnUse != 0.0F) {
+                                    f += this.radiusOnUse;
+                                    if (f < 0.5F) {
+                                        this.die();
+                                        return;
                                     }
 
-                                    if (this.radiusOnUse != 0.0F) {
-                                        f += this.radiusOnUse;
-                                        if (f < 0.5F) {
-                                            this.die();
-                                            return;
-                                        }
+                                    this.setRadius(f);
+                                }
 
-                                        this.setRadius(f);
-                                    }
-
-                                    if (this.durationOnUse != 0) {
-                                        this.au += this.durationOnUse;
-                                        if (this.au <= 0) {
-                                            this.die();
-                                            return;
-                                        }
+                                if (this.durationOnUse != 0) {
+                                    this.au += this.durationOnUse;
+                                    if (this.au <= 0) {
+                                        this.die();
+                                        return;
                                     }
                                 }
                             }

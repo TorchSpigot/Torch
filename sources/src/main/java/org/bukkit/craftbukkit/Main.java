@@ -12,8 +12,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import net.minecraft.server.MinecraftServer;
 import org.fusesource.jansi.AnsiConsole;
+import org.torch.server.TorchServer;
 
 public class Main {
     public static boolean useJline = true;
@@ -222,7 +222,7 @@ public class Main {
                 }
                 // Spigot End
                 // System.out.println("Loading libraries, please wait...");
-                MinecraftServer.main(options);
+                TorchServer.main(options);
             } catch (Throwable t) {
                 t.printStackTrace();
             }

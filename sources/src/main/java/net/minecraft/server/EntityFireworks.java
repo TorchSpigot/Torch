@@ -28,6 +28,7 @@ public class EntityFireworks extends Entity {
     }
     // Spigot End
 
+    @Override
     protected void i() {
         this.datawatcher.register(EntityFireworks.FIREWORK_ITEM, ItemStack.a);
         this.datawatcher.register(EntityFireworks.b, Integer.valueOf(0));
@@ -60,6 +61,7 @@ public class EntityFireworks extends Entity {
         this.e = entityliving;
     }
 
+    @Override
     public void A_() {
         this.M = this.locX;
         this.N = this.locY;
@@ -67,7 +69,7 @@ public class EntityFireworks extends Entity {
         super.A_();
         if (this.j()) {
             if (this.e == null) {
-                Entity entity = this.world.getEntity(((Integer) this.datawatcher.get(EntityFireworks.b)).intValue());
+                Entity entity = this.world.getEntity(this.datawatcher.get(EntityFireworks.b).intValue());
 
                 if (entity instanceof EntityLiving) {
                     this.e = (EntityLiving) entity;
@@ -101,7 +103,7 @@ public class EntityFireworks extends Entity {
 
         this.yaw = (float) (MathHelper.c(this.motX, this.motZ) * 57.2957763671875D);
 
-        for (this.pitch = (float) (MathHelper.c(this.motY, (double) f) * 57.2957763671875D); this.pitch - this.lastPitch < -180.0F; this.lastPitch -= 360.0F) {
+        for (this.pitch = (float) (MathHelper.c(this.motY, f) * 57.2957763671875D); this.pitch - this.lastPitch < -180.0F; this.lastPitch -= 360.0F) {
             ;
         }
 
@@ -124,11 +126,11 @@ public class EntityFireworks extends Entity {
         }
 
         ++this.ticksFlown;
-        if (this.world.isClientSide && this.ticksFlown % 2 < 2) {
+        /* if (this.world.isClientSide && this.ticksFlown % 2 < 2) {
             this.world.addParticle(EnumParticle.FIREWORKS_SPARK, this.locX, this.locY - 0.3D, this.locZ, this.random.nextGaussian() * 0.05D, -this.motY * 0.5D, this.random.nextGaussian() * 0.05D, new int[0]);
-        }
+        } */
 
-        if (!this.world.isClientSide && this.ticksFlown > this.expectedLifespan) {
+        if (this.ticksFlown > this.expectedLifespan) {
             // CraftBukkit start
             if (!org.bukkit.craftbukkit.event.CraftEventFactory.callFireworkExplodeEvent(this).isCancelled()) {
                 this.world.broadcastEntityEffect(this, (byte) 17);
@@ -142,18 +144,18 @@ public class EntityFireworks extends Entity {
 
     private void k() {
         float f = 0.0F;
-        ItemStack itemstack = (ItemStack) this.datawatcher.get(EntityFireworks.FIREWORK_ITEM);
+        ItemStack itemstack = this.datawatcher.get(EntityFireworks.FIREWORK_ITEM);
         NBTTagCompound nbttagcompound = itemstack.isEmpty() ? null : itemstack.d("Fireworks");
         NBTTagList nbttaglist = nbttagcompound != null ? nbttagcompound.getList("Explosions", 10) : null;
 
         if (nbttaglist != null && !nbttaglist.isEmpty()) {
-            f = (float) (5 + nbttaglist.size() * 2);
+            f = 5 + nbttaglist.size() * 2;
         }
 
         if (f > 0.0F) {
             if (this.e != null) {
                 CraftEventFactory.entityDamage = this; // CraftBukkit
-                this.e.damageEntity(DamageSource.t, (float) (5 + nbttaglist.size() * 2));
+                this.e.damageEntity(DamageSource.t, 5 + nbttaglist.size() * 2);
                 CraftEventFactory.entityDamage = null; // CraftBukkit
             }
 
@@ -169,7 +171,7 @@ public class EntityFireworks extends Entity {
                     boolean flag = false;
 
                     for (int i = 0; i < 2; ++i) {
-                        MovingObjectPosition movingobjectposition = this.world.rayTrace(vec3d, new Vec3D(entityliving.locX, entityliving.locY + (double) entityliving.length * 0.5D * (double) i, entityliving.locZ), false, true, false);
+                        MovingObjectPosition movingobjectposition = this.world.rayTrace(vec3d, new Vec3D(entityliving.locX, entityliving.locY + entityliving.length * 0.5D * i, entityliving.locZ), false, true, false);
 
                         if (movingobjectposition == null || movingobjectposition.type == MovingObjectPosition.EnumMovingObjectType.MISS) {
                             flag = true;
@@ -178,7 +180,7 @@ public class EntityFireworks extends Entity {
                     }
 
                     if (flag) {
-                        float f1 = f * (float) Math.sqrt((5.0D - (double) this.g(entityliving)) / 5.0D);
+                        float f1 = f * (float) Math.sqrt((5.0D - this.g(entityliving)) / 5.0D);
 
                         CraftEventFactory.entityDamage = this; // CraftBukkit
                         entityliving.damageEntity(DamageSource.t, f1);
@@ -191,17 +193,18 @@ public class EntityFireworks extends Entity {
     }
 
     public boolean j() {
-        return ((Integer) this.datawatcher.get(EntityFireworks.b)).intValue() > 0;
+        return this.datawatcher.get(EntityFireworks.b).intValue() > 0;
     }
 
     public static void a(DataConverterManager dataconvertermanager) {
-        dataconvertermanager.a(DataConverterTypes.ENTITY, (DataInspector) (new DataInspectorItem(EntityFireworks.class, new String[] { "FireworksItem"})));
+        dataconvertermanager.a(DataConverterTypes.ENTITY, (new DataInspectorItem(EntityFireworks.class, new String[] { "FireworksItem"})));
     }
 
+    @Override
     public void b(NBTTagCompound nbttagcompound) {
         nbttagcompound.setInt("Life", this.ticksFlown);
         nbttagcompound.setInt("LifeTime", this.expectedLifespan);
-        ItemStack itemstack = (ItemStack) this.datawatcher.get(EntityFireworks.FIREWORK_ITEM);
+        ItemStack itemstack = this.datawatcher.get(EntityFireworks.FIREWORK_ITEM);
 
         if (!itemstack.isEmpty()) {
             nbttagcompound.set("FireworksItem", itemstack.save(new NBTTagCompound()));
@@ -214,6 +217,7 @@ public class EntityFireworks extends Entity {
 
     }
 
+    @Override
     public void a(NBTTagCompound nbttagcompound) {
         this.ticksFlown = nbttagcompound.getInt("Life");
         this.expectedLifespan = nbttagcompound.getInt("LifeTime");
@@ -233,6 +237,7 @@ public class EntityFireworks extends Entity {
         // Paper end
     }
 
+    @Override
     public boolean aV() {
         return false;
     }

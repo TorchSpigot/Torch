@@ -12,6 +12,7 @@ public class TileEntitySign extends TileEntity {
 
     public TileEntitySign() {}
 
+    @Override
     public NBTTagCompound save(NBTTagCompound nbttagcompound) {
         super.save(nbttagcompound);
 
@@ -31,50 +32,63 @@ public class TileEntitySign extends TileEntity {
         return nbttagcompound;
     }
 
+    @Override
     protected void b(World world) {
         this.a(world);
     }
 
+    @Override
     public void a(NBTTagCompound nbttagcompound) {
         this.isEditable = false;
         super.a(nbttagcompound);
         ICommandListener icommandlistener = new ICommandListener() {
+            @Override
             public String getName() {
                 return "Sign";
             }
 
+            @Override
             public IChatBaseComponent getScoreboardDisplayName() {
                 return new ChatComponentText(this.getName());
             }
 
+            @Override
             public void sendMessage(IChatBaseComponent ichatbasecomponent) {}
 
+            @Override
             public boolean a(int i, String s) {
                 return true;
             }
 
+            @Override
             public BlockPosition getChunkCoordinates() {
                 return TileEntitySign.this.position;
             }
 
+            @Override
             public Vec3D d() {
-                return new Vec3D((double) TileEntitySign.this.position.getX() + 0.5D, (double) TileEntitySign.this.position.getY() + 0.5D, (double) TileEntitySign.this.position.getZ() + 0.5D);
+                return new Vec3D(TileEntitySign.this.position.getX() + 0.5D, TileEntitySign.this.position.getY() + 0.5D, TileEntitySign.this.position.getZ() + 0.5D);
             }
 
+            @Override
             public World getWorld() {
                 return TileEntitySign.this.world;
             }
 
+            @Override
             public Entity f() {
                 return null;
             }
 
+            @Override
             public boolean getSendCommandFeedback() {
                 return false;
             }
 
+            @Override
             public void a(CommandObjectiveExecutor.EnumCommandResult commandobjectiveexecutor_enumcommandresult, int i) {}
 
+            @Override
             public MinecraftServer B_() {
                 return TileEntitySign.this.world.getMinecraftServer();
             }
@@ -115,15 +129,18 @@ public class TileEntitySign extends TileEntity {
         this.i.a(nbttagcompound);
     }
 
+    @Override
     @Nullable
     public PacketPlayOutTileEntityData getUpdatePacket() {
         return new PacketPlayOutTileEntityData(this.position, 9, this.d());
     }
 
+    @Override
     public NBTTagCompound d() {
         return this.save(new NBTTagCompound());
     }
 
+    @Override
     public boolean isFilteredNBT() {
         return true;
     }
@@ -142,47 +159,58 @@ public class TileEntitySign extends TileEntity {
 
     public boolean b(final EntityHuman entityhuman) {
         ICommandListener icommandlistener = new ICommandListener() {
+            @Override
             public String getName() {
                 return entityhuman.getName();
             }
 
+            @Override
             public IChatBaseComponent getScoreboardDisplayName() {
                 return entityhuman.getScoreboardDisplayName();
             }
 
+            @Override
             public void sendMessage(IChatBaseComponent ichatbasecomponent) {}
 
+            @Override
             public boolean a(int i, String s) {
                 return i <= 2;
             }
 
+            @Override
             public BlockPosition getChunkCoordinates() {
                 return TileEntitySign.this.position;
             }
 
+            @Override
             public Vec3D d() {
-                return new Vec3D((double) TileEntitySign.this.position.getX() + 0.5D, (double) TileEntitySign.this.position.getY() + 0.5D, (double) TileEntitySign.this.position.getZ() + 0.5D);
+                return new Vec3D(TileEntitySign.this.position.getX() + 0.5D, TileEntitySign.this.position.getY() + 0.5D, TileEntitySign.this.position.getZ() + 0.5D);
             }
 
+            @Override
             public World getWorld() {
                 return entityhuman.getWorld();
             }
 
+            @Override
             public Entity f() {
                 return entityhuman;
             }
 
+            @Override
             public boolean getSendCommandFeedback() {
                 return false;
             }
 
+            @Override
             public void a(CommandObjectiveExecutor.EnumCommandResult commandobjectiveexecutor_enumcommandresult, int i) {
-                if (TileEntitySign.this.world != null && !TileEntitySign.this.world.isClientSide) {
+                if (TileEntitySign.this.world != null) {
                     TileEntitySign.this.i.a(TileEntitySign.this.world.getMinecraftServer(), this, commandobjectiveexecutor_enumcommandresult, i);
                 }
 
             }
 
+            @Override
             public MinecraftServer B_() {
                 return entityhuman.B_();
             }

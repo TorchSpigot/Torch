@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Random;
 import javax.annotation.Nullable;
 
+import org.torch.server.cache.TorchIntCache;
+
 public class WorldChunkManager {
 
     private CustomWorldSettingsFinal a;
@@ -51,7 +53,7 @@ public class WorldChunkManager {
     }
 
     public BiomeBase[] getBiomes(BiomeBase[] abiomebase, int i, int j, int k, int l) {
-        IntCache.a();
+        TorchIntCache.releaseCaches();
         if (abiomebase == null || abiomebase.length < k * l) {
             abiomebase = new BiomeBase[k * l];
         }
@@ -84,7 +86,7 @@ public class WorldChunkManager {
     /** Gets a list of biomes for the specified blocks */
     public BiomeBase[] getBiomes(@Nullable BiomeBase[] listToReuse, int x, int z, int width, int length, boolean cacheFlag) { return this.a(listToReuse, x, z, width, length, cacheFlag); } // OBFHELPER
     public BiomeBase[] a(@Nullable BiomeBase[] abiomebase, int i, int j, int k, int l, boolean flag) {
-        IntCache.a();
+        TorchIntCache.releaseCaches();
         if (abiomebase == null || abiomebase.length < k * l) {
             abiomebase = new BiomeBase[k * l];
         }
@@ -106,7 +108,7 @@ public class WorldChunkManager {
     }
 
     public boolean a(int i, int j, int k, List<BiomeBase> list) {
-        IntCache.a();
+        TorchIntCache.releaseCaches();
         int l = i - k >> 2;
         int i1 = j - k >> 2;
         int j1 = i + k >> 2;
@@ -140,7 +142,7 @@ public class WorldChunkManager {
 
     @Nullable
     public BlockPosition a(int i, int j, int k, List<BiomeBase> list, Random random) {
-        IntCache.a();
+        TorchIntCache.releaseCaches();
         int l = i - k >> 2;
         int i1 = j - k >> 2;
         int j1 = i + k >> 2;

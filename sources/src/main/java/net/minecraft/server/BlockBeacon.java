@@ -8,37 +8,39 @@ public class BlockBeacon extends BlockTileEntity {
         this.a(CreativeModeTab.f);
     }
 
+    @Override
     public TileEntity a(World world, int i) {
         return new TileEntityBeacon();
     }
 
+    @Override
     public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
-        if (world.isClientSide) {
-            return true;
-        } else {
-            TileEntity tileentity = world.getTileEntity(blockposition);
+        TileEntity tileentity = world.getTileEntity(blockposition);
 
-            if (tileentity instanceof TileEntityBeacon) {
-                entityhuman.openContainer((TileEntityBeacon) tileentity);
-                entityhuman.b(StatisticList.N);
-            }
-
-            return true;
+        if (tileentity instanceof TileEntityBeacon) {
+            entityhuman.openContainer((TileEntityBeacon) tileentity);
+            entityhuman.b(StatisticList.N);
         }
+
+        return true;
     }
 
+    @Override
     public boolean b(IBlockData iblockdata) {
         return false;
     }
 
+    @Override
     public boolean c(IBlockData iblockdata) {
         return false;
     }
 
+    @Override
     public EnumRenderType a(IBlockData iblockdata) {
         return EnumRenderType.MODEL;
     }
 
+    @Override
     public void postPlace(World world, BlockPosition blockposition, IBlockData iblockdata, EntityLiving entityliving, ItemStack itemstack) {
         super.postPlace(world, blockposition, iblockdata, entityliving, itemstack);
         if (itemstack.hasName()) {
@@ -51,6 +53,7 @@ public class BlockBeacon extends BlockTileEntity {
 
     }
 
+    @Override
     public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
         TileEntity tileentity = world.getTileEntity(blockposition);
 

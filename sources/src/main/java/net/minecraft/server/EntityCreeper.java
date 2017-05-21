@@ -24,6 +24,7 @@ public class EntityCreeper extends EntityMonster {
         this.setSize(0.6F, 1.7F);
     }
 
+    @Override
     protected void r() {
         this.goalSelector.a(1, new PathfinderGoalFloat(this));
         this.goalSelector.a(2, new PathfinderGoalSwell(this));
@@ -36,24 +37,28 @@ public class EntityCreeper extends EntityMonster {
         this.targetSelector.a(2, new PathfinderGoalHurtByTarget(this, false, new Class[0]));
     }
 
+    @Override
     protected void initAttributes() {
         super.initAttributes();
         this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).setValue(0.25D);
     }
 
+    @Override
     public int aY() {
         return this.getGoalTarget() == null ? 3 : 3 + (int) (this.getHealth() - 1.0F);
     }
 
+    @Override
     public void e(float f, float f1) {
         super.e(f, f1);
-        this.fuseTicks = (int) ((float) this.fuseTicks + f * 1.5F);
+        this.fuseTicks = (int) (this.fuseTicks + f * 1.5F);
         if (this.fuseTicks > this.maxFuseTicks - 5) {
             this.fuseTicks = this.maxFuseTicks - 5;
         }
 
     }
 
+    @Override
     protected void i() {
         super.i();
         this.datawatcher.register(EntityCreeper.a, Integer.valueOf(-1));
@@ -65,9 +70,10 @@ public class EntityCreeper extends EntityMonster {
         EntityInsentient.a(dataconvertermanager, EntityCreeper.class);
     }
 
+    @Override
     public void b(NBTTagCompound nbttagcompound) {
         super.b(nbttagcompound);
-        if (((Boolean) this.datawatcher.get(EntityCreeper.b)).booleanValue()) {
+        if (this.datawatcher.get(EntityCreeper.b).booleanValue()) {
             nbttagcompound.setBoolean("powered", true);
         }
 
@@ -76,6 +82,7 @@ public class EntityCreeper extends EntityMonster {
         nbttagcompound.setBoolean("ignited", this.isIgnited());
     }
 
+    @Override
     public void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
         this.datawatcher.set(EntityCreeper.b, Boolean.valueOf(nbttagcompound.getBoolean("powered")));
@@ -93,6 +100,7 @@ public class EntityCreeper extends EntityMonster {
 
     }
 
+    @Override
     public void A_() {
         if (this.isAlive()) {
             this.bw = this.fuseTicks;
@@ -120,14 +128,17 @@ public class EntityCreeper extends EntityMonster {
         super.A_();
     }
 
+    @Override
     protected SoundEffect bW() {
         return SoundEffects.au;
     }
 
+    @Override
     protected SoundEffect bX() {
         return SoundEffects.at;
     }
 
+    @Override
     public void die(DamageSource damagesource) {
         // super.die(damagesource); // CraftBukkit - Moved to end
         if (this.world.getGameRules().getBoolean("doMobLoot")) {
@@ -146,27 +157,30 @@ public class EntityCreeper extends EntityMonster {
 
     }
 
+    @Override
     public boolean B(Entity entity) {
         return true;
     }
 
     public boolean isPowered() {
-        return ((Boolean) this.datawatcher.get(EntityCreeper.b)).booleanValue();
+        return this.datawatcher.get(EntityCreeper.b).booleanValue();
     }
 
+    @Override
     @Nullable
     protected MinecraftKey J() {
         return LootTables.r;
     }
 
     public int di() {
-        return ((Integer) this.datawatcher.get(EntityCreeper.a)).intValue();
+        return this.datawatcher.get(EntityCreeper.a).intValue();
     }
 
     public void a(int i) {
         this.datawatcher.set(EntityCreeper.a, Integer.valueOf(i));
     }
 
+    @Override
     public void onLightningStrike(EntityLightning entitylightning) {
         super.onLightningStrike(entitylightning);
         // CraftBukkit start
@@ -182,40 +196,37 @@ public class EntityCreeper extends EntityMonster {
     }
     // CraftBukkit end
 
+    @Override
     protected boolean a(EntityHuman entityhuman, EnumHand enumhand) {
         ItemStack itemstack = entityhuman.b(enumhand);
 
         if (itemstack.getItem() == Items.FLINT_AND_STEEL) {
             this.world.a(entityhuman, this.locX, this.locY, this.locZ, SoundEffects.bI, this.bC(), 1.0F, this.random.nextFloat() * 0.4F + 0.8F);
             entityhuman.a(enumhand);
-            if (!this.world.isClientSide) {
-                this.dk();
-                itemstack.damage(1, entityhuman);
-                return true;
-            }
+            this.dk();
+            itemstack.damage(1, entityhuman);
+            return true;
         }
 
         return super.a(entityhuman, enumhand);
     }
 
     private void dn() {
-        if (!this.world.isClientSide) {
-            boolean flag = this.world.getGameRules().getBoolean("mobGriefing");
-            float f = this.isPowered() ? 2.0F : 1.0F;
+        boolean flag = this.world.getGameRules().getBoolean("mobGriefing");
+        float f = this.isPowered() ? 2.0F : 1.0F;
 
-            // CraftBukkit start
-            ExplosionPrimeEvent event = new ExplosionPrimeEvent(this.getBukkitEntity(), this.explosionRadius * f, false);
-            this.world.getServer().getPluginManager().callEvent(event);
-            if (!event.isCancelled()) {
-                this.aU = true;
-                this.world.createExplosion(this, this.locX, this.locY, this.locZ, event.getRadius(), event.getFire(), flag);
-                this.die();
-                this.do_();
-            } else {
-                fuseTicks = 0;
-            }
-            // CraftBukkit end
+        // CraftBukkit start
+        ExplosionPrimeEvent event = new ExplosionPrimeEvent(this.getBukkitEntity(), this.explosionRadius * f, false);
+        this.world.getServer().getPluginManager().callEvent(event);
+        if (!event.isCancelled()) {
+            this.aU = true;
+            this.world.createExplosion(this, this.locX, this.locY, this.locZ, event.getRadius(), event.getFire(), flag);
+            this.die();
+            this.do_();
+        } else {
+            fuseTicks = 0;
         }
+        // CraftBukkit end
 
     }
 
@@ -229,7 +240,7 @@ public class EntityCreeper extends EntityMonster {
             entityareaeffectcloud.setRadiusOnUse(-0.5F);
             entityareaeffectcloud.setWaitTime(10);
             entityareaeffectcloud.setDuration(entityareaeffectcloud.getDuration() / 2);
-            entityareaeffectcloud.setRadiusPerTick(-entityareaeffectcloud.getRadius() / (float) entityareaeffectcloud.getDuration());
+            entityareaeffectcloud.setRadiusPerTick(-entityareaeffectcloud.getRadius() / entityareaeffectcloud.getDuration());
             Iterator iterator = collection.iterator();
 
             while (iterator.hasNext()) {
@@ -244,7 +255,7 @@ public class EntityCreeper extends EntityMonster {
     }
 
     public boolean isIgnited() {
-        return ((Boolean) this.datawatcher.get(EntityCreeper.c)).booleanValue();
+        return this.datawatcher.get(EntityCreeper.c).booleanValue();
     }
 
     public void dk() {

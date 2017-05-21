@@ -13,22 +13,22 @@ import org.apache.logging.log4j.Logger;
 import org.torch.server.TorchServer;
 
 public class DedicatedServer extends MinecraftServer implements IMinecraftServer, org.torch.api.TorchServant {
-	/**
-	 * STATIC FIELDS
-	 */
-	/**
-	 * Legacy dedicated server instance
-	 */
-	private static DedicatedServer instance;
-	/**
-	 * Common logger
-	 */
+    /**
+     * STATIC FIELDS
+     */
+    /**
+     * Legacy dedicated server instance
+     */
+    private static DedicatedServer instance;
+    /**
+     * Common logger
+     */
     private static final Logger LOGGER = TorchServer.logger;
-	/**
-	 * SHA-1 pattern
-	 */
+    /**
+     * SHA-1 pattern
+     */
     private static final Pattern l = TorchServer.RESOURCE_PACK_SHA1_PATTERN;
-    
+
     /**
      * NORMAL FIELDS
      */
@@ -48,10 +48,10 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
      * If generate structures -> generateStructures
      */
     private boolean generateStructures;
-    
-	/**
-	 * OBFUSCATED FIELDS
-	 */
+
+    /**
+     * OBFUSCATED FIELDS
+     */
     /**
      * Rcon query listener -> remoteQueryListener
      */
@@ -75,30 +75,30 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
 
     public DedicatedServer(joptsimple.OptionSet options, DataConverterManager dataconvertermanager, YggdrasilAuthenticationService yggdrasilauthenticationservice, MinecraftSessionService minecraftsessionservice, GameProfileRepository gameprofilerepository, UserCache usercache) {
         super(options, Proxy.NO_PROXY, dataconvertermanager, yggdrasilauthenticationservice, minecraftsessionservice, gameprofilerepository, usercache);
-        
-    	instance = this;
-    	
-    	/**
-    	 * NORMAL FIELDS
-    	 */
-    	serverCommandQueue = reactor.getServerCommandQueue();
-    	remoteControlCommandListener = reactor.getRemoteControlCommandListener();
-    	propertyManager = reactor.getPropertyManager();
-    	generateStructures = reactor.isGenerateStructures();
-    	
-    	/**
-    	 * OBFUSCATED FIELDS
-    	 */
-    	n = reactor.getRemoteQueryListener();
-    	p = reactor.getRemoteControlListener();
-    	r = reactor.getEula();
-    	t = reactor.getGameMode();
-    	u = reactor.isGuiIsEnabled();
+
+        instance = this;
+
+        /**
+         * NORMAL FIELDS
+         */
+        serverCommandQueue = reactor.getServerCommandQueue();
+        remoteControlCommandListener = reactor.getRemoteControlCommandListener();
+        propertyManager = reactor.getPropertyManager();
+        generateStructures = reactor.isGenerateStructures();
+
+        /**
+         * OBFUSCATED FIELDS
+         */
+        n = reactor.getRemoteQueryListener();
+        p = reactor.getRemoteControlListener();
+        r = reactor.getEula();
+        t = reactor.getGameMode();
+        u = reactor.isGuiIsEnabled();
     }
 
     @Override
-	public boolean init() throws IOException {
-    	return reactor.init();
+    public boolean init() throws IOException {
+        return reactor.init();
     }
 
     public String aL() {
@@ -106,79 +106,79 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
     }
 
     @Override
-	public void setGamemode(EnumGamemode enumgamemode) {
-    	reactor.setGamemodeGlobal(enumgamemode);
+    public void setGamemode(EnumGamemode enumgamemode) {
+        reactor.setGamemodeGlobal(enumgamemode);
     }
 
     @Override
-	public boolean getGenerateStructures() {
+    public boolean getGenerateStructures() {
         return reactor.isGenerateStructures();
     }
 
     @Override
-	public EnumGamemode getGamemode() {
+    public EnumGamemode getGamemode() {
         return reactor.getGameMode();
     }
 
     @Override
-	public EnumDifficulty getDifficulty() {
+    public EnumDifficulty getDifficulty() {
         return reactor.getDifficulty();
     }
 
     @Override
-	public boolean isHardcore() {
+    public boolean isHardcore() {
         return reactor.isHardcore();
     }
 
     @Override
-	public CrashReport b(CrashReport crashreport) {
+    public CrashReport b(CrashReport crashreport) {
         return reactor.addServerInfoToCrashReportDedicated(crashreport);
     }
 
     @Override
-	public void B() {
-    	reactor.systemExitNow();
+    public void B() {
+        reactor.systemExitNow();
     }
 
     @Override
-	public void D() {
-    	reactor.updateLogicsPhysicsExecuteCommands();
+    public void D() {
+        reactor.updateLogicsPhysicsExecuteCommands();
     }
 
     @Override
-	public boolean getAllowNether() {
+    public boolean getAllowNether() {
         return reactor.getAllowNether();
     }
 
     @Override
-	public boolean getSpawnMonsters() {
+    public boolean getSpawnMonsters() {
         return reactor.getSpawnMonsters();
     }
 
     // Snooper
     @Override
-	public void a(MojangStatisticsGenerator mojangstatisticsgenerator) {}
+    public void a(MojangStatisticsGenerator mojangstatisticsgenerator) {}
 
     @Override
-	public boolean getSnooperEnabled() {
+    public boolean getSnooperEnabled() {
         return reactor.getSnooperEnabled();
     }
 
     public void issueCommand(String s, ICommandListener icommandlistener) {
-    	reactor.issueCommand(s, icommandlistener);
+        reactor.issueCommand(s, icommandlistener);
     }
 
     public void aM() {
-    	reactor.executePendingCommands();
+        reactor.executePendingCommands();
     }
 
     @Override
-	public boolean aa() {
-        return TorchServer.isDedicatedServer();
+    public boolean aa() {
+        return true; // isDedicatedServer
     }
 
     @Override
-	public boolean af() {
+    public boolean af() {
         return reactor.shouldUseNativeTransport();
     }
 
@@ -187,12 +187,12 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
     }
 
     @Override
-	public int a(String s, int i) {
+    public int a(String s, int i) {
         return reactor.getIntProperty(s, i);
     }
 
     @Override
-	public String a(String s, String s1) {
+    public String a(String s, String s1) {
         return reactor.getStringProperty(s, s1);
     }
 
@@ -201,32 +201,32 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
     }
 
     @Override
-	public void a(String s, Object object) {
-    	reactor.setProperty(s, object);
+    public void a(String s, Object object) {
+        reactor.setProperty(s, object);
     }
 
     @Override
-	public void a() {
-    	reactor.saveProperties();
+    public void a() {
+        reactor.saveProperties();
     }
 
     @Override
-	public String b() {
+    public String b() {
         return reactor.getSettingsPath();
     }
 
     @Override
-	public String d_() {
+    public String d_() {
         return reactor.getServerIp();
     }
 
     @Override
-	public int e_() {
+    public int e_() {
         return reactor.getServerPort();
     }
 
     @Override
-	public String f_() {
+    public String f_() {
         return reactor.getMotd();
     }
 
@@ -235,71 +235,71 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
     }
 
     @Override
-	public boolean ap() {
+    public boolean ap() {
         return reactor.isGuiIsEnabled();
     }
 
     @Override
-	public String a(EnumGamemode enumgamemode, boolean flag) {
-        return reactor.shareToLAN(enumgamemode, flag);
+    public String a(EnumGamemode enumgamemode, boolean flag) {
+        return ""; // shareToLAN
     }
 
     @Override
-	public boolean getEnableCommandBlock() {
+    public boolean getEnableCommandBlock() {
         return reactor.getEnableCommandBlock();
     }
 
     @Override
-	public int getSpawnProtection() {
+    public int getSpawnProtection() {
         return reactor.getSpawnProtectionSize();
     }
 
     @Override
-	public boolean a(World world, BlockPosition blockposition, EntityHuman entityhuman) {
+    public boolean a(World world, BlockPosition blockposition, EntityHuman entityhuman) {
         return reactor.isBlockProtected(world, blockposition, entityhuman);
     }
 
     @Override
-	public int q() {
+    public int q() {
         return reactor.getOpPermissionLevel();
     }
 
     @Override
-	public void setIdleTimeout(int i) {
-    	reactor.setIdleTimeout(i);
+    public void setIdleTimeout(int i) {
+        reactor.setIdleTimeout(i);
     }
 
     @Override
-	public boolean r() {
+    public boolean r() {
         return reactor.shouldBroadcastRconToOps();
     }
 
     @Override
-	public boolean s() {
+    public boolean s() {
         return reactor.shouldBroadcastConsoleToOps();
     }
 
     @Override
-	public boolean ay() {
+    public boolean ay() {
         return reactor.isAnnouncingPlayerAchievements();
     }
 
     @Override
-	public int aE() {
-    	return reactor.getMaxWorldSize();
+    public int aE() {
+        return reactor.getMaxWorldSize();
     }
 
     @Override
-	public int aG() {
+    public int aG() {
         return reactor.getNetworkCompressionThreshold();
     }
 
     protected boolean aP() {
-    	return reactor.convertFilesUUID();
+        return reactor.convertFilesUUID();
     }
 
     private void aS() {
-    	reactor.sleepFiveSeconds();
+        reactor.sleepFiveSeconds();
     }
 
     public long aQ() {
@@ -307,17 +307,17 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
     }
 
     @Override
-	public String getPlugins() {
+    public String getPlugins() {
         return reactor.getPluginsRcon();
     }
 
     @Override
-	public String executeRemoteCommand(final String s) {
-       return reactor.executeRemoteCommand(s);
+    public String executeRemoteCommand(final String s) {
+        return reactor.executeRemoteCommand(s);
     }
 
     @Override
-	public PlayerList getPlayerList() {
+    public PlayerList getPlayerList() {
         return reactor.getDedicatedPlayerList();
     }
 
@@ -325,8 +325,8 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
     public PropertyManager getPropertyManager() {
         return reactor.getPropertyManager();
     }
-    
+
     public static DedicatedServer getServer() {
-    	return instance;
+        return instance;
     }
 }

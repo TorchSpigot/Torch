@@ -21,29 +21,30 @@ public class EntityItemFrame extends EntityHanging {
         this.setDirection(enumdirection);
     }
 
+    @Override
     protected void i() {
         this.getDataWatcher().register(EntityItemFrame.c, ItemStack.a);
         this.getDataWatcher().register(EntityItemFrame.d, Integer.valueOf(0));
     }
 
+    @Override
     public float aA() {
         return 0.0F;
     }
 
+    @Override
     public boolean damageEntity(DamageSource damagesource, float f) {
         if (this.isInvulnerable(damagesource)) {
             return false;
         } else if (!damagesource.isExplosion() && !this.getItem().isEmpty()) {
-            if (!this.world.isClientSide) {
-                // CraftBukkit start - fire EntityDamageEvent
-                if (org.bukkit.craftbukkit.event.CraftEventFactory.handleNonLivingEntityDamageEvent(this, damagesource, f, false) || this.dead) {
-                    return true;
-                }
-                // CraftBukkit end
-                this.b(damagesource.getEntity(), false);
-                this.a(SoundEffects.dh, 1.0F, 1.0F);
-                this.setItem(ItemStack.a);
+            // CraftBukkit start - fire EntityDamageEvent
+            if (org.bukkit.craftbukkit.event.CraftEventFactory.handleNonLivingEntityDamageEvent(this, damagesource, f, false) || this.dead) {
+                return true;
             }
+            // CraftBukkit end
+            this.b(damagesource.getEntity(), false);
+            this.a(SoundEffects.dh, 1.0F, 1.0F);
+            this.setItem(ItemStack.a);
 
             return true;
         } else {
@@ -51,19 +52,23 @@ public class EntityItemFrame extends EntityHanging {
         }
     }
 
+    @Override
     public int getWidth() {
         return 12;
     }
 
+    @Override
     public int getHeight() {
         return 12;
     }
 
+    @Override
     public void a(@Nullable Entity entity) {
         this.a(SoundEffects.df, 1.0F, 1.0F);
         this.b(entity, true);
     }
 
+    @Override
     public void o() {
         this.a(SoundEffects.dg, 1.0F, 1.0F);
     }
@@ -107,7 +112,7 @@ public class EntityItemFrame extends EntityHanging {
     }
 
     public ItemStack getItem() {
-        return (ItemStack) this.getDataWatcher().get(EntityItemFrame.c);
+        return this.getDataWatcher().get(EntityItemFrame.c);
     }
 
     public void setItem(ItemStack itemstack) {
@@ -133,6 +138,7 @@ public class EntityItemFrame extends EntityHanging {
 
     }
 
+    @Override
     public void a(DataWatcherObject<?> datawatcherobject) {
         if (datawatcherobject.equals(EntityItemFrame.c)) {
             ItemStack itemstack = this.getItem();
@@ -145,7 +151,7 @@ public class EntityItemFrame extends EntityHanging {
     }
 
     public int getRotation() {
-        return ((Integer) this.getDataWatcher().get(EntityItemFrame.d)).intValue();
+        return this.getDataWatcher().get(EntityItemFrame.d).intValue();
     }
 
     public void setRotation(int i) {
@@ -161,9 +167,10 @@ public class EntityItemFrame extends EntityHanging {
     }
 
     public static void a(DataConverterManager dataconvertermanager) {
-        dataconvertermanager.a(DataConverterTypes.ENTITY, (DataInspector) (new DataInspectorItem(EntityItemFrame.class, new String[] { "Item"})));
+        dataconvertermanager.a(DataConverterTypes.ENTITY, (new DataInspectorItem(EntityItemFrame.class, new String[] { "Item"})));
     }
 
+    @Override
     public void b(NBTTagCompound nbttagcompound) {
         if (!this.getItem().isEmpty()) {
             nbttagcompound.set("Item", this.getItem().save(new NBTTagCompound()));
@@ -174,6 +181,7 @@ public class EntityItemFrame extends EntityHanging {
         super.b(nbttagcompound);
     }
 
+    @Override
     public void a(NBTTagCompound nbttagcompound) {
         NBTTagCompound nbttagcompound1 = nbttagcompound.getCompound("Item");
 
@@ -188,21 +196,20 @@ public class EntityItemFrame extends EntityHanging {
         super.a(nbttagcompound);
     }
 
+    @Override
     public boolean b(EntityHuman entityhuman, EnumHand enumhand) {
         ItemStack itemstack = entityhuman.b(enumhand);
 
-        if (!this.world.isClientSide) {
-            if (this.getItem().isEmpty()) {
-                if (!itemstack.isEmpty()) {
-                    this.setItem(itemstack);
-                    if (!entityhuman.abilities.canInstantlyBuild) {
-                        itemstack.subtract(1);
-                    }
+        if (this.getItem().isEmpty()) {
+            if (!itemstack.isEmpty()) {
+                this.setItem(itemstack);
+                if (!entityhuman.abilities.canInstantlyBuild) {
+                    itemstack.subtract(1);
                 }
-            } else {
-                this.a(SoundEffects.di, 1.0F, 1.0F);
-                this.setRotation(this.getRotation() + 1);
             }
+        } else {
+            this.a(SoundEffects.di, 1.0F, 1.0F);
+            this.setRotation(this.getRotation() + 1);
         }
 
         return true;

@@ -54,59 +54,57 @@ public class ItemBow extends Item {
                 if (f >= 0.1D) {
                     boolean flag1 = flag && itemstack1.getItem() == Items.ARROW;
 
-                    if (!world.isClientSide) {
-                        ItemArrow itemarrow = ((ItemArrow) (itemstack1.getItem() instanceof ItemArrow ? itemstack1.getItem() : Items.ARROW));
-                        EntityArrow entityarrow = itemarrow.a(world, itemstack1, entityhuman);
+                    ItemArrow itemarrow = ((ItemArrow) (itemstack1.getItem() instanceof ItemArrow ? itemstack1.getItem() : Items.ARROW));
+                    EntityArrow entityarrow = itemarrow.a(world, itemstack1, entityhuman);
 
-                        entityarrow.a(entityhuman, entityhuman.pitch, entityhuman.yaw, 0.0F, f * 3.0F, 1.0F);
-                        if (f == 1.0F) {
-                            entityarrow.setCritical(true);
-                        }
+                    entityarrow.a(entityhuman, entityhuman.pitch, entityhuman.yaw, 0.0F, f * 3.0F, 1.0F);
+                    if (f == 1.0F) {
+                        entityarrow.setCritical(true);
+                    }
 
-                        int k = EnchantmentManager.getEnchantmentLevel(Enchantments.ARROW_DAMAGE, itemstack);
+                    int k = EnchantmentManager.getEnchantmentLevel(Enchantments.ARROW_DAMAGE, itemstack);
 
-                        if (k > 0) {
-                            entityarrow.c(entityarrow.k() + k * 0.5D + 0.5D);
-                        }
+                    if (k > 0) {
+                        entityarrow.c(entityarrow.k() + k * 0.5D + 0.5D);
+                    }
 
-                        int l = EnchantmentManager.getEnchantmentLevel(Enchantments.ARROW_KNOCKBACK, itemstack);
+                    int l = EnchantmentManager.getEnchantmentLevel(Enchantments.ARROW_KNOCKBACK, itemstack);
 
-                        if (l > 0) {
-                            entityarrow.setKnockbackStrength(l);
-                        }
+                    if (l > 0) {
+                        entityarrow.setKnockbackStrength(l);
+                    }
 
-                        if (EnchantmentManager.getEnchantmentLevel(Enchantments.ARROW_FIRE, itemstack) > 0 && !entityarrow.isInWater()) {
-	                        // CraftBukkit start - call EntityCombustEvent
-	                        EntityCombustEvent event = new EntityCombustEvent(entityarrow.getBukkitEntity(), 100);
-	                        entityarrow.world.getServer().getPluginManager().callEvent(event);
-	
-	                        if (!event.isCancelled()) {
-	                            entityarrow.setOnFire(event.getDuration());
-	                        }
-	                        // CraftBukkit end
-                        }
-                        // CraftBukkit start
-                        org.bukkit.event.entity.EntityShootBowEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callEntityShootBowEvent(entityhuman, itemstack, entityarrow, f);
-                        if (event.isCancelled()) {
-                            event.getProjectile().remove();
+                    if (EnchantmentManager.getEnchantmentLevel(Enchantments.ARROW_FIRE, itemstack) > 0 && !entityarrow.isInWater()) {
+                            // CraftBukkit start - call EntityCombustEvent
+                            EntityCombustEvent event = new EntityCombustEvent(entityarrow.getBukkitEntity(), 100);
+                            entityarrow.world.getServer().getPluginManager().callEvent(event);
+    
+                            if (!event.isCancelled()) {
+                                entityarrow.setOnFire(event.getDuration());
+                            }
+                            // CraftBukkit end
+                    }
+                    // CraftBukkit start
+                    org.bukkit.event.entity.EntityShootBowEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callEntityShootBowEvent(entityhuman, itemstack, entityarrow, f);
+                    if (event.isCancelled()) {
+                        event.getProjectile().remove();
+                        return;
+                    }
+
+                    itemstack.damage(1, entityhuman);
+                    if (flag1 || entityhuman.abilities.canInstantlyBuild && (itemstack1.getItem() == Items.SPECTRAL_ARROW || itemstack1.getItem() == Items.TIPPED_ARROW)) {
+                        entityarrow.fromPlayer = EntityArrow.PickupStatus.CREATIVE_ONLY;
+                    }
+
+                    if (event.getProjectile() == entityarrow.getBukkitEntity()) {
+                        if (!world.addEntity(entityarrow)) {
+                            if (entityhuman instanceof EntityPlayer) {
+                                ((EntityPlayer) entityhuman).getBukkitEntity().updateInventory();
+                            }
                             return;
                         }
-
-                        itemstack.damage(1, entityhuman);
-                        if (flag1 || entityhuman.abilities.canInstantlyBuild && (itemstack1.getItem() == Items.SPECTRAL_ARROW || itemstack1.getItem() == Items.TIPPED_ARROW)) {
-                            entityarrow.fromPlayer = EntityArrow.PickupStatus.CREATIVE_ONLY;
-                        }
-
-                        if (event.getProjectile() == entityarrow.getBukkitEntity()) {
-                            if (!world.addEntity(entityarrow)) {
-                                if (entityhuman instanceof EntityPlayer) {
-                                    ((EntityPlayer) entityhuman).getBukkitEntity().updateInventory();
-                                }
-                                return;
-                            }
-                        }
-                        // CraftBukkit end
                     }
+                    // CraftBukkit end
 
                     world.a((EntityHuman) null, entityhuman.locX, entityhuman.locY, entityhuman.locZ, SoundEffects.w, SoundCategory.PLAYERS, 1.0F, 1.0F / (ItemBow.j.nextFloat() * 0.4F + 1.2F) + f * 0.5F);
                     if (!flag1 && !entityhuman.abilities.canInstantlyBuild) {

@@ -10,11 +10,12 @@ public class ItemBlock extends Item {
         this.a = block;
     }
 
+    @Override
     public EnumInteractionResult a(EntityHuman entityhuman, World world, BlockPosition blockposition, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
         IBlockData iblockdata = world.getType(blockposition);
         Block block = iblockdata.getBlock();
 
-        if (!block.a((IBlockAccess) world, blockposition)) {
+        if (!block.a(world, blockposition)) {
             blockposition = blockposition.shift(enumdirection);
         }
 
@@ -55,7 +56,7 @@ public class ItemBlock extends Item {
                 TileEntity tileentity = world.getTileEntity(blockposition);
 
                 if (tileentity != null) {
-                    if (!world.isClientSide && tileentity.isFilteredNBT() && (entityhuman == null || !entityhuman.dk())) {
+                    if (tileentity.isFilteredNBT() && (entityhuman == null || !entityhuman.dk())) {
                         return false;
                     }
 
@@ -78,10 +79,12 @@ public class ItemBlock extends Item {
         }
     }
 
+    @Override
     public String a(ItemStack itemstack) {
         return this.a.a();
     }
 
+    @Override
     public String getName() {
         return this.a.a();
     }

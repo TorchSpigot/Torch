@@ -16,26 +16,25 @@ public class EntityLargeFireball extends EntityFireball {
         isIncendiary = this.world.getGameRules().getBoolean("mobGriefing"); // CraftBukkit
     }
 
+    @Override
     protected void a(MovingObjectPosition movingobjectposition) {
-        if (!this.world.isClientSide) {
-            if (movingobjectposition.entity != null) {
-                movingobjectposition.entity.damageEntity(DamageSource.fireball(this, this.shooter), 6.0F);
-                this.a(this.shooter, movingobjectposition.entity);
-            }
-
-            boolean flag = this.world.getGameRules().getBoolean("mobGriefing");
-
-            // CraftBukkit start - fire ExplosionPrimeEvent
-            ExplosionPrimeEvent event = new ExplosionPrimeEvent((org.bukkit.entity.Explosive) org.bukkit.craftbukkit.entity.CraftEntity.getEntity(this.world.getServer(), this));
-            this.world.getServer().getPluginManager().callEvent(event);
-
-            if (!event.isCancelled()) {
-                // give 'this' instead of (Entity) null so we know what causes the damage
-                this.world.createExplosion(this, this.locX, this.locY, this.locZ, event.getRadius(), event.getFire(), isIncendiary);
-            }
-            // CraftBukkit end
-            this.die();
+        if (movingobjectposition.entity != null) {
+            movingobjectposition.entity.damageEntity(DamageSource.fireball(this, this.shooter), 6.0F);
+            this.a(this.shooter, movingobjectposition.entity);
         }
+
+        boolean flag = this.world.getGameRules().getBoolean("mobGriefing");
+
+        // CraftBukkit start - fire ExplosionPrimeEvent
+        ExplosionPrimeEvent event = new ExplosionPrimeEvent((org.bukkit.entity.Explosive) org.bukkit.craftbukkit.entity.CraftEntity.getEntity(this.world.getServer(), this));
+        this.world.getServer().getPluginManager().callEvent(event);
+
+        if (!event.isCancelled()) {
+            // give 'this' instead of (Entity) null so we know what causes the damage
+            this.world.createExplosion(this, this.locX, this.locY, this.locZ, event.getRadius(), event.getFire(), isIncendiary);
+        }
+        // CraftBukkit end
+        this.die();
 
     }
 
@@ -43,11 +42,13 @@ public class EntityLargeFireball extends EntityFireball {
         EntityFireball.a(dataconvertermanager, "Fireball");
     }
 
+    @Override
     public void b(NBTTagCompound nbttagcompound) {
         super.b(nbttagcompound);
         nbttagcompound.setInt("ExplosionPower", this.yield);
     }
 
+    @Override
     public void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
         if (nbttagcompound.hasKeyOfType("ExplosionPower", 99)) {

@@ -300,9 +300,7 @@ public abstract class EntityArrow extends Entity implements IProjectile {
                 if (entity instanceof EntityLiving) {
                     EntityLiving entityliving = (EntityLiving) entity;
 
-                    if (!this.world.isClientSide) {
-                        entityliving.f(entityliving.cc() + 1);
-                    }
+                    entityliving.f(entityliving.cc() + 1);
 
                     if (this.knockbackStrength > 0) {
                         float f1 = MathHelper.sqrt(this.motX * this.motX + this.motZ * this.motZ);
@@ -334,7 +332,7 @@ public abstract class EntityArrow extends Entity implements IProjectile {
                 this.yaw += 180.0F;
                 this.lastYaw += 180.0F;
                 this.ay = 0;
-                if (!this.world.isClientSide && this.motX * this.motX + this.motY * this.motY + this.motZ * this.motZ < 0.0010000000474974513D) {
+                if (this.motX * this.motX + this.motY * this.motY + this.motZ * this.motZ < 0.0010000000474974513D) {
                     if (this.fromPlayer == EntityArrow.PickupStatus.ALLOWED) {
                         this.a(this.j(), 0.1F);
                     }
@@ -464,7 +462,7 @@ public abstract class EntityArrow extends Entity implements IProjectile {
 
     @Override
 	public void d(EntityHuman entityhuman) {
-        if (!this.world.isClientSide && this.inGround && this.shake <= 0) {
+        if (this.inGround && this.shake <= 0) {
             // CraftBukkit start
             ItemStack itemstack = this.j(); // PAIL: rename
             EntityItem item = new EntityItem(this.world, this.locX, this.locY, this.locZ, itemstack);

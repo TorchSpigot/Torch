@@ -17,6 +17,7 @@ public abstract class EntityHanging extends Entity {
             return entity instanceof EntityHanging;
         }
 
+        @Override
         public boolean apply(@Nullable Object object) {
             return this.a((Entity) object);
         }
@@ -36,41 +37,42 @@ public abstract class EntityHanging extends Entity {
         this.blockPosition = blockposition;
     }
 
+    @Override
     protected void i() {}
 
     public void setDirection(EnumDirection enumdirection) {
         Validate.notNull(enumdirection);
         Validate.isTrue(enumdirection.k().c());
         this.direction = enumdirection;
-        this.yaw = (float) (this.direction.get2DRotationValue() * 90);
+        this.yaw = this.direction.get2DRotationValue() * 90;
         this.lastYaw = this.yaw;
         this.updateBoundingBox();
     }
 
     // CraftBukkit start - break out BB calc into own method
     public static AxisAlignedBB calculateBoundingBox(Entity entity, BlockPosition blockPosition, EnumDirection direction, int width, int height) {
-        double d0 = (double) blockPosition.getX() + 0.5D;
-        double d1 = (double) blockPosition.getY() + 0.5D;
-        double d2 = (double) blockPosition.getZ() + 0.5D;
+        double d0 = blockPosition.getX() + 0.5D;
+        double d1 = blockPosition.getY() + 0.5D;
+        double d2 = blockPosition.getZ() + 0.5D;
         double d3 = 0.46875D;
         double d4 = a(width);
         double d5 = a(height);
 
-        d0 -= (double) direction.getAdjacentX() * 0.46875D;
-        d2 -= (double) direction.getAdjacentZ() * 0.46875D;
+        d0 -= direction.getAdjacentX() * 0.46875D;
+        d2 -= direction.getAdjacentZ() * 0.46875D;
         d1 += d5;
         EnumDirection enumdirection = direction.f();
 
-        d0 += d4 * (double) enumdirection.getAdjacentX();
-        d2 += d4 * (double) enumdirection.getAdjacentZ();
+        d0 += d4 * enumdirection.getAdjacentX();
+        d2 += d4 * enumdirection.getAdjacentZ();
         if (entity != null) {
             entity.locX = d0;
             entity.locY = d1;
             entity.locZ = d2;
         }
-        double d6 = (double) width;
-        double d7 = (double) height;
-        double d8 = (double) width;
+        double d6 = width;
+        double d7 = height;
+        double d8 = width;
 
         if (direction.k() == EnumDirection.EnumAxis.Z) {
             d8 = 1.0D;
@@ -96,11 +98,12 @@ public abstract class EntityHanging extends Entity {
         return i % 32 == 0 ? 0.5D : 0.0D;
     }
 
+    @Override
     public void A_() {
         this.lastX = this.locX;
         this.lastY = this.locY;
         this.lastZ = this.locZ;
-        if (this.d++ == this.world.spigotConfig.hangingTickFrequency && !this.world.isClientSide) { // Spigot
+        if (this.d++ == this.world.spigotConfig.hangingTickFrequency) { // Spigot
             this.d = 0;
             if (!this.dead && !this.survives()) {
                 // CraftBukkit start - fire break events
@@ -156,23 +159,27 @@ public abstract class EntityHanging extends Entity {
         }
     }
 
+    @Override
     public boolean isInteractable() {
         return true;
     }
 
+    @Override
     public boolean t(Entity entity) {
         return entity instanceof EntityHuman ? this.damageEntity(DamageSource.playerAttack((EntityHuman) entity), 0.0F) : false;
     }
 
+    @Override
     public EnumDirection getDirection() {
         return this.direction;
     }
 
+    @Override
     public boolean damageEntity(DamageSource damagesource, float f) {
         if (this.isInvulnerable(damagesource)) {
             return false;
         } else {
-            if (!this.dead && !this.world.isClientSide) {
+            if (!this.dead) {
                 // CraftBukkit start - fire break events
                 HangingBreakEvent event = new HangingBreakEvent((Hanging) this.getBukkitEntity(), HangingBreakEvent.RemoveCause.DEFAULT);
                 if (damagesource.getEntity() != null) {
@@ -197,8 +204,9 @@ public abstract class EntityHanging extends Entity {
         }
     }
 
+    @Override
     public void move(EnumMoveType enummovetype, double d0, double d1, double d2) {
-        if (!this.world.isClientSide && !this.dead && d0 * d0 + d1 * d1 + d2 * d2 > 0.0D) {
+        if (!this.dead && d0 * d0 + d1 * d1 + d2 * d2 > 0.0D) {
             if (this.dead) return; // CraftBukkit
 
             // CraftBukkit start - fire break events
@@ -217,14 +225,16 @@ public abstract class EntityHanging extends Entity {
 
     }
 
+    @Override
     public void f(double d0, double d1, double d2) {
-        if (false && !this.world.isClientSide && !this.dead && d0 * d0 + d1 * d1 + d2 * d2 > 0.0D) { // CraftBukkit - not needed
+        /* if (false && !this.dead && d0 * d0 + d1 * d1 + d2 * d2 > 0.0D) { // CraftBukkit - not needed
             this.die();
             this.a((Entity) null);
-        }
+        } */
 
     }
 
+    @Override
     public void b(NBTTagCompound nbttagcompound) {
         nbttagcompound.setByte("Facing", (byte) this.direction.get2DRotationValue());
         BlockPosition blockposition = this.getBlockPosition();
@@ -234,6 +244,7 @@ public abstract class EntityHanging extends Entity {
         nbttagcompound.setInt("TileZ", blockposition.getZ());
     }
 
+    @Override
     public void a(NBTTagCompound nbttagcompound) {
         this.blockPosition = new BlockPosition(nbttagcompound.getInt("TileX"), nbttagcompound.getInt("TileY"), nbttagcompound.getInt("TileZ"));
         this.setDirection(EnumDirection.fromType2(nbttagcompound.getByte("Facing")));
@@ -247,18 +258,21 @@ public abstract class EntityHanging extends Entity {
 
     public abstract void o();
 
+    @Override
     public EntityItem a(ItemStack itemstack, float f) {
-        EntityItem entityitem = new EntityItem(this.world, this.locX + (double) ((float) this.direction.getAdjacentX() * 0.15F), this.locY + (double) f, this.locZ + (double) ((float) this.direction.getAdjacentZ() * 0.15F), itemstack);
+        EntityItem entityitem = new EntityItem(this.world, this.locX + this.direction.getAdjacentX() * 0.15F, this.locY + f, this.locZ + this.direction.getAdjacentZ() * 0.15F, itemstack);
 
         entityitem.q();
         this.world.addEntity(entityitem);
         return entityitem;
     }
 
+    @Override
     protected boolean as() {
         return false;
     }
 
+    @Override
     public void setPosition(double d0, double d1, double d2) {
         this.blockPosition = new BlockPosition(d0, d1, d2);
         this.updateBoundingBox();
@@ -269,6 +283,7 @@ public abstract class EntityHanging extends Entity {
         return this.blockPosition;
     }
 
+    @Override
     public float a(EnumBlockRotation enumblockrotation) {
         if (this.direction != null && this.direction.k() != EnumDirection.EnumAxis.Y) {
             switch (enumblockrotation) {
@@ -302,9 +317,11 @@ public abstract class EntityHanging extends Entity {
         }
     }
 
+    @Override
     public float a(EnumBlockMirror enumblockmirror) {
         return this.a(enumblockmirror.a(this.direction));
     }
 
+    @Override
     public void onLightningStrike(EntityLightning entitylightning) {}
 }

@@ -100,7 +100,7 @@ public abstract class World implements IBlockAccess {
     public final MethodProfiler methodProfiler;
     private final Calendar L;
     public Scoreboard scoreboard;
-    public final boolean isClientSide;
+    public final boolean isClientSide = false;
     public boolean allowMonsters;
     public boolean allowAnimals;
     private boolean M;
@@ -185,7 +185,6 @@ public abstract class World implements IBlockAccess {
         this.methodProfiler = methodprofiler;
         this.worldData = worlddata;
         this.worldProvider = worldprovider;
-        this.isClientSide = flag;
         this.N = worldprovider.getWorldBorder();
         // CraftBukkit start
         getWorldBorder().world = (WorldServer) this;
@@ -396,7 +395,7 @@ public abstract class World implements IBlockAccess {
         // CraftBukkit end
         if (blockposition.isInvalidYLocation()) { // Paper
             return false;
-        } else if (!this.isClientSide && this.worldData.getType() == WorldType.DEBUG_ALL_BLOCK_STATES) {
+        } else if (this.worldData.getType() == WorldType.DEBUG_ALL_BLOCK_STATES) {
             return false;
         } else {
             Chunk chunk = this.getChunkAtWorldCoords(blockposition);
@@ -455,16 +454,16 @@ public abstract class World implements IBlockAccess {
 
     // CraftBukkit start - Split off from above in order to directly send client and physic updates
     public void notifyAndUpdatePhysics(BlockPosition blockposition, Chunk chunk, IBlockData oldBlock, IBlockData newBlock, int i) {
-        if ((i & 2) != 0 && (!this.isClientSide || (i & 4) == 0) && (chunk == null || chunk.isReady())) { // allow chunk to be null here as chunk.isReady() is false when we send our notification during block placement
+        if ((i & 2) != 0 && (chunk == null || chunk.isReady())) { // allow chunk to be null here as chunk.isReady() is false when we send our notification during block placement
             this.notify(blockposition, oldBlock, newBlock, i);
         }
 
-        if (!this.isClientSide && (i & 1) != 0) {
+        if ((i & 1) != 0) {
             this.update(blockposition, oldBlock.getBlock(), true);
             if (newBlock.o()) {
                 this.updateAdjacentComparators(blockposition, newBlock.getBlock());
             }
-        } else if (!this.isClientSide && (i & 16) == 0) {
+        } else if ((i & 16) == 0) {
             this.c(blockposition, newBlock.getBlock());
         }
     }
@@ -592,26 +591,50 @@ public abstract class World implements IBlockAccess {
 
     /** PAIL: neighborChanged */
     public void a(BlockPosition blockposition, final Block block, BlockPosition blockposition1) {
-        if (!this.isClientSide) {
-            IBlockData iblockdata = this.getType(blockposition);
+        IBlockData iblockdata = this.getType(blockposition);
 
-            try {
-                // CraftBukkit start
-                CraftWorld world = ((WorldServer) this).getWorld();
-                if (world != null && !((WorldServer)this).stopPhysicsEvent) { // Paper
-                    BlockPhysicsEvent event = new BlockPhysicsEvent(world.getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ()), CraftMagicNumbers.getId(block));
-                    this.getServer().getPluginManager().callEvent(event);
-                    
-                    if (event.isCancelled()) {
-                        return;
+        try {
+            // CraftBukkit start
+            CraftWorld world = ((WorldServer) this).getWorld();
+            if (world != null && !((WorldServer)this).stopPhysicsEvent) { // Paper
+                BlockPhysicsEvent event = new BlockPhysicsEvent(world.getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ()), CraftMagicNumbers.getId(block));
+                this.getServer().getPluginManager().callEvent(event);
+                
+                if (event.isCancelled()) {
+                    return;
+                }
+            }
+            // CraftBukkit end
+            iblockdata.doPhysics(this, blockposition, block, blockposition1);
+        } catch (StackOverflowError stackoverflowerror) { // Spigot Start
+            haveWeSilencedAPhysicsCrash = true;
+            blockLocation = blockposition.getX() + ", " + blockposition.getY() + ", " + blockposition.getZ();
+            // Spigot End
+        } catch (Throwable throwable) {
+            CrashReport crashreport = CrashReport.a(throwable, "Exception while updating neighbours");
+            CrashReportSystemDetails crashreportsystemdetails = crashreport.a("Block being updated");
+
+            crashreportsystemdetails.a("Source block type", new CrashReportCallable<String>() {
+                @Override
+                public String call() throws Exception {
+                    try {
+                        return String.format("ID #%d (%s // %s)", new Object[] { Integer.valueOf(Block.getId(block)), block.a(), block.getClass().getCanonicalName()});
+                    } catch (Throwable throwable) {
+                        return "ID #" + Block.getId(block);
                     }
                 }
-                // CraftBukkit end
-                iblockdata.doPhysics(this, blockposition, block, blockposition1);
-            } catch (StackOverflowError stackoverflowerror) { // Spigot Start
-                haveWeSilencedAPhysicsCrash = true;
-                blockLocation = blockposition.getX() + ", " + blockposition.getY() + ", " + blockposition.getZ();
-                // Spigot End
+            });
+            CrashReportSystemDetails.a(crashreportsystemdetails, blockposition, iblockdata);
+            throw new ReportedException(crashreport);
+        }
+    }
+
+    public void b(BlockPosition blockposition, final Block block, BlockPosition blockposition1) {
+        IBlockData iblockdata = this.getType(blockposition);
+
+        if (iblockdata.getBlock() == Blocks.dk) {
+            try {
+                ((BlockObserver) iblockdata.getBlock()).b(iblockdata, this, blockposition, block, blockposition1);
             } catch (Throwable throwable) {
                 CrashReport crashreport = CrashReport.a(throwable, "Exception while updating neighbours");
                 CrashReportSystemDetails crashreportsystemdetails = crashreport.a("Block being updated");
@@ -632,38 +655,6 @@ public abstract class World implements IBlockAccess {
                 });
                 CrashReportSystemDetails.a(crashreportsystemdetails, blockposition, iblockdata);
                 throw new ReportedException(crashreport);
-            }
-        }
-    }
-
-    public void b(BlockPosition blockposition, final Block block, BlockPosition blockposition1) {
-        if (!this.isClientSide) {
-            IBlockData iblockdata = this.getType(blockposition);
-
-            if (iblockdata.getBlock() == Blocks.dk) {
-                try {
-                    ((BlockObserver) iblockdata.getBlock()).b(iblockdata, this, blockposition, block, blockposition1);
-                } catch (Throwable throwable) {
-                    CrashReport crashreport = CrashReport.a(throwable, "Exception while updating neighbours");
-                    CrashReportSystemDetails crashreportsystemdetails = crashreport.a("Block being updated");
-
-                    crashreportsystemdetails.a("Source block type", new CrashReportCallable() {
-                        public String a() throws Exception {
-                            try {
-                                return String.format("ID #%d (%s // %s)", new Object[] { Integer.valueOf(Block.getId(block)), block.a(), block.getClass().getCanonicalName()});
-                            } catch (Throwable throwable) {
-                                return "ID #" + Block.getId(block);
-                            }
-                        }
-
-                        @Override
-                        public Object call() throws Exception {
-                            return this.a();
-                        }
-                    });
-                    CrashReportSystemDetails.a(crashreportsystemdetails, blockposition, iblockdata);
-                    throw new ReportedException(crashreport);
-                }
             }
         }
     }
@@ -1705,13 +1696,6 @@ public abstract class World implements IBlockAccess {
             this.tileEntityListTick.add(tileentity);
         }
 
-        if (this.isClientSide) {
-            BlockPosition blockposition = tileentity.getPosition();
-            IBlockData iblockdata = this.getType(blockposition);
-
-            this.notify(blockposition, iblockdata, iblockdata, 2);
-        }
-
         return flag;
     }
 
@@ -2236,77 +2220,75 @@ public abstract class World implements IBlockAccess {
 
     protected void t() {
         if (this.worldProvider.m()) {
-            if (!this.isClientSide) {
-                boolean flag = this.getGameRules().getBoolean("doWeatherCycle");
+            boolean flag = this.getGameRules().getBoolean("doWeatherCycle");
 
-                if (flag) {
-                    int i = this.worldData.z();
+            if (flag) {
+                int i = this.worldData.z();
 
-                    if (i > 0) {
-                        --i;
-                        this.worldData.i(i);
-                        this.worldData.setThunderDuration(this.worldData.isThundering() ? 1 : 2);
-                        this.worldData.setWeatherDuration(this.worldData.hasStorm() ? 1 : 2);
+                if (i > 0) {
+                    --i;
+                    this.worldData.i(i);
+                    this.worldData.setThunderDuration(this.worldData.isThundering() ? 1 : 2);
+                    this.worldData.setWeatherDuration(this.worldData.hasStorm() ? 1 : 2);
+                }
+
+                int j = this.worldData.getThunderDuration();
+
+                if (j <= 0) {
+                    if (this.worldData.isThundering()) {
+                        this.worldData.setThunderDuration(this.random.nextInt(12000) + 3600);
+                    } else {
+                        this.worldData.setThunderDuration(this.random.nextInt(168000) + 12000);
                     }
-
-                    int j = this.worldData.getThunderDuration();
-
+                } else {
+                    --j;
+                    this.worldData.setThunderDuration(j);
                     if (j <= 0) {
-                        if (this.worldData.isThundering()) {
-                            this.worldData.setThunderDuration(this.random.nextInt(12000) + 3600);
-                        } else {
-                            this.worldData.setThunderDuration(this.random.nextInt(168000) + 12000);
-                        }
-                    } else {
-                        --j;
-                        this.worldData.setThunderDuration(j);
-                        if (j <= 0) {
-                            this.worldData.setThundering(!this.worldData.isThundering());
-                        }
+                        this.worldData.setThundering(!this.worldData.isThundering());
                     }
+                }
 
-                    int k = this.worldData.getWeatherDuration();
+                int k = this.worldData.getWeatherDuration();
 
+                if (k <= 0) {
+                    if (this.worldData.hasStorm()) {
+                        this.worldData.setWeatherDuration(this.random.nextInt(12000) + 12000);
+                    } else {
+                        this.worldData.setWeatherDuration(this.random.nextInt(168000) + 12000);
+                    }
+                } else {
+                    --k;
+                    this.worldData.setWeatherDuration(k);
                     if (k <= 0) {
-                        if (this.worldData.hasStorm()) {
-                            this.worldData.setWeatherDuration(this.random.nextInt(12000) + 12000);
-                        } else {
-                            this.worldData.setWeatherDuration(this.random.nextInt(168000) + 12000);
-                        }
-                    } else {
-                        --k;
-                        this.worldData.setWeatherDuration(k);
-                        if (k <= 0) {
-                            this.worldData.setStorm(!this.worldData.hasStorm());
-                        }
+                        this.worldData.setStorm(!this.worldData.hasStorm());
                     }
                 }
-
-                this.p = this.q;
-                if (this.worldData.isThundering()) {
-                    this.q = (float) (this.q + 0.01D);
-                } else {
-                    this.q = (float) (this.q - 0.01D);
-                }
-
-                this.q = MathHelper.a(this.q, 0.0F, 1.0F);
-                this.n = this.o;
-                if (this.worldData.hasStorm()) {
-                    this.o = (float) (this.o + 0.01D);
-                } else {
-                    this.o = (float) (this.o - 0.01D);
-                }
-
-                this.o = MathHelper.a(this.o, 0.0F, 1.0F);
-
-                // CraftBukkit start
-                for (int idx = 0; idx < this.players.size(); ++idx) {
-                    if (((EntityPlayer) this.players.get(idx)).world == this) {
-                        ((EntityPlayer) this.players.get(idx)).tickWeather();
-                    }
-                }
-                // CraftBukkit end
             }
+
+            this.p = this.q;
+            if (this.worldData.isThundering()) {
+                this.q = (float) (this.q + 0.01D);
+            } else {
+                this.q = (float) (this.q - 0.01D);
+            }
+
+            this.q = MathHelper.a(this.q, 0.0F, 1.0F);
+            this.n = this.o;
+            if (this.worldData.hasStorm()) {
+                this.o = (float) (this.o + 0.01D);
+            } else {
+                this.o = (float) (this.o - 0.01D);
+            }
+
+            this.o = MathHelper.a(this.o, 0.0F, 1.0F);
+
+            // CraftBukkit start
+            for (int idx = 0; idx < this.players.size(); ++idx) {
+                if (((EntityPlayer) this.players.get(idx)).world == this) {
+                    ((EntityPlayer) this.players.get(idx)).tickWeather();
+                }
+            }
+            // CraftBukkit end
         }
     }
 
@@ -3031,9 +3013,7 @@ public abstract class World implements IBlockAccess {
     // Calls the method that checks to see if players are sleeping
     // Called by CraftPlayer.setPermanentSleeping()
     public void checkSleepStatus() {
-        if (!this.isClientSide) {
-            this.everyoneSleeping();
-        }
+        this.everyoneSleeping();
     }
     // CraftBukkit end
 

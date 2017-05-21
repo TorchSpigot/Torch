@@ -1,10 +1,8 @@
 package net.minecraft.server;
 
-import com.google.common.collect.Sets;
 import com.google.common.collect.UnmodifiableIterator;
 import com.koloboke.collect.set.hash.HashObjSets;
 
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -347,25 +345,22 @@ public class Block {
     }
 
     public void dropNaturally(World world, BlockPosition blockposition, IBlockData iblockdata, float f, int i) {
-        if (!world.isClientSide) {
-            int j = this.getDropCount(i, world.random);
+        int j = this.getDropCount(i, world.random);
 
-            for (int k = 0; k < j; ++k) {
-                // CraftBukkit - <= to < to allow for plugins to completely disable block drops from explosions
-                if (world.random.nextFloat() < f) {
-                    Item item = this.getDropType(iblockdata, world.random, i);
+        for (int k = 0; k < j; ++k) {
+            // CraftBukkit - <= to < to allow for plugins to completely disable block drops from explosions
+            if (world.random.nextFloat() < f) {
+                Item item = this.getDropType(iblockdata, world.random, i);
 
-                    if (item != Items.a) {
-                        a(world, blockposition, new ItemStack(item, 1, this.getDropData(iblockdata)));
-                    }
+                if (item != Items.a) {
+                    a(world, blockposition, new ItemStack(item, 1, this.getDropData(iblockdata)));
                 }
             }
-
         }
     }
 
     public static void a(World world, BlockPosition blockposition, ItemStack itemstack) {
-        if (!world.isClientSide && !itemstack.isEmpty() && world.getGameRules().getBoolean("doTileDrops")) {
+        if (!itemstack.isEmpty() && world.getGameRules().getBoolean("doTileDrops")) {
             float f = 0.5F;
             double d0 = world.random.nextFloat() * 0.5F + 0.25D;
             double d1 = world.random.nextFloat() * 0.5F + 0.25D;
@@ -378,7 +373,7 @@ public class Block {
     }
 
     protected void dropExperience(World world, BlockPosition blockposition, int i) {
-        if (!world.isClientSide && world.getGameRules().getBoolean("doTileDrops")) {
+        if (world.getGameRules().getBoolean("doTileDrops")) {
             while (i > 0) {
                 int j = EntityExperienceOrb.getOrbValue(i);
 

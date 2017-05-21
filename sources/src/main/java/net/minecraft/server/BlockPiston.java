@@ -92,23 +92,19 @@ public class BlockPiston extends BlockDirectional {
     @Override
     public void postPlace(World world, BlockPosition blockposition, IBlockData iblockdata, EntityLiving entityliving, ItemStack itemstack) {
         world.setTypeAndData(blockposition, iblockdata.set(BlockPiston.FACING, EnumDirection.a(blockposition, entityliving)), 2);
-        if (!world.isClientSide) {
-            this.e(world, blockposition, iblockdata);
-        }
+        this.e(world, blockposition, iblockdata);
 
     }
 
     @Override
     public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
-        if (!world.isClientSide) {
-            this.e(world, blockposition, iblockdata);
-        }
+        this.e(world, blockposition, iblockdata);
 
     }
 
     @Override
     public void onPlace(World world, BlockPosition blockposition, IBlockData iblockdata) {
-        if (!world.isClientSide && world.getTileEntity(blockposition) == null) {
+        if (world.getTileEntity(blockposition) == null) {
             this.e(world, blockposition, iblockdata);
         }
 
@@ -183,17 +179,15 @@ public class BlockPiston extends BlockDirectional {
     public boolean a(IBlockData iblockdata, World world, BlockPosition blockposition, int i, int j) {
         EnumDirection enumdirection = iblockdata.get(BlockPiston.FACING);
 
-        if (!world.isClientSide) {
-            boolean flag = this.a(world, blockposition, enumdirection);
+        boolean flag = this.a(world, blockposition, enumdirection);
 
-            if (flag && i == 1) {
-                world.setTypeAndData(blockposition, iblockdata.set(BlockPiston.EXTENDED, Boolean.valueOf(true)), 2);
-                return false;
-            }
+        if (flag && i == 1) {
+            world.setTypeAndData(blockposition, iblockdata.set(BlockPiston.EXTENDED, Boolean.valueOf(true)), 2);
+            return false;
+        }
 
-            if (!flag && i == 0) {
-                return false;
-            }
+        if (!flag && i == 0) {
+            return false;
         }
 
         if (i == 0) {

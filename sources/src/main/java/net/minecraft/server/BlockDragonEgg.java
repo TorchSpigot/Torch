@@ -12,18 +12,22 @@ public class BlockDragonEgg extends Block {
         super(Material.DRAGON_EGG, MaterialMapColor.E);
     }
 
+    @Override
     public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return BlockDragonEgg.a;
     }
 
+    @Override
     public void onPlace(World world, BlockPosition blockposition, IBlockData iblockdata) {
-        world.a(blockposition, (Block) this, this.a(world));
+        world.a(blockposition, this, this.a(world));
     }
 
+    @Override
     public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
-        world.a(blockposition, (Block) this, this.a(world));
+        world.a(blockposition, this, this.a(world));
     }
 
+    @Override
     public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
         this.b(world, blockposition);
     }
@@ -33,7 +37,7 @@ public class BlockDragonEgg extends Block {
             boolean flag = true;
 
             if (!BlockFalling.instaFall && world.areChunksLoadedBetween(blockposition.a(-32, -32, -32), blockposition.a(32, 32, 32))) {
-                world.addEntity(new EntityFallingBlock(world, (double) ((float) blockposition.getX() + 0.5F), (double) blockposition.getY(), (double) ((float) blockposition.getZ() + 0.5F), this.getBlockData()));
+                world.addEntity(new EntityFallingBlock(world, blockposition.getX() + 0.5F, blockposition.getY(), blockposition.getZ() + 0.5F, this.getBlockData()));
             } else {
                 world.setAir(blockposition);
 
@@ -51,11 +55,13 @@ public class BlockDragonEgg extends Block {
         }
     }
 
+    @Override
     public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
         this.c(world, blockposition);
         return true;
     }
 
+    @Override
     public void attack(World world, BlockPosition blockposition, EntityHuman entityhuman) {
         this.c(world, blockposition);
     }
@@ -80,22 +86,8 @@ public class BlockDragonEgg extends Block {
 
                     blockposition1 = new BlockPosition(event.getToBlock().getX(), event.getToBlock().getY(), event.getToBlock().getZ());
                     // CraftBukkit end
-                    if (world.isClientSide) {
-                        for (int j = 0; j < 128; ++j) {
-                            double d0 = world.random.nextDouble();
-                            float f = (world.random.nextFloat() - 0.5F) * 0.2F;
-                            float f1 = (world.random.nextFloat() - 0.5F) * 0.2F;
-                            float f2 = (world.random.nextFloat() - 0.5F) * 0.2F;
-                            double d1 = (double) blockposition1.getX() + (double) (blockposition.getX() - blockposition1.getX()) * d0 + (world.random.nextDouble() - 0.5D) + 0.5D;
-                            double d2 = (double) blockposition1.getY() + (double) (blockposition.getY() - blockposition1.getY()) * d0 + world.random.nextDouble() - 0.5D;
-                            double d3 = (double) blockposition1.getZ() + (double) (blockposition.getZ() - blockposition1.getZ()) * d0 + (world.random.nextDouble() - 0.5D) + 0.5D;
-
-                            world.addParticle(EnumParticle.PORTAL, d1, d2, d3, (double) f, (double) f1, (double) f2, new int[0]);
-                        }
-                    } else {
-                        world.setTypeAndData(blockposition1, iblockdata, 2);
-                        world.setAir(blockposition);
-                    }
+                    world.setTypeAndData(blockposition1, iblockdata, 2);
+                    world.setAir(blockposition);
 
                     return;
                 }
@@ -104,14 +96,17 @@ public class BlockDragonEgg extends Block {
         }
     }
 
+    @Override
     public int a(World world) {
         return 5;
     }
 
+    @Override
     public boolean b(IBlockData iblockdata) {
         return false;
     }
 
+    @Override
     public boolean c(IBlockData iblockdata) {
         return false;
     }

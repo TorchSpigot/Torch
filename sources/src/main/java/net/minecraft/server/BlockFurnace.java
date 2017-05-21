@@ -14,6 +14,7 @@ public class BlockFurnace extends BlockTileEntity {
         this.b = flag;
     }
 
+    @Override
     public Item getDropType(IBlockData iblockdata, Random random, int i) {
         return Item.getItemOf(Blocks.FURNACE);
     }
@@ -49,19 +50,16 @@ public class BlockFurnace extends BlockTileEntity {
     */
     // Paper end
 
+    @Override
     public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
-        if (world.isClientSide) {
-            return true;
-        } else {
-            TileEntity tileentity = world.getTileEntity(blockposition);
+        TileEntity tileentity = world.getTileEntity(blockposition);
 
-            if (tileentity instanceof TileEntityFurnace) {
-                entityhuman.openContainer((TileEntityFurnace) tileentity);
-                entityhuman.b(StatisticList.Y);
-            }
-
-            return true;
+        if (tileentity instanceof TileEntityFurnace) {
+            entityhuman.openContainer((TileEntityFurnace) tileentity);
+            entityhuman.b(StatisticList.Y);
         }
+
+        return true;
     }
 
     public static void a(boolean flag, World world, BlockPosition blockposition) {
@@ -85,14 +83,17 @@ public class BlockFurnace extends BlockTileEntity {
 
     }
 
+    @Override
     public TileEntity a(World world, int i) {
         return new TileEntityFurnace();
     }
 
+    @Override
     public IBlockData getPlacedState(World world, BlockPosition blockposition, EnumDirection enumdirection, float f, float f1, float f2, int i, EntityLiving entityliving) {
         return this.getBlockData().set(BlockFurnace.FACING, entityliving.getDirection().opposite());
     }
 
+    @Override
     public void postPlace(World world, BlockPosition blockposition, IBlockData iblockdata, EntityLiving entityliving, ItemStack itemstack) {
         world.setTypeAndData(blockposition, iblockdata.set(BlockFurnace.FACING, entityliving.getDirection().opposite()), 2);
         if (itemstack.hasName()) {
@@ -105,6 +106,7 @@ public class BlockFurnace extends BlockTileEntity {
 
     }
 
+    @Override
     public void remove(World world, BlockPosition blockposition, IBlockData iblockdata) {
         if (!BlockFurnace.c) {
             TileEntity tileentity = world.getTileEntity(blockposition);
@@ -118,22 +120,27 @@ public class BlockFurnace extends BlockTileEntity {
         super.remove(world, blockposition, iblockdata);
     }
 
+    @Override
     public boolean isComplexRedstone(IBlockData iblockdata) {
         return true;
     }
 
+    @Override
     public int c(IBlockData iblockdata, World world, BlockPosition blockposition) {
         return Container.a(world.getTileEntity(blockposition));
     }
 
+    @Override
     public ItemStack a(World world, BlockPosition blockposition, IBlockData iblockdata) {
         return new ItemStack(Blocks.FURNACE);
     }
 
+    @Override
     public EnumRenderType a(IBlockData iblockdata) {
         return EnumRenderType.MODEL;
     }
 
+    @Override
     public IBlockData fromLegacyData(int i) {
         EnumDirection enumdirection = EnumDirection.fromType1(i);
 
@@ -144,18 +151,22 @@ public class BlockFurnace extends BlockTileEntity {
         return this.getBlockData().set(BlockFurnace.FACING, enumdirection);
     }
 
+    @Override
     public int toLegacyData(IBlockData iblockdata) {
-        return ((EnumDirection) iblockdata.get(BlockFurnace.FACING)).a();
+        return iblockdata.get(BlockFurnace.FACING).a();
     }
 
+    @Override
     public IBlockData a(IBlockData iblockdata, EnumBlockRotation enumblockrotation) {
-        return iblockdata.set(BlockFurnace.FACING, enumblockrotation.a((EnumDirection) iblockdata.get(BlockFurnace.FACING)));
+        return iblockdata.set(BlockFurnace.FACING, enumblockrotation.a(iblockdata.get(BlockFurnace.FACING)));
     }
 
+    @Override
     public IBlockData a(IBlockData iblockdata, EnumBlockMirror enumblockmirror) {
-        return iblockdata.a(enumblockmirror.a((EnumDirection) iblockdata.get(BlockFurnace.FACING)));
+        return iblockdata.a(enumblockmirror.a(iblockdata.get(BlockFurnace.FACING)));
     }
 
+    @Override
     protected BlockStateList getStateList() {
         return new BlockStateList(this, new IBlockState[] { BlockFurnace.FACING});
     }

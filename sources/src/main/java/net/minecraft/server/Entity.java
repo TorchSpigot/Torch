@@ -280,7 +280,7 @@ public abstract class Entity implements ICommandListener {
             AxisAlignedBB axisalignedbb = this.getBoundingBox();
 
             this.a(new AxisAlignedBB(axisalignedbb.a, axisalignedbb.b, axisalignedbb.c, axisalignedbb.a + this.width, axisalignedbb.b + this.length, axisalignedbb.c + this.width));
-            if (this.width > f2 && !this.justCreated && !this.world.isClientSide) {
+            if (this.width > f2 && !this.justCreated) {
                 this.move(EnumMoveType.SELF, f2 - this.width, 0.0D, f2 - this.width);
             }
         }
@@ -330,9 +330,7 @@ public abstract class Entity implements ICommandListener {
     }
 
     public void A_() {
-        if (!this.world.isClientSide) {
-            this.setFlag(6, this.aO());
-        }
+        this.setFlag(6, this.aO());
 
         this.U();
     }
@@ -340,7 +338,7 @@ public abstract class Entity implements ICommandListener {
     // CraftBukkit start
     public void postTick() {
         // No clean way to break out of ticking once the entity has been copied to a new world, so instead we move the portalling later in the tick cycle
-        if (!this.world.isClientSide && this.world instanceof WorldServer) {
+        if (this.world instanceof WorldServer) {
             this.world.methodProfiler.a("portal");
             if (this.ak) {
                 MinecraftServer minecraftserver = this.world.getMinecraftServer();
@@ -400,7 +398,7 @@ public abstract class Entity implements ICommandListener {
         this.lastYaw = this.yaw;
         // Moved up to postTick
         /*
-        if (!this.world.isClientSide && this.world instanceof WorldServer) {
+        if (this.world instanceof WorldServer) {
             this.world.methodProfiler.a("portal");
             if (this.ak) {
                 MinecraftServer minecraftserver = this.world.getMinecraftServer();
@@ -443,9 +441,7 @@ public abstract class Entity implements ICommandListener {
 
         this.am();
         this.ak();
-        if (this.world.isClientSide) {
-            this.extinguish();
-        } else if (this.fireTicks > 0) {
+        if (this.fireTicks > 0) {
             if (this.fireProof) {
                 this.fireTicks -= 4;
                 if (this.fireTicks < 0) {
@@ -475,9 +471,7 @@ public abstract class Entity implements ICommandListener {
         this.checkAndDoHeightDamage();
         // Paper end
 
-        if (!this.world.isClientSide) {
-            this.setFlag(0, this.fireTicks > 0);
-        }
+        this.setFlag(0, this.fireTicks > 0);
 
         this.justCreated = false;
         
@@ -1957,7 +1951,7 @@ public abstract class Entity implements ICommandListener {
                 return;
             }
             // Spigot end
-            if (!this.world.isClientSide && entity instanceof EntityHuman && !(this.bw() instanceof EntityHuman)) {
+            if (entity instanceof EntityHuman && !(this.bw() instanceof EntityHuman)) {
                 this.passengers.add(0, entity);
             } else {
                 this.passengers.add(entity);
@@ -2015,7 +2009,7 @@ public abstract class Entity implements ICommandListener {
         if (this.portalCooldown > 0) {
             this.portalCooldown = this.aE();
         } else {
-            if (!this.world.isClientSide && !blockposition.equals(this.an)) {
+            if (!blockposition.equals(this.an)) {
                 this.an = new BlockPosition(blockposition);
                 ShapeDetector.ShapeDetectorCollection shapedetector_shapedetectorcollection = Blocks.PORTAL.c(this.world, this.an);
                 double d0 = shapedetector_shapedetectorcollection.getFacing().k() == EnumDirection.EnumAxis.X ? (double) shapedetector_shapedetectorcollection.a().getZ() : (double) shapedetector_shapedetectorcollection.a().getX();
@@ -2051,9 +2045,7 @@ public abstract class Entity implements ICommandListener {
     public void setEquipment(EnumItemSlot enumitemslot, ItemStack itemstack) {}
 
     public boolean isBurning() {
-        boolean flag = this.world != null && this.world.isClientSide;
-
-        return !this.fireProof && (this.fireTicks > 0 || flag && this.getFlag(0));
+        return !this.fireProof && (this.fireTicks > 0);
     }
 
     public boolean isPassenger() {
@@ -2081,14 +2073,12 @@ public abstract class Entity implements ICommandListener {
     }
 
     public boolean aO() {
-        return this.glowing || this.world.isClientSide && this.getFlag(6);
+        return this.glowing;
     }
 
     public void g(boolean flag) {
         this.glowing = flag;
-        if (!this.world.isClientSide) {
-            this.setFlag(6, this.glowing);
-        }
+        this.setFlag(6, this.glowing);
 
     }
 
@@ -2321,7 +2311,7 @@ public abstract class Entity implements ICommandListener {
 
     @Nullable
     public Entity c(int i) {
-        if (!this.world.isClientSide && !this.dead) {
+        if (!this.dead) {
             this.world.methodProfiler.a("changeDimension");
             MinecraftServer minecraftserver = this.B_();
             // CraftBukkit start - Move logic into new function "teleportTo(Location,boolean)"
@@ -2708,7 +2698,7 @@ public abstract class Entity implements ICommandListener {
 
     @Override
 	public void a(CommandObjectiveExecutor.EnumCommandResult commandobjectiveexecutor_enumcommandresult, int i) {
-        if (this.world != null && !this.world.isClientSide) {
+        if (this.world != null) {
             this.aF.a(this.world.getMinecraftServer(), this, commandobjectiveexecutor_enumcommandresult, i);
         }
 
@@ -2879,7 +2869,7 @@ public abstract class Entity implements ICommandListener {
     public boolean bA() {
         Entity entity = this.bw();
 
-        return entity instanceof EntityHuman ? ((EntityHuman) entity).cR() : !this.world.isClientSide;
+        return entity instanceof EntityHuman ? ((EntityHuman) entity).cR() : true;
     }
 
     @Nullable

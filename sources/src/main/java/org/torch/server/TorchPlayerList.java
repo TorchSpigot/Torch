@@ -49,6 +49,7 @@ import net.minecraft.server.*;
 import net.minecraft.server.PacketPlayOutPlayerInfo.EnumPlayerInfoAction;
 
 import static org.torch.server.TorchServer.logger;
+import static org.torch.server.TorchServer.getMinecraftServer;
 
 @Getter
 public final class TorchPlayerList implements TorchReactor {
@@ -56,10 +57,6 @@ public final class TorchPlayerList implements TorchReactor {
      * Legacy player list instance
      */
     private final PlayerList servant;
-    /**
-     * Reference to the MinecraftServer object
-     */
-    private final MinecraftServer minecraftServer;
     /**
      * Reference to the TorchServer object
      */
@@ -151,28 +148,22 @@ public final class TorchPlayerList implements TorchReactor {
      */
     private final Map<String, EntityPlayer> playersByName = new org.spigotmc.CaseInsensitiveMap<>();
 
-    public TorchPlayerList(MinecraftServer server, PlayerList legacy) {
+    public TorchPlayerList(PlayerList legacy) {
         // Setup instance for org.torch.api.TorchReactor
         servant = legacy;
-        this.server = TorchServer.getServer();
 
-        TorchServer.getServer().craftServer = server.server = craftServer = new CraftServer(this.server, this);
-        TorchServer.getServer().console = server.console = org.bukkit.craftbukkit.command.ColouredConsoleSender.getInstance();
-        TorchServer.getServer().reader.addCompleter(new org.bukkit.craftbukkit.command.ConsoleCommandCompleter(server.server));
+        getMinecraftServer().server = TorchServer.getServer().craftServer  = craftServer = new CraftServer(TorchServer.getServer(), this);
+        getMinecraftServer().console = TorchServer.getServer().console = org.bukkit.craftbukkit.command.ColouredConsoleSender.getInstance();
+        TorchServer.getServer().reader.addCompleter(new org.bukkit.craftbukkit.command.ConsoleCommandCompleter(TorchServer.getServer().craftServer));
         // Port the reader for compatibility
-        server.reader = TorchServer.getServer().reader;
-        minecraftServer = server;
+        getMinecraftServer().reader = TorchServer.getServer().reader;
+        server = TorchServer.getServer();
 
         bannedPlayers = new GameProfileBanList(PLAYER_BANS_FILE);
         bannedIPs = new IpBanList(IP_BANS_FILE);
         operators = new OpList(OPS_FILE);
         whitelist = new WhiteList(WHITELIST_FILE);
         playerStatFiles = HashObjObjMaps.newMutableMap();
-
-        // Sets whether we are a LAN server
-        bannedPlayers.a(false);
-        bannedIPs.a(false);
-        // maxPlayers = 9; // baka
 
         /**
          * Dedicated PlayerList
@@ -187,13 +178,7 @@ public final class TorchPlayerList implements TorchReactor {
     /**
      * Load banned players, whitelist and Ops
      */
-    @SuppressWarnings("deprecation")
     public void refreshJsonLists() {
-        if (!this.server.isSinglePlayer()) {
-            this.bannedPlayers.a(true);
-            this.bannedIPs.a(true);
-        }
-
         this.loadPlayerBanList();
         this.savePlayerBanList();
         this.loadIPBanList();
@@ -251,24 +236,11 @@ public final class TorchPlayerList implements TorchReactor {
     }
 
     /**
-     * called during player login. reads the player info from disk
+     * Called during player login. reads the player info from disk
      */
     @Nullable
     public NBTTagCompound readPlayerDataFromFile(EntityPlayer player) {
-        // Get raw player NBT from the primary world data
-        NBTTagCompound nbttagcompoundRaw = this.server.worlds.get(0).getWorldData().h();
-        NBTTagCompound nbttagcompound;
-
-        if (player.getName().equals(this.server.getServerOwner()) && nbttagcompoundRaw != null) {
-            // Process the raw NBT data
-            nbttagcompound = this.server.getDataConverterManager().a(DataConverterTypes.PLAYER, nbttagcompoundRaw);
-            player.f(nbttagcompound); // PAIL: f() -> Read player from NBT
-            logger.debug("loading single player");
-        } else {
-            nbttagcompound = this.playerFileData.load(player);
-        }
-
-        return nbttagcompound;
+        return this.playerFileData.load(player);
     }
 
     /**
@@ -293,22 +265,11 @@ public final class TorchPlayerList implements TorchReactor {
         player.x().getPlayerChunkMap().movePlayer(player);
     }
 
-    /**
-     * Also checks for multiple logins across servers, **does nothing cause Bukkit moved up this
-     */
-    @Deprecated
-    public EntityPlayer processLogin(GameProfile gameprofile, EntityPlayer player) {
-        return player;
-    }
-
-    @SuppressWarnings("deprecation")
     public void updatePermissionLevel(EntityPlayer player) {
         GameProfile gameprofile = player.getProfile();
         // PAIL: Return the permission level if the player is Opped
         int permLevel = this.isOp(gameprofile) ? this.operators.getPermissionLevel(gameprofile) : 0;
-
-        // PAIL: If the world is commands allowed, return 4
-        permLevel = this.server.isSinglePlayer() && this.minecraftServer.worldServer[0].getWorldData().u() ? 4 : permLevel;
+        
         // PAIL: If the server is commands allowed for all (chest mode), return 4
         permLevel = this.allowedCommands ? 4 : permLevel;
         this.sendPlayerPermissionLevel(player, permLevel);
@@ -402,7 +363,7 @@ public final class TorchPlayerList implements TorchReactor {
         WorldData worlddata = worldserver.getWorldData();
 
         this.setPlayerGamemodeBasedOnOther(entityplayer, (EntityPlayer) null, worldserver);
-        PlayerConnection playerconnection = new PlayerConnection(this.minecraftServer, networkmanager, entityplayer);
+        PlayerConnection playerconnection = new PlayerConnection(getMinecraftServer(), networkmanager, entityplayer);
 
         playerconnection.sendPacket(new PacketPlayOutLogin(entityplayer.getId(), entityplayer.playerInteractManager.getGameMode(), worlddata.isHardcore(), worldserver.worldProvider.getDimensionManager().getDimensionID(), worldserver.getDifficulty(), this.getMaxPlayers(), worlddata.getType(), worldserver.getGameRules().getBoolean("reducedDebugInfo")));
         entityplayer.getBukkitEntity().sendSupportedChannels();
@@ -655,7 +616,7 @@ public final class TorchPlayerList implements TorchReactor {
         // in the event, check with plugins to see if it's ok, and THEN kick depending on the outcome
         SocketAddress socketaddress = loginlistener.networkManager.getSocketAddress();
         
-        EntityPlayer entity = new EntityPlayer(minecraftServer, server.getWorldServer(0), profile, new PlayerInteractManager(server.getWorldServer(0)));
+        EntityPlayer entity = new EntityPlayer(getMinecraftServer(), server.getWorldServer(0), profile, new PlayerInteractManager(server.getWorldServer(0)));
         Player player = entity.getBukkitEntity();
         PlayerLoginEvent event = new PlayerLoginEvent(player, hostname, ((java.net.InetSocketAddress) socketaddress).getAddress(), ((java.net.InetSocketAddress) loginlistener.networkManager.getRawAddress()).getAddress());
         String reason;
@@ -1330,7 +1291,7 @@ public final class TorchPlayerList implements TorchReactor {
                 }
             }
 
-            statManager = new ServerStatisticManager(this.minecraftServer, playerStatFile);
+            statManager = new ServerStatisticManager(getMinecraftServer(), playerStatFile);
             statManager.a(); // PAIL: Read the stat files
             this.playerStatFiles.put(uuid, statManager);
         }
@@ -1343,9 +1304,9 @@ public final class TorchPlayerList implements TorchReactor {
      */
     public void setViewDistance(int distance) {
         this.viewDistance = distance;
-        if (this.minecraftServer.worldServer != null) {
+        if (getMinecraftServer().worldServer != null) {
             for (int index = 0, size = server.worlds.size(); index < size; ++index) {
-                WorldServer worldserver = server.worlds.get(index); // TODO: CraftBukkit only world(0), but all world in original NMS
+                WorldServer worldserver = server.worlds.get(index);
 
                 if (worldserver != null) {
                     worldserver.getPlayerChunkMap().a(distance); // PAIL: Set world player view radius
@@ -1421,7 +1382,8 @@ public final class TorchPlayerList implements TorchReactor {
     }
     
     /** Get player's name by uuid */
-    @Nullable public String uuidToUsername(UUID uuid) {
+    @Nullable
+    public String uuidToUsername(UUID uuid) {
         return this.uuidToPlayerMap.get(uuid).getName();
     }
 }

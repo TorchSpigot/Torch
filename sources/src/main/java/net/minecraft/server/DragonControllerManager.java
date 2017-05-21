@@ -39,11 +39,9 @@ public class DragonControllerManager {
             // CraftBukkit end
 
             this.currentDragonController = this.b(dragoncontrollerphase);
-            if (!this.enderDragon.world.isClientSide) {
-                this.enderDragon.getDataWatcher().set(EntityEnderDragon.PHASE, Integer.valueOf(dragoncontrollerphase.b()));
-            }
+            this.enderDragon.getDataWatcher().set(EntityEnderDragon.PHASE, Integer.valueOf(dragoncontrollerphase.b()));
 
-            DragonControllerManager.a.debug("Dragon is now in phase {} on the {}", new Object[] { dragoncontrollerphase, this.enderDragon.world.isClientSide ? "client" : "server"});
+            DragonControllerManager.a.debug("Dragon is now in phase {} on the {}", new Object[] { dragoncontrollerphase, "server"});
             this.currentDragonController.d();
         }
     }

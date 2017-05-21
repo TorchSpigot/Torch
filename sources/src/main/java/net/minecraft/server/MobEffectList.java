@@ -68,20 +68,18 @@ public class MobEffectList {
         } else if (this == MobEffects.HUNGER && entityliving instanceof EntityHuman) {
             ((EntityHuman) entityliving).applyExhaustion(0.005F * (i + 1));
         } else if (this == MobEffects.SATURATION && entityliving instanceof EntityHuman) {
-            if (!entityliving.world.isClientSide) {
-                // CraftBukkit start
-                EntityHuman entityhuman = (EntityHuman) entityliving;
-                int oldFoodLevel = entityhuman.getFoodData().foodLevel;
+            // CraftBukkit start
+            EntityHuman entityhuman = (EntityHuman) entityliving;
+            int oldFoodLevel = entityhuman.getFoodData().foodLevel;
 
-                org.bukkit.event.entity.FoodLevelChangeEvent event = CraftEventFactory.callFoodLevelChangeEvent(entityhuman, i + 1 + oldFoodLevel);
+            org.bukkit.event.entity.FoodLevelChangeEvent event = CraftEventFactory.callFoodLevelChangeEvent(entityhuman, i + 1 + oldFoodLevel);
 
-                if (!event.isCancelled()) {
-                    entityhuman.getFoodData().eat(event.getFoodLevel() - oldFoodLevel, 1.0F);
-                }
-
-                ((EntityPlayer) entityhuman).playerConnection.sendPacket(new PacketPlayOutUpdateHealth(((EntityPlayer) entityhuman).getBukkitEntity().getScaledHealth(), entityhuman.getFoodData().foodLevel, entityhuman.getFoodData().saturationLevel));
-                // CraftBukkit end
+            if (!event.isCancelled()) {
+                entityhuman.getFoodData().eat(event.getFoodLevel() - oldFoodLevel, 1.0F);
             }
+
+            ((EntityPlayer) entityhuman).playerConnection.sendPacket(new PacketPlayOutUpdateHealth(((EntityPlayer) entityhuman).getBukkitEntity().getScaledHealth(), entityhuman.getFoodData().foodLevel, entityhuman.getFoodData().saturationLevel));
+            // CraftBukkit end
         } else if ((this != MobEffects.HEAL || entityliving.bT()) && (this != MobEffects.HARM || !entityliving.bT())) {
             if (this == MobEffects.HARM && !entityliving.bT() || this == MobEffects.HEAL && entityliving.bT()) {
                 entityliving.damageEntity(DamageSource.MAGIC, 6 << i);

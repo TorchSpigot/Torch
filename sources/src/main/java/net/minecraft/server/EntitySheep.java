@@ -15,6 +15,7 @@ public class EntitySheep extends EntityAnimal {
 
     private static final DataWatcherObject<Byte> bw = DataWatcher.a(EntitySheep.class, DataWatcherRegistry.a);
     private final InventoryCrafting container = new InventoryCrafting(new Container() {
+        @Override
         public boolean a(EntityHuman entityhuman) {
             return false;
         }
@@ -31,7 +32,7 @@ public class EntitySheep extends EntityAnimal {
     private PathfinderGoalEatTile bB;
 
     public static float[] a(EnumColor enumcolor) {
-        return (float[]) EntitySheep.by.get(enumcolor);
+        return EntitySheep.by.get(enumcolor);
     }
 
     public EntitySheep(World world) {
@@ -42,6 +43,7 @@ public class EntitySheep extends EntityAnimal {
         this.container.resultInventory = new InventoryCraftResult(); // CraftBukkit - add result slot for event
     }
 
+    @Override
     protected void r() {
         this.bB = new PathfinderGoalEatTile(this);
         this.goalSelector.a(0, new PathfinderGoalFloat(this));
@@ -55,30 +57,32 @@ public class EntitySheep extends EntityAnimal {
         this.goalSelector.a(8, new PathfinderGoalRandomLookaround(this));
     }
 
+    @Override
     protected void M() {
         this.bA = this.bB.f();
         super.M();
     }
 
+    @Override
     public void n() {
-        if (this.world.isClientSide) {
-            this.bA = Math.max(0, this.bA - 1);
-        }
 
         super.n();
     }
 
+    @Override
     protected void initAttributes() {
         super.initAttributes();
         this.getAttributeInstance(GenericAttributes.maxHealth).setValue(8.0D);
         this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).setValue(0.23000000417232513D);
     }
 
+    @Override
     protected void i() {
         super.i();
         this.datawatcher.register(EntitySheep.bw, Byte.valueOf((byte) 0));
     }
 
+    @Override
     @Nullable
     protected MinecraftKey J() {
         if (this.isSheared()) {
@@ -137,32 +141,31 @@ public class EntitySheep extends EntityAnimal {
         }
     }
 
+    @Override
     public boolean a(EntityHuman entityhuman, EnumHand enumhand) {
         ItemStack itemstack = entityhuman.b(enumhand);
 
         if (itemstack.getItem() == Items.SHEARS && !this.isSheared() && !this.isBaby()) {
-            if (!this.world.isClientSide) {
-                // CraftBukkit start
-                PlayerShearEntityEvent event = new PlayerShearEntityEvent((org.bukkit.entity.Player) entityhuman.getBukkitEntity(), this.getBukkitEntity());
-                this.world.getServer().getPluginManager().callEvent(event);
+            // CraftBukkit start
+            PlayerShearEntityEvent event = new PlayerShearEntityEvent((org.bukkit.entity.Player) entityhuman.getBukkitEntity(), this.getBukkitEntity());
+            this.world.getServer().getPluginManager().callEvent(event);
 
-                if (event.isCancelled()) {
-                    return false;
-                }
-                // CraftBukkit end
+            if (event.isCancelled()) {
+                return false;
+            }
+            // CraftBukkit end
 
-                this.setSheared(true);
-                int i = 1 + this.random.nextInt(3);
+            this.setSheared(true);
+            int i = 1 + this.random.nextInt(3);
 
-                for (int j = 0; j < i; ++j) {
-                    this.forceDrops = true; // CraftBukkit
-                    EntityItem entityitem = this.a(new ItemStack(Item.getItemOf(Blocks.WOOL), 1, this.getColor().getColorIndex()), 1.0F);
-                    this.forceDrops = false; // CraftBukkit
+            for (int j = 0; j < i; ++j) {
+                this.forceDrops = true; // CraftBukkit
+                EntityItem entityitem = this.a(new ItemStack(Item.getItemOf(Blocks.WOOL), 1, this.getColor().getColorIndex()), 1.0F);
+                this.forceDrops = false; // CraftBukkit
 
-                    entityitem.motY += (double) (this.random.nextFloat() * 0.05F);
-                    entityitem.motX += (double) ((this.random.nextFloat() - this.random.nextFloat()) * 0.1F);
-                    entityitem.motZ += (double) ((this.random.nextFloat() - this.random.nextFloat()) * 0.1F);
-                }
+                entityitem.motY += this.random.nextFloat() * 0.05F;
+                entityitem.motX += (this.random.nextFloat() - this.random.nextFloat()) * 0.1F;
+                entityitem.motZ += (this.random.nextFloat() - this.random.nextFloat()) * 0.1F;
             }
 
             itemstack.damage(1, entityhuman);
@@ -176,50 +179,56 @@ public class EntitySheep extends EntityAnimal {
         EntityInsentient.a(dataconvertermanager, EntitySheep.class);
     }
 
+    @Override
     public void b(NBTTagCompound nbttagcompound) {
         super.b(nbttagcompound);
         nbttagcompound.setBoolean("Sheared", this.isSheared());
         nbttagcompound.setByte("Color", (byte) this.getColor().getColorIndex());
     }
 
+    @Override
     public void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
         this.setSheared(nbttagcompound.getBoolean("Sheared"));
         this.setColor(EnumColor.fromColorIndex(nbttagcompound.getByte("Color")));
     }
 
+    @Override
     protected SoundEffect G() {
         return SoundEffects.fr;
     }
 
+    @Override
     protected SoundEffect bW() {
         return SoundEffects.ft;
     }
 
+    @Override
     protected SoundEffect bX() {
         return SoundEffects.fs;
     }
 
+    @Override
     protected void a(BlockPosition blockposition, Block block) {
         this.a(SoundEffects.fv, 0.15F, 1.0F);
     }
 
     public EnumColor getColor() {
-        return EnumColor.fromColorIndex(((Byte) this.datawatcher.get(EntitySheep.bw)).byteValue() & 15);
+        return EnumColor.fromColorIndex(this.datawatcher.get(EntitySheep.bw).byteValue() & 15);
     }
 
     public void setColor(EnumColor enumcolor) {
-        byte b0 = ((Byte) this.datawatcher.get(EntitySheep.bw)).byteValue();
+        byte b0 = this.datawatcher.get(EntitySheep.bw).byteValue();
 
         this.datawatcher.set(EntitySheep.bw, Byte.valueOf((byte) (b0 & 240 | enumcolor.getColorIndex() & 15)));
     }
 
     public boolean isSheared() {
-        return (((Byte) this.datawatcher.get(EntitySheep.bw)).byteValue() & 16) != 0;
+        return (this.datawatcher.get(EntitySheep.bw).byteValue() & 16) != 0;
     }
 
     public void setSheared(boolean flag) {
-        byte b0 = ((Byte) this.datawatcher.get(EntitySheep.bw)).byteValue();
+        byte b0 = this.datawatcher.get(EntitySheep.bw).byteValue();
 
         if (flag) {
             this.datawatcher.set(EntitySheep.bw, Byte.valueOf((byte) (b0 | 16)));
@@ -239,10 +248,11 @@ public class EntitySheep extends EntityAnimal {
         EntitySheep entitysheep = (EntitySheep) entityageable;
         EntitySheep entitysheep1 = new EntitySheep(this.world);
 
-        entitysheep1.setColor(this.a((EntityAnimal) this, (EntityAnimal) entitysheep));
+        entitysheep1.setColor(this.a(this, entitysheep));
         return entitysheep1;
     }
 
+    @Override
     public void A() {
         // CraftBukkit start
         SheepRegrowWoolEvent event = new SheepRegrowWoolEvent((org.bukkit.entity.Sheep) this.getBukkitEntity());
@@ -257,6 +267,7 @@ public class EntitySheep extends EntityAnimal {
 
     }
 
+    @Override
     @Nullable
     public GroupDataEntity prepare(DifficultyDamageScaler difficultydamagescaler, @Nullable GroupDataEntity groupdataentity) {
         groupdataentity = super.prepare(difficultydamagescaler, groupdataentity);
@@ -282,10 +293,12 @@ public class EntitySheep extends EntityAnimal {
         return EnumColor.fromInvColorIndex(k);
     }
 
+    @Override
     public float getHeadHeight() {
         return 0.95F * this.length;
     }
 
+    @Override
     public EntityAgeable createChild(EntityAgeable entityageable) {
         return this.b(entityageable);
     }

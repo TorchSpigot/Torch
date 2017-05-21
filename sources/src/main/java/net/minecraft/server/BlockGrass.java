@@ -21,83 +21,88 @@ public class BlockGrass extends Block implements IBlockFragilePlantElement {
         this.a(CreativeModeTab.b);
     }
 
+    @Override
     public IBlockData updateState(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         Block block = iblockaccess.getType(blockposition.up()).getBlock();
 
         return iblockdata.set(BlockGrass.SNOWY, Boolean.valueOf(block == Blocks.SNOW || block == Blocks.SNOW_LAYER));
     }
 
+    @Override
     public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
         if (world.paperConfig.grassUpdateRate != 1 && (world.paperConfig.grassUpdateRate < 1 || (MinecraftServer.currentTick + blockposition.hashCode()) % world.paperConfig.grassUpdateRate != 0)) { return; } // Paper
-        if (!world.isClientSide) {
-            int lightLevel = -1; // Paper
-            if (world.getType(blockposition.up()).c() > 2 && (lightLevel = world.getLightLevel(blockposition.up())) < 4) { // Paper - move light check to end to avoid unneeded light lookups
-                // CraftBukkit start
-                // world.setTypeUpdate(blockposition, Blocks.DIRT.getBlockData());
-                org.bukkit.World bworld = world.getWorld();
-                BlockState blockState = bworld.getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ()).getState();
-                blockState.setType(CraftMagicNumbers.getMaterial(Blocks.DIRT));
+        
+        int lightLevel = -1; // Paper
+        if (world.getType(blockposition.up()).c() > 2 && (lightLevel = world.getLightLevel(blockposition.up())) < 4) { // Paper - move light check to end to avoid unneeded light lookups
+            // CraftBukkit start
+            // world.setTypeUpdate(blockposition, Blocks.DIRT.getBlockData());
+            org.bukkit.World bworld = world.getWorld();
+            BlockState blockState = bworld.getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ()).getState();
+            blockState.setType(CraftMagicNumbers.getMaterial(Blocks.DIRT));
 
-                BlockFadeEvent event = new BlockFadeEvent(blockState.getBlock(), blockState);
-                world.getServer().getPluginManager().callEvent(event);
+            BlockFadeEvent event = new BlockFadeEvent(blockState.getBlock(), blockState);
+            world.getServer().getPluginManager().callEvent(event);
 
-                if (!event.isCancelled()) {
-                    blockState.update(true);
-                }
-                // CraftBukkit end
-            } else {
-                // Paper start
-                // If light was calculated above, reuse it, else grab it
-                if (lightLevel == -1) {
-                    lightLevel = world.getLightLevel(blockposition.up());
-                }
-                if (lightLevel >= 9) {
-                    // Paper end
-                    for (int i = 0; i < 4; ++i) {
-                        BlockPosition blockposition1 = blockposition.a(random.nextInt(3) - 1, random.nextInt(5) - 3, random.nextInt(3) - 1);
+            if (!event.isCancelled()) {
+                blockState.update(true);
+            }
+            // CraftBukkit end
+        } else {
+            // Paper start
+            // If light was calculated above, reuse it, else grab it
+            if (lightLevel == -1) {
+                lightLevel = world.getLightLevel(blockposition.up());
+            }
+            if (lightLevel >= 9) {
+                // Paper end
+                for (int i = 0; i < 4; ++i) {
+                    BlockPosition blockposition1 = blockposition.a(random.nextInt(3) - 1, random.nextInt(5) - 3, random.nextInt(3) - 1);
 
-                        IBlockData iblockdata2 = world.getTypeIfLoaded(blockposition1); // Paper - moved up
-                        if (iblockdata2 == null) { // Paper
-                            return;
+                    IBlockData iblockdata2 = world.getTypeIfLoaded(blockposition1); // Paper - moved up
+                    if (iblockdata2 == null) { // Paper
+                        return;
+                    }
+
+                    IBlockData iblockdata1 = world.getType(blockposition1.up());
+                    //IBlockData iblockdata2 = world.getTypeIfLoaded(blockposition1); // Paper - moved up
+
+                    if (iblockdata2.getBlock() == Blocks.DIRT && iblockdata2.get(BlockDirt.VARIANT) == BlockDirt.EnumDirtVariant.DIRT && iblockdata1.c() <= 2 && world.isLightLevel(blockposition1.up(), 4)) { // Paper - move last check before isLightLevel to avoid unneeded light checks
+                        // CraftBukkit start
+                        // world.setTypeUpdate(blockposition1, Blocks.GRASS.getBlockData());
+                        org.bukkit.World bworld = world.getWorld();
+                        BlockState blockState = bworld.getBlockAt(blockposition1.getX(), blockposition1.getY(), blockposition1.getZ()).getState();
+                        blockState.setType(CraftMagicNumbers.getMaterial(Blocks.GRASS));
+
+                        BlockSpreadEvent event = new BlockSpreadEvent(blockState.getBlock(), bworld.getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ()), blockState);
+                        world.getServer().getPluginManager().callEvent(event);
+
+                        if (!event.isCancelled()) {
+                            blockState.update(true);
                         }
-
-                        IBlockData iblockdata1 = world.getType(blockposition1.up());
-                        //IBlockData iblockdata2 = world.getTypeIfLoaded(blockposition1); // Paper - moved up
-
-                        if (iblockdata2.getBlock() == Blocks.DIRT && iblockdata2.get(BlockDirt.VARIANT) == BlockDirt.EnumDirtVariant.DIRT && iblockdata1.c() <= 2 && world.isLightLevel(blockposition1.up(), 4)) { // Paper - move last check before isLightLevel to avoid unneeded light checks
-                            // CraftBukkit start
-                            // world.setTypeUpdate(blockposition1, Blocks.GRASS.getBlockData());
-                            org.bukkit.World bworld = world.getWorld();
-                            BlockState blockState = bworld.getBlockAt(blockposition1.getX(), blockposition1.getY(), blockposition1.getZ()).getState();
-                            blockState.setType(CraftMagicNumbers.getMaterial(Blocks.GRASS));
-
-                            BlockSpreadEvent event = new BlockSpreadEvent(blockState.getBlock(), bworld.getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ()), blockState);
-                            world.getServer().getPluginManager().callEvent(event);
-
-                            if (!event.isCancelled()) {
-                                blockState.update(true);
-                            }
-                            // CraftBukkit end
-                        }
+                        // CraftBukkit end
                     }
                 }
-
             }
+
         }
     }
 
+    @Override
     public Item getDropType(IBlockData iblockdata, Random random, int i) {
         return Blocks.DIRT.getDropType(Blocks.DIRT.getBlockData().set(BlockDirt.VARIANT, BlockDirt.EnumDirtVariant.DIRT), random, i);
     }
 
+    @Override
     public boolean a(World world, BlockPosition blockposition, IBlockData iblockdata, boolean flag) {
         return true;
     }
 
+    @Override
     public boolean a(World world, Random random, BlockPosition blockposition, IBlockData iblockdata) {
         return true;
     }
 
+    @Override
     public void b(World world, Random random, BlockPosition blockposition, IBlockData iblockdata) {
         BlockPosition blockposition1 = blockposition.up();
         int i = 0;
@@ -140,10 +145,12 @@ public class BlockGrass extends Block implements IBlockFragilePlantElement {
 
     }
 
+    @Override
     public int toLegacyData(IBlockData iblockdata) {
         return 0;
     }
 
+    @Override
     protected BlockStateList getStateList() {
         return new BlockStateList(this, new IBlockState[] { BlockGrass.SNOWY});
     }

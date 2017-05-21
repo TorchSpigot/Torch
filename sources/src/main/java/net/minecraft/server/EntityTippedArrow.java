@@ -86,15 +86,7 @@ public class EntityTippedArrow extends EntityArrow {
     @Override
 	public void A_() {
         super.A_();
-        if (this.world.isClientSide) {
-            if (this.inGround) {
-                if (this.b % 5 == 0) {
-                    this.b(1);
-                }
-            } else {
-                this.b(2);
-            }
-        } else if (this.inGround && this.b != 0 && !this.effects.isEmpty() && this.b >= 600) {
+        if (this.inGround && this.b != 0 && !this.effects.isEmpty() && this.b >= 600) {
             this.world.broadcastEntityEffect(this, (byte) 0);
             this.potionRegistry = Potions.EMPTY;
             this.effects.clear();

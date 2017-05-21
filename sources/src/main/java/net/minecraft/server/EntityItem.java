@@ -32,9 +32,9 @@ public class EntityItem extends Entity implements HopperPusher {
         this.setSize(0.25F, 0.25F);
         this.setPosition(d0, d1, d2);
         this.yaw = (float) (Math.random() * 360.0D);
-        this.motX = (double) ((float) (Math.random() * 0.20000000298023224D - 0.10000000149011612D));
+        this.motX = ((float) (Math.random() * 0.20000000298023224D - 0.10000000149011612D));
         this.motY = 0.20000000298023224D;
-        this.motZ = (double) ((float) (Math.random() * 0.20000000298023224D - 0.10000000149011612D));
+        this.motZ = ((float) (Math.random() * 0.20000000298023224D - 0.10000000149011612D));
     }
 
     public EntityItem(World world, double d0, double d1, double d2, ItemStack itemstack) {
@@ -42,6 +42,7 @@ public class EntityItem extends Entity implements HopperPusher {
         this.setItemStack(itemstack);
     }
 
+    @Override
     protected boolean playStepSound() {
         return false;
     }
@@ -54,10 +55,12 @@ public class EntityItem extends Entity implements HopperPusher {
         this.setItemStack(ItemStack.a);
     }
 
+    @Override
     protected void i() {
         this.getDataWatcher().register(EntityItem.c, ItemStack.a);
     }
 
+    @Override
     public void A_() {
         if (this.getItemStack().isEmpty()) {
             this.die();
@@ -82,11 +85,7 @@ public class EntityItem extends Entity implements HopperPusher {
                 this.motY -= 0.03999999910593033D;
             }
 
-            if (this.world.isClientSide) {
-                this.noclip = false;
-            } else {
-                this.noclip = this.i(this.locX, (this.getBoundingBox().b + this.getBoundingBox().e) / 2.0D, this.locZ);
-            }
+            this.noclip = this.i(this.locX, (this.getBoundingBox().b + this.getBoundingBox().e) / 2.0D, this.locZ);
 
             this.move(EnumMoveType.SELF, this.motX, this.motY, this.motZ);
             boolean flag = (int) this.lastX != (int) this.locX || (int) this.lastY != (int) this.locY || (int) this.lastZ != (int) this.locZ;
@@ -94,14 +93,12 @@ public class EntityItem extends Entity implements HopperPusher {
             if (flag || this.ticksLived % 25 == 0) {
                 if (this.world.getType(new BlockPosition(this)).getMaterial() == Material.LAVA) {
                     this.motY = 0.20000000298023224D;
-                    this.motX = (double) ((this.random.nextFloat() - this.random.nextFloat()) * 0.2F);
-                    this.motZ = (double) ((this.random.nextFloat() - this.random.nextFloat()) * 0.2F);
+                    this.motX = (this.random.nextFloat() - this.random.nextFloat()) * 0.2F;
+                    this.motZ = (this.random.nextFloat() - this.random.nextFloat()) * 0.2F;
                     this.a(SoundEffects.bL, 0.4F, 2.0F + this.random.nextFloat() * 0.4F);
                 }
 
-                if (!this.world.isClientSide) {
-                    this.x();
-                }
+                this.x();
             }
 
             float f = 0.98F;
@@ -110,9 +107,9 @@ public class EntityItem extends Entity implements HopperPusher {
                 f = this.world.getType(new BlockPosition(MathHelper.floor(this.locX), MathHelper.floor(this.getBoundingBox().b) - 1, MathHelper.floor(this.locZ))).getBlock().frictionFactor * 0.98F;
             }
 
-            this.motX *= (double) f;
+            this.motX *= f;
             this.motY *= 0.9800000190734863D;
-            this.motZ *= (double) f;
+            this.motZ *= f;
             if (this.onGround) {
                 this.motY *= -0.5D;
             }
@@ -124,18 +121,16 @@ public class EntityItem extends Entity implements HopperPusher {
             // Craftbukkit end */
 
             this.ak();
-            if (!this.world.isClientSide) {
-                double d3 = this.motX - d0;
-                double d4 = this.motY - d1;
-                double d5 = this.motZ - d2;
-                double d6 = d3 * d3 + d4 * d4 + d5 * d5;
+            double d3 = this.motX - d0;
+            double d4 = this.motY - d1;
+            double d5 = this.motZ - d2;
+            double d6 = d3 * d3 + d4 * d4 + d5 * d5;
 
-                if (d6 > 0.01D) {
-                    this.impulse = true;
-                }
+            if (d6 > 0.01D) {
+                this.impulse = true;
             }
 
-            if (!this.world.isClientSide && this.age >= world.spigotConfig.itemDespawnRate) { // Spigot
+            if (this.age >= world.spigotConfig.itemDespawnRate) { // Spigot
                 // CraftBukkit start - fire ItemDespawnEvent
                 if (org.bukkit.craftbukkit.event.CraftEventFactory.callItemDespawnEvent(this).isCancelled()) {
                     this.age = 0;
@@ -159,7 +154,7 @@ public class EntityItem extends Entity implements HopperPusher {
         this.lastTick = MinecraftServer.currentTick;
         // CraftBukkit end
 
-        if (!this.world.isClientSide && this.age >= world.spigotConfig.itemDespawnRate) { // Spigot
+        if (this.age >= world.spigotConfig.itemDespawnRate) { // Spigot
             // CraftBukkit start - fire ItemDespawnEvent
             if (org.bukkit.craftbukkit.event.CraftEventFactory.callItemDespawnEvent(this).isCancelled()) {
                 this.age = 0;
@@ -234,8 +229,9 @@ public class EntityItem extends Entity implements HopperPusher {
         this.age = 4800;
     }
 
+    @Override
     public boolean ak() {
-        if (this.world.a(this.getBoundingBox(), Material.WATER, (Entity) this)) {
+        if (this.world.a(this.getBoundingBox(), Material.WATER, this)) {
             if (!this.inWater && !this.justCreated) {
                 this.al();
             }
@@ -249,9 +245,10 @@ public class EntityItem extends Entity implements HopperPusher {
     }
 
     protected void burn(int i) {
-        this.damageEntity(DamageSource.FIRE, (float) i);
+        this.damageEntity(DamageSource.FIRE, i);
     }
 
+    @Override
     public boolean damageEntity(DamageSource damagesource, float f) {
         if (this.isInvulnerable(damagesource)) {
             return false;
@@ -264,7 +261,7 @@ public class EntityItem extends Entity implements HopperPusher {
             }
             // CraftBukkit end
             this.ap();
-            this.f = (int) ((float) this.f - f);
+            this.f = (int) (this.f - f);
             if (this.f <= 0) {
                 this.die();
             }
@@ -274,9 +271,10 @@ public class EntityItem extends Entity implements HopperPusher {
     }
 
     public static void a(DataConverterManager dataconvertermanager) {
-        dataconvertermanager.a(DataConverterTypes.ENTITY, (DataInspector) (new DataInspectorItem(EntityItem.class, new String[] { "Item"})));
+        dataconvertermanager.a(DataConverterTypes.ENTITY, (new DataInspectorItem(EntityItem.class, new String[] { "Item"})));
     }
 
+    @Override
     public void b(NBTTagCompound nbttagcompound) {
         nbttagcompound.setShort("Health", (short) this.f);
         nbttagcompound.setShort("Age", (short) this.age);
@@ -295,6 +293,7 @@ public class EntityItem extends Entity implements HopperPusher {
 
     }
 
+    @Override
     public void a(NBTTagCompound nbttagcompound) {
         this.f = nbttagcompound.getShort("Health");
         this.age = nbttagcompound.getShort("Age");
@@ -319,86 +318,87 @@ public class EntityItem extends Entity implements HopperPusher {
 
     }
 
+    @Override
     public void d(EntityHuman entityhuman) {
-        if (!this.world.isClientSide) {
-            ItemStack itemstack = this.getItemStack();
-            Item item = itemstack.getItem();
-            int i = itemstack.getCount();
+        ItemStack itemstack = this.getItemStack();
+        Item item = itemstack.getItem();
+        int i = itemstack.getCount();
 
-            // CraftBukkit start - fire PlayerPickupItemEvent
-            int canHold = entityhuman.inventory.canHold(itemstack);
-            int remaining = i - canHold;
+        // CraftBukkit start - fire PlayerPickupItemEvent
+        int canHold = entityhuman.inventory.canHold(itemstack);
+        int remaining = i - canHold;
 
-            if (this.pickupDelay <= 0 && canHold > 0) {
-                itemstack.setCount(canHold);
-                PlayerPickupItemEvent event = new PlayerPickupItemEvent((org.bukkit.entity.Player) entityhuman.getBukkitEntity(), (org.bukkit.entity.Item) this.getBukkitEntity(), remaining);
-                // event.setCancelled(!entityhuman.canPickUpLoot); TODO
-                this.world.getServer().getPluginManager().callEvent(event);
-                itemstack.setCount(canHold + remaining);
+        if (this.pickupDelay <= 0 && canHold > 0) {
+            itemstack.setCount(canHold);
+            PlayerPickupItemEvent event = new PlayerPickupItemEvent((org.bukkit.entity.Player) entityhuman.getBukkitEntity(), (org.bukkit.entity.Item) this.getBukkitEntity(), remaining);
+            // event.setCancelled(!entityhuman.canPickUpLoot); TODO
+            this.world.getServer().getPluginManager().callEvent(event);
+            itemstack.setCount(canHold + remaining);
 
-                if (event.isCancelled()) {
-                    return;
-                }
-
-                // Possibly < 0; fix here so we do not have to modify code below
-                this.pickupDelay = 0;
-            }
-            // CraftBukkit end
-
-            if (this.pickupDelay == 0 && (this.h == null || 6000 - this.age <= 200 || this.h.equals(entityhuman.getName())) && entityhuman.inventory.pickup(itemstack)) {
-                if (item == Item.getItemOf(Blocks.LOG)) {
-                    entityhuman.b((Statistic) AchievementList.g);
-                }
-
-                if (item == Item.getItemOf(Blocks.LOG2)) {
-                    entityhuman.b((Statistic) AchievementList.g);
-                }
-
-                if (item == Items.LEATHER) {
-                    entityhuman.b((Statistic) AchievementList.t);
-                }
-
-                if (item == Items.DIAMOND) {
-                    entityhuman.b((Statistic) AchievementList.w);
-                }
-
-                if (item == Items.BLAZE_ROD) {
-                    entityhuman.b((Statistic) AchievementList.A);
-                }
-
-                if (item == Items.DIAMOND && this.n() != null) {
-                    EntityHuman entityhuman1 = this.world.a(this.n());
-
-                    if (entityhuman1 != null && entityhuman1 != entityhuman) {
-                        entityhuman1.b((Statistic) AchievementList.x);
-                    }
-                }
-
-                entityhuman.receive(this, i);
-                if (itemstack.isEmpty()) {
-                    this.die();
-                    itemstack.setCount(i);
-                }
-
-                entityhuman.a(StatisticList.d(item), i);
+            if (event.isCancelled()) {
+                return;
             }
 
+            // Possibly < 0; fix here so we do not have to modify code below
+            this.pickupDelay = 0;
+        }
+        // CraftBukkit end
+
+        if (this.pickupDelay == 0 && (this.h == null || 6000 - this.age <= 200 || this.h.equals(entityhuman.getName())) && entityhuman.inventory.pickup(itemstack)) {
+            if (item == Item.getItemOf(Blocks.LOG)) {
+                entityhuman.b(AchievementList.g);
+            }
+
+            if (item == Item.getItemOf(Blocks.LOG2)) {
+                entityhuman.b(AchievementList.g);
+            }
+
+            if (item == Items.LEATHER) {
+                entityhuman.b(AchievementList.t);
+            }
+
+            if (item == Items.DIAMOND) {
+                entityhuman.b(AchievementList.w);
+            }
+
+            if (item == Items.BLAZE_ROD) {
+                entityhuman.b(AchievementList.A);
+            }
+
+            if (item == Items.DIAMOND && this.n() != null) {
+                EntityHuman entityhuman1 = this.world.a(this.n());
+
+                if (entityhuman1 != null && entityhuman1 != entityhuman) {
+                    entityhuman1.b(AchievementList.x);
+                }
+            }
+
+            entityhuman.receive(this, i);
+            if (itemstack.isEmpty()) {
+                this.die();
+                itemstack.setCount(i);
+            }
+
+            entityhuman.a(StatisticList.d(item), i);
         }
     }
 
+    @Override
     public String getName() {
         return this.hasCustomName() ? this.getCustomName() : LocaleI18n.get("item." + this.getItemStack().a());
     }
 
+    @Override
     public boolean aV() {
         return false;
     }
 
+    @Override
     @Nullable
     public Entity c(int i) {
         Entity entity = super.c(i);
 
-        if (!this.world.isClientSide && entity instanceof EntityItem) {
+        if (entity instanceof EntityItem) {
             ((EntityItem) entity).x();
         }
 
@@ -406,7 +406,7 @@ public class EntityItem extends Entity implements HopperPusher {
     }
 
     public ItemStack getItemStack() {
-        return (ItemStack) this.getDataWatcher().get(EntityItem.c);
+        return this.getDataWatcher().get(EntityItem.c);
     }
 
     public void setItemStack(ItemStack itemstack) {

@@ -15,7 +15,7 @@ public class ContainerMerchant extends Container {
     @Override
     public CraftInventoryView getBukkitView() {
         if (bukkitEntity == null) {
-            bukkitEntity = new CraftInventoryView(this.player.player.getBukkitEntity(), new org.bukkit.craftbukkit.inventory.CraftInventoryMerchant((InventoryMerchant) f), this);
+            bukkitEntity = new CraftInventoryView(this.player.player.getBukkitEntity(), new org.bukkit.craftbukkit.inventory.CraftInventoryMerchant(f), this);
         }
         return bukkitEntity;
     }
@@ -27,7 +27,7 @@ public class ContainerMerchant extends Container {
         this.f = new InventoryMerchant(playerinventory.player, imerchant);
         this.a(new Slot(this.f, 0, 36, 53));
         this.a(new Slot(this.f, 1, 62, 53));
-        this.a((Slot) (new SlotMerchantResult(playerinventory.player, imerchant, this.f, 2, 120, 53)));
+        this.a((new SlotMerchantResult(playerinventory.player, imerchant, this.f, 2, 120, 53)));
         this.player = playerinventory; // CraftBukkit - save player
 
         int i;
@@ -48,6 +48,7 @@ public class ContainerMerchant extends Container {
         return this.f;
     }
 
+    @Override
     public void a(IInventory iinventory) {
         this.f.i();
         super.a(iinventory);
@@ -57,13 +58,15 @@ public class ContainerMerchant extends Container {
         this.f.d(i);
     }
 
+    @Override
     public boolean a(EntityHuman entityhuman) {
         return this.merchant.getTrader() == entityhuman;
     }
 
+    @Override
     public ItemStack b(EntityHuman entityhuman, int i) {
         ItemStack itemstack = ItemStack.a;
-        Slot slot = (Slot) this.c.get(i);
+        Slot slot = this.c.get(i);
 
         if (slot != null && slot.hasItem()) {
             ItemStack itemstack1 = slot.getItem();
@@ -103,22 +106,20 @@ public class ContainerMerchant extends Container {
         return itemstack;
     }
 
+    @Override
     public void b(EntityHuman entityhuman) {
         super.b(entityhuman);
         this.merchant.setTradingPlayer((EntityHuman) null);
         super.b(entityhuman);
-        if (!this.g.isClientSide) {
-            ItemStack itemstack = this.f.splitWithoutUpdate(0);
+        ItemStack itemstack = this.f.splitWithoutUpdate(0);
 
-            if (!itemstack.isEmpty()) {
-                entityhuman.drop(itemstack, false);
-            }
+        if (!itemstack.isEmpty()) {
+            entityhuman.drop(itemstack, false);
+        }
 
-            itemstack = this.f.splitWithoutUpdate(1);
-            if (!itemstack.isEmpty()) {
-                entityhuman.drop(itemstack, false);
-            }
-
+        itemstack = this.f.splitWithoutUpdate(1);
+        if (!itemstack.isEmpty()) {
+            entityhuman.drop(itemstack, false);
         }
     }
 }

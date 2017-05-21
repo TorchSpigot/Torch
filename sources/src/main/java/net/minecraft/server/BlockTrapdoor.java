@@ -21,11 +21,12 @@ public class BlockTrapdoor extends Block {
         this.a(CreativeModeTab.d);
     }
 
+    @Override
     public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         AxisAlignedBB axisalignedbb;
 
-        if (((Boolean) iblockdata.get(BlockTrapdoor.OPEN)).booleanValue()) {
-            switch ((EnumDirection) iblockdata.get(BlockTrapdoor.FACING)) {
+        if (iblockdata.get(BlockTrapdoor.OPEN).booleanValue()) {
+            switch (iblockdata.get(BlockTrapdoor.FACING)) {
             case NORTH:
             default:
                 axisalignedbb = BlockTrapdoor.g;
@@ -51,25 +52,29 @@ public class BlockTrapdoor extends Block {
         return axisalignedbb;
     }
 
+    @Override
     public boolean b(IBlockData iblockdata) {
         return false;
     }
 
+    @Override
     public boolean c(IBlockData iblockdata) {
         return false;
     }
 
+    @Override
     public boolean b(IBlockAccess iblockaccess, BlockPosition blockposition) {
-        return !((Boolean) iblockaccess.getType(blockposition).get(BlockTrapdoor.OPEN)).booleanValue();
+        return !iblockaccess.getType(blockposition).get(BlockTrapdoor.OPEN).booleanValue();
     }
 
+    @Override
     public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
         if (this.material == Material.ORE) {
             return false;
         } else {
             iblockdata = iblockdata.a((IBlockState) BlockTrapdoor.OPEN);
             world.setTypeAndData(blockposition, iblockdata, 2);
-            this.a(entityhuman, world, blockposition, ((Boolean) iblockdata.get(BlockTrapdoor.OPEN)).booleanValue());
+            this.a(entityhuman, world, blockposition, iblockdata.get(BlockTrapdoor.OPEN).booleanValue());
             return true;
         }
     }
@@ -87,35 +92,34 @@ public class BlockTrapdoor extends Block {
 
     }
 
+    @Override
     public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
-        if (!world.isClientSide) {
-            boolean flag = world.isBlockIndirectlyPowered(blockposition);
+        boolean flag = world.isBlockIndirectlyPowered(blockposition);
 
-            if (flag || block.getBlockData().n()) {
-                // CraftBukkit start
-                org.bukkit.World bworld = world.getWorld();
-                org.bukkit.block.Block bblock = bworld.getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
+        if (flag || block.getBlockData().n()) {
+            // CraftBukkit start
+            org.bukkit.World bworld = world.getWorld();
+            org.bukkit.block.Block bblock = bworld.getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
 
-                int power = bblock.getBlockPower();
-                int oldPower = (Boolean) iblockdata.get(OPEN) ? 15 : 0;
+            int power = bblock.getBlockPower();
+            int oldPower = iblockdata.get(OPEN) ? 15 : 0;
 
-                if (oldPower == 0 ^ power == 0 || block.getBlockData().n()) {
-                    BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(bblock, oldPower, power);
-                    world.getServer().getPluginManager().callEvent(eventRedstone);
-                    flag = eventRedstone.getNewCurrent() > 0;
-                }
-                // CraftBukkit end
-                boolean flag1 = ((Boolean) iblockdata.get(BlockTrapdoor.OPEN)).booleanValue();
-
-                if (flag1 != flag) {
-                    world.setTypeAndData(blockposition, iblockdata.set(BlockTrapdoor.OPEN, Boolean.valueOf(flag)), 2);
-                    this.a((EntityHuman) null, world, blockposition, flag);
-                }
+            if (oldPower == 0 ^ power == 0 || block.getBlockData().n()) {
+                BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(bblock, oldPower, power);
+                world.getServer().getPluginManager().callEvent(eventRedstone);
+                flag = eventRedstone.getNewCurrent() > 0;
             }
+            // CraftBukkit end
+            boolean flag1 = iblockdata.get(BlockTrapdoor.OPEN).booleanValue();
 
+            if (flag1 != flag) {
+                world.setTypeAndData(blockposition, iblockdata.set(BlockTrapdoor.OPEN, Boolean.valueOf(flag)), 2);
+                this.a((EntityHuman) null, world, blockposition, flag);
+            }
         }
     }
 
+    @Override
     public IBlockData getPlacedState(World world, BlockPosition blockposition, EnumDirection enumdirection, float f, float f1, float f2, int i, EntityLiving entityliving) {
         IBlockData iblockdata = this.getBlockData();
 
@@ -134,6 +138,7 @@ public class BlockTrapdoor extends Block {
         return iblockdata;
     }
 
+    @Override
     public boolean canPlace(World world, BlockPosition blockposition, EnumDirection enumdirection) {
         return true;
     }
@@ -172,15 +177,17 @@ public class BlockTrapdoor extends Block {
         }
     }
 
+    @Override
     public IBlockData fromLegacyData(int i) {
         return this.getBlockData().set(BlockTrapdoor.FACING, e(i)).set(BlockTrapdoor.OPEN, Boolean.valueOf((i & 4) != 0)).set(BlockTrapdoor.HALF, (i & 8) == 0 ? BlockTrapdoor.EnumTrapdoorHalf.BOTTOM : BlockTrapdoor.EnumTrapdoorHalf.TOP);
     }
 
+    @Override
     public int toLegacyData(IBlockData iblockdata) {
         byte b0 = 0;
-        int i = b0 | a((EnumDirection) iblockdata.get(BlockTrapdoor.FACING));
+        int i = b0 | a(iblockdata.get(BlockTrapdoor.FACING));
 
-        if (((Boolean) iblockdata.get(BlockTrapdoor.OPEN)).booleanValue()) {
+        if (iblockdata.get(BlockTrapdoor.OPEN).booleanValue()) {
             i |= 4;
         }
 
@@ -191,14 +198,17 @@ public class BlockTrapdoor extends Block {
         return i;
     }
 
+    @Override
     public IBlockData a(IBlockData iblockdata, EnumBlockRotation enumblockrotation) {
-        return iblockdata.set(BlockTrapdoor.FACING, enumblockrotation.a((EnumDirection) iblockdata.get(BlockTrapdoor.FACING)));
+        return iblockdata.set(BlockTrapdoor.FACING, enumblockrotation.a(iblockdata.get(BlockTrapdoor.FACING)));
     }
 
+    @Override
     public IBlockData a(IBlockData iblockdata, EnumBlockMirror enumblockmirror) {
-        return iblockdata.a(enumblockmirror.a((EnumDirection) iblockdata.get(BlockTrapdoor.FACING)));
+        return iblockdata.a(enumblockmirror.a(iblockdata.get(BlockTrapdoor.FACING)));
     }
 
+    @Override
     protected BlockStateList getStateList() {
         return new BlockStateList(this, new IBlockState[] { BlockTrapdoor.FACING, BlockTrapdoor.OPEN, BlockTrapdoor.HALF});
     }
@@ -213,10 +223,12 @@ public class BlockTrapdoor extends Block {
             this.c = s;
         }
 
+        @Override
         public String toString() {
             return this.c;
         }
 
+        @Override
         public String getName() {
             return this.c;
         }

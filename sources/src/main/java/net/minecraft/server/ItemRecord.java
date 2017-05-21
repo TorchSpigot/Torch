@@ -24,15 +24,13 @@ public class ItemRecord extends Item {
         IBlockData iblockdata = world.getType(blockposition);
 
         if (iblockdata.getBlock() == Blocks.JUKEBOX && !iblockdata.get(BlockJukeBox.HAS_RECORD).booleanValue()) {
-            if (!world.isClientSide) {
-                if (true) return EnumInteractionResult.SUCCESS; // CraftBukkit - handled in ItemStack
-                ItemStack itemstack = entityhuman.b(enumhand);
+            if (true) return EnumInteractionResult.SUCCESS; // CraftBukkit - handled in ItemStack
+            ItemStack itemstack = entityhuman.b(enumhand);
 
-                ((BlockJukeBox) Blocks.JUKEBOX).a(world, blockposition, iblockdata, itemstack);
-                world.a((EntityHuman) null, 1010, blockposition, Item.getId(this));
-                itemstack.subtract(1);
-                entityhuman.b(StatisticList.X);
-            }
+            ((BlockJukeBox) Blocks.JUKEBOX).a(world, blockposition, iblockdata, itemstack);
+            world.a((EntityHuman) null, 1010, blockposition, Item.getId(this));
+            itemstack.subtract(1);
+            entityhuman.b(StatisticList.X);
 
             return EnumInteractionResult.SUCCESS;
         } else {

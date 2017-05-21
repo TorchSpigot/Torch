@@ -251,7 +251,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
             containerUpdateDelay = world.paperConfig.containerUpdateTickRate;
         }
         // Paper end
-        if (!this.world.isClientSide && !this.activeContainer.a(this)) {
+        if (!this.activeContainer.a(this)) {
             this.closeInventory();
             this.activeContainer = this.defaultContainer;
         }

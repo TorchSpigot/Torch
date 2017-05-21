@@ -143,9 +143,7 @@ public class BlockDoor extends Block {
             }
 
             if (flag) {
-                if (!world.isClientSide) {
-                    this.b(world, blockposition, iblockdata, 0);
-                }
+                this.b(world, blockposition, iblockdata, 0);
             } else {
 
                 // CraftBukkit start

@@ -22,7 +22,7 @@ public class ItemWorldMap extends ItemWorldMapBase {
         String s = "map_" + itemstack.getData();
         WorldMap worldmap = new WorldMap(s);
 
-        worldMain.a(s, (PersistentBase) worldmap); // CraftBukkit
+        worldMain.a(s, worldmap); // CraftBukkit
         worldmap.scale = b0;
         worldmap.a(d0, d1, worldmap.scale);
         worldmap.map = (byte) ((WorldServer) world).dimension; // CraftBukkit - use bukkit dimension
@@ -39,15 +39,15 @@ public class ItemWorldMap extends ItemWorldMapBase {
         String s = "map_" + itemstack.getData();
         WorldMap worldmap = (WorldMap) worldMain.a(WorldMap.class, s); // CraftBukkit - use primary world for maps
 
-        if (worldmap == null && !world.isClientSide) {
+        if (worldmap == null) {
             itemstack.setData(worldMain.b("map")); // CraftBukkit - use primary world for maps
             s = "map_" + itemstack.getData();
             worldmap = new WorldMap(s);
             worldmap.scale = 3;
-            worldmap.a((double) world.getWorldData().b(), (double) world.getWorldData().d(), worldmap.scale);
+            worldmap.a(world.getWorldData().b(), world.getWorldData().d(), worldmap.scale);
             worldmap.map = (byte) ((WorldServer) world).dimension; // CraftBukkit - fixes Bukkit multiworld maps
             worldmap.c();
-            worldMain.a(s, (PersistentBase) worldmap); // CraftBukkit - use primary world for maps
+            worldMain.a(s, worldmap); // CraftBukkit - use primary world for maps
 
             // CraftBukkit start
             MapInitializeEvent event = new MapInitializeEvent(worldmap.mapView);
@@ -64,8 +64,8 @@ public class ItemWorldMap extends ItemWorldMapBase {
             int i = 1 << worldmap.scale;
             int j = worldmap.centerX;
             int k = worldmap.centerZ;
-            int l = MathHelper.floor(entity.locX - (double) j) / i + 64;
-            int i1 = MathHelper.floor(entity.locZ - (double) k) / i + 64;
+            int l = MathHelper.floor(entity.locX - j) / i + 64;
+            int i1 = MathHelper.floor(entity.locZ - k) / i + 64;
             int j1 = 128 / i;
 
             if (world.worldProvider.n()) {
@@ -144,7 +144,7 @@ public class ItemWorldMap extends ItemWorldMapBase {
                                 }
 
                                 k3 /= i * i;
-                                double d2 = (d1 - d0) * 4.0D / (double) (i + 4) + ((double) (k1 + l1 & 1) - 0.5D) * 0.4D;
+                                double d2 = (d1 - d0) * 4.0D / (i + 4) + ((k1 + l1 & 1) - 0.5D) * 0.4D;
                                 byte b0 = 1;
 
                                 if (d2 > 0.6D) {
@@ -155,10 +155,10 @@ public class ItemWorldMap extends ItemWorldMapBase {
                                     b0 = 0;
                                 }
 
-                                MaterialMapColor materialmapcolor = (MaterialMapColor) Iterables.getFirst(Multisets.copyHighestCountFirst(hashmultiset), MaterialMapColor.b);
+                                MaterialMapColor materialmapcolor = Iterables.getFirst(Multisets.copyHighestCountFirst(hashmultiset), MaterialMapColor.b);
 
                                 if (materialmapcolor == MaterialMapColor.n) {
-                                    d2 = (double) k3 * 0.1D + (double) (k1 + l1 & 1) * 0.2D;
+                                    d2 = k3 * 0.1D + (k1 + l1 & 1) * 0.2D;
                                     b0 = 1;
                                     if (d2 < 0.5D) {
                                         b0 = 2;
@@ -245,7 +245,7 @@ public class ItemWorldMap extends ItemWorldMapBase {
                                 if (biomebase.j() < 0.0F) {
                                     materialmapcolor = MaterialMapColor.q;
                                     if (i2 > 7 && i1 % 2 == 0) {
-                                        l1 = (l + (int) (MathHelper.sin((float) i1 + 0.0F) * 7.0F)) / 8 % 5;
+                                        l1 = (l + (int) (MathHelper.sin(i1 + 0.0F) * 7.0F)) / 8 % 5;
                                         if (l1 == 3) {
                                             l1 = 1;
                                         } else if (l1 == 4) {
@@ -282,28 +282,28 @@ public class ItemWorldMap extends ItemWorldMapBase {
         }
     }
 
+    @Override
     public void a(ItemStack itemstack, World world, Entity entity, int i, boolean flag) {
-        if (!world.isClientSide) {
-            WorldMap worldmap = this.getSavedMap(itemstack, world);
+        WorldMap worldmap = this.getSavedMap(itemstack, world);
 
-            if (entity instanceof EntityHuman) {
-                EntityHuman entityhuman = (EntityHuman) entity;
+        if (entity instanceof EntityHuman) {
+            EntityHuman entityhuman = (EntityHuman) entity;
 
-                worldmap.a(entityhuman, itemstack);
-            }
+            worldmap.a(entityhuman, itemstack);
+        }
 
-            if (flag || entity instanceof EntityHuman && ((EntityHuman) entity).getItemInOffHand() == itemstack) {
-                this.a(world, entity, worldmap);
-            }
-
+        if (flag || entity instanceof EntityHuman && ((EntityHuman) entity).getItemInOffHand() == itemstack) {
+            this.a(world, entity, worldmap);
         }
     }
 
+    @Override
     @Nullable
     public Packet<?> a(ItemStack itemstack, World world, EntityHuman entityhuman) {
         return this.getSavedMap(itemstack, world).a(itemstack, world, entityhuman);
     }
 
+    @Override
     public void b(ItemStack itemstack, World world, EntityHuman entityhuman) {
         NBTTagCompound nbttagcompound = itemstack.getTag();
 
@@ -329,10 +329,10 @@ public class ItemWorldMap extends ItemWorldMapBase {
         if (worldmap != null) {
             worldmap1.scale = (byte) MathHelper.clamp(worldmap.scale + i, 0, 4);
             worldmap1.track = worldmap.track;
-            worldmap1.a((double) worldmap.centerX, (double) worldmap.centerZ, worldmap1.scale);
+            worldmap1.a(worldmap.centerX, worldmap.centerZ, worldmap1.scale);
             worldmap1.map = worldmap.map;
             worldmap1.c();
-            world.a("map_" + itemstack.getData(), (PersistentBase) worldmap1);
+            world.a("map_" + itemstack.getData(), worldmap1);
             // CraftBukkit start
             MapInitializeEvent event = new MapInitializeEvent(worldmap1.mapView);
             Bukkit.getServer().getPluginManager().callEvent(event);
@@ -355,7 +355,7 @@ public class ItemWorldMap extends ItemWorldMapBase {
             worldmap1.scale = worldmap.scale;
             worldmap1.map = worldmap.map;
             worldmap1.c();
-            world.a("map_" + itemstack.getData(), (PersistentBase) worldmap1);
+            world.a("map_" + itemstack.getData(), worldmap1);
             // CraftBukkit start
             MapInitializeEvent event = new MapInitializeEvent(worldmap1.mapView);
             Bukkit.getServer().getPluginManager().callEvent(event);

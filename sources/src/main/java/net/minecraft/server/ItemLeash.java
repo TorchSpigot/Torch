@@ -11,15 +11,14 @@ public class ItemLeash extends Item {
         this.a(CreativeModeTab.i);
     }
 
+    @Override
     public EnumInteractionResult a(EntityHuman entityhuman, World world, BlockPosition blockposition, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
         Block block = world.getType(blockposition).getBlock();
 
         if (!(block instanceof BlockFence)) {
             return EnumInteractionResult.PASS;
         } else {
-            if (!world.isClientSide) {
-                a(entityhuman, world, blockposition);
-            }
+            a(entityhuman, world, blockposition);
 
             return EnumInteractionResult.SUCCESS;
         }
@@ -32,7 +31,7 @@ public class ItemLeash extends Item {
         int i = blockposition.getX();
         int j = blockposition.getY();
         int k = blockposition.getZ();
-        List list = world.a(EntityInsentient.class, new AxisAlignedBB((double) i - 7.0D, (double) j - 7.0D, (double) k - 7.0D, (double) i + 7.0D, (double) j + 7.0D, (double) k + 7.0D));
+        List list = world.a(EntityInsentient.class, new AxisAlignedBB(i - 7.0D, j - 7.0D, k - 7.0D, i + 7.0D, j + 7.0D, k + 7.0D));
         Iterator iterator = list.iterator();
 
         while (iterator.hasNext()) {

@@ -26,34 +26,36 @@ public class EntityEnderCrystal extends Entity {
         this.setPosition(d0, d1, d2);
     }
 
+    @Override
     protected boolean playStepSound() {
         return false;
     }
 
+    @Override
     protected void i() {
         this.getDataWatcher().register(EntityEnderCrystal.b, Optional.absent());
         this.getDataWatcher().register(EntityEnderCrystal.c, Boolean.valueOf(true));
     }
 
+    @Override
     public void A_() {
         this.lastX = this.locX;
         this.lastY = this.locY;
         this.lastZ = this.locZ;
         ++this.a;
-        if (!this.world.isClientSide) {
-            BlockPosition blockposition = new BlockPosition(this);
+        BlockPosition blockposition = new BlockPosition(this);
 
-            if (this.world.worldProvider instanceof WorldProviderTheEnd && this.world.getType(blockposition).getBlock() != Blocks.FIRE) {
-                // CraftBukkit start
-                if (!CraftEventFactory.callBlockIgniteEvent(this.world, blockposition.getX(), blockposition.getY(), blockposition.getZ(), this).isCancelled()) {
-                    this.world.setTypeUpdate(blockposition, Blocks.FIRE.getBlockData());
-                }
-                // CraftBukkit end
+        if (this.world.worldProvider instanceof WorldProviderTheEnd && this.world.getType(blockposition).getBlock() != Blocks.FIRE) {
+            // CraftBukkit start
+            if (!CraftEventFactory.callBlockIgniteEvent(this.world, blockposition.getX(), blockposition.getY(), blockposition.getZ(), this).isCancelled()) {
+                this.world.setTypeUpdate(blockposition, Blocks.FIRE.getBlockData());
             }
+            // CraftBukkit end
         }
 
     }
 
+    @Override
     protected void b(NBTTagCompound nbttagcompound) {
         if (this.getBeamTarget() != null) {
             nbttagcompound.set("BeamTarget", GameProfileSerializer.a(this.getBeamTarget()));
@@ -62,6 +64,7 @@ public class EntityEnderCrystal extends Entity {
         nbttagcompound.setBoolean("ShowBottom", this.isShowingBottom());
     }
 
+    @Override
     protected void a(NBTTagCompound nbttagcompound) {
         if (nbttagcompound.hasKeyOfType("BeamTarget", 10)) {
             this.setBeamTarget(GameProfileSerializer.c(nbttagcompound.getCompound("BeamTarget")));
@@ -73,41 +76,42 @@ public class EntityEnderCrystal extends Entity {
 
     }
 
+    @Override
     public boolean isInteractable() {
         return true;
     }
 
+    @Override
     public boolean damageEntity(DamageSource damagesource, float f) {
         if (this.isInvulnerable(damagesource)) {
             return false;
         } else if (damagesource.getEntity() instanceof EntityEnderDragon) {
             return false;
         } else {
-            if (!this.dead && !this.world.isClientSide) {
+            if (!this.dead) {
                 // CraftBukkit start - All non-living entities need this
                 if (CraftEventFactory.handleNonLivingEntityDamageEvent(this, damagesource, f)) {
                     return false;
                 }
                 // CraftBukkit end
                 this.die();
-                if (!this.world.isClientSide) {
-                    // CraftBukkit start
-                    ExplosionPrimeEvent event = new ExplosionPrimeEvent(this.getBukkitEntity(), 6.0F, true);
-                    this.world.getServer().getPluginManager().callEvent(event);
-                    if (event.isCancelled()) {
-                        this.dead = false;
-                        return false;
-                    }
-                    this.world.explode(this, this.locX, this.locY, this.locZ, event.getRadius(), event.getFire());
-                    // CraftBukkit end
-                    this.a(damagesource);
+                // CraftBukkit start
+                ExplosionPrimeEvent event = new ExplosionPrimeEvent(this.getBukkitEntity(), 6.0F, true);
+                this.world.getServer().getPluginManager().callEvent(event);
+                if (event.isCancelled()) {
+                    this.dead = false;
+                    return false;
                 }
+                this.world.explode(this, this.locX, this.locY, this.locZ, event.getRadius(), event.getFire());
+                // CraftBukkit end
+                this.a(damagesource);
             }
 
             return true;
         }
     }
 
+    @Override
     public void Q() {
         this.a(DamageSource.GENERIC);
         super.Q();
@@ -139,6 +143,6 @@ public class EntityEnderCrystal extends Entity {
     }
 
     public boolean isShowingBottom() {
-        return ((Boolean) this.getDataWatcher().get(EntityEnderCrystal.c)).booleanValue();
+        return this.getDataWatcher().get(EntityEnderCrystal.c).booleanValue();
     }
 }

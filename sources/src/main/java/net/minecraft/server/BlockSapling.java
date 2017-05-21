@@ -23,49 +23,49 @@ public class BlockSapling extends BlockPlant implements IBlockFragilePlantElemen
         this.a(CreativeModeTab.c);
     }
 
+    @Override
     public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return BlockSapling.d;
     }
 
+    @Override
     public String getName() {
         return LocaleI18n.get(this.a() + "." + BlockWood.EnumLogVariant.OAK.d() + ".name");
     }
 
+    @Override
     public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
-        if (!world.isClientSide) {
-            super.b(world, blockposition, iblockdata, random);
-            if (world.isLightLevel(blockposition.up(), 9) && random.nextInt(Math.max(2, (int) (((100.0F / world.spigotConfig.saplingModifier) * 7) + 0.5F))) == 0) { // Spigot // Paper
-                // CraftBukkit start
-                world.captureTreeGeneration = true;
-                // CraftBukkit end
-                this.grow(world, blockposition, iblockdata, random);
-                // CraftBukkit start
-                world.captureTreeGeneration = false;
-                if (world.capturedBlockStates.size() > 0) {
-                    TreeType treeType = BlockSapling.treeType;
-                    BlockSapling.treeType = null;
-                    Location location = new Location(world.getWorld(), blockposition.getX(), blockposition.getY(), blockposition.getZ());
-                    List<BlockState> blocks = (List<BlockState>) world.capturedBlockStates.clone();
-                    world.capturedBlockStates.clear();
-                    StructureGrowEvent event = null;
-                    if (treeType != null) {
-                        event = new StructureGrowEvent(location, treeType, false, null, blocks);
-                        org.bukkit.Bukkit.getPluginManager().callEvent(event);
-                    }
-                    if (event == null || !event.isCancelled()) {
-                        for (BlockState blockstate : blocks) {
-                            blockstate.update(true);
-                        }
+        super.b(world, blockposition, iblockdata, random);
+        if (world.isLightLevel(blockposition.up(), 9) && random.nextInt(Math.max(2, (int) (((100.0F / world.spigotConfig.saplingModifier) * 7) + 0.5F))) == 0) { // Spigot // Paper
+            // CraftBukkit start
+            world.captureTreeGeneration = true;
+            // CraftBukkit end
+            this.grow(world, blockposition, iblockdata, random);
+            // CraftBukkit start
+            world.captureTreeGeneration = false;
+            if (world.capturedBlockStates.size() > 0) {
+                TreeType treeType = BlockSapling.treeType;
+                BlockSapling.treeType = null;
+                Location location = new Location(world.getWorld(), blockposition.getX(), blockposition.getY(), blockposition.getZ());
+                List<BlockState> blocks = (List<BlockState>) world.capturedBlockStates.clone();
+                world.capturedBlockStates.clear();
+                StructureGrowEvent event = null;
+                if (treeType != null) {
+                    event = new StructureGrowEvent(location, treeType, false, null, blocks);
+                    org.bukkit.Bukkit.getPluginManager().callEvent(event);
+                }
+                if (event == null || !event.isCancelled()) {
+                    for (BlockState blockstate : blocks) {
+                        blockstate.update(true);
                     }
                 }
-                // CraftBukkit end
             }
-
+            // CraftBukkit end
         }
     }
 
     public void grow(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
-        if (((Integer) iblockdata.get(BlockSapling.STAGE)).intValue() == 0) {
+        if (iblockdata.get(BlockSapling.STAGE).intValue() == 0) {
             world.setTypeAndData(blockposition, iblockdata.a((IBlockState) BlockSapling.STAGE), 4);
         } else {
             this.d(world, blockposition, iblockdata, random);
@@ -90,7 +90,7 @@ public class BlockSapling extends BlockPlant implements IBlockFragilePlantElemen
         boolean flag = false;
         IBlockData iblockdata1;
 
-        switch ((BlockWood.EnumLogVariant) iblockdata.get(BlockSapling.TYPE)) {
+        switch (iblockdata.get(BlockSapling.TYPE)) {
         case SPRUCE:
             label66:
             for (i = 0; i >= -1; --i) {
@@ -199,34 +199,41 @@ public class BlockSapling extends BlockPlant implements IBlockFragilePlantElemen
         return iblockdata.getBlock() == this && iblockdata.get(BlockSapling.TYPE) == blockwood_enumlogvariant;
     }
 
+    @Override
     public int getDropData(IBlockData iblockdata) {
-        return ((BlockWood.EnumLogVariant) iblockdata.get(BlockSapling.TYPE)).a();
+        return iblockdata.get(BlockSapling.TYPE).a();
     }
 
+    @Override
     public boolean a(World world, BlockPosition blockposition, IBlockData iblockdata, boolean flag) {
         return true;
     }
 
+    @Override
     public boolean a(World world, Random random, BlockPosition blockposition, IBlockData iblockdata) {
-        return (double) world.random.nextFloat() < 0.45D;
+        return world.random.nextFloat() < 0.45D;
     }
 
+    @Override
     public void b(World world, Random random, BlockPosition blockposition, IBlockData iblockdata) {
         this.grow(world, blockposition, iblockdata, random);
     }
 
+    @Override
     public IBlockData fromLegacyData(int i) {
         return this.getBlockData().set(BlockSapling.TYPE, BlockWood.EnumLogVariant.a(i & 7)).set(BlockSapling.STAGE, Integer.valueOf((i & 8) >> 3));
     }
 
+    @Override
     public int toLegacyData(IBlockData iblockdata) {
         byte b0 = 0;
-        int i = b0 | ((BlockWood.EnumLogVariant) iblockdata.get(BlockSapling.TYPE)).a();
+        int i = b0 | iblockdata.get(BlockSapling.TYPE).a();
 
-        i |= ((Integer) iblockdata.get(BlockSapling.STAGE)).intValue() << 3;
+        i |= iblockdata.get(BlockSapling.STAGE).intValue() << 3;
         return i;
     }
 
+    @Override
     protected BlockStateList getStateList() {
         return new BlockStateList(this, new IBlockState[] { BlockSapling.TYPE, BlockSapling.STAGE});
     }

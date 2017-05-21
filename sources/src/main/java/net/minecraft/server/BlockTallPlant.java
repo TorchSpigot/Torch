@@ -116,7 +116,7 @@ public class BlockTallPlant extends BlockPlant implements IBlockFragilePlantElem
 
     @Override
     public void a(World world, EntityHuman entityhuman, BlockPosition blockposition, IBlockData iblockdata, @Nullable TileEntity tileentity, ItemStack itemstack) {
-        if (world.isClientSide || itemstack.getItem() != Items.SHEARS || iblockdata.get(BlockTallPlant.HALF) != BlockTallPlant.EnumTallPlantHalf.LOWER || !this.b(world, blockposition, iblockdata, entityhuman)) {
+        if (itemstack.getItem() != Items.SHEARS || iblockdata.get(BlockTallPlant.HALF) != BlockTallPlant.EnumTallPlantHalf.LOWER || !this.b(world, blockposition, iblockdata, entityhuman)) {
             super.a(world, entityhuman, blockposition, iblockdata, tileentity, itemstack);
         }
     }
@@ -133,8 +133,6 @@ public class BlockTallPlant extends BlockPlant implements IBlockFragilePlantElem
 
                     if (blocktallplant_enumtallflowervariants != BlockTallPlant.EnumTallFlowerVariants.FERN && blocktallplant_enumtallflowervariants != BlockTallPlant.EnumTallFlowerVariants.GRASS) {
                         world.setAir(blockposition.down(), true);
-                    } else if (world.isClientSide) {
-                        world.setAir(blockposition.down());
                     } else if (!entityhuman.getItemInMainHand().isEmpty() && entityhuman.getItemInMainHand().getItem() == Items.SHEARS) {
                         this.b(world, blockposition, iblockdata1, entityhuman);
                         world.setAir(blockposition.down());

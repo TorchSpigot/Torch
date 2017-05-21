@@ -14,13 +14,14 @@ public class ItemSkull extends Item {
         this.a(true);
     }
 
+    @Override
     public EnumInteractionResult a(EntityHuman entityhuman, World world, BlockPosition blockposition, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
         if (enumdirection == EnumDirection.DOWN) {
             return EnumInteractionResult.FAIL;
         } else {
             IBlockData iblockdata = world.getType(blockposition);
             Block block = iblockdata.getBlock();
-            boolean flag = block.a((IBlockAccess) world, blockposition);
+            boolean flag = block.a(world, blockposition);
 
             if (!flag) {
                 if (!world.getType(blockposition).getMaterial().isBuildable()) {
@@ -33,62 +34,60 @@ public class ItemSkull extends Item {
             ItemStack itemstack = entityhuman.b(enumhand);
 
             if (entityhuman.a(blockposition, enumdirection, itemstack) && Blocks.SKULL.canPlace(world, blockposition)) {
-                if (world.isClientSide) {
-                    return EnumInteractionResult.SUCCESS;
-                } else {
-                    // Spigot Start
-                    if ( !Blocks.SKULL.canPlace( world, blockposition ) )
-                    {
-                        return EnumInteractionResult.FAIL;
-                    }
-                    // Spigot End
-                    world.setTypeAndData(blockposition, Blocks.SKULL.getBlockData().set(BlockSkull.FACING, enumdirection), 11);
-                    int i = 0;
+             // Spigot Start
+                if ( !Blocks.SKULL.canPlace( world, blockposition ) )
+                {
+                    return EnumInteractionResult.FAIL;
+                }
+                // Spigot End
+                world.setTypeAndData(blockposition, Blocks.SKULL.getBlockData().set(BlockSkull.FACING, enumdirection), 11);
+                int i = 0;
 
-                    if (enumdirection == EnumDirection.UP) {
-                        i = MathHelper.floor((double) (entityhuman.yaw * 16.0F / 360.0F) + 0.5D) & 15;
-                    }
+                if (enumdirection == EnumDirection.UP) {
+                    i = MathHelper.floor(entityhuman.yaw * 16.0F / 360.0F + 0.5D) & 15;
+                }
 
-                    TileEntity tileentity = world.getTileEntity(blockposition);
+                TileEntity tileentity = world.getTileEntity(blockposition);
 
-                    if (tileentity instanceof TileEntitySkull) {
-                        TileEntitySkull tileentityskull = (TileEntitySkull) tileentity;
+                if (tileentity instanceof TileEntitySkull) {
+                    TileEntitySkull tileentityskull = (TileEntitySkull) tileentity;
 
-                        if (itemstack.getData() == 3) {
-                            GameProfile gameprofile = null;
+                    if (itemstack.getData() == 3) {
+                        GameProfile gameprofile = null;
 
-                            if (itemstack.hasTag()) {
-                                NBTTagCompound nbttagcompound = itemstack.getTag();
+                        if (itemstack.hasTag()) {
+                            NBTTagCompound nbttagcompound = itemstack.getTag();
 
-                                if (nbttagcompound.hasKeyOfType("SkullOwner", 10)) {
-                                    gameprofile = GameProfileSerializer.deserialize(nbttagcompound.getCompound("SkullOwner"));
-                                } else if (nbttagcompound.hasKeyOfType("SkullOwner", 8) && !StringUtils.isBlank(nbttagcompound.getString("SkullOwner"))) {
-                                    gameprofile = new GameProfile((UUID) null, nbttagcompound.getString("SkullOwner"));
-                                }
+                            if (nbttagcompound.hasKeyOfType("SkullOwner", 10)) {
+                                gameprofile = GameProfileSerializer.deserialize(nbttagcompound.getCompound("SkullOwner"));
+                            } else if (nbttagcompound.hasKeyOfType("SkullOwner", 8) && !StringUtils.isBlank(nbttagcompound.getString("SkullOwner"))) {
+                                gameprofile = new GameProfile((UUID) null, nbttagcompound.getString("SkullOwner"));
                             }
-
-                            tileentityskull.setGameProfile(gameprofile);
-                        } else {
-                            tileentityskull.setSkullType(itemstack.getData());
                         }
 
-                        tileentityskull.setRotation(i);
-                        Blocks.SKULL.a(world, blockposition, tileentityskull);
+                        tileentityskull.setGameProfile(gameprofile);
+                    } else {
+                        tileentityskull.setSkullType(itemstack.getData());
                     }
 
-                    itemstack.subtract(1);
-                    return EnumInteractionResult.SUCCESS;
+                    tileentityskull.setRotation(i);
+                    Blocks.SKULL.a(world, blockposition, tileentityskull);
                 }
+
+                itemstack.subtract(1);
+                return EnumInteractionResult.SUCCESS;
             } else {
                 return EnumInteractionResult.FAIL;
             }
         }
     }
 
+    @Override
     public int filterData(int i) {
         return i;
     }
 
+    @Override
     public String a(ItemStack itemstack) {
         int i = itemstack.getData();
 
@@ -99,6 +98,7 @@ public class ItemSkull extends Item {
         return super.getName() + "." + ItemSkull.a[i];
     }
 
+    @Override
     public String b(ItemStack itemstack) {
         if (itemstack.getData() == 3 && itemstack.hasTag()) {
             if (itemstack.getTag().hasKeyOfType("SkullOwner", 8)) {
@@ -117,6 +117,7 @@ public class ItemSkull extends Item {
         return super.b(itemstack);
     }
 
+    @Override
     public boolean a(final NBTTagCompound nbttagcompound) { // Spigot - make final
         super.a(nbttagcompound);
         if (nbttagcompound.hasKeyOfType("SkullOwner", 8) && !StringUtils.isBlank(nbttagcompound.getString("SkullOwner"))) {
@@ -137,7 +138,7 @@ public class ItemSkull extends Item {
             // CraftBukkit start
             NBTTagList textures = nbttagcompound.getCompound("SkullOwner").getCompound("Properties").getList("textures", 10); // Safe due to method contracts
             for (int i = 0; i < textures.size(); i++) {
-                if (textures.get(i) instanceof NBTTagCompound && !((NBTTagCompound) textures.get(i)).hasKeyOfType("Signature", 8) && ((NBTTagCompound) textures.get(i)).getString("Value").trim().isEmpty()) {
+                if (textures.get(i) instanceof NBTTagCompound && !textures.get(i).hasKeyOfType("Signature", 8) && textures.get(i).getString("Value").trim().isEmpty()) {
                     nbttagcompound.remove("SkullOwner");
                     break;
                 }

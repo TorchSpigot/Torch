@@ -306,7 +306,6 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
         h = reactor.getTickTimeArray();
         i = reactor.getTimeOfLastDimensionTick();
         I = reactor.getServerKeyPair();
-        J = reactor.getServerOwner();
         K = reactor.getPrimaryWorldFolderName();
         N = reactor.isEnableBonusChest();
         O = reactor.getResourcePackUrl();
@@ -458,7 +457,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public String getVersion() {
-        return reactor.getMinecraftVersion();
+        return TorchServer.GAME_VERSION;
     }
 
     public int H() {
@@ -517,7 +516,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
 
     @Override
     public boolean a(int i, String s) {
-        return reactor.canUseCommand(i, s);
+        return true; // canConsoleUseCommand
     }
 
     public ICommandHandler getCommandHandler() {
@@ -537,15 +536,15 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     }
 
     public String Q() {
-        return reactor.getServerOwner();
+        return J; // getServerOwner
     }
 
     public void i(String s) {
-        reactor.setServerOwner(s);
+        J = s; // setServerOwner
     }
 
     public boolean R() {
-        return reactor.isSinglePlayer();
+        return false; // isSinglePlayer
     }
 
     public String S() {
@@ -723,12 +722,12 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
 
     @Override
     public BlockPosition getChunkCoordinates() {
-        return reactor.getChunkCoordinates();
+        return BlockPosition.ZERO;
     }
 
     @Override
     public Vec3D d() {
-        return reactor.getEntityVec3D();
+        return Vec3D.a; // getVec3D
     }
 
     @Override
@@ -738,7 +737,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
 
     @Override
     public Entity f() {
-        return reactor.getEntity();
+        return null; // getEntity
     }
 
     public int getSpawnProtection() {

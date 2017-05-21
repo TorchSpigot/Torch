@@ -354,7 +354,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
     }
 
     public boolean everyoneDeeplySleeping() {
-        if (this.O && !this.isClientSide) {
+        if (this.O) {
             Iterator iterator = this.players.iterator();
 
             // CraftBukkit - This allows us to assume that some people are in bed but not really, allowing time to pass in spite of AFKers

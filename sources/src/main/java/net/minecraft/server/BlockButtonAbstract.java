@@ -34,27 +34,33 @@ public abstract class BlockButtonAbstract extends BlockDirectional {
         this.I = flag;
     }
 
+    @Override
     @Nullable
     public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return BlockButtonAbstract.k;
     }
 
+    @Override
     public int a(World world) {
         return this.I ? 30 : 20;
     }
 
+    @Override
     public boolean b(IBlockData iblockdata) {
         return false;
     }
 
+    @Override
     public boolean c(IBlockData iblockdata) {
         return false;
     }
 
+    @Override
     public boolean canPlace(World world, BlockPosition blockposition, EnumDirection enumdirection) {
         return a(world, blockposition, enumdirection.opposite());
     }
 
+    @Override
     public boolean canPlace(World world, BlockPosition blockposition) {
         EnumDirection[] aenumdirection = EnumDirection.values();
         int i = aenumdirection.length;
@@ -76,12 +82,14 @@ public abstract class BlockButtonAbstract extends BlockDirectional {
         return enumdirection == EnumDirection.DOWN ? world.getType(blockposition1).r() : world.getType(blockposition1).m();
     }
 
+    @Override
     public IBlockData getPlacedState(World world, BlockPosition blockposition, EnumDirection enumdirection, float f, float f1, float f2, int i, EntityLiving entityliving) {
         return a(world, blockposition, enumdirection.opposite()) ? this.getBlockData().set(BlockButtonAbstract.FACING, enumdirection).set(BlockButtonAbstract.POWERED, Boolean.valueOf(false)) : this.getBlockData().set(BlockButtonAbstract.FACING, EnumDirection.DOWN).set(BlockButtonAbstract.POWERED, Boolean.valueOf(false));
     }
 
+    @Override
     public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
-        if (this.e(world, blockposition, iblockdata) && !a(world, blockposition, ((EnumDirection) iblockdata.get(BlockButtonAbstract.FACING)).opposite())) {
+        if (this.e(world, blockposition, iblockdata) && !a(world, blockposition, iblockdata.get(BlockButtonAbstract.FACING).opposite())) {
             this.b(world, blockposition, iblockdata, 0);
             world.setAir(blockposition);
         }
@@ -98,9 +106,10 @@ public abstract class BlockButtonAbstract extends BlockDirectional {
         }
     }
 
+    @Override
     public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
-        EnumDirection enumdirection = (EnumDirection) iblockdata.get(BlockButtonAbstract.FACING);
-        boolean flag = ((Boolean) iblockdata.get(BlockButtonAbstract.POWERED)).booleanValue();
+        EnumDirection enumdirection = iblockdata.get(BlockButtonAbstract.FACING);
+        boolean flag = iblockdata.get(BlockButtonAbstract.POWERED).booleanValue();
 
         switch (enumdirection) {
         case EAST:
@@ -124,12 +133,13 @@ public abstract class BlockButtonAbstract extends BlockDirectional {
         }
     }
 
+    @Override
     public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
-        if (((Boolean) iblockdata.get(BlockButtonAbstract.POWERED)).booleanValue()) {
+        if (iblockdata.get(BlockButtonAbstract.POWERED).booleanValue()) {
             return true;
         } else {
             // CraftBukkit start
-            boolean powered = ((Boolean) iblockdata.get(POWERED));
+            boolean powered = (iblockdata.get(POWERED));
             org.bukkit.block.Block block = world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
             int old = (powered) ? 15 : 0;
             int current = (!powered) ? 15 : 0;
@@ -144,8 +154,8 @@ public abstract class BlockButtonAbstract extends BlockDirectional {
             world.setTypeAndData(blockposition, iblockdata.set(BlockButtonAbstract.POWERED, Boolean.valueOf(true)), 3);
             world.b(blockposition, blockposition);
             this.a(entityhuman, world, blockposition);
-            this.c(world, blockposition, (EnumDirection) iblockdata.get(BlockButtonAbstract.FACING));
-            world.a(blockposition, (Block) this, this.a(world));
+            this.c(world, blockposition, iblockdata.get(BlockButtonAbstract.FACING));
+            world.a(blockposition, this, this.a(world));
             return true;
         }
     }
@@ -154,60 +164,63 @@ public abstract class BlockButtonAbstract extends BlockDirectional {
 
     protected abstract void b(World world, BlockPosition blockposition);
 
+    @Override
     public void remove(World world, BlockPosition blockposition, IBlockData iblockdata) {
-        if (((Boolean) iblockdata.get(BlockButtonAbstract.POWERED)).booleanValue()) {
-            this.c(world, blockposition, (EnumDirection) iblockdata.get(BlockButtonAbstract.FACING));
+        if (iblockdata.get(BlockButtonAbstract.POWERED).booleanValue()) {
+            this.c(world, blockposition, iblockdata.get(BlockButtonAbstract.FACING));
         }
 
         super.remove(world, blockposition, iblockdata);
     }
 
+    @Override
     public int b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition, EnumDirection enumdirection) {
-        return ((Boolean) iblockdata.get(BlockButtonAbstract.POWERED)).booleanValue() ? 15 : 0;
+        return iblockdata.get(BlockButtonAbstract.POWERED).booleanValue() ? 15 : 0;
     }
 
+    @Override
     public int c(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition, EnumDirection enumdirection) {
-        return !((Boolean) iblockdata.get(BlockButtonAbstract.POWERED)).booleanValue() ? 0 : (iblockdata.get(BlockButtonAbstract.FACING) == enumdirection ? 15 : 0);
+        return !iblockdata.get(BlockButtonAbstract.POWERED).booleanValue() ? 0 : (iblockdata.get(BlockButtonAbstract.FACING) == enumdirection ? 15 : 0);
     }
 
+    @Override
     public boolean isPowerSource(IBlockData iblockdata) {
         return true;
     }
 
+    @Override
     public void a(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {}
 
+    @Override
     public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
-        if (!world.isClientSide) {
-            if (((Boolean) iblockdata.get(BlockButtonAbstract.POWERED)).booleanValue()) {
-                if (this.I) {
-                    this.d(iblockdata, world, blockposition);
-                } else {
-                    // CraftBukkit start
-                    org.bukkit.block.Block block = world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
+        if (iblockdata.get(BlockButtonAbstract.POWERED).booleanValue()) {
+            if (this.I) {
+                this.d(iblockdata, world, blockposition);
+            } else {
+                // CraftBukkit start
+                org.bukkit.block.Block block = world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
 
-                    BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(block, 15, 0);
-                    world.getServer().getPluginManager().callEvent(eventRedstone);
+                BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(block, 15, 0);
+                world.getServer().getPluginManager().callEvent(eventRedstone);
 
-                    if (eventRedstone.getNewCurrent() > 0) {
-                        return;
-                    }
-                    // CraftBukkit end
-                    world.setTypeUpdate(blockposition, iblockdata.set(BlockButtonAbstract.POWERED, Boolean.valueOf(false)));
-                    this.c(world, blockposition, (EnumDirection) iblockdata.get(BlockButtonAbstract.FACING));
-                    this.b(world, blockposition);
-                    world.b(blockposition, blockposition);
+                if (eventRedstone.getNewCurrent() > 0) {
+                    return;
                 }
-
+                // CraftBukkit end
+                world.setTypeUpdate(blockposition, iblockdata.set(BlockButtonAbstract.POWERED, Boolean.valueOf(false)));
+                this.c(world, blockposition, iblockdata.get(BlockButtonAbstract.FACING));
+                this.b(world, blockposition);
+                world.b(blockposition, blockposition);
             }
+
         }
     }
 
+    @Override
     public void a(World world, BlockPosition blockposition, IBlockData iblockdata, Entity entity) {
-        if (!world.isClientSide) {
-            if (this.I) {
-                if (!((Boolean) iblockdata.get(BlockButtonAbstract.POWERED)).booleanValue()) {
-                    this.d(iblockdata, world, blockposition);
-                }
+        if (this.I) {
+            if (!iblockdata.get(BlockButtonAbstract.POWERED).booleanValue()) {
+                this.d(iblockdata, world, blockposition);
             }
         }
     }
@@ -215,7 +228,7 @@ public abstract class BlockButtonAbstract extends BlockDirectional {
     private void d(IBlockData iblockdata, World world, BlockPosition blockposition) {
         List list = world.a(EntityArrow.class, iblockdata.d(world, blockposition).a(blockposition));
         boolean flag = !list.isEmpty();
-        boolean flag1 = ((Boolean) iblockdata.get(BlockButtonAbstract.POWERED)).booleanValue();
+        boolean flag1 = iblockdata.get(BlockButtonAbstract.POWERED).booleanValue();
 
         // CraftBukkit start - Call interact event when arrows turn on wooden buttons
         if (flag1 != flag && flag) {
@@ -253,7 +266,7 @@ public abstract class BlockButtonAbstract extends BlockDirectional {
             }
             // CraftBukkit end
             world.setTypeUpdate(blockposition, iblockdata.set(BlockButtonAbstract.POWERED, Boolean.valueOf(true)));
-            this.c(world, blockposition, (EnumDirection) iblockdata.get(BlockButtonAbstract.FACING));
+            this.c(world, blockposition, iblockdata.get(BlockButtonAbstract.FACING));
             world.b(blockposition, blockposition);
             this.a((EntityHuman) null, world, blockposition);
         }
@@ -270,13 +283,13 @@ public abstract class BlockButtonAbstract extends BlockDirectional {
             }
             // CraftBukkit end
             world.setTypeUpdate(blockposition, iblockdata.set(BlockButtonAbstract.POWERED, Boolean.valueOf(false)));
-            this.c(world, blockposition, (EnumDirection) iblockdata.get(BlockButtonAbstract.FACING));
+            this.c(world, blockposition, iblockdata.get(BlockButtonAbstract.FACING));
             world.b(blockposition, blockposition);
             this.b(world, blockposition);
         }
 
         if (flag) {
-            world.a(new BlockPosition(blockposition), (Block) this, this.a(world));
+            world.a(new BlockPosition(blockposition), this, this.a(world));
         }
 
     }
@@ -286,6 +299,7 @@ public abstract class BlockButtonAbstract extends BlockDirectional {
         world.applyPhysics(blockposition.shift(enumdirection.opposite()), this, false);
     }
 
+    @Override
     public IBlockData fromLegacyData(int i) {
         EnumDirection enumdirection;
 
@@ -318,10 +332,11 @@ public abstract class BlockButtonAbstract extends BlockDirectional {
         return this.getBlockData().set(BlockButtonAbstract.FACING, enumdirection).set(BlockButtonAbstract.POWERED, Boolean.valueOf((i & 8) > 0));
     }
 
+    @Override
     public int toLegacyData(IBlockData iblockdata) {
         int i;
 
-        switch ((EnumDirection) iblockdata.get(BlockButtonAbstract.FACING)) {
+        switch (iblockdata.get(BlockButtonAbstract.FACING)) {
         case EAST:
             i = 1;
             break;
@@ -347,21 +362,24 @@ public abstract class BlockButtonAbstract extends BlockDirectional {
             i = 0;
         }
 
-        if (((Boolean) iblockdata.get(BlockButtonAbstract.POWERED)).booleanValue()) {
+        if (iblockdata.get(BlockButtonAbstract.POWERED).booleanValue()) {
             i |= 8;
         }
 
         return i;
     }
 
+    @Override
     public IBlockData a(IBlockData iblockdata, EnumBlockRotation enumblockrotation) {
-        return iblockdata.set(BlockButtonAbstract.FACING, enumblockrotation.a((EnumDirection) iblockdata.get(BlockButtonAbstract.FACING)));
+        return iblockdata.set(BlockButtonAbstract.FACING, enumblockrotation.a(iblockdata.get(BlockButtonAbstract.FACING)));
     }
 
+    @Override
     public IBlockData a(IBlockData iblockdata, EnumBlockMirror enumblockmirror) {
-        return iblockdata.a(enumblockmirror.a((EnumDirection) iblockdata.get(BlockButtonAbstract.FACING)));
+        return iblockdata.a(enumblockmirror.a(iblockdata.get(BlockButtonAbstract.FACING)));
     }
 
+    @Override
     protected BlockStateList getStateList() {
         return new BlockStateList(this, new IBlockState[] { BlockButtonAbstract.FACING, BlockButtonAbstract.POWERED});
     }

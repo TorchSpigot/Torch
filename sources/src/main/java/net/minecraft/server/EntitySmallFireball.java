@@ -28,53 +28,52 @@ public class EntitySmallFireball extends EntityFireball {
         EntityFireball.a(dataconvertermanager, "SmallFireball");
     }
 
+    @Override
     protected void a(MovingObjectPosition movingobjectposition) {
-        if (!this.world.isClientSide) {
-            boolean flag;
-
-            if (movingobjectposition.entity != null) {
-                if (!movingobjectposition.entity.isFireProof()) {
-                    // CraftBukkit start - Entity damage by entity event + combust event
-                    isIncendiary = movingobjectposition.entity.damageEntity(DamageSource.fireball(this, this.shooter), 5.0F);
-                    if (isIncendiary) {
-                        this.a(this.shooter, movingobjectposition.entity);
-                        EntityCombustByEntityEvent event = new EntityCombustByEntityEvent((org.bukkit.entity.Projectile) this.getBukkitEntity(), movingobjectposition.entity.getBukkitEntity(), 5);
-                        movingobjectposition.entity.world.getServer().getPluginManager().callEvent(event);
-
-                        if (!event.isCancelled()) {
-                            movingobjectposition.entity.setOnFire(event.getDuration());
-                        }
-                        // CraftBukkit end
-                    }
-                }
-            } else {
-                flag = true;
-                if (this.shooter != null && this.shooter instanceof EntityInsentient) {
-                    flag = this.world.getGameRules().getBoolean("mobGriefing");
-                }
-
-                // CraftBukkit start
+        if (movingobjectposition.entity != null) {
+            if (!movingobjectposition.entity.isFireProof()) {
+                // CraftBukkit start - Entity damage by entity event + combust event
+                isIncendiary = movingobjectposition.entity.damageEntity(DamageSource.fireball(this, this.shooter), 5.0F);
                 if (isIncendiary) {
-                    BlockPosition blockposition = movingobjectposition.a().shift(movingobjectposition.direction);
+                    this.a(this.shooter, movingobjectposition.entity);
+                    EntityCombustByEntityEvent event = new EntityCombustByEntityEvent(this.getBukkitEntity(), movingobjectposition.entity.getBukkitEntity(), 5);
+                    movingobjectposition.entity.world.getServer().getPluginManager().callEvent(event);
 
-                    if (this.world.isEmpty(blockposition)) {
-                        if (!org.bukkit.craftbukkit.event.CraftEventFactory.callBlockIgniteEvent(world, blockposition.getX(), blockposition.getY(), blockposition.getZ(), this).isCancelled()) {
-                            this.world.setTypeUpdate(blockposition, Blocks.FIRE.getBlockData());
-                        }
-                        // CraftBukkit end
+                    if (!event.isCancelled()) {
+                        movingobjectposition.entity.setOnFire(event.getDuration());
                     }
+                    // CraftBukkit end
                 }
             }
+        } else {
+            //flag = true;
+            //if (this.shooter != null && this.shooter instanceof EntityInsentient) {
+            //    flag = this.world.getGameRules().getBoolean("mobGriefing");
+            //}
 
-            this.die();
+            // CraftBukkit start
+            if (isIncendiary) {
+                BlockPosition blockposition = movingobjectposition.a().shift(movingobjectposition.direction);
+
+                if (this.world.isEmpty(blockposition)) {
+                    if (!org.bukkit.craftbukkit.event.CraftEventFactory.callBlockIgniteEvent(world, blockposition.getX(), blockposition.getY(), blockposition.getZ(), this).isCancelled()) {
+                        this.world.setTypeUpdate(blockposition, Blocks.FIRE.getBlockData());
+                    }
+                    // CraftBukkit end
+                }
+            }
         }
+
+        this.die();
 
     }
 
+    @Override
     public boolean isInteractable() {
         return false;
     }
 
+    @Override
     public boolean damageEntity(DamageSource damagesource, float f) {
         return false;
     }

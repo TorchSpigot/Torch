@@ -13,13 +13,14 @@ public class ItemBoat extends Item {
         this.c("boat." + entityboat_enumboattype.a());
     }
 
+    @Override
     public InteractionResultWrapper<ItemStack> a(World world, EntityHuman entityhuman, EnumHand enumhand) {
         ItemStack itemstack = entityhuman.b(enumhand);
         float f = 1.0F;
         float f1 = entityhuman.lastPitch + (entityhuman.pitch - entityhuman.lastPitch) * 1.0F;
         float f2 = entityhuman.lastYaw + (entityhuman.yaw - entityhuman.lastYaw) * 1.0F;
         double d0 = entityhuman.lastX + (entityhuman.locX - entityhuman.lastX) * 1.0D;
-        double d1 = entityhuman.lastY + (entityhuman.locY - entityhuman.lastY) * 1.0D + (double) entityhuman.getHeadHeight();
+        double d1 = entityhuman.lastY + (entityhuman.locY - entityhuman.lastY) * 1.0D + entityhuman.getHeadHeight();
         double d2 = entityhuman.lastZ + (entityhuman.locZ - entityhuman.lastZ) * 1.0D;
         Vec3D vec3d = new Vec3D(d0, d1, d2);
         float f3 = MathHelper.cos(-f2 * 0.017453292F - 3.1415927F);
@@ -29,7 +30,7 @@ public class ItemBoat extends Item {
         float f7 = f4 * f5;
         float f8 = f3 * f5;
         double d3 = 5.0D;
-        Vec3D vec3d1 = vec3d.add((double) f7 * 5.0D, (double) f6 * 5.0D, (double) f8 * 5.0D);
+        Vec3D vec3d1 = vec3d.add(f7 * 5.0D, f6 * 5.0D, f8 * 5.0D);
         MovingObjectPosition movingobjectposition = world.rayTrace(vec3d, vec3d1, true);
 
         if (movingobjectposition == null) {
@@ -43,7 +44,7 @@ public class ItemBoat extends Item {
                 Entity entity = (Entity) list.get(i);
 
                 if (entity.isInteractable()) {
-                    AxisAlignedBB axisalignedbb = entity.getBoundingBox().g((double) entity.aA());
+                    AxisAlignedBB axisalignedbb = entity.getBoundingBox().g(entity.aA());
 
                     if (axisalignedbb.b(vec3d)) {
                         flag = true;
@@ -72,15 +73,13 @@ public class ItemBoat extends Item {
                 if (!world.getCubes(entityboat, entityboat.getBoundingBox().g(-0.1D)).isEmpty()) {
                     return new InteractionResultWrapper(EnumInteractionResult.FAIL, itemstack);
                 } else {
-                    if (!world.isClientSide) {
-                        if (!world.addEntity(entityboat)) return new InteractionResultWrapper(EnumInteractionResult.PASS, itemstack); // CraftBukkit
-                    }
+                    if (!world.addEntity(entityboat)) return new InteractionResultWrapper(EnumInteractionResult.PASS, itemstack); // CraftBukkit
 
                     if (!entityhuman.abilities.canInstantlyBuild) {
                         itemstack.subtract(1);
                     }
 
-                    entityhuman.b(StatisticList.b((Item) this));
+                    entityhuman.b(StatisticList.b(this));
                     return new InteractionResultWrapper(EnumInteractionResult.SUCCESS, itemstack);
                 }
             }

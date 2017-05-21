@@ -63,7 +63,7 @@ public abstract class EntityInsentient extends EntityLiving {
         this.bv = new EntitySenses(this);
         Arrays.fill(this.dropChanceArmor, 0.085F);
         Arrays.fill(this.dropChanceHand, 0.085F);
-        if (world != null && !world.isClientSide) {
+        if (world != null) {
             this.r();
         }
 
@@ -231,34 +231,21 @@ public abstract class EntityInsentient extends EntityLiving {
     }
 
     public void doSpawnEffect() {
-        if (this.world.isClientSide) {
-            for (int i = 0; i < 20; ++i) {
-                double d0 = this.random.nextGaussian() * 0.02D;
-                double d1 = this.random.nextGaussian() * 0.02D;
-                double d2 = this.random.nextGaussian() * 0.02D;
-                double d3 = 10.0D;
-
-                this.world.addParticle(EnumParticle.EXPLOSION_NORMAL, this.locX + this.random.nextFloat() * this.width * 2.0F - this.width - d0 * 10.0D, this.locY + this.random.nextFloat() * this.length - d1 * 10.0D, this.locZ + this.random.nextFloat() * this.width * 2.0F - this.width - d2 * 10.0D, d0, d1, d2, new int[0]);
-            }
-        } else {
-            this.world.broadcastEntityEffect(this, (byte) 20);
-        }
+        this.world.broadcastEntityEffect(this, (byte) 20);
 
     }
 
     @Override
     public void A_() {
         super.A_();
-        if (!this.world.isClientSide) {
-            this.cV();
-            if (this.ticksLived % 5 == 0) {
-                boolean flag = !(this.bw() instanceof EntityInsentient);
-                boolean flag1 = !(this.bB() instanceof EntityBoat);
+        this.cV();
+        if (this.ticksLived % 5 == 0) {
+            boolean flag = !(this.bw() instanceof EntityInsentient);
+            boolean flag1 = !(this.bB() instanceof EntityBoat);
 
-                this.goalSelector.a(1, flag);
-                this.goalSelector.a(4, flag && flag1);
-                this.goalSelector.a(2, flag);
-            }
+            this.goalSelector.a(1, flag);
+            this.goalSelector.a(4, flag && flag1);
+            this.goalSelector.a(2, flag);
         }
 
     }
@@ -514,7 +501,7 @@ public abstract class EntityInsentient extends EntityLiving {
     public void n() {
         super.n();
         this.world.methodProfiler.a("looting");
-        if (!this.world.isClientSide && this.cT() && !this.aU && this.world.getGameRules().getBoolean("mobGriefing")) {
+        if (this.cT() && !this.aU && this.world.getGameRules().getBoolean("mobGriefing")) {
             List list = this.world.a(EntityItem.class, this.getBoundingBox().grow(1.0D, 0.0D, 1.0D));
             Iterator iterator = list.iterator();
 
@@ -1084,13 +1071,13 @@ public abstract class EntityInsentient extends EntityLiving {
         if (this.bD) {
             this.bD = false;
             this.leashHolder = null;
-            if (!this.world.isClientSide && flag1) {
+            if (flag1) {
                 this.forceDrops = true; // CraftBukkit
                 this.a(Items.LEAD, 1);
                 this.forceDrops = false; // CraftBukkit
             }
 
-            if (!this.world.isClientSide && flag && this.world instanceof WorldServer) {
+            if (flag && this.world instanceof WorldServer) {
                 ((WorldServer) this.world).getTracker().a(this, (new PacketPlayOutAttachEntity(this, (Entity) null)));
             }
         }
@@ -1112,7 +1099,7 @@ public abstract class EntityInsentient extends EntityLiving {
     public void setLeashHolder(Entity entity, boolean flag) {
         this.bD = true;
         this.leashHolder = entity;
-        if (!this.world.isClientSide && flag && this.world instanceof WorldServer) {
+        if (flag && this.world instanceof WorldServer) {
             ((WorldServer) this.world).getTracker().a(this, (new PacketPlayOutAttachEntity(this, this.leashHolder)));
         }
 

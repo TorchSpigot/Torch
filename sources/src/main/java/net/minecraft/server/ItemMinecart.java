@@ -10,12 +10,13 @@ public class ItemMinecart extends Item {
     private static final IDispenseBehavior a = new DispenseBehaviorItem() {
         private final DispenseBehaviorItem b = new DispenseBehaviorItem();
 
+        @Override
         public ItemStack b(ISourceBlock isourceblock, ItemStack itemstack) {
-            EnumDirection enumdirection = (EnumDirection) isourceblock.e().get(BlockDispenser.FACING);
+            EnumDirection enumdirection = isourceblock.e().get(BlockDispenser.FACING);
             World world = isourceblock.getWorld();
-            double d0 = isourceblock.getX() + (double) enumdirection.getAdjacentX() * 1.125D;
-            double d1 = Math.floor(isourceblock.getY()) + (double) enumdirection.getAdjacentY();
-            double d2 = isourceblock.getZ() + (double) enumdirection.getAdjacentZ() * 1.125D;
+            double d0 = isourceblock.getX() + enumdirection.getAdjacentX() * 1.125D;
+            double d1 = Math.floor(isourceblock.getY()) + enumdirection.getAdjacentY();
+            double d2 = isourceblock.getZ() + enumdirection.getAdjacentZ() * 1.125D;
             BlockPosition blockposition = isourceblock.getBlockPosition().shift(enumdirection);
             IBlockData iblockdata = world.getType(blockposition);
             BlockMinecartTrackAbstract.EnumTrackPosition blockminecarttrackabstract_enumtrackposition = iblockdata.getBlock() instanceof BlockMinecartTrackAbstract ? (BlockMinecartTrackAbstract.EnumTrackPosition) iblockdata.get(((BlockMinecartTrackAbstract) iblockdata.getBlock()).g()) : BlockMinecartTrackAbstract.EnumTrackPosition.NORTH_SOUTH;
@@ -62,7 +63,7 @@ public class ItemMinecart extends Item {
                 itemstack.add(1);
                 // Chain to handler for new item
                 ItemStack eventStack = CraftItemStack.asNMSCopy(event.getItem());
-                IDispenseBehavior idispensebehavior = (IDispenseBehavior) BlockDispenser.REGISTRY.get(eventStack.getItem());
+                IDispenseBehavior idispensebehavior = BlockDispenser.REGISTRY.get(eventStack.getItem());
                 if (idispensebehavior != IDispenseBehavior.NONE && idispensebehavior != this) {
                     idispensebehavior.a(isourceblock, eventStack);
                     return itemstack;
@@ -82,6 +83,7 @@ public class ItemMinecart extends Item {
             return itemstack;
         }
 
+        @Override
         protected void a(ISourceBlock isourceblock) {
             isourceblock.getWorld().triggerEffect(1000, isourceblock.getBlockPosition(), 0);
         }
@@ -95,6 +97,7 @@ public class ItemMinecart extends Item {
         BlockDispenser.REGISTRY.a(this, ItemMinecart.a);
     }
 
+    @Override
     public EnumInteractionResult a(EntityHuman entityhuman, World world, BlockPosition blockposition, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
         IBlockData iblockdata = world.getType(blockposition);
 
@@ -103,22 +106,20 @@ public class ItemMinecart extends Item {
         } else {
             ItemStack itemstack = entityhuman.b(enumhand);
 
-            if (!world.isClientSide) {
-                BlockMinecartTrackAbstract.EnumTrackPosition blockminecarttrackabstract_enumtrackposition = iblockdata.getBlock() instanceof BlockMinecartTrackAbstract ? (BlockMinecartTrackAbstract.EnumTrackPosition) iblockdata.get(((BlockMinecartTrackAbstract) iblockdata.getBlock()).g()) : BlockMinecartTrackAbstract.EnumTrackPosition.NORTH_SOUTH;
-                double d0 = 0.0D;
+            BlockMinecartTrackAbstract.EnumTrackPosition blockminecarttrackabstract_enumtrackposition = iblockdata.getBlock() instanceof BlockMinecartTrackAbstract ? (BlockMinecartTrackAbstract.EnumTrackPosition) iblockdata.get(((BlockMinecartTrackAbstract) iblockdata.getBlock()).g()) : BlockMinecartTrackAbstract.EnumTrackPosition.NORTH_SOUTH;
+            double d0 = 0.0D;
 
-                if (blockminecarttrackabstract_enumtrackposition.c()) {
-                    d0 = 0.5D;
-                }
-
-                EntityMinecartAbstract entityminecartabstract = EntityMinecartAbstract.a(world, (double) blockposition.getX() + 0.5D, (double) blockposition.getY() + 0.0625D + d0, (double) blockposition.getZ() + 0.5D, this.b);
-
-                if (itemstack.hasName()) {
-                    entityminecartabstract.setCustomName(itemstack.getName());
-                }
-
-                if (!world.addEntity(entityminecartabstract)) return EnumInteractionResult.PASS; // CraftBukkit
+            if (blockminecarttrackabstract_enumtrackposition.c()) {
+                d0 = 0.5D;
             }
+
+            EntityMinecartAbstract entityminecartabstract = EntityMinecartAbstract.a(world, blockposition.getX() + 0.5D, blockposition.getY() + 0.0625D + d0, blockposition.getZ() + 0.5D, this.b);
+
+            if (itemstack.hasName()) {
+                entityminecartabstract.setCustomName(itemstack.getName());
+            }
+
+            if (!world.addEntity(entityminecartabstract)) return EnumInteractionResult.PASS; // CraftBukkit
 
             itemstack.subtract(1);
             return EnumInteractionResult.SUCCESS;

@@ -23,6 +23,7 @@ public class TileEntityEndGateway extends TileEntityEnderPortal implements ITick
 
     public TileEntityEndGateway() {}
 
+    @Override
     public NBTTagCompound save(NBTTagCompound nbttagcompound) {
         super.save(nbttagcompound);
         nbttagcompound.setLong("Age", this.f);
@@ -37,6 +38,7 @@ public class TileEntityEndGateway extends TileEntityEnderPortal implements ITick
         return nbttagcompound;
     }
 
+    @Override
     public void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
         this.f = nbttagcompound.getLong("Age");
@@ -47,6 +49,7 @@ public class TileEntityEndGateway extends TileEntityEnderPortal implements ITick
         this.exactTeleport = nbttagcompound.getBoolean("ExactTeleport");
     }
 
+    @Override
     public void F_() {
         boolean flag = this.a();
         boolean flag1 = this.e();
@@ -54,7 +57,7 @@ public class TileEntityEndGateway extends TileEntityEnderPortal implements ITick
         ++this.f;
         if (flag1) {
             --this.g;
-        } else if (!this.world.isClientSide) {
+        } else {
             List list = this.world.a(Entity.class, new AxisAlignedBB(this.getPosition()));
 
             if (!list.isEmpty()) {
@@ -80,24 +83,25 @@ public class TileEntityEndGateway extends TileEntityEnderPortal implements ITick
         return this.g > 0;
     }
 
+    @Override
     @Nullable
     public PacketPlayOutTileEntityData getUpdatePacket() {
         return new PacketPlayOutTileEntityData(this.position, 8, this.d());
     }
 
+    @Override
     public NBTTagCompound d() {
         return this.save(new NBTTagCompound());
     }
 
     public void f() {
-        if (!this.world.isClientSide) {
-            this.g = 40;
-            this.world.playBlockAction(this.getPosition(), this.getBlock(), 1, 0);
-            this.update();
-        }
+        this.g = 40;
+        this.world.playBlockAction(this.getPosition(), this.getBlock(), 1, 0);
+        this.update();
 
     }
 
+    @Override
     public boolean c(int i, int j) {
         if (i == 1) {
             this.g = 40;
@@ -108,7 +112,7 @@ public class TileEntityEndGateway extends TileEntityEnderPortal implements ITick
     }
 
     public void a(Entity entity) {
-        if (!this.world.isClientSide && !this.e()) {
+        if (!this.e()) {
             this.g = 100;
             if (this.exitPortal == null && this.world.worldProvider instanceof WorldProviderTheEnd) {
                 this.j();
@@ -120,7 +124,7 @@ public class TileEntityEndGateway extends TileEntityEnderPortal implements ITick
                 // CraftBukkit start - Fire PlayerTeleportEvent
                 if (entity instanceof EntityPlayer) {
                     org.bukkit.craftbukkit.entity.CraftPlayer player = (CraftPlayer) entity.getBukkitEntity();
-                    org.bukkit.Location location = new Location(world.getWorld(), (double) blockposition.getX() + 0.5D, (double) blockposition.getY() + 0.5D, (double) blockposition.getZ() + 0.5D);
+                    org.bukkit.Location location = new Location(world.getWorld(), blockposition.getX() + 0.5D, blockposition.getY() + 0.5D, blockposition.getZ() + 0.5D);
                     location.setPitch(player.getLocation().getPitch());
                     location.setYaw(player.getLocation().getYaw());
 
@@ -137,7 +141,7 @@ public class TileEntityEndGateway extends TileEntityEnderPortal implements ITick
                 }
                 // CraftBukkit end
 
-                entity.enderTeleportTo((double) blockposition.getX() + 0.5D, (double) blockposition.getY() + 0.5D, (double) blockposition.getZ() + 0.5D);
+                entity.enderTeleportTo(blockposition.getX() + 0.5D, blockposition.getY() + 0.5D, blockposition.getZ() + 0.5D);
             }
 
             this.f();
@@ -152,7 +156,7 @@ public class TileEntityEndGateway extends TileEntityEnderPortal implements ITick
     }
 
     private void j() {
-        Vec3D vec3d = (new Vec3D((double) this.getPosition().getX(), 0.0D, (double) this.getPosition().getZ())).a();
+        Vec3D vec3d = (new Vec3D(this.getPosition().getX(), 0.0D, this.getPosition().getZ())).a();
         Vec3D vec3d1 = vec3d.a(1024.0D);
 
         int i;

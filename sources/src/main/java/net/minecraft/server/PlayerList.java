@@ -81,7 +81,7 @@ public abstract class PlayerList implements org.torch.api.TorchServant {
 
     public PlayerList(MinecraftServer minecraftserver) {
         // Setup instance for org.torch.api.TorchServant
-        reactor = new TorchPlayerList(minecraftserver, this);
+        reactor = new TorchPlayerList(this);
         server = minecraftserver;
 
         /**
@@ -192,7 +192,7 @@ public abstract class PlayerList implements org.torch.api.TorchServant {
 
         return new EntityPlayer(this.server, this.server.getWorldServer(0), gameprofile, (PlayerInteractManager) object);
          */
-        return reactor.processLogin(gameprofile, player);
+        return player;
         // CraftBukkit end
     }
 
@@ -387,7 +387,7 @@ public abstract class PlayerList implements org.torch.api.TorchServant {
     }
 
     public MinecraftServer getServer() {
-        return reactor.getMinecraftServer();
+        return TorchServer.getMinecraftServer();
     }
 
     public NBTTagCompound t() {

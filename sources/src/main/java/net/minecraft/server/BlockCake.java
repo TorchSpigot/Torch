@@ -13,26 +13,24 @@ public class BlockCake extends Block {
         this.a(true);
     }
 
+    @Override
     public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
-        return BlockCake.b[((Integer) iblockdata.get(BlockCake.BITES)).intValue()];
+        return BlockCake.b[iblockdata.get(BlockCake.BITES).intValue()];
     }
 
+    @Override
     public boolean c(IBlockData iblockdata) {
         return false;
     }
 
+    @Override
     public boolean b(IBlockData iblockdata) {
         return false;
     }
 
+    @Override
     public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
-        if (!world.isClientSide) {
-            return this.b(world, blockposition, iblockdata, entityhuman);
-        } else {
-            ItemStack itemstack = entityhuman.b(enumhand);
-
-            return this.b(world, blockposition, iblockdata, entityhuman) || itemstack.isEmpty();
-        }
+        return this.b(world, blockposition, iblockdata, entityhuman);
     }
 
     private boolean b(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman) {
@@ -52,7 +50,7 @@ public class BlockCake extends Block {
 
             ((EntityPlayer) entityhuman).getBukkitEntity().sendHealthUpdate();
             // CraftBukkit end
-            int i = ((Integer) iblockdata.get(BlockCake.BITES)).intValue();
+            int i = iblockdata.get(BlockCake.BITES).intValue();
 
             if (i < 6) {
                 world.setTypeAndData(blockposition, iblockdata.set(BlockCake.BITES, Integer.valueOf(i + 1)), 3);
@@ -64,10 +62,12 @@ public class BlockCake extends Block {
         }
     }
 
+    @Override
     public boolean canPlace(World world, BlockPosition blockposition) {
         return super.canPlace(world, blockposition) ? this.b(world, blockposition) : false;
     }
 
+    @Override
     public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
         if (!this.b(world, blockposition)) {
             world.setAir(blockposition);
@@ -79,34 +79,42 @@ public class BlockCake extends Block {
         return world.getType(blockposition.down()).getMaterial().isBuildable();
     }
 
+    @Override
     public int a(Random random) {
         return 0;
     }
 
+    @Override
     public Item getDropType(IBlockData iblockdata, Random random, int i) {
         return Items.a;
     }
 
+    @Override
     public ItemStack a(World world, BlockPosition blockposition, IBlockData iblockdata) {
         return new ItemStack(Items.CAKE);
     }
 
+    @Override
     public IBlockData fromLegacyData(int i) {
         return this.getBlockData().set(BlockCake.BITES, Integer.valueOf(i));
     }
 
+    @Override
     public int toLegacyData(IBlockData iblockdata) {
-        return ((Integer) iblockdata.get(BlockCake.BITES)).intValue();
+        return iblockdata.get(BlockCake.BITES).intValue();
     }
 
+    @Override
     protected BlockStateList getStateList() {
         return new BlockStateList(this, new IBlockState[] { BlockCake.BITES});
     }
 
+    @Override
     public int c(IBlockData iblockdata, World world, BlockPosition blockposition) {
-        return (7 - ((Integer) iblockdata.get(BlockCake.BITES)).intValue()) * 2;
+        return (7 - iblockdata.get(BlockCake.BITES).intValue()) * 2;
     }
 
+    @Override
     public boolean isComplexRedstone(IBlockData iblockdata) {
         return true;
     }

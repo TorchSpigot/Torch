@@ -12,12 +12,14 @@ public class ItemDye extends Item {
         this.a(CreativeModeTab.l);
     }
 
+    @Override
     public String a(ItemStack itemstack) {
         int i = itemstack.getData();
 
         return super.getName() + "." + EnumColor.fromInvColorIndex(i).d();
     }
 
+    @Override
     public EnumInteractionResult a(EntityHuman entityhuman, World world, BlockPosition blockposition, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
         ItemStack itemstack = entityhuman.b(enumhand);
 
@@ -28,9 +30,7 @@ public class ItemDye extends Item {
 
             if (enumcolor == EnumColor.WHITE) {
                 if (a(itemstack, world, blockposition)) {
-                    if (!world.isClientSide) {
-                        world.triggerEffect(2005, blockposition, 0);
-                    }
+                    world.triggerEffect(2005, blockposition, 0);
 
                     return EnumInteractionResult.SUCCESS;
                 }
@@ -70,13 +70,11 @@ public class ItemDye extends Item {
             IBlockFragilePlantElement iblockfragileplantelement = (IBlockFragilePlantElement) iblockdata.getBlock();
 
             if (iblockfragileplantelement.a(world, blockposition, iblockdata, world.isClientSide)) {
-                if (!world.isClientSide) {
-                    if (iblockfragileplantelement.a(world, world.random, blockposition, iblockdata)) {
-                        iblockfragileplantelement.b(world, world.random, blockposition, iblockdata);
-                    }
-
-                    itemstack.subtract(1);
+                if (iblockfragileplantelement.a(world, world.random, blockposition, iblockdata)) {
+                    iblockfragileplantelement.b(world, world.random, blockposition, iblockdata);
                 }
+
+                itemstack.subtract(1);
 
                 return true;
             }
@@ -85,6 +83,7 @@ public class ItemDye extends Item {
         return false;
     }
 
+    @Override
     public boolean a(ItemStack itemstack, EntityHuman entityhuman, EntityLiving entityliving, EnumHand enumhand) {
         if (entityliving instanceof EntitySheep) {
             EntitySheep entitysheep = (EntitySheep) entityliving;
@@ -100,7 +99,7 @@ public class ItemDye extends Item {
                     return false;
                 }
 
-                enumcolor = EnumColor.fromColorIndex((byte) event.getColor().getWoolData());
+                enumcolor = EnumColor.fromColorIndex(event.getColor().getWoolData());
                 // CraftBukkit end
                 entitysheep.setColor(enumcolor);
                 itemstack.subtract(1);

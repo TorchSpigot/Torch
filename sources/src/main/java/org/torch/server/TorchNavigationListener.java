@@ -63,7 +63,7 @@ public final class TorchNavigationListener implements org.torch.api.IWorldAccess
         // PAIL: c -> getCollisionBoundingBox
         AxisAlignedBB oldBoundingBox = oldData.c(world, position);
         AxisAlignedBB newBoundingBox = newData.c(world, position);
-
+        
         return oldBoundingBox != newBoundingBox && (oldBoundingBox == null || !oldBoundingBox.equals(newBoundingBox));
     }
 

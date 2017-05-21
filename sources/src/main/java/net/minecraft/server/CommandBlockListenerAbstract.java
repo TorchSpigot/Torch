@@ -33,7 +33,7 @@ public abstract class CommandBlockListenerAbstract implements ICommandListener {
     }
 
     public IChatBaseComponent l() {
-        return (IChatBaseComponent) (this.d == null ? new ChatComponentText("") : this.d);
+        return this.d == null ? new ChatComponentText("") : this.d;
     }
 
     public NBTTagCompound a(NBTTagCompound nbttagcompound) {
@@ -73,6 +73,7 @@ public abstract class CommandBlockListenerAbstract implements ICommandListener {
         this.g.a(nbttagcompound);
     }
 
+    @Override
     public boolean a(int i, String s) {
         return i <= 2;
     }
@@ -87,9 +88,7 @@ public abstract class CommandBlockListenerAbstract implements ICommandListener {
     }
 
     public void a(World world) {
-        if (world.isClientSide) {
-            this.b = 0;
-        } else if ("Searge".equalsIgnoreCase(this.e)) {
+        if ("Searge".equalsIgnoreCase(this.e)) {
             this.d = new ChatComponentText("#itzlipofutzli");
             this.b = 1;
         } else {
@@ -112,6 +111,7 @@ public abstract class CommandBlockListenerAbstract implements ICommandListener {
                             return CommandBlockListenerAbstract.this.getCommand();
                         }
 
+                        @Override
                         public Object call() throws Exception {
                             return this.a();
                         }
@@ -121,6 +121,7 @@ public abstract class CommandBlockListenerAbstract implements ICommandListener {
                             return CommandBlockListenerAbstract.this.getName();
                         }
 
+                        @Override
                         public Object call() throws Exception {
                             return this.a();
                         }
@@ -249,7 +250,7 @@ public abstract class CommandBlockListenerAbstract implements ICommandListener {
 
     private static ArrayList<String[]> buildCommands(ICommandListener sender, String[] args, int pos) throws CommandException {
         ArrayList<String[]> commands = new ArrayList<String[]>();
-        java.util.List<EntityPlayer> players = (java.util.List<EntityPlayer>)PlayerSelector.getPlayers(sender, args[pos], EntityPlayer.class);
+        java.util.List<EntityPlayer> players = PlayerSelector.getPlayers(sender, args[pos], EntityPlayer.class);
 
         if (players != null) {
             for (EntityPlayer player : players) {
@@ -266,10 +267,12 @@ public abstract class CommandBlockListenerAbstract implements ICommandListener {
     }
     // CraftBukkit end
 
+    @Override
     public String getName() {
         return this.f;
     }
 
+    @Override
     public IChatBaseComponent getScoreboardDisplayName() {
         return new ChatComponentText(this.getName());
     }
@@ -278,20 +281,23 @@ public abstract class CommandBlockListenerAbstract implements ICommandListener {
         this.f = s;
     }
 
+    @Override
     public void sendMessage(IChatBaseComponent ichatbasecomponent) {
-        if (this.c && this.getWorld() != null && !this.getWorld().isClientSide) {
+        if (this.c && this.getWorld() != null) {
             this.d = (new ChatComponentText("[" + CommandBlockListenerAbstract.a.format(new Date()) + "] ")).addSibling(ichatbasecomponent);
             this.i();
         }
 
     }
 
+    @Override
     public boolean getSendCommandFeedback() {
         MinecraftServer minecraftserver = this.B_();
 
         return minecraftserver == null || !minecraftserver.M() || minecraftserver.worldServer[0].getGameRules().getBoolean("commandBlockOutput");
     }
 
+    @Override
     public void a(CommandObjectiveExecutor.EnumCommandResult commandobjectiveexecutor_enumcommandresult, int i) {
         this.g.a(this.B_(), this, commandobjectiveexecutor_enumcommandresult, i);
     }
@@ -314,9 +320,6 @@ public abstract class CommandBlockListenerAbstract implements ICommandListener {
         if (!entityhuman.dk()) {
             return false;
         } else {
-            if (entityhuman.getWorld().isClientSide) {
-                entityhuman.a(this);
-            }
 
             return true;
         }

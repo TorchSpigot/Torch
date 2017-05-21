@@ -85,7 +85,7 @@ public class EntitySlime extends EntityInsentient implements IMonster {
 
     @Override
 	public void A_() {
-        if (!this.world.isClientSide && this.world.getDifficulty() == EnumDifficulty.PEACEFUL && this.getSize() > 0) {
+        if (this.world.getDifficulty() == EnumDifficulty.PEACEFUL && this.getSize() > 0) {
             this.dead = true;
         }
 
@@ -150,7 +150,7 @@ public class EntitySlime extends EntityInsentient implements IMonster {
 	public void die() {
         int i = this.getSize();
 
-        if (!this.world.isClientSide && i > 1 && this.getHealth() <= 0.0F) {
+        if (i > 1 && this.getHealth() <= 0.0F) {
             int j = 2 + this.random.nextInt(3);
 
             // CraftBukkit start

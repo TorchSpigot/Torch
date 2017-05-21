@@ -31,9 +31,10 @@ public class EntityLlama extends EntityHorseChestedAbstract implements IRangedEn
     }
 
     public int dL() { // PAIL: rename
-        return ((Integer) this.datawatcher.get(EntityLlama.bG)).intValue();
+        return this.datawatcher.get(EntityLlama.bG).intValue();
     }
 
+    @Override
     public void b(NBTTagCompound nbttagcompound) {
         super.b(nbttagcompound);
         nbttagcompound.setInt("Variant", this.getVariant());
@@ -44,6 +45,7 @@ public class EntityLlama extends EntityHorseChestedAbstract implements IRangedEn
 
     }
 
+    @Override
     public void a(NBTTagCompound nbttagcompound) {
         this.p(nbttagcompound.getInt("Strength"));
         super.a(nbttagcompound);
@@ -55,6 +57,7 @@ public class EntityLlama extends EntityHorseChestedAbstract implements IRangedEn
         this.dy();
     }
 
+    @Override
     protected void r() {
         this.goalSelector.a(0, new PathfinderGoalFloat(this));
         this.goalSelector.a(1, new PathfinderGoalTame(this, 1.2D));
@@ -70,11 +73,13 @@ public class EntityLlama extends EntityHorseChestedAbstract implements IRangedEn
         this.targetSelector.a(2, new EntityLlama.a(this));
     }
 
+    @Override
     protected void initAttributes() {
         super.initAttributes();
         this.getAttributeInstance(GenericAttributes.FOLLOW_RANGE).setValue(40.0D);
     }
 
+    @Override
     protected void i() {
         super.i();
         this.datawatcher.register(EntityLlama.bG, Integer.valueOf(0));
@@ -83,35 +88,40 @@ public class EntityLlama extends EntityHorseChestedAbstract implements IRangedEn
     }
 
     public int getVariant() {
-        return MathHelper.clamp(((Integer) this.datawatcher.get(EntityLlama.bI)).intValue(), 0, 3);
+        return MathHelper.clamp(this.datawatcher.get(EntityLlama.bI).intValue(), 0, 3);
     }
 
     public void setVariant(int i) {
         this.datawatcher.set(EntityLlama.bI, Integer.valueOf(i));
     }
 
+    @Override
     protected int di() {
         return this.isCarryingChest() ? 2 + 3 * this.dl() : super.di();
     }
 
+    @Override
     public void k(Entity entity) {
         if (this.w(entity)) {
             float f = MathHelper.cos(this.aN * 0.017453292F);
             float f1 = MathHelper.sin(this.aN * 0.017453292F);
             float f2 = 0.3F;
 
-            entity.setPosition(this.locX + (double) (0.3F * f1), this.locY + this.ay() + entity.ax(), this.locZ - (double) (0.3F * f));
+            entity.setPosition(this.locX + 0.3F * f1, this.locY + this.ay() + entity.ax(), this.locZ - 0.3F * f);
         }
     }
 
+    @Override
     public double ay() {
-        return (double) this.length * 0.67D;
+        return this.length * 0.67D;
     }
 
+    @Override
     public boolean cR() {
         return false;
     }
 
+    @Override
     protected boolean b(EntityHuman entityhuman, ItemStack itemstack) {
         byte b0 = 0;
         byte b1 = 0;
@@ -139,19 +149,15 @@ public class EntityLlama extends EntityHorseChestedAbstract implements IRangedEn
         }
 
         if (this.isBaby() && b0 > 0) {
-            this.world.addParticle(EnumParticle.VILLAGER_HAPPY, this.locX + (double) (this.random.nextFloat() * this.width * 2.0F) - (double) this.width, this.locY + 0.5D + (double) (this.random.nextFloat() * this.length), this.locZ + (double) (this.random.nextFloat() * this.width * 2.0F) - (double) this.width, 0.0D, 0.0D, 0.0D, new int[0]);
-            if (!this.world.isClientSide) {
-                this.setAge(b0);
-            }
+            this.world.addParticle(EnumParticle.VILLAGER_HAPPY, this.locX + this.random.nextFloat() * this.width * 2.0F - this.width, this.locY + 0.5D + this.random.nextFloat() * this.length, this.locZ + this.random.nextFloat() * this.width * 2.0F - this.width, 0.0D, 0.0D, 0.0D, new int[0]);
+            this.setAge(b0);
 
             flag = true;
         }
 
         if (b1 > 0 && (flag || !this.isTamed()) && this.getTemper() < this.getMaxDomestication()) {
             flag = true;
-            if (!this.world.isClientSide) {
-                this.n(b1);
-            }
+            this.n(b1);
         }
 
         if (flag && !this.isSilent()) {
@@ -161,10 +167,12 @@ public class EntityLlama extends EntityHorseChestedAbstract implements IRangedEn
         return flag;
     }
 
+    @Override
     protected boolean isFrozen() {
         return this.getHealth() <= 0.0F || this.dt();
     }
 
+    @Override
     @Nullable
     public GroupDataEntity prepare(DifficultyDamageScaler difficultydamagescaler, @Nullable GroupDataEntity groupdataentity) {
         Object object = super.prepare(difficultydamagescaler, groupdataentity);
@@ -183,30 +191,37 @@ public class EntityLlama extends EntityHorseChestedAbstract implements IRangedEn
         return (GroupDataEntity) object;
     }
 
+    @Override
     protected SoundEffect dj() {
         return SoundEffects.dA;
     }
 
+    @Override
     protected SoundEffect G() {
         return SoundEffects.dz;
     }
 
+    @Override
     protected SoundEffect bW() {
         return SoundEffects.dE;
     }
 
+    @Override
     protected SoundEffect bX() {
         return SoundEffects.dC;
     }
 
+    @Override
     protected void a(BlockPosition blockposition, Block block) {
         this.a(SoundEffects.dG, 0.15F, 1.0F);
     }
 
+    @Override
     protected void dk() {
         this.a(SoundEffects.dB, 1.0F, (this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F);
     }
 
+    @Override
     public void dF() {
         SoundEffect soundeffect = this.dj();
 
@@ -216,27 +231,33 @@ public class EntityLlama extends EntityHorseChestedAbstract implements IRangedEn
 
     }
 
+    @Override
     @Nullable
     protected MinecraftKey J() {
         return LootTables.aw;
     }
 
+    @Override
     public int dl() {
         return this.dL();
     }
 
+    @Override
     public boolean dK() {
         return true;
     }
 
+    @Override
     public boolean f(ItemStack itemstack) {
         return itemstack.getItem() == Item.getItemOf(Blocks.CARPET);
     }
 
+    @Override
     public boolean dA() {
         return false;
     }
 
+    @Override
     public void a(IInventory iinventory) {
         EnumColor enumcolor = this.dO();
 
@@ -249,11 +270,10 @@ public class EntityLlama extends EntityHorseChestedAbstract implements IRangedEn
 
     }
 
+    @Override
     protected void dy() {
-        if (!this.world.isClientSide) {
-            super.dy();
-            this.g(this.inventoryChest.getItem(1));
-        }
+        super.dy();
+        this.g(this.inventoryChest.getItem(1));
     }
 
     private void a(@Nullable EnumColor enumcolor) {
@@ -271,15 +291,17 @@ public class EntityLlama extends EntityHorseChestedAbstract implements IRangedEn
 
     @Nullable
     public EnumColor dO() {
-        int i = ((Integer) this.datawatcher.get(EntityLlama.bH)).intValue();
+        int i = this.datawatcher.get(EntityLlama.bH).intValue();
 
         return i == -1 ? null : EnumColor.fromColorIndex(i);
     }
 
+    @Override
     public int getMaxDomestication() {
         return 30;
     }
 
+    @Override
     public boolean mate(EntityAnimal entityanimal) {
         return entityanimal != this && entityanimal instanceof EntityLlama && this.dG() && ((EntityLlama) entityanimal).dG();
     }
@@ -287,7 +309,7 @@ public class EntityLlama extends EntityHorseChestedAbstract implements IRangedEn
     public EntityLlama b(EntityAgeable entityageable) {
         EntityLlama entityllama = new EntityLlama(this.world);
 
-        this.a(entityageable, (EntityHorseAbstract) entityllama);
+        this.a(entityageable, entityllama);
         EntityLlama entityllama1 = (EntityLlama) entityageable;
         int i = this.random.nextInt(Math.max(this.dL(), entityllama1.dL())) + 1;
 
@@ -303,11 +325,11 @@ public class EntityLlama extends EntityHorseChestedAbstract implements IRangedEn
     private void e(EntityLiving entityliving) {
         EntityLlamaSpit entityllamaspit = new EntityLlamaSpit(this.world, this);
         double d0 = entityliving.locX - this.locX;
-        double d1 = entityliving.getBoundingBox().b + (double) (entityliving.length / 3.0F) - entityllamaspit.locY;
+        double d1 = entityliving.getBoundingBox().b + entityliving.length / 3.0F - entityllamaspit.locY;
         double d2 = entityliving.locZ - this.locZ;
         float f = MathHelper.sqrt(d0 * d0 + d2 * d2) * 0.2F;
 
-        entityllamaspit.shoot(d0, d1 + (double) f, d2, 1.5F, 10.0F);
+        entityllamaspit.shoot(d0, d1 + f, d2, 1.5F, 10.0F);
         this.world.a((EntityHuman) null, this.locX, this.locY, this.locZ, SoundEffects.dF, this.bC(), 1.0F, 1.0F + (this.random.nextFloat() - this.random.nextFloat()) * 0.2F);
         this.world.addEntity(entityllamaspit);
         this.bJ = true;
@@ -317,24 +339,25 @@ public class EntityLlama extends EntityHorseChestedAbstract implements IRangedEn
         this.bJ = flag;
     }
 
+    @Override
     public void e(float f, float f1) {
         int i = MathHelper.f((f * 0.5F - 3.0F) * f1);
 
         if (i > 0) {
             if (f >= 6.0F) {
-                this.damageEntity(DamageSource.FALL, (float) i);
+                this.damageEntity(DamageSource.FALL, i);
                 if (this.isVehicle()) {
                     Iterator iterator = this.by().iterator();
 
                     while (iterator.hasNext()) {
                         Entity entity = (Entity) iterator.next();
 
-                        entity.damageEntity(DamageSource.FALL, (float) i);
+                        entity.damageEntity(DamageSource.FALL, i);
                     }
                 }
             }
 
-            IBlockData iblockdata = this.world.getType(new BlockPosition(this.locX, this.locY - 0.2D - (double) this.lastYaw, this.locZ));
+            IBlockData iblockdata = this.world.getType(new BlockPosition(this.locX, this.locY - 0.2D - this.lastYaw, this.locZ));
             Block block = iblockdata.getBlock();
 
             if (iblockdata.getMaterial() != Material.AIR && !this.isSilent()) {
@@ -372,10 +395,12 @@ public class EntityLlama extends EntityHorseChestedAbstract implements IRangedEn
         return this.bK;
     }
 
+    @Override
     protected double dg() {
         return 2.0D;
     }
 
+    @Override
     protected void dD() {
         if (!this.dR() && this.isBaby()) {
             super.dD();
@@ -383,14 +408,17 @@ public class EntityLlama extends EntityHorseChestedAbstract implements IRangedEn
 
     }
 
+    @Override
     public boolean dE() {
         return false;
     }
 
+    @Override
     public void a(EntityLiving entityliving, float f) {
         this.e(entityliving);
     }
 
+    @Override
     public EntityAgeable createChild(EntityAgeable entityageable) {
         return this.b(entityageable);
     }
@@ -401,8 +429,9 @@ public class EntityLlama extends EntityHorseChestedAbstract implements IRangedEn
             super(entityllama, EntityWolf.class, 16, false, true, (Predicate) null);
         }
 
+        @Override
         public boolean a() {
-            if (super.a() && this.d != null && !((EntityWolf) this.d).isTamed()) {
+            if (super.a() && this.d != null && !this.d.isTamed()) {
                 return true;
             } else {
                 this.e.setGoalTarget((EntityLiving) null);
@@ -410,6 +439,7 @@ public class EntityLlama extends EntityHorseChestedAbstract implements IRangedEn
             }
         }
 
+        @Override
         protected double i() {
             return super.i() * 0.25D;
         }
@@ -421,6 +451,7 @@ public class EntityLlama extends EntityHorseChestedAbstract implements IRangedEn
             super(entityllama, false, new Class[0]);
         }
 
+        @Override
         public boolean b() {
             if (this.e instanceof EntityLlama) {
                 EntityLlama entityllama = (EntityLlama) this.e;
