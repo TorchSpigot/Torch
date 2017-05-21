@@ -9,11 +9,9 @@ public class BaseBlockPosition implements Comparable<BaseBlockPosition> {
 
     public static final BaseBlockPosition ZERO = new BaseBlockPosition(0, 0, 0);
     // Paper start - Make mutable and protected for MutableBlockPos and PooledBlockPos
-    // Torch start
     protected int a;
     protected int b;
     protected int c;
-    // Torch end
 
     public final boolean isValidLocation() {
         return a >= -30000000 && c >= -30000000 && a < 30000000 && c < 30000000 && b >= 0 && b < 256;

@@ -983,7 +983,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         MinecraftTimings.playerListTimer.stopTiming();
 
         MinecraftTimings.tickablesTimer.startTiming();
-        for (index = 0, size = tickables.size(); index < this.tickables.size(); index++) {
+        for (index = 0, size = tickables.size(); index < size; index++) {
             tickables.get(index).F_();
         }
         MinecraftTimings.tickablesTimer.stopTiming();
@@ -1183,8 +1183,8 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         return new File(this.getDataDirectory(), fileName);
     }
 
-    public void registerTickable(ITickable itickable) {
-        this.tickables.add(itickable);
+    public void registerTickable(ITickable tickable) {
+        this.tickables.add(tickable);
     }
 
     /**

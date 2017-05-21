@@ -1730,17 +1730,24 @@ public abstract class World implements IBlockAccess {
 
     }
 
+    /**
+     * <b>PAIL: updateEntity</b>
+     * <p>Forcefully updates the entity
+     */
     public void h(Entity entity) {
         this.entityJoinedWorld(entity, true);
     }
 
-    public void entityJoinedWorld(Entity entity, boolean flag) {
+    /**
+     * Updates the entity in the world if the chunk the entity is in is currently loaded or its forced to update
+     */
+    public void entityJoinedWorld(Entity entity, boolean forceUpdate) {
         //int i = MathHelper.floor(entity.locX);
         //int j = MathHelper.floor(entity.locZ);
         //boolean flag1 = true;
 
         // Spigot start
-        if (flag && !org.spigotmc.ActivationRange.checkIfActive(entity)) {
+        if (forceUpdate && !org.spigotmc.ActivationRange.checkIfActive(entity)) {
             entity.ticksLived++;
             entity.inactiveTick();
         } else {
@@ -1750,7 +1757,7 @@ public abstract class World implements IBlockAccess {
             entity.O = entity.locZ;
             entity.lastYaw = entity.yaw;
             entity.lastPitch = entity.pitch;
-            if (flag && entity.aa) {
+            if (forceUpdate && entity.aa) {
                 ++entity.ticksLived;
                 ++co.aikar.timings.TimingHistory.activatedEntityTicks; // Paper
                 if (entity.isPassenger()) {
@@ -1799,7 +1806,7 @@ public abstract class World implements IBlockAccess {
             }
 
             
-            if (flag && entity.aa) {
+            if (forceUpdate && entity.aa) {
                 Iterator iterator = entity.bx().iterator();
 
                 while (iterator.hasNext()) {
