@@ -1367,7 +1367,7 @@ public class Chunk {
         if (this.heightMap.length != newHeightMap.length) {
             Chunk.e.warn("Could not set level chunk heightmap, array length is {} instead of {}", new Object[] { Integer.valueOf(newHeightMap.length), Integer.valueOf(this.heightMap.length)});
         } else {
-            // Torch start - Update minimum height map, see MC-117412
+            // Torch start - Update minimum heightmap, see MC-117412
             // System.arraycopy(newHeightMap, 0, this.heightMap, 0, this.heightMap.length);
             int min = this.v;
             

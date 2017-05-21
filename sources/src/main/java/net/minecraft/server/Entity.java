@@ -507,7 +507,7 @@ public abstract class Entity implements ICommandListener {
     }
 
     protected void burnFromLava() {
-        if (!this.fireProof && !this.isInWater()) {
+        if (!this.fireProof) {
             this.damageEntity(DamageSource.LAVA, 4.0F);
 
             // CraftBukkit start - Fallen in lava TODO: this event spams!
@@ -2170,7 +2170,7 @@ public abstract class Entity implements ICommandListener {
         }
         // CraftBukkit end
         ++this.fireTicks;
-        if (this.fireTicks == 0 && !this.isInWater()) {
+        if (this.fireTicks == 0) {
             // CraftBukkit start - Call a combust event when lightning strikes
             EntityCombustByEntityEvent entityCombustEvent = new EntityCombustByEntityEvent(stormBukkitEntity, thisBukkitEntity, 8);
             pluginManager.callEvent(entityCombustEvent);
