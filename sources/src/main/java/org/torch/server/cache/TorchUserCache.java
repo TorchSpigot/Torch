@@ -192,7 +192,7 @@ public final class TorchUserCache implements TorchReactor {
      * Also create new entry if not present
      */
     public GameProfile requestProfile(String username) {
-        String keyUsername = Caches.toLowerCase(username, Locale.ROOT);
+        String keyUsername = username.toLowerCase(Locale.ROOT);
         UserCacheEntry cachedEntry = caches.getIfPresent(keyUsername);
         
         if (cachedEntry == null) {
@@ -204,7 +204,7 @@ public final class TorchUserCache implements TorchReactor {
     
     @Nullable
     public GameProfile peekCachedProfile(String username) {
-        UserCacheEntry entry = caches.getIfPresent(Caches.toLowerCase(username, Locale.ROOT));
+        UserCacheEntry entry = caches.getIfPresent(username.toLowerCase(Locale.ROOT));
         
         return entry == null ? null : entry.profile;
     }
@@ -218,7 +218,7 @@ public final class TorchUserCache implements TorchReactor {
     public void offerCache(GameProfile profile, Date date) {
         if (date == null) date = warpExpireDate(false);
         
-        String keyUsername = Caches.toLowerCase(profile.getName(), Locale.ROOT);
+        String keyUsername = profile.getName().toLowerCase(Locale.ROOT);
         UserCacheEntry entry = caches.getIfPresent(keyUsername);
         
         if (entry != null) {

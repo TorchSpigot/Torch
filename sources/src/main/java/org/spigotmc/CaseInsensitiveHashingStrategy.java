@@ -2,9 +2,8 @@ package org.spigotmc;
 
 import gnu.trove.strategy.HashingStrategy;
 
+@SuppressWarnings("serial")
 class CaseInsensitiveHashingStrategy implements HashingStrategy<String> {
-
-    private static final long serialVersionUID = -1L;
     
     static final CaseInsensitiveHashingStrategy INSTANCE = new CaseInsensitiveHashingStrategy();
 

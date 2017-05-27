@@ -31,8 +31,8 @@ public class PaperLightingQueue {
         }
     }
 
+    @SuppressWarnings("serial")
     public static class LightingQueue extends ArrayDeque<Runnable> {
-        private static final long serialVersionUID = -1L;
         final private Chunk chunk;
 
         LightingQueue(Chunk chunk) {
