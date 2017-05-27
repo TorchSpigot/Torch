@@ -1714,7 +1714,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
     /**
      * Simply send a message
      */
-    public void sendMessage(IChatBaseComponent component) {
+    public static void sendMessage(IChatBaseComponent component) {
         Bukkit.getConsoleSender().sendMessage(component.toPlainText());
     }
 

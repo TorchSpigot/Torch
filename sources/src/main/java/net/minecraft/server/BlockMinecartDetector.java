@@ -78,7 +78,7 @@ public class BlockMinecartDetector extends BlockMinecartTrackAbstract {
         if (flag != flag1) {
             org.bukkit.block.Block block = world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
 
-            BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(block, flag ? 15 : 0, flag1 ? 15 : 0);
+            BlockRedstoneEvent eventRedstone = BlockRedstoneEvent.requestMutable(block, flag ? 15 : 0, flag1 ? 15 : 0);
             world.getServer().getPluginManager().callEvent(eventRedstone);
 
             flag1 = eventRedstone.getNewCurrent() > 0;

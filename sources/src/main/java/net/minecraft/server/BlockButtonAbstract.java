@@ -144,7 +144,7 @@ public abstract class BlockButtonAbstract extends BlockDirectional {
             int old = (powered) ? 15 : 0;
             int current = (!powered) ? 15 : 0;
 
-            BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(block, old, current);
+            BlockRedstoneEvent eventRedstone = BlockRedstoneEvent.requestMutable(block, old, current);
             world.getServer().getPluginManager().callEvent(eventRedstone);
 
             if ((eventRedstone.getNewCurrent() > 0) != (!powered)) {
@@ -200,7 +200,7 @@ public abstract class BlockButtonAbstract extends BlockDirectional {
                 // CraftBukkit start
                 org.bukkit.block.Block block = world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
 
-                BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(block, 15, 0);
+                BlockRedstoneEvent eventRedstone = BlockRedstoneEvent.requestMutable(block, 15, 0);
                 world.getServer().getPluginManager().callEvent(eventRedstone);
 
                 if (eventRedstone.getNewCurrent() > 0) {
@@ -258,7 +258,7 @@ public abstract class BlockButtonAbstract extends BlockDirectional {
             // CraftBukkit start
             org.bukkit.block.Block block = world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
 
-            BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(block, 0, 15);
+            BlockRedstoneEvent eventRedstone = BlockRedstoneEvent.requestMutable(block, 0, 15);
             world.getServer().getPluginManager().callEvent(eventRedstone);
 
             if (eventRedstone.getNewCurrent() <= 0) {
@@ -275,7 +275,7 @@ public abstract class BlockButtonAbstract extends BlockDirectional {
             // CraftBukkit start
             org.bukkit.block.Block block = world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
 
-            BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(block, 15, 0);
+            BlockRedstoneEvent eventRedstone = BlockRedstoneEvent.requestMutable(block, 15, 0);
             world.getServer().getPluginManager().callEvent(eventRedstone);
 
             if (eventRedstone.getNewCurrent() > 0) {

@@ -763,8 +763,8 @@ public final class TorchPlayerList implements TorchReactor {
 
         newPlayerEntity.setHealth(newPlayerEntity.getHealth());
         // Update health, etc...
-        syncPlayerInventoryHealth(newPlayerEntity); // TODO: check
-        newPlayerEntity.updateAbilities(); // TODO: check
+        syncPlayerInventoryHealth(newPlayerEntity);
+        newPlayerEntity.updateAbilities();
 
         Regulator.post(() -> {
             for (MobEffect effect : oldPlayerEntity.getEffects()) {
@@ -1123,7 +1123,7 @@ public final class TorchPlayerList implements TorchReactor {
     }
 
     public void sendMessage(IChatBaseComponent component, boolean flag) {
-        this.server.sendMessage(component);
+        TorchServer.sendMessage(component);
         int i = flag ? 1 : 0;
 
         // We run this through our processor first so we can get web links etc

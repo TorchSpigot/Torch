@@ -1,6 +1,5 @@
 package net.minecraft.server;
 
-import com.google.common.collect.Sets;
 import com.koloboke.collect.set.hash.HashObjSets;
 
 import java.util.Set;
@@ -42,7 +41,7 @@ public class PathfinderGoalTempt extends PathfinderGoal {
     }
 
     @Override
-	public boolean a() {
+    public boolean a() {
         if (this.i > 0) {
             --this.i;
             return false;
@@ -68,7 +67,7 @@ public class PathfinderGoalTempt extends PathfinderGoal {
     }
 
     @Override
-	public boolean b() {
+    public boolean b() {
         if (this.l) {
             if (this.a.h(this.h) < 36.0D) {
                 if (this.h.d(this.c, this.d, this.e) > 0.010000000000000002D) {
@@ -92,7 +91,7 @@ public class PathfinderGoalTempt extends PathfinderGoal {
     }
 
     @Override
-	public void c() {
+    public void c() {
         this.c = this.h.locX;
         this.d = this.h.locY;
         this.e = this.h.locZ;
@@ -100,7 +99,7 @@ public class PathfinderGoalTempt extends PathfinderGoal {
     }
 
     @Override
-	public void d() {
+    public void d() {
         this.h = null;
         this.a.getNavigation().o();
         this.i = 100;
@@ -108,7 +107,7 @@ public class PathfinderGoalTempt extends PathfinderGoal {
     }
 
     @Override
-	public void e() {
+    public void e() {
         this.a.getControllerLook().a(this.h, this.a.cL() + 20, this.a.N());
         if (this.a.h(this.h) < 6.25D) {
             this.a.getNavigation().o();

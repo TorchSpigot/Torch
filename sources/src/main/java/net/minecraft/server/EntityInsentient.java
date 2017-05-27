@@ -141,7 +141,7 @@ public abstract class EntityInsentient extends EntityLiving {
             if (entityliving != null) {
                 ctarget = (CraftLivingEntity) entityliving.getBukkitEntity();
             }
-            EntityTargetLivingEntityEvent event = new EntityTargetLivingEntityEvent(this.getBukkitEntity(), ctarget, reason);
+            EntityTargetLivingEntityEvent event = EntityTargetLivingEntityEvent.requestMutable(this.getBukkitEntity(), ctarget, reason);
             world.getServer().getPluginManager().callEvent(event);
             if (event.isCancelled()) {
                 return false;

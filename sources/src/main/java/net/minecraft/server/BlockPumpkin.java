@@ -5,7 +5,6 @@ import javax.annotation.Nullable;
 
 // CraftBukkit start
 import org.bukkit.craftbukkit.util.BlockStateListPopulator;
-import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 // CraftBukkit end
 
@@ -20,6 +19,7 @@ public class BlockPumpkin extends BlockFacingHorizontal {
             return iblockdata != null && (iblockdata.getBlock() == Blocks.PUMPKIN || iblockdata.getBlock() == Blocks.LIT_PUMPKIN);
         }
 
+        @Override
         public boolean apply(@Nullable Object object) {
             return this.a((IBlockData) object);
         }
@@ -32,6 +32,7 @@ public class BlockPumpkin extends BlockFacingHorizontal {
         this.a(CreativeModeTab.b);
     }
 
+    @Override
     public void onPlace(World world, BlockPosition blockposition, IBlockData iblockdata) {
         super.onPlace(world, blockposition, iblockdata);
         this.c(world, blockposition);
@@ -61,13 +62,13 @@ public class BlockPumpkin extends BlockFacingHorizontal {
             EntitySnowman entitysnowman = new EntitySnowman(world);
             BlockPosition blockposition1 = shapedetector_shapedetectorcollection.a(0, 2, 0).getPosition();
 
-            entitysnowman.setPositionRotation((double) blockposition1.getX() + 0.5D, (double) blockposition1.getY() + 0.05D, (double) blockposition1.getZ() + 0.5D, 0.0F, 0.0F);
+            entitysnowman.setPositionRotation(blockposition1.getX() + 0.5D, blockposition1.getY() + 0.05D, blockposition1.getZ() + 0.5D, 0.0F, 0.0F);
             // CraftBukkit start
             if (world.addEntity(entitysnowman, SpawnReason.BUILD_SNOWMAN)) {
                 blockList.updateList();
 
             for (j = 0; j < 120; ++j) {
-                world.addParticle(EnumParticle.SNOW_SHOVEL, (double) blockposition1.getX() + world.random.nextDouble(), (double) blockposition1.getY() + world.random.nextDouble() * 2.5D, (double) blockposition1.getZ() + world.random.nextDouble(), 0.0D, 0.0D, 0.0D, new int[0]);
+                world.addParticle(EnumParticle.SNOW_SHOVEL, blockposition1.getX() + world.random.nextDouble(), blockposition1.getY() + world.random.nextDouble() * 2.5D, blockposition1.getZ() + world.random.nextDouble(), 0.0D, 0.0D, 0.0D, new int[0]);
             }
 
             for (j = 0; j < this.getDetectorSnowGolem().b(); ++j) {
@@ -93,13 +94,13 @@ public class BlockPumpkin extends BlockFacingHorizontal {
                 EntityIronGolem entityirongolem = new EntityIronGolem(world);
 
                 entityirongolem.setPlayerCreated(true);
-                entityirongolem.setPositionRotation((double) blockposition2.getX() + 0.5D, (double) blockposition2.getY() + 0.05D, (double) blockposition2.getZ() + 0.5D, 0.0F, 0.0F);
+                entityirongolem.setPositionRotation(blockposition2.getX() + 0.5D, blockposition2.getY() + 0.05D, blockposition2.getZ() + 0.5D, 0.0F, 0.0F);
             // CraftBukkit start
             if (world.addEntity(entityirongolem, SpawnReason.BUILD_IRONGOLEM)) {
                 blockList.updateList();
 
                 for (j = 0; j < 120; ++j) {
-                    world.addParticle(EnumParticle.SNOWBALL, (double) blockposition2.getX() + world.random.nextDouble(), (double) blockposition2.getY() + world.random.nextDouble() * 3.9D, (double) blockposition2.getZ() + world.random.nextDouble(), 0.0D, 0.0D, 0.0D, new int[0]);
+                    world.addParticle(EnumParticle.SNOWBALL, blockposition2.getX() + world.random.nextDouble(), blockposition2.getY() + world.random.nextDouble() * 3.9D, blockposition2.getZ() + world.random.nextDouble(), 0.0D, 0.0D, 0.0D, new int[0]);
                 }
 
                 for (j = 0; j < this.getDetectorIronGolem().c(); ++j) {
@@ -115,30 +116,37 @@ public class BlockPumpkin extends BlockFacingHorizontal {
 
     }
 
+    @Override
     public boolean canPlace(World world, BlockPosition blockposition) {
         return world.getType(blockposition).getBlock().material.isReplaceable() && world.getType(blockposition.down()).r();
     }
 
+    @Override
     public IBlockData a(IBlockData iblockdata, EnumBlockRotation enumblockrotation) {
-        return iblockdata.set(BlockPumpkin.FACING, enumblockrotation.a((EnumDirection) iblockdata.get(BlockPumpkin.FACING)));
+        return iblockdata.set(BlockPumpkin.FACING, enumblockrotation.a(iblockdata.get(BlockPumpkin.FACING)));
     }
 
+    @Override
     public IBlockData a(IBlockData iblockdata, EnumBlockMirror enumblockmirror) {
-        return iblockdata.a(enumblockmirror.a((EnumDirection) iblockdata.get(BlockPumpkin.FACING)));
+        return iblockdata.a(enumblockmirror.a(iblockdata.get(BlockPumpkin.FACING)));
     }
 
+    @Override
     public IBlockData getPlacedState(World world, BlockPosition blockposition, EnumDirection enumdirection, float f, float f1, float f2, int i, EntityLiving entityliving) {
         return this.getBlockData().set(BlockPumpkin.FACING, entityliving.getDirection().opposite());
     }
 
+    @Override
     public IBlockData fromLegacyData(int i) {
         return this.getBlockData().set(BlockPumpkin.FACING, EnumDirection.fromType2(i));
     }
 
+    @Override
     public int toLegacyData(IBlockData iblockdata) {
-        return ((EnumDirection) iblockdata.get(BlockPumpkin.FACING)).get2DRotationValue();
+        return iblockdata.get(BlockPumpkin.FACING).get2DRotationValue();
     }
 
+    @Override
     protected BlockStateList getStateList() {
         return new BlockStateList(this, new IBlockState[] { BlockPumpkin.FACING});
     }

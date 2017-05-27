@@ -37,7 +37,7 @@ public class BlockCommand extends BlockTileEntity {
         int old = flag1 ? 15 : 0;
         int current = flag ? 15 : 0;
 
-        BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(bukkitBlock, old, current);
+        BlockRedstoneEvent eventRedstone = BlockRedstoneEvent.requestMutable(bukkitBlock, old, current);
         world.getServer().getPluginManager().callEvent(eventRedstone);
         // CraftBukkit end
 

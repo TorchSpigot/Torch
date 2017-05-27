@@ -143,7 +143,7 @@ public class BlockLever extends Block {
         int old = (powered) ? 15 : 0;
         int current = (!powered) ? 15 : 0;
 
-        BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(block, old, current);
+        BlockRedstoneEvent eventRedstone = BlockRedstoneEvent.requestMutable(block, old, current);
         world.getServer().getPluginManager().callEvent(eventRedstone);
 
         if ((eventRedstone.getNewCurrent() > 0) != (!powered)) {

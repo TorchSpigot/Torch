@@ -157,7 +157,7 @@ public class BlockDoor extends Block {
                 int oldPower = iblockdata2.get(BlockDoor.POWERED) ? 15 : 0;
 
                 if (oldPower == 0 ^ power == 0) {
-                    BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(bukkitBlock, oldPower, power);
+                    BlockRedstoneEvent eventRedstone = BlockRedstoneEvent.requestMutable(bukkitBlock, oldPower, power);
                     world.getServer().getPluginManager().callEvent(eventRedstone);
 
                     boolean flag1 = eventRedstone.getNewCurrent() > 0;

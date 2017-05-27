@@ -29,23 +29,23 @@ public class BlockMonsterEggs extends Block {
     @Override
     protected ItemStack w(IBlockData iblockdata) {
         switch (iblockdata.get(BlockMonsterEggs.VARIANT)) {
-        case COBBLESTONE:
-            return new ItemStack(Blocks.COBBLESTONE);
+            case COBBLESTONE:
+                return new ItemStack(Blocks.COBBLESTONE);
 
-        case STONEBRICK:
-            return new ItemStack(Blocks.STONEBRICK);
+            case STONEBRICK:
+                return new ItemStack(Blocks.STONEBRICK);
 
-        case MOSSY_STONEBRICK:
-            return new ItemStack(Blocks.STONEBRICK, 1, BlockSmoothBrick.EnumStonebrickType.MOSSY.a());
+            case MOSSY_STONEBRICK:
+                return new ItemStack(Blocks.STONEBRICK, 1, BlockSmoothBrick.EnumStonebrickType.MOSSY.a());
 
-        case CRACKED_STONEBRICK:
-            return new ItemStack(Blocks.STONEBRICK, 1, BlockSmoothBrick.EnumStonebrickType.CRACKED.a());
+            case CRACKED_STONEBRICK:
+                return new ItemStack(Blocks.STONEBRICK, 1, BlockSmoothBrick.EnumStonebrickType.CRACKED.a());
 
-        case CHISELED_STONEBRICK:
-            return new ItemStack(Blocks.STONEBRICK, 1, BlockSmoothBrick.EnumStonebrickType.CHISELED.a());
+            case CHISELED_STONEBRICK:
+                return new ItemStack(Blocks.STONEBRICK, 1, BlockSmoothBrick.EnumStonebrickType.CHISELED.a());
 
-        default:
-            return new ItemStack(Blocks.STONE);
+            default:
+                return new ItemStack(Blocks.STONE);
         }
     }
 
@@ -84,36 +84,36 @@ public class BlockMonsterEggs extends Block {
     public static enum EnumMonsterEggVarient implements INamable {
 
         STONE(0, "stone") {;
-            @Override
-            public IBlockData d() {
-                return Blocks.STONE.getBlockData().set(BlockStone.VARIANT, BlockStone.EnumStoneVariant.STONE);
-            }
+        @Override
+        public IBlockData d() {
+            return Blocks.STONE.getBlockData().set(BlockStone.VARIANT, BlockStone.EnumStoneVariant.STONE);
+        }
         }, COBBLESTONE(1, "cobblestone", "cobble") {;
-    @Override
-    public IBlockData d() {
-        return Blocks.COBBLESTONE.getBlockData();
-    }
-}, STONEBRICK(2, "stone_brick", "brick") {;
-    @Override
-    public IBlockData d() {
-        return Blocks.STONEBRICK.getBlockData().set(BlockSmoothBrick.VARIANT, BlockSmoothBrick.EnumStonebrickType.DEFAULT);
-    }
-}, MOSSY_STONEBRICK(3, "mossy_brick", "mossybrick") {;
-    @Override
-    public IBlockData d() {
-        return Blocks.STONEBRICK.getBlockData().set(BlockSmoothBrick.VARIANT, BlockSmoothBrick.EnumStonebrickType.MOSSY);
-    }
-}, CRACKED_STONEBRICK(4, "cracked_brick", "crackedbrick") {;
-    @Override
-    public IBlockData d() {
-        return Blocks.STONEBRICK.getBlockData().set(BlockSmoothBrick.VARIANT, BlockSmoothBrick.EnumStonebrickType.CRACKED);
-    }
-}, CHISELED_STONEBRICK(5, "chiseled_brick", "chiseledbrick") {;
-    @Override
-    public IBlockData d() {
-        return Blocks.STONEBRICK.getBlockData().set(BlockSmoothBrick.VARIANT, BlockSmoothBrick.EnumStonebrickType.CHISELED);
-    }
-};
+        @Override
+        public IBlockData d() {
+            return Blocks.COBBLESTONE.getBlockData();
+        }
+        }, STONEBRICK(2, "stone_brick", "brick") {;
+        @Override
+        public IBlockData d() {
+            return Blocks.STONEBRICK.getBlockData().set(BlockSmoothBrick.VARIANT, BlockSmoothBrick.EnumStonebrickType.DEFAULT);
+        }
+        }, MOSSY_STONEBRICK(3, "mossy_brick", "mossybrick") {;
+        @Override
+        public IBlockData d() {
+            return Blocks.STONEBRICK.getBlockData().set(BlockSmoothBrick.VARIANT, BlockSmoothBrick.EnumStonebrickType.MOSSY);
+        }
+        }, CRACKED_STONEBRICK(4, "cracked_brick", "crackedbrick") {;
+        @Override
+        public IBlockData d() {
+            return Blocks.STONEBRICK.getBlockData().set(BlockSmoothBrick.VARIANT, BlockSmoothBrick.EnumStonebrickType.CRACKED);
+        }
+        }, CHISELED_STONEBRICK(5, "chiseled_brick", "chiseledbrick") {;
+        @Override
+        public IBlockData d() {
+            return Blocks.STONEBRICK.getBlockData().set(BlockSmoothBrick.VARIANT, BlockSmoothBrick.EnumStonebrickType.CHISELED);
+        }
+        };
 
         private static final BlockMonsterEggs.EnumMonsterEggVarient[] g = new BlockMonsterEggs.EnumMonsterEggVarient[values().length];
         private final int h;

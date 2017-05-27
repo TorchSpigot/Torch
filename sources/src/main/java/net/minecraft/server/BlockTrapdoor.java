@@ -105,7 +105,7 @@ public class BlockTrapdoor extends Block {
             int oldPower = iblockdata.get(OPEN) ? 15 : 0;
 
             if (oldPower == 0 ^ power == 0 || block.getBlockData().n()) {
-                BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(bblock, oldPower, power);
+                BlockRedstoneEvent eventRedstone = BlockRedstoneEvent.requestMutable(bblock, oldPower, power);
                 world.getServer().getPluginManager().callEvent(eventRedstone);
                 flag = eventRedstone.getNewCurrent() > 0;
             }
