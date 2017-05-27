@@ -6,7 +6,9 @@ public final class TorchIntCache {
         return new int[size];
     }
     
-    public static void releaseCaches() {}
+    public static void releaseCaches() {
+        ;
+    }
     
     public static String toReadableSize() {
         return "Integer array caching disabled.";
