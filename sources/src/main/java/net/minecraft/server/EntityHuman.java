@@ -6,7 +6,6 @@ import com.mojang.authlib.GameProfile;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 import javax.annotation.Nullable;
 
@@ -20,7 +19,6 @@ import org.bukkit.event.player.PlayerBedLeaveEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerVelocityEvent;
 import org.bukkit.util.Vector;
-import org.torch.server.cache.Caches;
 
 public abstract class EntityHuman extends EntityLiving {
 
@@ -1856,7 +1854,7 @@ public abstract class EntityHuman extends EntityLiving {
     }
 
     public static UUID offlinePlayerUUID(String name, boolean toLowerCase) {
-        return UUID.nameUUIDFromBytes(("OfflinePlayer:" + (toLowerCase ? Caches.toLowerCase(name) : name)).getBytes(Charsets.UTF_8));
+        return UUID.nameUUIDFromBytes(("OfflinePlayer:" + (toLowerCase ? name.toLowerCase() : name)).getBytes(Charsets.UTF_8));
     }
 
     public static UUID d(String name) {

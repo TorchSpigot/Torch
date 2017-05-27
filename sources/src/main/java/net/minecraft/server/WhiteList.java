@@ -8,8 +8,6 @@ import static org.torch.server.cache.TorchUserCache.authUUID;
 import java.io.File;
 import java.util.Iterator;
 
-import org.torch.server.cache.Caches;
-
 public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
 
     public WhiteList(File file) {
@@ -34,7 +32,7 @@ public class WhiteList extends JsonList<GameProfile, WhiteListEntry> {
     }
 
     protected String b(GameProfile profile) {
-        return authUUID() ? profile.getId().toString() : Caches.toLowerCase(profile.getName()); // Torch - use cache
+        return authUUID() ? profile.getId().toString() : profile.getName().toLowerCase();
     }
 
     public GameProfile a(String s) {

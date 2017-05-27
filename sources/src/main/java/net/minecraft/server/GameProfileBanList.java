@@ -8,8 +8,6 @@ import static org.torch.server.cache.TorchUserCache.authUUID;
 import java.io.File;
 import java.util.Iterator;
 
-import org.torch.server.cache.Caches;
-
 public class GameProfileBanList extends JsonList<GameProfile, GameProfileBanEntry> {
 
     public GameProfileBanList(File file) {
@@ -34,7 +32,7 @@ public class GameProfileBanList extends JsonList<GameProfile, GameProfileBanEntr
     }
 
     protected String b(GameProfile profile) {
-        return authUUID() ? Caches.objectString(profile) : Caches.toLowerCase(profile.getName()); // Torch - use cache
+        return authUUID() ? profile.getId().toString() : profile.getName().toLowerCase();
     }
 
     public GameProfile a(String s) {

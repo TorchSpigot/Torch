@@ -56,9 +56,8 @@ public final class TorchChunkProvider implements net.minecraft.server.IChunkProv
     public final WorldServer world;
     
     /** Map of chunk Id's to Chunk instances */
+    @SuppressWarnings("serial")
     public Long2ObjectOpenHashMap<Chunk> chunks = new Long2ObjectOpenHashMap<Chunk>(8192) {
-        private static final long serialVersionUID = -1L;
-
         @Override
         public Chunk get(long key) {
             if (lastChunkByPos != null && key == lastChunkByPos.chunkKey) {

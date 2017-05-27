@@ -113,7 +113,6 @@ import org.spigotmc.AsyncCatcher;
 import org.torch.server.TorchPlayerList;
 import org.torch.server.TorchServer;
 import org.torch.server.TorchWorldManager;
-import org.torch.server.cache.Caches;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 import org.yaml.snakeyaml.error.MarkedYAMLException;
@@ -421,10 +420,10 @@ public final class CraftServer implements Server {
             return found;
         }
 
-        String lowerName = Caches.toLowerCase(name, Locale.ENGLISH);
+        String lowerName = name.toLowerCase(Locale.ENGLISH);
         int delta = Integer.MAX_VALUE;
         for (Player player : getOnlinePlayers()) {
-            if (Caches.toLowerCase(player.getName(), Locale.ENGLISH).startsWith(lowerName)) {
+            if (player.getName().toLowerCase(Locale.ENGLISH).startsWith(lowerName)) {
                 int curDelta = Math.abs(player.getName().length() - lowerName.length());
                 if (curDelta < delta) {
                     found = player;
@@ -1056,7 +1055,7 @@ public final class CraftServer implements Server {
     public World getWorld(String name) {
         Validate.notNull(name, "Name cannot be null");
 
-        return worlds.get(Caches.toLowerCase(name, Locale.ENGLISH));
+        return worlds.get(name.toLowerCase(Locale.ENGLISH));
     }
 
     @Override

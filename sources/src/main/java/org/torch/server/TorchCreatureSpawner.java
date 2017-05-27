@@ -2,6 +2,7 @@ package org.torch.server;
 
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -38,14 +39,16 @@ public final class TorchCreatureSpawner implements TorchReactor {
     public TorchCreatureSpawner(@Nullable SpawnerCreature legacy) {
         servant = legacy;
     }
+    
+    UUID uuid = UUID.randomUUID();
 
     /** Returns entity count only from chunks being processed in spawnableChunks */
     public int getEntityCount(WorldServer server, Class<?> creatureType) {
         // Paper - use entire world, not just active chunks. Spigot broke vanilla expectations.
         return server
-                .getChunkProviderServer().getReactor()
+                .getChunkProviderServer()
                 .chunks.values()
-                .stream()
+                .parallelStream()
                 .collect(java.util.stream.Collectors.summingInt(chunk -> chunk.entityCount.getOrDefault(creatureType, 0)));
     }
 

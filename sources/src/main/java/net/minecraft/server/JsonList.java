@@ -28,8 +28,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Logger;
 import org.torch.api.Async;
-import org.torch.server.cache.Caches;
-
 import static org.torch.server.TorchServer.logger;
 
 public class JsonList<K, V extends JsonListEntry<K>> {
@@ -122,7 +120,7 @@ public class JsonList<K, V extends JsonListEntry<K>> {
     }
 
     protected String a(K k) {
-        return Caches.objectString(k); // Torch - cache keys
+        return k.toString();
     }
 
     public boolean contains(K k0) { return this.d(k0); } // OBFHELPER

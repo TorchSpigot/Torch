@@ -7,8 +7,6 @@ import com.mojang.authlib.properties.Property;
 import java.util.UUID;
 import javax.annotation.Nullable;
 
-import org.torch.server.cache.Caches;
-
 import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
@@ -197,14 +195,14 @@ public class TileEntitySkull extends TileEntity /*implements ITickable*/ { // Pa
             } else if (MinecraftServer.getServer() == null) {
                 callback.apply(gameprofile);
             } else {
-                GameProfile profile = skinCache.getIfPresent(Caches.toLowerCase(gameprofile.getName())); // Paper
+                GameProfile profile = skinCache.getIfPresent(gameprofile.getName().toLowerCase()); // Paper
                 if (profile != null && Iterables.getFirst(profile.getProperties().get("textures"), (Object) null) != null) {
                     callback.apply(profile);
                 } else {
                     executor.execute(new Runnable() {
                         @Override
                         public void run() {
-                            final GameProfile profile = skinCache.get(Caches.toLowerCase(gameprofile.getName()));                            
+                            final GameProfile profile = skinCache.get(gameprofile.getName().toLowerCase());                            
                             MinecraftServer.getServer().processQueue.add(new Runnable() {
                                 @Override
                                 public void run() {

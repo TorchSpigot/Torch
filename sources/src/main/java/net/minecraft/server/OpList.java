@@ -8,8 +8,6 @@ import static org.torch.server.cache.TorchUserCache.authUUID;
 import java.io.File;
 import java.util.Iterator;
 
-import org.torch.server.cache.Caches;
-
 public class OpList extends JsonList<GameProfile, OpListEntry> {
 
     public OpList(File file) {
@@ -48,7 +46,7 @@ public class OpList extends JsonList<GameProfile, OpListEntry> {
     }
 
     protected String c(GameProfile profile) { // PAIL: toStringKey
-        return authUUID() ? Caches.objectString(profile) : Caches.toLowerCase(profile.getName()); // Torch - use cache
+        return authUUID() ? profile.getId().toString() : profile.getName().toLowerCase();
     }
 
     public GameProfile a(String s) {
