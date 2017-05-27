@@ -1199,7 +1199,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     }
 
     public void addChannel(String channel) {
-        com.google.common.base.Preconditions.checkState( channels.size() < 128, "Too many channels registered" ); // Spigot
+        com.google.common.base.Preconditions.checkState( channels.size() < 256, "Too many channels registered" ); // Spigot
         if (channels.add(channel)) {
             server.getPluginManager().callEvent(new PlayerRegisterChannelEvent(this, channel));
         }
