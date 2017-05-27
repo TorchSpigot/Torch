@@ -7,11 +7,11 @@ worldwide. This software is distributed without any warranty.
 
 See <http://creativecommons.org/publicdomain/zero/1.0/>. */
 
-package org.torch.util.random;
+package org.torch.utils.random;
 
-import org.torch.util.random.LightRNG;
-import org.torch.util.random.RandomnessSource;
-import org.torch.util.random.StatefulRandomness;
+import org.torch.utils.random.LightRNG;
+import org.torch.utils.random.RandomnessSource;
+import org.torch.utils.random.StatefulRandomness;
 
 /**
  * From DreamSpigotPlus project.

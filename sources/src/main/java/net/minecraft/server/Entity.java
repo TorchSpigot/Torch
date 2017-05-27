@@ -42,7 +42,7 @@ import org.bukkit.event.entity.EntityAirChangeEvent;
 import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.plugin.PluginManager;
-import org.torch.util.random.LightRandom;
+import org.torch.utils.random.LightRandom;
 
 public abstract class Entity implements ICommandListener {
 

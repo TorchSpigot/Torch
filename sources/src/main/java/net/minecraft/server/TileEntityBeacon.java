@@ -87,8 +87,8 @@ public class TileEntityBeacon extends TileEntityContainer implements ITickable, 
 
     public void n() {
         if (this.world != null) {
-            this.checkStructure();
             this.applyEffects();
+            this.checkStructure();
         }
     }
 
@@ -199,7 +199,7 @@ public class TileEntityBeacon extends TileEntityContainer implements ITickable, 
     
     private void E() { applyEffects(); }
     public void applyEffects() {
-        if (this.j && this.levels > 0 && this.primaryEffect != null) {
+        if (this.levels > 0 && this.primaryEffect != null) {
             byte amplifier = getAmplification();
 
             final int duration = getLevel();

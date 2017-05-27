@@ -1,6 +1,6 @@
-package org.torch.util.random;
+package org.torch.utils.random;
 
-import org.torch.util.random.RandomnessSource;
+import org.torch.utils.random.RandomnessSource;
 
 /**
  * From DreamSpigotPlus project.

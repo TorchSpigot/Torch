@@ -15,7 +15,7 @@ public class ContainerBeacon extends Container {
         player = (PlayerInventory) iinventory; // CraftBukkit - TODO: check this
         this.beacon = iinventory1;
         this.f = new ContainerBeacon.SlotBeacon(iinventory1, 0, 136, 110);
-        this.a((Slot) this.f);
+        this.a(this.f);
         boolean flag = true;
         boolean flag1 = true;
 
@@ -33,6 +33,7 @@ public class ContainerBeacon extends Container {
 
     }
 
+    @Override
     public void addSlotListener(ICrafting icrafting) {
         super.addSlotListener(icrafting);
         icrafting.setContainerData(this, this.beacon);
@@ -42,9 +43,10 @@ public class ContainerBeacon extends Container {
         return this.beacon;
     }
 
+    @Override
     public void b(EntityHuman entityhuman) {
         super.b(entityhuman);
-        if (entityhuman != null && !entityhuman.world.isClientSide) {
+        if (entityhuman != null) {
             ItemStack itemstack = this.f.a(this.f.getMaxStackSize());
 
             if (!itemstack.isEmpty()) {
@@ -54,14 +56,16 @@ public class ContainerBeacon extends Container {
         }
     }
 
+    @Override
     public boolean a(EntityHuman entityhuman) {
         if (!this.checkReachable) return true; // CraftBukkit
         return this.beacon.a(entityhuman);
     }
 
+    @Override
     public ItemStack b(EntityHuman entityhuman, int i) {
         ItemStack itemstack = ItemStack.a;
-        Slot slot = (Slot) this.c.get(i);
+        Slot slot = this.c.get(i);
 
         if (slot != null && slot.hasItem()) {
             ItemStack itemstack1 = slot.getItem();
@@ -111,12 +115,14 @@ public class ContainerBeacon extends Container {
             super(iinventory, i, j, k);
         }
 
+        @Override
         public boolean isAllowed(ItemStack itemstack) {
             Item item = itemstack.getItem();
 
             return item == Items.EMERALD || item == Items.DIAMOND || item == Items.GOLD_INGOT || item == Items.IRON_INGOT;
         }
 
+        @Override
         public int getMaxStackSize() {
             return 1;
         }

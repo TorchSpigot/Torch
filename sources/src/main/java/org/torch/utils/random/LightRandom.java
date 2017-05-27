@@ -1,8 +1,8 @@
-package org.torch.util.random;
+package org.torch.utils.random;
 
 import java.util.Random;
 
-import org.torch.util.random.LightRNG;
+import org.torch.utils.random.LightRNG;
 
 /**
  * From DreamSpigotPlus project.

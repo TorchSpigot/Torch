@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 // CraftBukkit start
 import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityExplodeEvent;
-import org.torch.util.random.LightRandom;
+import org.torch.utils.random.LightRandom;
 import org.bukkit.Location;
 import org.bukkit.event.block.BlockExplodeEvent;
 // CraftBukkit end
