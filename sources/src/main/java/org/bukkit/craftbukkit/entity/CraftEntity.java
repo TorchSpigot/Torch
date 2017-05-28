@@ -234,11 +234,8 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
 
     @Override
     public void setVelocity(Vector vel) {
-        if (Double.isNaN(vel.getX()) || Double.isNaN(vel.getY()) || Double.isNaN(vel.getZ())) {
-            throw new NumberFormatException("NaN velocity set detected: tried to set velocity of entity #" + getEntityId() + " to (" + vel.getX() + "," + vel.getY() + "," + vel.getZ() + ").");
-        }
         // Paper start - Warn server owners when plugins try to set super high velocities
-        if (!(this instanceof org.bukkit.entity.Projectile) && (vel.getX() > 4 || vel.getX() < -4 || vel.getY() > 4 || vel.getY() < -4 || vel.getZ() > 4 || vel.getZ() < -4)) {
+        if (!(this instanceof org.bukkit.entity.Projectile) && isUnsafeVelocity(vel)) {
             CraftServer.excessiveVelEx = new Exception("Excessive velocity set detected: tried to set velocity of entity #" + getEntityId() + " to (" + vel.getX() + "," + vel.getY() + "," + vel.getZ() + ").");
         }
         // Paper end
@@ -247,6 +244,33 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
         entity.motZ = vel.getZ();
         entity.velocityChanged = true;
     }
+    
+    // Paper start
+    /**
+     * Checks if the given velocity is not necessarily safe in all situations.
+     * This function returning true does not mean the velocity is dangerous or to be avoided, only that it may be
+     * a detriment to performance on the server.
+     *
+     * It is not to be used as a hard rule of any sort.
+     * Paper only uses it to warn server owners in watchdog crashes.
+     *
+     * @param vel incoming velocity to check
+     * @return if the velocity has the potential to be a performance detriment
+     */
+    private static boolean isUnsafeVelocity(Vector vel) {
+        final double x = vel.getX();
+        final double y = vel.getY();
+        final double z = vel.getZ();
+
+        if (x > 4 || x < -4 || y > 4 || y < -4 || z > 4 || z < -4) {
+            return true;
+        } else if (x != x || y != y || z != z) { // NaN check
+            return true;
+        }
+
+        return false;
+    }
+    // Paper end
 
     @Override
     public double getHeight() {
