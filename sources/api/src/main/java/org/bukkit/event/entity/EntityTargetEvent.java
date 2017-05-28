@@ -12,27 +12,8 @@ import org.bukkit.event.HandlerList;
 public class EntityTargetEvent extends EntityEvent implements Cancellable {
     private static final HandlerList handlers = new HandlerList();
     private boolean cancel = false;
-    // Torch start
-    protected Entity target;
-    protected TargetReason reason;
-    
-    private static EntityTargetEvent instance;
-    
-    public static EntityTargetEvent requestMutable(final Entity entity, final Entity target, final TargetReason reason) {
-        if (!Bukkit.isPrimaryThread()) throw new IllegalStateException("Async request mutable event!");
-        
-        if (instance == null) {
-            instance = new EntityTargetEvent(entity, target, reason);
-            return instance;
-        }
-        
-        instance.entity = entity;
-        instance.target = target;
-        instance.reason = reason;
-        
-        return instance;
-    }
-    // Torch end
+    protected Entity target; // Torch - private -> protected
+    protected TargetReason reason; // Torch - private -> protected
 
     public EntityTargetEvent(final Entity entity, final Entity target, final TargetReason reason) {
         super(entity);

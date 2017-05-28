@@ -674,7 +674,11 @@ public final class CraftServer implements Server {
             return true;
         }
 
-        sender.sendMessage(org.spigotmc.SpigotConfig.unknownCommandMessage);
+        // Spigot start
+        if (StringUtils.isNotEmpty(org.spigotmc.SpigotConfig.unknownCommandMessage)) {
+            sender.sendMessage(org.spigotmc.SpigotConfig.unknownCommandMessage);
+        }
+        // Spigot end
 
         return false;
     }

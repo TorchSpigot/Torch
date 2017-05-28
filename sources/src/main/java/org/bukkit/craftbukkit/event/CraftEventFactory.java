@@ -737,7 +737,7 @@ public class CraftEventFactory {
     }
 
     public static EntityTargetEvent callEntityTargetEvent(Entity entity, Entity target, EntityTargetEvent.TargetReason reason) {
-        EntityTargetEvent event = EntityTargetEvent.requestMutable(entity.getBukkitEntity(), target == null ? null : target.getBukkitEntity(), reason);
+        EntityTargetEvent event = new EntityTargetEvent(entity.getBukkitEntity(), target == null ? null : target.getBukkitEntity(), reason);
         entity.getBukkitEntity().getServer().getPluginManager().callEvent(event);
         return event;
     }
