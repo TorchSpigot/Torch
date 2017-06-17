@@ -2,7 +2,6 @@ package net.minecraft.server;
 
 import com.destroystokyo.paper.exception.ServerInternalException;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.koloboke.collect.map.hash.HashObjObjMaps;
 import com.koloboke.collect.map.hash.HashObjShortMaps;
 
@@ -12,8 +11,6 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -93,23 +90,26 @@ public class PersistentCollection {
 
     private void a(PersistentBase persistentbase) {
         if (this.b != null) {
-            try {
-                File file = this.b.getDataFile(persistentbase.id);
-
-                if (file != null) {
-                    NBTTagCompound nbttagcompound = new NBTTagCompound();
-
-                    nbttagcompound.set("data", persistentbase.b(new NBTTagCompound()));
-                    FileOutputStream fileoutputstream = new FileOutputStream(file);
-
-                    NBTCompressedStreamTools.a(nbttagcompound, fileoutputstream);
-                    fileoutputstream.close();
-                }
-            } catch (Exception exception) {
-                exception.printStackTrace();
-                ServerInternalException.reportInternalException(exception); // Paper
+            File file = this.b.getDataFile(persistentbase.id);
+            
+            if (file != null) {
+                NBTTagCompound compound = new NBTTagCompound();
+                compound.set("data", persistentbase.b(new NBTTagCompound()));
+                
+                // Torch start
+                MCUtil.scheduleAsyncTask(() -> {
+                    try {
+                        FileOutputStream outputStream = new FileOutputStream(file);
+                        
+                        NBTCompressedStreamTools.a(compound, outputStream);
+                        outputStream.close();
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        ServerInternalException.reportInternalException(ex); // Paper
+                    }
+                });
+                // Torch end
             }
-
         }
     }
 
