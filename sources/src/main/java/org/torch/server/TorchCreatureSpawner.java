@@ -54,7 +54,7 @@ public final class TorchCreatureSpawner implements TorchReactor {
 
     /**
      * Adds all chunks within the spawn radius of the players to spawnableChunks
-     * Returns number of spawnable chunks
+     * Returns number of spawned entities
      */
     public int findChunksForSpawning(WorldServer world, boolean spawnHostileCreatures, boolean spawnPassiveCreatures, boolean spawnAnimals) {
         // Paper - At least until we figure out what is calling this async
@@ -94,8 +94,10 @@ public final class TorchCreatureSpawner implements TorchReactor {
 
         }
 
-        int spawnableChunks = 0;
+        int spawnedTotal = 0;
         BlockPosition spawnPoint = world.getSpawn();
+        
+        MutableBlockPosition currentPos = new BlockPosition.MutableBlockPosition();
 
         for (EnumCreatureType type : EnumCreatureType.values()) {
             // CraftBukkit - use per-world spawn limits
@@ -121,93 +123,92 @@ public final class TorchCreatureSpawner implements TorchReactor {
             if ((!type.isPeaceful() || spawnPassiveCreatures) && (type.isPeaceful() || spawnHostileCreatures) && (!type.isAnimal() || spawnAnimals)
                     && ((mobCount = getEntityCount(world, type.a())) <= spawnLimit * foundChunks / CHUNKS_PER_PLAYER)) {
 
-                MutableBlockPosition currentPos = new BlockPosition.MutableBlockPosition();
-
                 int mobLimit = (spawnLimit * foundChunks / 256) - mobCount + 1; // Spigot - up to 1 more than limit
 
-                SEARCH:
-                    for (Long hash : this.spawnableChunks) {
-                        if (mobLimit <= 0) return spawnableChunks;
+                for (Long hash : this.spawnableChunks) {
+                    if (mobLimit <= 0) return spawnedTotal;
 
-                        BlockPosition randomPos = createRandomPosition(world, LongHash.msw(hash), LongHash.lsw(hash));
-                        int randomX = randomPos.getX();
-                        int randomY = randomPos.getY();
-                        int randomZ = randomPos.getZ();
+                    BlockPosition randomPos = createRandomPosition(world, LongHash.msw(hash), LongHash.lsw(hash));
+                    int randomX = randomPos.getX();
+                    int randomY = randomPos.getY();
+                    int randomZ = randomPos.getZ();
 
-                        final IBlockData block = world.getType(randomPos);
-                        if (!block.m() && block.getMaterial() == type.getCreatureMaterial()) {
-                            int spawnedEntity = 0;
-                            int research = 0;
+                    final IBlockData block = world.getType(randomPos);
+                    if (!block.m() && block.getMaterial() == type.getCreatureMaterial()) {
+                        int spawnedEntity = 0;
+                        int research = 0;
 
-                            while (research < 3) {
-                                int cX = randomX;
-                                int cY = randomY;
-                                int cZ = randomZ;
-                                final int noise = 6;
-                                BiomeMeta spawnEntry = null;
-                                GroupDataEntity entityData = null;
+                        while (research < 3) {
+                            int cX = randomX;
+                            int cY = randomY;
+                            int cZ = randomZ;
+                            final int noise = 6;
+                            BiomeMeta spawnEntry = null;
+                            GroupDataEntity entityData = null;
 
-                                int respawn = 0;
-                                while (true) {
-                                    if (respawn < 4) {
-                                        SPAWN: {
-                                        cX += world.random.nextInt(noise) - world.random.nextInt(noise);
-                                        cY += world.random.nextInt(1) - world.random.nextInt(1);
-                                        cZ += world.random.nextInt(noise) - world.random.nextInt(noise);
+                            int respawn = 0;
+                            while (true) {
+                                if (respawn < 4) {
+                                    SPAWN: {
+                                    cX += world.random.nextInt(noise) - world.random.nextInt(noise);
+                                    cY += world.random.nextInt(1) - world.random.nextInt(1);
+                                    cZ += world.random.nextInt(noise) - world.random.nextInt(noise);
+                                    currentPos.setValues(cX, cY, cZ);
+                                    
+                                    float xCoord = cX + 0.5F;
+                                    float zCoord = cZ + 0.5F;
 
-                                        currentPos.setValues(cX, cY, cZ);
+                                    if (!world.isPlayerNearby(xCoord, cY, zCoord, 24.0D) && spawnPoint.distanceSquared(xCoord, cY, zCoord) >= 576.0D) {
+                                        if (spawnEntry == null) {
+                                            spawnEntry = world.createRandomSpawnEntry(type, currentPos);
 
-                                        if (!world.isPlayerNearby(cX, cY, cZ, 24.0D) && spawnPoint.distanceSquared(cX + 0.5F, cY, cZ + 0.5F) >= 576.0D) {
-                                            if (spawnEntry == null) {
-                                                spawnEntry = world.createRandomSpawnEntry(type, currentPos);
-
-                                                if (spawnEntry == null) break SPAWN;
-                                            }
-
-                                            if (world.possibleToSpawn(type, spawnEntry, currentPos) && canCreatureTypeSpawnAtLocation(EntityPositionTypes.a(spawnEntry.entityClass()), world, currentPos)) {
-                                                EntityInsentient entity;
-
-                                                entity = createCreature(world, spawnEntry.entityClass());
-                                                if (entity == null) return spawnableChunks;
-
-                                                entity.setPositionRotation(cX, cY, cZ, world.random.nextFloat() * 360.0F, 0.0F);
-
-                                                if (entity.isNotColliding() && entity.canSpawn()) {
-                                                    entityData = entity.prepare(world.createDamageScaler(new BlockPosition(entity)), entityData);
-
-                                                    if (entity.canSpawn()) {
-                                                        if (world.addEntity(entity, SpawnReason.NATURAL)) {
-
-                                                            spawnedEntity++;
-                                                            mobLimit--;
-                                                        }
-                                                    } else {
-                                                        entity.die();
-                                                    }
-
-                                                    if (mobLimit <= 0) continue SEARCH; // Spigot - If we're past limit, stop spawn
-                                                }
-
-                                                spawnableChunks += spawnedEntity;
-                                            }
+                                            if (spawnEntry == null) break SPAWN;
                                         }
 
-                                        respawn++;
-                                        continue;
-                                    } // SPAWN LABEL END
+                                        if (world.possibleToSpawn(type, spawnEntry, currentPos) && canCreatureTypeSpawnAtLocation(EntityPositionTypes.a(spawnEntry.entityClass()), world, currentPos)) {
+                                            EntityInsentient entity;
+
+                                            entity = createCreature(world, spawnEntry.entityClass());
+                                            if (entity == null) return spawnedTotal;
+
+                                            entity.setPositionRotation(xCoord, cY, zCoord, world.random.nextFloat() * 360.0F, 0.0F);
+
+                                            if (entity.isNotColliding() && entity.canSpawn()) {
+                                                entityData = entity.prepare(world.createDamageScaler(new BlockPosition(entity)), entityData);
+
+                                                if (entity.canSpawn()) {
+                                                    if (world.addEntity(entity, SpawnReason.NATURAL)) {
+
+                                                        spawnedEntity++;
+                                                        mobLimit--;
+                                                    }
+                                                } else {
+                                                    entity.die();
+                                                }
+
+                                                if (mobLimit <= 0) return spawnedTotal; // Spigot - If we're past limit, stop spawn
+                                            }
+
+                                            spawnedTotal += spawnedEntity;
+                                        }
                                     }
 
-                                    research++;
-                                    break;
+                                    respawn++;
+                                    continue;
+                                } // SPAWN LABEL END
                                 }
+
+                                research++;
+                                break;
                             }
                         }
-
-                    } // SEARCH LABEL END
+                    }
+                }
+                
             }
         }
 
-        return spawnableChunks;
+        return spawnedTotal;
     }
 
     public static BlockPosition createRandomPosition(World world, int chunkX, int chunkZ) {
