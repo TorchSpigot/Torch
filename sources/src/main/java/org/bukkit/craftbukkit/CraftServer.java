@@ -948,7 +948,7 @@ public final class CraftServer implements Server {
         internal.scoreboard = getScoreboardManager().getMainScoreboard().getHandle();
 
         internal.tracker = new EntityTracker(internal);
-        internal.addIWorldAccess(new TorchWorldManager(console, internal, null));
+        internal.addIWorldAccess(new WorldManager(console.getServant(), internal));
         internal.worldData.setDifficulty(EnumDifficulty.EASY);
         internal.setSpawnFlags(true, true);
         console.worlds.add(internal);

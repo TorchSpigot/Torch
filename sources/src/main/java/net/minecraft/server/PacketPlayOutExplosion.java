@@ -20,7 +20,8 @@ public class PacketPlayOutExplosion implements Packet<PacketListenerPlayOut> {
 
     public PacketPlayOutExplosion() {}
 
-    public PacketPlayOutExplosion(double d0, double d1, double d2, float f, Set<BlockPosition> set, Vec3D vec3d) { // Torch
+    // Torch start - constructor for set
+    public PacketPlayOutExplosion(double d0, double d1, double d2, float f, Set<BlockPosition> set, Vec3D vec3d) {
         this.a = d0;
         this.b = d1;
         this.c = d2;
@@ -31,7 +32,20 @@ public class PacketPlayOutExplosion implements Packet<PacketListenerPlayOut> {
             this.g = (float) vec3d.y;
             this.h = (float) vec3d.z;
         }
-
+    }
+    // Torch end
+    
+    public PacketPlayOutExplosion(double d0, double d1, double d2, float f, List<BlockPosition> list, Vec3D vec3d) { // Keeping compatibility for plugins
+        this.a = d0;
+        this.b = d1;
+        this.c = d2;
+        this.d = f;
+        this.e = Lists.newArrayList(list);
+        if (vec3d != null) {
+            this.f = (float) vec3d.x;
+            this.g = (float) vec3d.y;
+            this.h = (float) vec3d.z;
+        }
     }
 
     @Override

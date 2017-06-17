@@ -34,11 +34,11 @@ public class ChunkProviderServer implements IChunkProvider, org.torch.api.TorchS
     public Long2ObjectOpenHashMap<Chunk> chunks;
 
     public ChunkProviderServer(WorldServer worldserver, IChunkLoader ichunkloader, ChunkGenerator chunkgenerator) {
-        reactor = new TorchChunkProvider(worldserver, ichunkloader, chunkgenerator, this);
-
         this.world = worldserver;
         this.chunkLoader = ichunkloader;
         this.chunkGenerator = chunkgenerator;
+        
+        reactor = new TorchChunkProvider(worldserver, ichunkloader, chunkgenerator, this);
 
         this.unloadQueue = reactor.getUnloadQueue();
         this.chunks = reactor.getChunks();

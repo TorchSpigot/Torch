@@ -287,7 +287,8 @@ public abstract class Entity implements ICommandListener {
 
     }
 
-    public void setYawPitch(float f, float f1) {
+    public void setRotation(float f, float f1) { setYawPitch(f, f1); } // ALIAS
+    protected void setYawPitch(float f, float f1) {
         // CraftBukkit start - yaw was sometimes set to NaN, so we need to set it back to 0
         if (Float.isNaN(f)) {
             f = 0;

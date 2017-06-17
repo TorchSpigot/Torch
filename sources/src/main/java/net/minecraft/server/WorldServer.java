@@ -34,7 +34,8 @@ public class WorldServer extends World implements IAsyncTaskHandler {
 
     private static final Logger a = LogManager.getLogger();
     boolean stopPhysicsEvent = false; // Paper
-    private final TorchServer server;
+    private final TorchServer torchServer;
+    private final MinecraftServer server;
     public EntityTracker tracker;
     private final PlayerChunkMap manager;
     // private final Set<NextTickListEntry> nextTickListHash = Sets.newHashSet();
@@ -60,7 +61,8 @@ public class WorldServer extends World implements IAsyncTaskHandler {
         this.pvpMode = minecraftserver.getPVP();
         worlddata.world = this;
         // CraftBukkit end
-        this.server = minecraftserver.getReactor();
+        this.server = minecraftserver;
+        this.torchServer = minecraftserver.getReactor(); // Torch
         this.tracker = new EntityTracker(this);
         this.manager = new PlayerChunkMap(this, spigotConfig.viewDistance); // Spigot
         this.worldProvider.a(this);
@@ -86,7 +88,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
         }
 
         if (getServer().getScoreboardManager() == null) { // CraftBukkit
-            this.scoreboard = new ScoreboardServer(this.server.getServant());
+            this.scoreboard = new ScoreboardServer(this.torchServer.getServant());
             PersistentScoreboard persistentscoreboard = (PersistentScoreboard) this.worldMaps.get(PersistentScoreboard.class, "scoreboard");
 
             if (persistentscoreboard == null) {
@@ -832,11 +834,11 @@ public class WorldServer extends World implements IAsyncTaskHandler {
     // CraftBukkit end */
 
     private boolean getSpawnNPCs() {
-        return this.server.isSpawnNPCs();
+        return this.torchServer.isSpawnNPCs();
     }
 
     private boolean getSpawnAnimals() {
-        return this.server.isSpawnAnimals();
+        return this.torchServer.isSpawnAnimals();
     }
 
     @Override
@@ -895,7 +897,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
 
     @Override
     public boolean a(EntityHuman entityhuman, BlockPosition blockposition) {
-        return !this.server.isBlockProtected(this, blockposition, entityhuman) && this.getWorldBorder().a(blockposition);
+        return !this.torchServer.isBlockProtected(this, blockposition, entityhuman) && this.getWorldBorder().a(blockposition);
     }
 
     @Override
@@ -1065,7 +1067,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
     protected void a() throws ExceptionWorldConflict {
         timings.worldSaveLevel.startTiming(); // Paper
         this.checkSession();
-        WorldServer[] aworldserver = this.server.getWorldServers();
+        WorldServer[] aworldserver = this.torchServer.getWorldServers();
         int i = aworldserver.length;
 
         for (int j = 0; j < i; ++j) {
@@ -1200,7 +1202,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
         }
         // CraftBukkit end
         if (super.strikeLightning(entity)) {
-            this.server.getPlayerList().sendPacketNearby((EntityHuman) null, entity.locX, entity.locY, entity.locZ, 512.0D, dimension, new PacketPlayOutSpawnEntityWeather(entity)); // CraftBukkit - Use dimension
+            this.torchServer.getPlayerList().sendPacketNearby((EntityHuman) null, entity.locX, entity.locY, entity.locZ, 512.0D, dimension, new PacketPlayOutSpawnEntityWeather(entity)); // CraftBukkit - Use dimension
             return true;
         } else {
             return false;
@@ -1279,7 +1281,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
 
                 if (this.a(blockactiondata)) {
                     // CraftBukkit - this.worldProvider.dimension -> this.dimension
-                    this.server.getPlayerList().sendPacketNearby((EntityHuman) null, blockactiondata.a().getX(), blockactiondata.a().getY(), blockactiondata.a().getZ(), 64.0D, dimension, new PacketPlayOutBlockAction(blockactiondata.a(), blockactiondata.d(), blockactiondata.b(), blockactiondata.c()));
+                    this.torchServer.getPlayerList().sendPacketNearby((EntityHuman) null, blockactiondata.a().getX(), blockactiondata.a().getY(), blockactiondata.a().getZ(), 64.0D, dimension, new PacketPlayOutBlockAction(blockactiondata.a(), blockactiondata.d(), blockactiondata.b(), blockactiondata.c()));
                 }
             }
 
@@ -1305,22 +1307,22 @@ public class WorldServer extends World implements IAsyncTaskHandler {
         super.t();
         /* CraftBukkit start
         if (this.n != this.o) {
-            this.server.getPlayerList().a((Packet) (new PacketPlayOutGameStateChange(7, this.o)), this.worldProvider.getDimensionManager().getDimensionID());
+            this.torchServer.getPlayerList().a((Packet) (new PacketPlayOutGameStateChange(7, this.o)), this.worldProvider.getDimensionManager().getDimensionID());
         }
 
         if (this.p != this.q) {
-            this.server.getPlayerList().a((Packet) (new PacketPlayOutGameStateChange(8, this.q)), this.worldProvider.getDimensionManager().getDimensionID());
+            this.torchServer.getPlayerList().a((Packet) (new PacketPlayOutGameStateChange(8, this.q)), this.worldProvider.getDimensionManager().getDimensionID());
         }
 
         if (flag != this.W()) {
             if (flag) {
-                this.server.getPlayerList().sendAll(new PacketPlayOutGameStateChange(2, 0.0F));
+                this.torchServer.getPlayerList().sendAll(new PacketPlayOutGameStateChange(2, 0.0F));
             } else {
-                this.server.getPlayerList().sendAll(new PacketPlayOutGameStateChange(1, 0.0F));
+                this.torchServer.getPlayerList().sendAll(new PacketPlayOutGameStateChange(1, 0.0F));
             }
 
-            this.server.getPlayerList().sendAll(new PacketPlayOutGameStateChange(7, this.o));
-            this.server.getPlayerList().sendAll(new PacketPlayOutGameStateChange(8, this.q));
+            this.torchServer.getPlayerList().sendAll(new PacketPlayOutGameStateChange(7, this.o));
+            this.torchServer.getPlayerList().sendAll(new PacketPlayOutGameStateChange(8, this.q));
         }
         // */
         if (flag != this.W()) {
@@ -1343,7 +1345,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
     @Override
     @Nullable
     public MinecraftServer getMinecraftServer() {
-        return this.server.getMinecraftServer();
+        return this.torchServer.getMinecraftServer();
     }
 
     public EntityTracker getTracker() {
@@ -1410,12 +1412,12 @@ public class WorldServer extends World implements IAsyncTaskHandler {
 
     @Override
     public ListenableFuture<Object> postToMainThread(Runnable runnable) {
-        return this.server.postToMainThread(runnable);
+        return this.torchServer.postToMainThread(runnable);
     }
 
     @Override
     public boolean isMainThread() {
-        return this.server.isMainThread();
+        return this.torchServer.isMainThread();
     }
 
     @Override
