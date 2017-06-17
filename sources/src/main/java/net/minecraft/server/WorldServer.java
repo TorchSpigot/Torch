@@ -1091,7 +1091,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
         this.worldData.k(this.getWorldBorder().getWarningTime());
         this.worldData.b(this.getWorldBorder().j());
         this.worldData.e(this.getWorldBorder().i());
-        // this.dataManager.saveWorldData(this.worldData, this.server.getPlayerList().getHostPlayerData());
+        this.dataManager.saveWorldData(this.worldData, null);
         this.worldMaps.a();
         timings.worldSaveLevel.stopTiming(); // Paper
     }
