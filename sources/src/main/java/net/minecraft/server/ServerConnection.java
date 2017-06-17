@@ -77,7 +77,7 @@ public class ServerConnection {
      */
     private final List<NetworkManager> h = WrappedCollections.wrappedList(Lists.newCopyOnWriteArrayList());
     
-    private final List<NetworkManager> pending = Collections.synchronizedList(Lists.newLinkedList());
+    private final List<NetworkManager> pending = WrappedCollections.wrappedList(Collections.synchronizedList(Lists.newLinkedList()));
     
     private void removePending() {
         synchronized (pending) {
