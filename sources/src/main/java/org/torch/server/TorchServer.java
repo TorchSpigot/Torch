@@ -1927,6 +1927,7 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         this.getOpPermissionLevel();
         this.getSnooperEnabled();
         this.getNetworkCompressionThreshold();
+        this.getSpawnProtectionSize();
 
         this.setBuildLimit(this.propertyManager.getInt("max-build-height", 256));
         this.setBuildLimit((this.getBuildLimit() + 8) / 16 * 16);
