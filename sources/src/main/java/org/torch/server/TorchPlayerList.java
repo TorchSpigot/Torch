@@ -605,7 +605,7 @@ public final class TorchPlayerList implements TorchReactor {
         UUID uuid = EntityHuman.matchUUID(profile);
         
         // Kick player if already logged
-        EntityPlayer loggedPlayer = server.onlineMode ? uuidToPlayerMap.get(uuid) : playersByName.get(profile.getName());
+        EntityPlayer loggedPlayer = playersByName.get(profile.getName());
         if (loggedPlayer != null) {
             // Force the player's inventory to be saved
             savePlayerFile(loggedPlayer);

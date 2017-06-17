@@ -3,8 +3,6 @@ package net.minecraft.server;
 import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
 
-import static org.torch.server.cache.TorchUserCache.authUUID;
-
 import java.io.File;
 import java.util.Iterator;
 
@@ -32,7 +30,7 @@ public class GameProfileBanList extends JsonList<GameProfile, GameProfileBanEntr
     }
 
     protected String b(GameProfile profile) {
-        return authUUID() ? profile.getId().toString() : profile.getName().toLowerCase();
+        return profile.getName().toLowerCase();
     }
 
     public GameProfile a(String s) {

@@ -3,8 +3,6 @@ package net.minecraft.server;
 import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
 
-import static org.torch.server.cache.TorchUserCache.authUUID;
-
 import java.io.File;
 import java.util.Iterator;
 
@@ -46,7 +44,7 @@ public class OpList extends JsonList<GameProfile, OpListEntry> {
     }
 
     protected String c(GameProfile profile) { // PAIL: toStringKey
-        return authUUID() ? profile.getId().toString() : profile.getName().toLowerCase();
+        return profile.getName().toLowerCase();
     }
 
     public GameProfile a(String s) {
