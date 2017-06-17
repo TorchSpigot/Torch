@@ -157,7 +157,7 @@ public final class TorchCreatureSpawner implements TorchReactor {
 
                                         currentPos.setValues(cX, cY, cZ);
 
-                                        if (!world.isPlayerNearby(cZ, cY, cZ, 24.0D) && spawnPoint.distanceSquared(cX + 0.5F, cY, cZ + 0.5F) >= 576.0D) {
+                                        if (!world.isPlayerNearby(cX, cY, cZ, 24.0D) && spawnPoint.distanceSquared(cX + 0.5F, cY, cZ + 0.5F) >= 576.0D) {
                                             if (spawnEntry == null) {
                                                 spawnEntry = world.createRandomSpawnEntry(type, currentPos);
 

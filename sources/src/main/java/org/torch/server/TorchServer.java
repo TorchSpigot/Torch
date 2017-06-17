@@ -38,6 +38,7 @@ import org.bukkit.craftbukkit.util.Waitable;
 import org.bukkit.event.server.RemoteServerCommandEvent;
 import org.bukkit.event.server.ServerCommandEvent;
 import org.spigotmc.SlackActivityAccountant;
+import org.spigotmc.SpigotConfig;
 import org.torch.api.Anaphase;
 import org.torch.server.cache.TorchUserCache;
 
@@ -1864,9 +1865,9 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
         this.setServerKeyPair(MinecraftEncryption.b());
         logger.info("Binding server to {}:{}", new Object[] { this.getServerIp().isEmpty() ? "*" : this.getServerIp(), Integer.valueOf(this.getServerPort()) });
 
-        if (!org.spigotmc.SpigotConfig.lateBind) {
+        if (!SpigotConfig.lateBind) {
             try {
-                this.getServerConnection().a(bindIp, this.getServerPort());
+                this.getServerConnection().addEndpoint(bindIp, this.getServerPort());
             } catch (IOException ioexception) {
                 logger.warn("**** FAILED TO BIND TO PORT!");
                 logger.warn("The exception was: {}", new Object[] { ioexception.toString()});
@@ -1969,9 +1970,9 @@ public final class TorchServer implements Runnable, org.torch.api.TorchReactor {
             this.propertyManager.savePropertiesFile();
         }
 
-        if (org.spigotmc.SpigotConfig.lateBind) {
+        if (SpigotConfig.lateBind) {
             try {
-                this.getServerConnection().a(bindIp, this.getServerPort());
+                this.getServerConnection().addEndpoint(bindIp, this.getServerPort());
             } catch (IOException ioexception) {
                 logger.warn("**** FAILED TO BIND TO PORT!");
                 logger.warn("The exception was: {}", new Object[] { ioexception.toString()});
