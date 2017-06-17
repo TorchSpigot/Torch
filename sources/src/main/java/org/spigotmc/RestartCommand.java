@@ -39,7 +39,7 @@ public class RestartCommand extends Command {
             if (isRestarting) {
                 System.out.println("Attempting to restart with " + SpigotConfig.restartScript);
             } else {
-                System.out.println( "Startup script '" + SpigotConfig.restartScript + "' does not exist! Stopping server." );
+                System.out.println("Startup script '" + SpigotConfig.restartScript + "' does not exist! Stopping server.");
             }
 
             // Stop the watchdog
@@ -57,7 +57,7 @@ public class RestartCommand extends Command {
     private static void shutdownServer(boolean isRestarting) {
         if (getServer().isMainThread()) {
             // Kick all players
-            for (EntityPlayer player : com.google.common.collect.ImmutableList.copyOf(getServer().getPlayerList().players)) {
+            for (EntityPlayer player : ImmutableList.copyOf(getServer().getPlayerList().players)) {
                 player.playerConnection.disconnect(SpigotConfig.restartMessage);
             }
 
@@ -83,9 +83,9 @@ public class RestartCommand extends Command {
             // Mark the server to shutdown at the end of the tick
             getServer().safeShutdown(isRestarting);
 
-            // wait 10 seconds to see if we're actually going to try shutdown
+            // wait 9 seconds to see if we're actually going to try shutdown
             try {
-                Thread.sleep(10000);
+                Thread.sleep(9000);
             } catch (InterruptedException ignored) {
                 ;
             }
