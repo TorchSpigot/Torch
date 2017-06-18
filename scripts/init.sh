@@ -7,6 +7,10 @@ workdir="$basedir/work"
 paperbasedir="$basedir/work/Paper"
 paperworkdir="$basedir/work/Paper/work"
 
+(
+	cd "$paperbasedir" && git checkout ver/1.11.2
+)
+
 if [ "$2" == "--init" ]; then
 	echo "Initial Paper..."
 	(
