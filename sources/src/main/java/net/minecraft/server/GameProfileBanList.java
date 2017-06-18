@@ -48,4 +48,9 @@ public class GameProfileBanList extends JsonList<GameProfile, GameProfileBanEntr
 
         return gameprofilebanentry.getKey();
     }
+    
+    @Override
+    protected String a(GameProfile object) {
+        return this.b(object);
+    }
 }
