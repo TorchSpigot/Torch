@@ -11,7 +11,7 @@
 
 	<groupId>com.destroystokyo.paper</groupId>
 	<artifactId>paper-api</artifactId>
-	<version>1.11.2-R0.1-RELEASE</version>
+	<version>1.11.2-R0.2-RELEASE</version>
 	<packaging>jar</packaging>
 
 	<name>Paper-API</name>
