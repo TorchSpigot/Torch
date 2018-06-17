@@ -1,0 +1,41 @@
+{
+    "required": true,
+    "minVersion": "0.7.8",
+    "package": "io.akarin.server.mixin",
+    "target": "@env(DEFAULT)",
+    "compatibilityLevel": "JAVA_8",
+    "server": [
+        "bootstrap.Watchcat",
+        "bootstrap.Bootstrap",
+        "bootstrap.DummyEula",
+        "bootstrap.MixinMetrics",
+        "bootstrap.ParallelRegistry",
+        "bootstrap.MetricsBootstrap",
+        "bootstrap.MixinRestartCommand",
+        
+        "core.MixinMCUtil",
+        "core.MixinCommandBan",
+        "core.MixinCommandKick",
+        "core.MixinCraftServer",
+        "core.MixinWorldServer",
+        "core.MixinCommandBanIp",
+        "core.MixinAsyncCatcher",
+        "core.MixinTimingHandler",
+        "core.MonsterEggGuardian",
+        "core.MixinVersionCommand",
+        "core.MixinMinecraftServer",
+        "core.MixinChunkIOExecutor",
+        
+        "cps.MixinCraftWorld",
+        "cps.MixinChunkProviderServer",
+        
+        "nsc.OptimisticNetworkManager",
+        "nsc.NonblockingServerConnection",
+        
+        "optimization.WeakBigTree",
+        "optimization.WeakEnchantmentManager",
+        "optimization.MixinEntityHorseAbstract",
+        "optimization.MixinEntityTameableAnimal",
+        "optimization.MixinTileEntityEnchantTable"
+    ]
+}

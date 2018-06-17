@@ -1,20 +1,16 @@
 machine:
   java:
     version: openjdk8
-  notify:
-    branches:
-      only:
-        - master
 
 dependencies:
   cache-directories:
-    - "work/Paper/work"
+    - "/home/ubuntu/Akarin/work/Paper/work/Minecraft"
   override:
     - git config --global user.email "circle@circleci.com"
     - git config --global user.name "CircleCI"
-    - chmod +x scripts/build.sh
-    - ./scripts/build.sh --init --ci
+    - chmod +x scripts/inst.sh
+    - ./scripts/inst.sh --setup --remote
 
 test:
   post:
-    - yes|cp -rf ./Torchpowered-1.11.2.jar $CIRCLE_ARTIFACTS
+    - yes|cp -rf ./akarin-1.12.2.jar $CIRCLE_ARTIFACTS

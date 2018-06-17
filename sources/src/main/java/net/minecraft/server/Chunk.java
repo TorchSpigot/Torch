@@ -2,11 +2,8 @@ package net.minecraft.server;
 
 import com.destroystokyo.paper.exception.ServerInternalException;
 import com.google.common.base.Predicate;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
-import com.koloboke.collect.map.hash.HashObjIntMap;
-import com.koloboke.collect.map.hash.HashObjIntMaps;
-import com.koloboke.collect.map.hash.HashObjObjMaps;
-
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -21,10 +18,17 @@ import com.google.common.collect.Lists; // CraftBukkit
 import org.bukkit.Server; // CraftBukkit
 import org.bukkit.craftbukkit.util.CraftMagicNumbers; // Paper
 
+/**
+ * <b>Akarin Changes Note</b><br>
+ * <br>
+ * 1) Add volatile to fields<br>
+ * 2) Add OBFHELPER<br>
+ * @author cakoyo
+ */
 public class Chunk {
 
     private static final Logger e = LogManager.getLogger();
-    public static final ChunkSection a = null;
+    public static final ChunkSection a = null; public static final ChunkSection EMPTY_CHUNK_SECTION = Chunk.a; // Paper - OBFHELPER
     private final ChunkSection[] sections;
     private final byte[] g;
     private final int[] h;
@@ -38,10 +42,10 @@ public class Chunk {
     private boolean m;
     public final Map<BlockPosition, TileEntity> tileEntities;
     public final List<Entity>[] entitySlices; // Spigot
-    public final PaperLightingQueue.LightingQueue lightingQueue = new PaperLightingQueue.LightingQueue(this); // Paper
-    private boolean done;
-    private boolean lit;
-    private boolean r;
+    final PaperLightingQueue.LightingQueue lightingQueue = new PaperLightingQueue.LightingQueue(this); // Paper
+    private volatile boolean done; // Akarin - volatile
+    private volatile boolean lit; // Akarin - volatile
+    private volatile boolean r; private boolean isTicked() { return r; }; // Paper - OBFHELPER // Akarin - volatile
     private boolean s;
     private boolean t;
     private long lastSaved;
@@ -50,7 +54,7 @@ public class Chunk {
     private int x;
     private final ConcurrentLinkedQueue<BlockPosition> y;
     public boolean d; public void setShouldUnload(boolean unload) { this.d = unload; } public boolean isUnloading() { return d; } // Paper - OBFHELPER
-    public HashObjIntMap<Class> entityCount = HashObjIntMaps.getDefaultFactory().newMutableMap(); // Spigot
+    protected gnu.trove.map.hash.TObjectIntHashMap<Class> entityCount = new gnu.trove.map.hash.TObjectIntHashMap<Class>(); // Spigot
 
     // Paper start
     // Track the number of minecarts and items
@@ -93,7 +97,7 @@ public class Chunk {
         this.g = new byte[256];
         this.h = new int[256];
         this.i = new boolean[256];
-        this.tileEntities = HashObjObjMaps.newMutableMap();
+        this.tileEntities = Maps.newHashMap();
         this.x = 4096;
         this.y = Queues.newConcurrentLinkedQueue();
         this.entitySlices = (new List[16]); // Spigot
@@ -110,7 +114,7 @@ public class Chunk {
         Arrays.fill(this.g, (byte) -1);
         // CraftBukkit start
         this.bukkitChunk = new org.bukkit.craftbukkit.CraftChunk(this);
-        this.chunkKey = ChunkCoordIntPair.chunkXZ2Int(this.locX, this.locZ);
+        this.chunkKey = ChunkCoordIntPair.a(this.locX, this.locZ);
     }
 
     public org.bukkit.Chunk bukkitChunk;
@@ -131,7 +135,7 @@ public class Chunk {
                         int j1 = i1 >> 4;
 
                         if (this.sections[j1] == Chunk.a) {
-                            this.sections[j1] = new ChunkSection(j1 << 4, flag1);
+                            this.sections[j1] = new ChunkSection(j1 << 4, flag1, world.chunkPacketBlockController.getPredefinedBlockData(this, j1)); // Paper - Anti-Xray - Add predefined block data
                         }
 
                         this.sections[j1].setType(k, i1 & 15, l, iblockdata);
@@ -165,10 +169,10 @@ public class Chunk {
         return null;
     }
 
-    public int findFilledTop() { return this.g(); } // OBFHELPER
     public int g() {
-        ChunkSection section = this.y();
-        return section == null ? 0 : section.getYPosition();
+        ChunkSection chunksection = this.y();
+
+        return chunksection == null ? 0 : chunksection.getYPosition();
     }
 
     public ChunkSection[] getSections() {
@@ -242,7 +246,7 @@ public class Chunk {
     private void h(boolean flag) {
         this.world.methodProfiler.a("recheckGaps");
         if (this.world.areChunksLoaded(new BlockPosition(this.locX * 16 + 8, 0, this.locZ * 16 + 8), 16)) {
-            lightingQueue.add(() -> recheckGaps(flag)); // Paper - Queue light update
+            this.runOrQueueLightUpdate(() -> recheckGaps(flag)); // Paper - Queue light update
         }
     }
 
@@ -274,7 +278,7 @@ public class Chunk {
                         }
 
                         if (flag) {
-                            
+                            this.world.methodProfiler.b();
                             return;
                         }
                     }
@@ -284,7 +288,7 @@ public class Chunk {
             this.m = false;
         }
 
-        
+        this.world.methodProfiler.b();
     }
 
     private void b(int i, int j, int k) {
@@ -427,9 +431,10 @@ public class Chunk {
     public IBlockData a(final int i, final int j, final int k) {
         return getBlockData(i, j, k);
     }
+
     public IBlockData unused(final int i, final int j, final int k) {
     // Paper end
-        if (this.world.L() == WorldType.DEBUG_ALL_BLOCK_STATES) {
+        if (this.world.N() == WorldType.DEBUG_ALL_BLOCK_STATES) {
             IBlockData iblockdata = null;
 
             if (j == 60) {
@@ -462,7 +467,7 @@ public class Chunk {
                     }
 
                     @Override
-					public Object call() throws Exception {
+                    public Object call() throws Exception {
                         return this.a();
                     }
                 });
@@ -498,14 +503,18 @@ public class Chunk {
                     return null;
                 }
 
-                chunksection = new ChunkSection(j >> 4 << 4, this.world.worldProvider.m());
+                chunksection = new ChunkSection(j >> 4 << 4, this.world.worldProvider.m(), this.world.chunkPacketBlockController.getPredefinedBlockData(this, j >> 4)); // Paper - Anti-Xray - Add predefined block data
                 this.sections[j >> 4] = chunksection;
                 flag = j >= i1;
             }
 
             chunksection.setType(i, j & 15, k, iblockdata);
             if (block1 != block) {
-                block1.remove(this.world, blockposition, iblockdata1);
+                if (!this.world.isClientSide) {
+                    block1.remove(this.world, blockposition, iblockdata1);
+                } else if (block1 instanceof ITileEntity) {
+                    this.world.s(blockposition);
+                }
             }
 
             if (chunksection.getType(i, j & 15, k).getBlock() != block) {
@@ -513,7 +522,8 @@ public class Chunk {
             } else {
                 if (flag) {
                     this.initLighting();
-                } else { lightingQueue.add(() -> { // Paper - Queue light update
+                } else {
+                    this.runOrQueueLightUpdate(() -> { // Paper - Queue light update
                     int j1 = iblockdata.c();
                     int k1 = iblockdata1.c();
 
@@ -541,7 +551,7 @@ public class Chunk {
                 }
 
                 // CraftBukkit - Don't place while processing the BlockPlaceEvent, unless it's a BlockContainer. Prevents blocks such as TNT from activating when cancelled.
-                if (block1 != block  && (!this.world.captureBlockStates || block instanceof BlockTileEntity)) {
+                if (!this.world.isClientSide && block1 != block  && (!this.world.captureBlockStates || block instanceof BlockTileEntity)) {
                     block.onPlace(this.world, blockposition, iblockdata);
                 }
 
@@ -579,7 +589,7 @@ public class Chunk {
         ChunkSection chunksection = this.sections[k >> 4];
 
         if (chunksection == Chunk.a) {
-            chunksection = new ChunkSection(k >> 4 << 4, this.world.worldProvider.m());
+            chunksection = new ChunkSection(k >> 4 << 4, this.world.worldProvider.m(), this.world.chunkPacketBlockController.getPredefinedBlockData(this, k >> 4)); // Paper - Anti-Xray - Add predefined block data
             this.sections[k >> 4] = chunksection;
             this.initLighting();
         }
@@ -595,6 +605,7 @@ public class Chunk {
 
     }
 
+    public final int getLightSubtracted(BlockPosition blockposition, int i) { return this.a(blockposition, i); } // Paper - OBFHELPER
     public int a(BlockPosition blockposition, int i) {
         int j = blockposition.getX() & 15;
         int k = blockposition.getY();
@@ -623,7 +634,7 @@ public class Chunk {
         int j = MathHelper.floor(entity.locZ / 16.0D);
 
         if (i != this.locX || j != this.locZ) {
-            Chunk.e.warn("Wrong location! ({}, {}) should be ({}, {}), {}", new Object[] { Integer.valueOf(i), Integer.valueOf(j), Integer.valueOf(this.locX), Integer.valueOf(this.locZ), entity});
+            Chunk.e.warn("Wrong location! ({}, {}) should be ({}, {}), {}", Integer.valueOf(i), Integer.valueOf(j), Integer.valueOf(this.locX), Integer.valueOf(this.locZ), entity);
             entity.die();
         }
 
@@ -661,7 +672,7 @@ public class Chunk {
         {
             if ( creatureType.a().isAssignableFrom( entity.getClass() ) )
             {
-                this.entityCount.addValue(creatureType.a(), 1, 1);
+                this.entityCount.adjustOrPutValue( creatureType.a(), 1, 1 );
             }
         }
         // Spigot end
@@ -700,7 +711,7 @@ public class Chunk {
         {
             if ( creatureType.a().isAssignableFrom( entity.getClass() ) )
             {
-                this.entityCount.addValue(creatureType.a(), -1);
+                this.entityCount.adjustValue( creatureType.a(), -1 );
             }
         }
         // Spigot end
@@ -875,7 +886,7 @@ public class Chunk {
 
     }
 
-    public void e() {
+    public void markDirty() {
         this.s = true;
     }
 
@@ -907,7 +918,7 @@ public class Chunk {
                             list.add(entity1);
                         }
 
-                        Entity[] aentity = entity1.aT();
+                        Entity[] aentity = entity1.bb();
 
                         if (aentity != null) {
                             Entity[] aentity1 = aentity;
@@ -1008,10 +1019,10 @@ public class Chunk {
         // CraftBukkit end
         world.timings.syncChunkLoadPostTimer.stopTiming(); // Paper
         world.timings.syncChunkLoadPopulateNeighbors.startTiming(); // Paper
-        Chunk chunk = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider, this.locX, this.locZ - 1); // Paper
-        Chunk chunk1 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider, this.locX + 1, this.locZ); // Paper
-        Chunk chunk2 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider, this.locX, this.locZ + 1); // Paper
-        Chunk chunk3 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider, this.locX - 1, this.locZ); // Paper
+        Chunk chunk = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.locX, this.locZ - 1); // Paper
+        Chunk chunk1 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.locX + 1, this.locZ); // Paper
+        Chunk chunk2 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.locX, this.locZ + 1); // Paper
+        Chunk chunk3 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.locX - 1, this.locZ); // Paper
 
         if (chunk1 != null && chunk2 != null && MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.locX + 1, this.locZ + 1) != null) { // Paper
             this.a(chunkgenerator);
@@ -1039,7 +1050,7 @@ public class Chunk {
     protected void a(ChunkGenerator chunkgenerator) {
         if (this.isDone()) {
             if (chunkgenerator.a(this, this.locX, this.locZ)) {
-                this.e();
+                this.markDirty();
             }
         } else {
             this.o();
@@ -1067,7 +1078,7 @@ public class Chunk {
             BlockSand.instaFall = false;
             this.world.getServer().getPluginManager().callEvent(new org.bukkit.event.world.ChunkPopulateEvent(bukkitChunk));
             // CraftBukkit end
-            this.e();
+            this.markDirty();
         }
 
     }
@@ -1111,8 +1122,9 @@ public class Chunk {
             this.o();
         }
 
-        BlockPosition blockposition;
-        while ((blockposition = this.y.poll()) != null) {
+        while (!this.y.isEmpty()) {
+            BlockPosition blockposition = this.y.poll();
+
             if (this.a(blockposition, Chunk.EnumTileEntityState.CHECK) == null && this.getBlockData(blockposition).getBlock().isTileEntity()) {
                 TileEntity tileentity = this.g(blockposition);
 
@@ -1131,7 +1143,11 @@ public class Chunk {
          * We cannot unfortunately do this lighting stage during chunk gen as it appears to put a lot more noticeable load on the server, than when it is done at play time.
          * For now at least we will simply send all chunks, in accordance with pre 1.7 behaviour.
          */
-        return true;
+        // Paper Start
+        // if randomLightUpdates are disabled, we should always return true, otherwise chunks may never send
+        // to the client due to not being lit, otherwise retain standard behavior and only send properly lit chunks.
+        return !this.world.spigotConfig.randomLightUpdates || (this.isTicked() && this.done && this.lit);
+        // Paper End
         // Spigot End
     }
 
@@ -1165,7 +1181,7 @@ public class Chunk {
 
     public void a(ChunkSection[] achunksection) {
         if (this.sections.length != achunksection.length) {
-            Chunk.e.warn("Could not set level chunk sections, array length is {} instead of {}", new Object[] { Integer.valueOf(achunksection.length), Integer.valueOf(this.sections.length)});
+            Chunk.e.warn("Could not set level chunk sections, array length is {} instead of {}", Integer.valueOf(achunksection.length), Integer.valueOf(this.sections.length));
         } else {
             System.arraycopy(achunksection, 0, this.sections, 0, this.sections.length);
         }
@@ -1193,7 +1209,7 @@ public class Chunk {
 
     public void a(byte[] abyte) {
         if (this.g.length != abyte.length) {
-            Chunk.e.warn("Could not set level chunk biomes, array length is {} instead of {}", new Object[] { Integer.valueOf(abyte.length), Integer.valueOf(this.g.length)});
+            Chunk.e.warn("Could not set level chunk biomes, array length is {} instead of {}", Integer.valueOf(abyte.length), Integer.valueOf(this.g.length));
         } else {
             System.arraycopy(abyte, 0, this.g, 0, this.g.length);
         }
@@ -1250,7 +1266,7 @@ public class Chunk {
         BlockPosition blockposition = new BlockPosition(this.locX << 4, 0, this.locZ << 4);
 
         if (this.world.worldProvider.m()) {
-            if (this.world.areChunksLoadedBetween(blockposition.a(-1, 0, -1), blockposition.a(16, this.world.K(), 16))) {
+            if (this.world.areChunksLoadedBetween(blockposition.a(-1, 0, -1), blockposition.a(16, this.world.getSeaLevel(), 16))) {
                 label42:
                 for (int i = 0; i < 16; ++i) {
                     for (int j = 0; j < 16; ++j) {
@@ -1289,6 +1305,7 @@ public class Chunk {
         this.h(false);
     }
 
+    public void checkLightSide(EnumDirection direction) { a(direction); } // Akarin - OBFHELPER
     private void a(EnumDirection enumdirection) {
         if (this.done) {
             int i;
@@ -1322,11 +1339,11 @@ public class Chunk {
 
         int l;
 
-        for (l = k + 16 - 1; l > this.world.K() || l > 0 && !flag1; --l) {
+        for (l = k + 16 - 1; l > this.world.getSeaLevel() || l > 0 && !flag1; --l) {
             blockposition_mutableblockposition.c(blockposition_mutableblockposition.getX(), l, blockposition_mutableblockposition.getZ());
             int i1 = this.b(blockposition_mutableblockposition);
 
-            if (i1 == 255 && blockposition_mutableblockposition.getY() < this.world.K()) {
+            if (i1 == 255 && blockposition_mutableblockposition.getY() < this.world.getSeaLevel()) {
                 flag1 = true;
             }
 
@@ -1359,21 +1376,11 @@ public class Chunk {
         return this.heightMap;
     }
 
-    public void a(int[] newHeightMap) {
-        if (this.heightMap.length != newHeightMap.length) {
-            Chunk.e.warn("Could not set level chunk heightmap, array length is {} instead of {}", new Object[] { Integer.valueOf(newHeightMap.length), Integer.valueOf(this.heightMap.length)});
+    public void a(int[] aint) {
+        if (this.heightMap.length != aint.length) {
+            Chunk.e.warn("Could not set level chunk heightmap, array length is {} instead of {}", Integer.valueOf(aint.length), Integer.valueOf(this.heightMap.length));
         } else {
-            // Torch start - Update minimum heightmap, see MC-117412
-            // System.arraycopy(newHeightMap, 0, this.heightMap, 0, this.heightMap.length);
-            int min = this.v;
-            
-            for (int i = 0; i < newHeightMap.length; i++) {
-                this.heightMap[i] = newHeightMap[i];
-                if(newHeightMap[i] < min) min = newHeightMap[i];
-            }
-            
-            this.v = min;
-            // Torch end
+            System.arraycopy(aint, 0, this.heightMap, 0, this.heightMap.length);
         }
     }
 
@@ -1424,6 +1431,16 @@ public class Chunk {
     public void c(long i) {
         this.w = i;
     }
+
+    // Paper start
+    public void runOrQueueLightUpdate(Runnable runnable) {
+        if (this.world.paperConfig.queueLightUpdates) {
+            lightingQueue.add(runnable);
+        } else {
+            runnable.run();
+        }
+    }
+    // Paper end
 
     public static enum EnumTileEntityState {
 

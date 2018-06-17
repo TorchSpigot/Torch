@@ -1,7 +1,8 @@
 package net.minecraft.server;
 
-import com.google.common.collect.Queues;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
+import io.akarin.api.internal.collections.CheckedConcurrentLinkedQueue;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -16,6 +17,7 @@ import io.netty.handler.timeout.TimeoutException;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
+
 import java.net.SocketAddress;
 import java.util.Queue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -27,8 +29,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
-import org.torch.api.Async;
 
+/**
+ * <b>Akarin Changes Note</b><br>
+ * <br>
+ * 1) Add volatile to fields<br>
+ * 2) Expose private members<br>
+ * @author cakoyo
+ */
 public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
 
     private static final Logger g = LogManager.getLogger();
@@ -41,7 +49,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
         }
 
         @Override
-		protected Object init() {
+        protected Object init() {
             return this.a();
         }
     };
@@ -51,7 +59,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
         }
 
         @Override
-		protected Object init() {
+        protected Object init() {
             return this.a();
         }
     };
@@ -61,31 +69,36 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
         }
 
         @Override
-		protected Object init() {
+        protected Object init() {
             return this.a();
         }
     };
     private final EnumProtocolDirection h;
-    // private final Queue<NetworkManager.QueuedPacket> i = Queues.newConcurrentLinkedQueue(); // Paper
-    // private final ReentrantReadWriteLock j = new ReentrantReadWriteLock(); // Paper
+    private final Queue<NetworkManager.QueuedPacket> i = new CheckedConcurrentLinkedQueue<NetworkManager.QueuedPacket>(); private final Queue<NetworkManager.QueuedPacket> getPacketQueue() { return this.i; } // Paper - Anti-Xray - OBFHELPER // Akarin
+    private final ReentrantReadWriteLock j = new ReentrantReadWriteLock();
     public Channel channel;
     // Spigot Start // PAIL
     public SocketAddress l;
     public java.util.UUID spoofedUUID;
     public com.mojang.authlib.properties.Property[] spoofedProfile;
-    public boolean preparing = true;
+    public volatile boolean preparing = true; // Akarin - add volatile
     // Spigot End
     private PacketListener m;
     private IChatBaseComponent n;
     private boolean o;
     private boolean p;
+    // Paper start - NetworkClient implementation
+    public int protocolVersion;
+    public java.net.InetSocketAddress virtualHost;
+    private static boolean enableExplicitFlush = Boolean.getBoolean("paper.explicit-flush");
+    // Paper end
 
     public NetworkManager(EnumProtocolDirection enumprotocoldirection) {
         this.h = enumprotocoldirection;
     }
 
     @Override
-	public void channelActive(ChannelHandlerContext channelhandlercontext) throws Exception {
+    public void channelActive(ChannelHandlerContext channelhandlercontext) throws Exception {
         super.channelActive(channelhandlercontext);
         this.channel = channelhandlercontext.channel();
         this.l = this.channel.remoteAddress();
@@ -108,12 +121,12 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
     }
 
     @Override
-	public void channelInactive(ChannelHandlerContext channelhandlercontext) throws Exception {
+    public void channelInactive(ChannelHandlerContext channelhandlercontext) throws Exception {
         this.close(new ChatMessage("disconnect.endOfStream", new Object[0]));
     }
 
     @Override
-	public void exceptionCaught(ChannelHandlerContext channelhandlercontext, Throwable throwable) throws Exception {
+    public void exceptionCaught(ChannelHandlerContext channelhandlercontext, Throwable throwable) throws Exception {
         ChatMessage chatmessage;
 
         if (throwable instanceof TimeoutException) {
@@ -122,7 +135,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
             chatmessage = new ChatMessage("disconnect.genericReason", new Object[] { "Internal Exception: " + throwable});
         }
 
-        NetworkManager.g.debug(throwable);
+        NetworkManager.g.debug(chatmessage.toPlainText(), throwable);
         this.close(chatmessage);
         if (MinecraftServer.getServer().isDebugging()) throwable.printStackTrace(); // Spigot
     }
@@ -140,49 +153,43 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
 
     public void setPacketListener(PacketListener packetlistener) {
         Validate.notNull(packetlistener, "packetListener", new Object[0]);
-        NetworkManager.g.debug("Set listener of {} to {}", new Object[] { this, packetlistener});
+        NetworkManager.g.debug("Set listener of {} to {}", this, packetlistener);
         this.m = packetlistener;
     }
 
-    @Async
     public void sendPacket(Packet<?> packet) {
-        if (this.isConnected()) {
-            this.m();
+        if (this.isConnected() && this.trySendQueue() && !(packet instanceof PacketPlayOutMapChunk && !((PacketPlayOutMapChunk) packet).isReady())) { // Paper - Async-Anti-Xray - Add chunk packets which are not ready or all packets if the queue contains chunk packets which are not ready to the queue and send the packets later in the right order
+            //this.m(); // Paper - Async-Anti-Xray - Move to if statement (this.trySendQueue())
             this.a(packet, (GenericFutureListener[]) null);
+        } else {
+            this.j.writeLock().lock();
+
+            try {
+                this.i.add(new NetworkManager.QueuedPacket(packet, new GenericFutureListener[0]));
+            } finally {
+                this.j.writeLock().unlock();
+            }
         }
-        // Paper start - Remove but force a conflict
-//        else {
-//            this.j.writeLock().lock();
-//
-//            try {
-//                this.i.add(new NetworkManager.QueuedPacket(packet, (GenericFutureListener[]) null));
-//            } finally {
-//                this.j.writeLock().unlock();
-//            }
-//        }
-        // Paper end
+
     }
 
-    @Async
     public void sendPacket(Packet<?> packet, GenericFutureListener<? extends Future<? super Void>> genericfuturelistener, GenericFutureListener<? extends Future<? super Void>>... agenericfuturelistener) {
-        if (this.isConnected()) {
-            this.m();
+        if (this.isConnected() && this.trySendQueue() && !(packet instanceof PacketPlayOutMapChunk && !((PacketPlayOutMapChunk) packet).isReady())) { // Paper - Async-Anti-Xray - Add chunk packets which are not ready or all packets if the queue contains chunk packets which are not ready to the queue and send the packets later in the right order
+            //this.m(); // Paper - Async-Anti-Xray - Move to if statement (this.trySendQueue())
             this.a(packet, ArrayUtils.add(agenericfuturelistener, 0, genericfuturelistener));
+        } else {
+            this.j.writeLock().lock();
+
+            try {
+                this.i.add(new NetworkManager.QueuedPacket(packet, ArrayUtils.add(agenericfuturelistener, 0, genericfuturelistener)));
+            } finally {
+                this.j.writeLock().unlock();
+            }
         }
-        // Paper start - Remove but force a conflict
-//        else {
-//            this.j.writeLock().lock();
-//
-//            try {
-//                this.i.add(new NetworkManager.QueuedPacket(packet, (GenericFutureListener[]) ArrayUtils.add(agenericfuturelistener, 0, genericfuturelistener)));
-//            } finally {
-//                this.j.writeLock().unlock();
-//            }
-//        }
-        // Paper end
+
     }
 
-    @Async
+    private void dispatchPacket(final Packet<?> packet, @Nullable final GenericFutureListener<? extends Future<? super Void>>[] genericFutureListeners) { this.a(packet, genericFutureListeners); } // Paper - Anti-Xray - OBFHELPER
     private void a(final Packet<?> packet, @Nullable final GenericFutureListener<? extends Future<? super Void>>[] agenericfuturelistener) {
         final EnumProtocol enumprotocol = EnumProtocol.a(packet);
         final EnumProtocol enumprotocol1 = this.channel.attr(NetworkManager.c).get();
@@ -207,7 +214,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
         } else {
             this.channel.eventLoop().execute(new Runnable() {
                 @Override
-				public void run() {
+                public void run() {
                     if (enumprotocol != enumprotocol1) {
                         NetworkManager.this.setProtocol(enumprotocol);
                     }
@@ -225,32 +232,49 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
 
     }
 
-    private void m() {
-        // Paper start - Remove but force a conflict
-//        if (this.channel != null && this.channel.isOpen()) {
-//            this.j.readLock().lock();
-//
-//            try {
-//                while (!this.i.isEmpty()) {
-//                    NetworkManager.QueuedPacket networkmanager_queuedpacket = (NetworkManager.QueuedPacket) this.i.poll();
-//
-//                    this.a(networkmanager_queuedpacket.a, networkmanager_queuedpacket.b);
-//                }
-//            } finally {
-//                this.j.readLock().unlock();
-//            }
-//
-//        }
-        // Paper end
+    // Paper start - Async-Anti-Xray - Stop dispatching further packets and return false if the peeked packet is a chunk packet which is not ready
+    private boolean trySendQueue() { return this.m(); } // OBFHELPER
+    private boolean m() { // void -> boolean
+        if (this.channel != null && this.channel.isOpen()) {
+            if (this.i.isEmpty()) { // return if the packet queue is empty so that the write lock by Anti-Xray doesn't affect the vanilla performance at all
+                return true;
+            }
+
+            this.j.writeLock().lock(); // readLock -> writeLock (because of race condition between peek and poll)
+
+            try {
+                while (!this.i.isEmpty()) {
+                    NetworkManager.QueuedPacket networkmanager_queuedpacket = this.getPacketQueue().peek(); // poll -> peek
+
+                    if (networkmanager_queuedpacket != null) { // Fix NPE (Spigot bug caused by handleDisconnection())
+                        if (networkmanager_queuedpacket.getPacket() instanceof PacketPlayOutMapChunk && !((PacketPlayOutMapChunk) networkmanager_queuedpacket.getPacket()).isReady()) { // Check if the peeked packet is a chunk packet which is not ready
+                            return false; // Return false if the peeked packet is a chunk packet which is not ready
+                        } else {
+                            this.getPacketQueue().poll(); // poll here
+                            this.dispatchPacket(networkmanager_queuedpacket.getPacket(), networkmanager_queuedpacket.getGenericFutureListeners()); // dispatch the packet
+                        }
+                    }
+                }
+            } finally {
+                this.j.writeLock().unlock(); // readLock -> writeLock (because of race condition between peek and poll)
+            }
+
+        }
+
+        return true; // Return true if all packets were dispatched
     }
+    // Paper end
 
     public void a() {
         this.m();
         if (this.m instanceof ITickable) {
-            ((ITickable) this.m).F_();
+            ((ITickable) this.m).e();
         }
 
-        this.channel.flush();
+        if (this.channel != null) {
+            if (enableExplicitFlush) this.channel.eventLoop().execute(() -> this.channel.flush()); // Paper - we don't need to explicit flush here, but allow opt in incase issues are found to a better version
+        }
+
     }
 
     public SocketAddress getSocketAddress() {
@@ -332,23 +356,23 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
                 if (this.j() != null) {
                     this.i().a(this.j());
                 } else if (this.i() != null) {
-                    this.i().a(new ChatComponentText("Disconnected"));
+                    this.i().a(new ChatMessage("multiplayer.disconnect.generic", new Object[0]));
                 }
-                 // this.i.clear(); // Free up packet queue. // Paper - remove unneeded packet queue
+                this.i.clear(); // Free up packet queue.
             }
 
         }
     }
 
     @Override
-	protected void channelRead0(ChannelHandlerContext channelhandlercontext, Packet object) throws Exception { // CraftBukkit - fix decompile error
+    protected void channelRead0(ChannelHandlerContext channelhandlercontext, Packet object) throws Exception { // CraftBukkit - fix decompile error
         this.a(channelhandlercontext, object);
     }
 
-    static class QueuedPacket {
+    public static class QueuedPacket { // Akarin - default -> public
 
-        private final Packet<?> a;
-        private final GenericFutureListener<? extends Future<? super Void>>[] b;
+        private final Packet<?> a; public final Packet<?> getPacket() { return this.a; } // Paper - Anti-Xray - OBFHELPER // Akarin - private -> public
+        private final GenericFutureListener<? extends Future<? super Void>>[] b; public final GenericFutureListener<? extends Future<? super Void>>[] getGenericFutureListeners() { return this.b; } // Paper - Anti-Xray - OBFHELPER // Akarin - private -> public
 
         public QueuedPacket(Packet<?> packet, GenericFutureListener<? extends Future<? super Void>>... agenericfuturelistener) {
             this.a = packet;

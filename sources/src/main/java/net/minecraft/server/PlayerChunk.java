@@ -3,6 +3,7 @@ package net.minecraft.server;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+
 import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -12,6 +13,12 @@ import org.apache.logging.log4j.Logger;
 import org.bukkit.craftbukkit.chunkio.ChunkIOExecutor;
 // CraftBukkit end
 
+/**
+ * <b>Akarin Changes Note</b><br>
+ * <br>
+ * 1) Check player list empty<br>
+ * @author cakoyo
+ */
 public class PlayerChunk {
 
     private static final Logger a = LogManager.getLogger();
@@ -27,6 +34,7 @@ public class PlayerChunk {
     private boolean done;
 
     // CraftBukkit start - add fields
+    boolean chunkExists; // Paper
     private boolean loadInProgress = false;
     private Runnable loadedRunnable = new Runnable() {
         @Override
@@ -51,6 +59,7 @@ public class PlayerChunk {
         // CraftBukkit start
         loadInProgress = true;
         this.chunk = playerchunkmap.getWorld().getChunkProviderServer().getChunkAt(i, j, loadedRunnable, false);
+        this.chunkExists = this.chunk != null || ChunkIOExecutor.hasQueuedChunkLoad(playerChunkMap.getWorld(), i, j); // Paper
         markChunkUsed(); // Paper - delay chunk unloads
         // CraftBukkit end
     }
@@ -61,7 +70,7 @@ public class PlayerChunk {
 
     public void a(final EntityPlayer entityplayer) { // CraftBukkit - added final to argument
         if (this.c.contains(entityplayer)) {
-            PlayerChunk.a.debug("Failed to add player. {} already is in chunk {}, {}", new Object[] { entityplayer, Integer.valueOf(this.location.x), Integer.valueOf(this.location.z)});
+            PlayerChunk.a.debug("Failed to add player. {} already is in chunk {}, {}", entityplayer, Integer.valueOf(this.location.x), Integer.valueOf(this.location.z));
         } else {
             if (this.c.isEmpty()) {
                 this.i = this.playerChunkMap.getWorld().getTime();
@@ -116,7 +125,7 @@ public class PlayerChunk {
             } else {
                 this.chunk = this.playerChunkMap.getWorld().getChunkProviderServer().getOrLoadChunkAt(this.location.x, this.location.z);
             }
-             */
+            */
             if (!loadInProgress) {
                 loadInProgress = true;
                 this.chunk = playerChunkMap.getWorld().getChunkProviderServer().getChunkAt(this.location.x, this.location.z, loadedRunnable, flag);
@@ -135,10 +144,13 @@ public class PlayerChunk {
             return false;
         } else if (!this.chunk.isReady()) {
             return false;
+        } else if (!this.chunk.world.chunkPacketBlockController.onChunkPacketCreate(this.chunk, '\uffff', false)) { // Paper - Anti-Xray - Load nearby chunks if necessary
+            return false; // Paper - Anti-Xray - Wait and try again later
         } else {
             this.dirtyCount = 0;
             this.h = 0;
             this.done = true;
+            if (c.isEmpty()) return true; // Akarin - Fixes MC-120780
             PacketPlayOutMapChunk packetplayoutmapchunk = new PacketPlayOutMapChunk(this.chunk, '\uffff');
             Iterator iterator = this.c.iterator();
 
@@ -155,6 +167,7 @@ public class PlayerChunk {
 
     public void sendChunk(EntityPlayer entityplayer) {
         if (this.done) {
+            this.chunk.world.chunkPacketBlockController.onChunkPacketCreate(this.chunk, '\uffff', true); // Paper - Anti-Xray - Load nearby chunks if necessary
             entityplayer.playerConnection.sendPacket(new PacketPlayOutMapChunk(this.chunk, '\uffff'));
             this.playerChunkMap.getWorld().getTracker().a(entityplayer, this.chunk);
         }
@@ -170,7 +183,6 @@ public class PlayerChunk {
         this.i = i;
     }
 
-    public void blockChanged(int x, int y, int z) { this.a(x, y, z); } // OBFHELPER
     public void a(int i, int j, int k) {
         if (this.done) {
             if (this.dirtyCount == 0) {
@@ -220,6 +232,8 @@ public class PlayerChunk {
                         this.a(this.playerChunkMap.getWorld().getTileEntity(blockposition));
                     }
                 } else if (this.dirtyCount == 64) {
+                    // Paper - Anti-Xray - Loading chunks here could cause a ConcurrentModificationException #1104
+                    //this.chunk.world.chunkPacketBlockController.onChunkPacketCreate(this.chunk, this.h, true); // Paper - Anti-Xray - Load nearby chunks if necessary
                     this.a((new PacketPlayOutMapChunk(this.chunk, this.h)));
                 } else {
                     this.a((new PacketPlayOutMultiBlockChange(this.dirtyCount, this.dirtyBlocks, this.chunk)));
@@ -275,7 +289,6 @@ public class PlayerChunk {
         return false;
     }
 
-    public boolean isDone() { return this.e(); } // OBFHELPER
     public boolean e() {
         return this.done;
     }

@@ -11,6 +11,12 @@ import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
 // CraftBukkit end
 
+/**
+ * <b>Akarin Changes Note</b><br>
+ * <br>
+ * 1) Add volatile to fields<br>
+ * @author cakoyo
+ */
 public class WorldData {
 
     private String b;
@@ -23,8 +29,8 @@ public class WorldData {
     private int h;
     private int i;
     private int j;
-    private long k;
-    private long l;
+    private volatile long k; // Akarin - volatile - PAIL: time
+    private volatile long l; // Akarin - volatile - PAIL: dayTime
     private long m;
     private long n;
     private NBTTagCompound o;
@@ -70,6 +76,7 @@ public class WorldData {
 
     public static void a(DataConverterManager dataconvertermanager) {
         dataconvertermanager.a(DataConverterTypes.LEVEL, new DataInspector() {
+            @Override
             public NBTTagCompound a(DataConverter dataconverter, NBTTagCompound nbttagcompound, int i) {
                 if (nbttagcompound.hasKeyOfType("Player", 10)) {
                     nbttagcompound.set("Player", dataconverter.a(DataConverterTypes.PLAYER, nbttagcompound.getCompound("Player"), i));
@@ -313,11 +320,11 @@ public class WorldData {
     private void a(NBTTagCompound nbttagcompound, NBTTagCompound nbttagcompound1) {
         NBTTagCompound nbttagcompound2 = new NBTTagCompound();
 
-        nbttagcompound2.setString("Name", "1.11.2");
-        nbttagcompound2.setInt("Id", 922);
+        nbttagcompound2.setString("Name", "1.12.2");
+        nbttagcompound2.setInt("Id", 1343);
         nbttagcompound2.setBoolean("Snapshot", false);
         nbttagcompound.set("Version", nbttagcompound2);
-        nbttagcompound.setInt("DataVersion", 922);
+        nbttagcompound.setInt("DataVersion", 1343);
         nbttagcompound.setLong("RandomSeed", this.e);
         nbttagcompound.setString("generatorName", this.f.name());
         nbttagcompound.setInt("generatorVersion", this.f.getVersion());
@@ -348,8 +355,8 @@ public class WorldData {
         nbttagcompound.setDouble("BorderSafeZone", this.J);
         nbttagcompound.setDouble("BorderDamagePerBlock", this.K);
         nbttagcompound.setDouble("BorderSizeLerpTarget", this.I);
-        nbttagcompound.setDouble("BorderWarningBlocks", (double) this.L);
-        nbttagcompound.setDouble("BorderWarningTime", (double) this.M);
+        nbttagcompound.setDouble("BorderWarningBlocks", this.L);
+        nbttagcompound.setDouble("BorderWarningTime", this.M);
         if (this.C != null) {
             nbttagcompound.setByte("Difficulty", (byte) this.C.a());
         }
@@ -451,8 +458,6 @@ public class WorldData {
             if (thunder.isCancelled()) {
                 return;
             }
-
-            setThunderDuration(0); // Will force a time reset
         }
         // CraftBukkit end
         this.v = flag;
@@ -479,8 +484,6 @@ public class WorldData {
             if (weather.isCancelled()) {
                 return;
             }
-
-            setWeatherDuration(0); // Will force a time reset
         }
         // CraftBukkit end
         this.t = flag;
@@ -650,6 +653,7 @@ public class WorldData {
                 return String.valueOf(WorldData.this.getSeed());
             }
 
+            @Override
             public Object call() throws Exception {
                 return this.a();
             }
@@ -659,6 +663,7 @@ public class WorldData {
                 return String.format("ID %02d - %s, ver %d. Features enabled: %b", new Object[] { Integer.valueOf(WorldData.this.f.g()), WorldData.this.f.name(), Integer.valueOf(WorldData.this.f.getVersion()), Boolean.valueOf(WorldData.this.y)});
             }
 
+            @Override
             public Object call() throws Exception {
                 return this.a();
             }
@@ -668,6 +673,7 @@ public class WorldData {
                 return WorldData.this.g;
             }
 
+            @Override
             public Object call() throws Exception {
                 return this.a();
             }
@@ -677,6 +683,7 @@ public class WorldData {
                 return CrashReportSystemDetails.a(WorldData.this.h, WorldData.this.i, WorldData.this.j);
             }
 
+            @Override
             public Object call() throws Exception {
                 return this.a();
             }
@@ -686,6 +693,7 @@ public class WorldData {
                 return String.format("%d game time, %d day time", new Object[] { Long.valueOf(WorldData.this.k), Long.valueOf(WorldData.this.l)});
             }
 
+            @Override
             public Object call() throws Exception {
                 return this.a();
             }
@@ -695,6 +703,7 @@ public class WorldData {
                 return String.valueOf(WorldData.this.p);
             }
 
+            @Override
             public Object call() throws Exception {
                 return this.a();
             }
@@ -719,6 +728,7 @@ public class WorldData {
                 return String.format("0x%05X - %s", new Object[] { Integer.valueOf(WorldData.this.r), s});
             }
 
+            @Override
             public Object call() throws Exception {
                 return this.a();
             }
@@ -728,6 +738,7 @@ public class WorldData {
                 return String.format("Rain time: %d (now: %b), thunder time: %d (now: %b)", new Object[] { Integer.valueOf(WorldData.this.u), Boolean.valueOf(WorldData.this.t), Integer.valueOf(WorldData.this.w), Boolean.valueOf(WorldData.this.v)});
             }
 
+            @Override
             public Object call() throws Exception {
                 return this.a();
             }
@@ -737,6 +748,7 @@ public class WorldData {
                 return String.format("Game mode: %s (ID %d). Hardcore: %b. Cheats: %b", new Object[] { WorldData.this.x.b(), Integer.valueOf(WorldData.this.x.getId()), Boolean.valueOf(WorldData.this.z), Boolean.valueOf(WorldData.this.A)});
             }
 
+            @Override
             public Object call() throws Exception {
                 return this.a();
             }
@@ -744,7 +756,7 @@ public class WorldData {
     }
 
     public NBTTagCompound a(DimensionManager dimensionmanager) {
-        NBTTagCompound nbttagcompound = (NBTTagCompound) this.N.get(dimensionmanager);
+        NBTTagCompound nbttagcompound = this.N.get(dimensionmanager);
 
         return nbttagcompound == null ? new NBTTagCompound() : nbttagcompound;
     }
