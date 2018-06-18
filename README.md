@@ -3,11 +3,9 @@
 [![bStats](https://img.shields.io/badge/bStats-Torch-0099ff.svg?style=flat)](https://bstats.org/plugin/bukkit/Torch)
 [![Powered by](https://img.shields.io/badge/Powered_by-Akarin_project-ee6aa7.svg?style=flat)](https://akarin.io)
 
-**This repo is a mirror of [Akarin](https://github.com/Akarin-project/Akarin) (continuation of Torch)**
-
 Introduction
 ---
-> Akarin is a powerful server software form the 'new dimension', formerly known as [Torch](https://github.com/Akarin-project/Torch).
+> Akarin is a powerful server software form the 'new dimension', formerly known as Torch.
 
 As a [Paper](https://github.com/PaperMC/Paper) fork, it supports almost all plugins that [Spigot](https://hub.spigotmc.org/stash/projects/SPIGOT/repos/spigot/browse) can use.
 

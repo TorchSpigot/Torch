@@ -170,19 +170,19 @@ public class AkarinGlobalConfig {
         legacyWorldTimings = getBoolean("alternative.legacy-world-timings-required", false);
     }
     
-    public static int timeUpdateInterval;
+    public static long timeUpdateInterval;
     private static void timeUpdateInterval() {
-        timeUpdateInterval = getSeconds(getString("core.world-time-update-interval", "1s"));
+        timeUpdateInterval = getSeconds(getString("core.tick-rate.world-time-update-interval", "1s")) * 10;
     }
     
-    public static int keepAliveSendInterval;
+    public static long keepAliveSendInterval;
     private static void keepAliveSendInterval() {
-        keepAliveSendInterval = getSeconds(getString("core.keep-alive-packet-send-interval", "15s"));
+        keepAliveSendInterval = getSeconds(getString("core.tick-rate.keep-alive-packet-send-interval", "15s")) * 1000;
     }
     
-    public static int keepAliveTimeout;
+    public static long keepAliveTimeout;
     private static void keepAliveTimeout() {
-        keepAliveTimeout = getSeconds(getString("core.keep-alive-response-timeout", "30s"));
+        keepAliveTimeout = getSeconds(getString("core.keep-alive-response-timeout", "30s")) * 1000;
     }
     
     public static int asyncLightingThreads;
@@ -193,21 +193,6 @@ public class AkarinGlobalConfig {
     public static boolean asyncLightingWorkStealing;
     private static void asyncLightingWorkStealing() {
         asyncLightingWorkStealing = getBoolean("core.async-lighting.use-work-stealing", false);
-    }
-    
-    public static boolean enableMockPlugin;
-    private static void enableMockPlugin() {
-        enableMockPlugin = getBoolean("core.thread-safe.enable-mock-plugins", false);
-    }
-    
-    public static List<String> mockPackageList;
-    private static void mockPluginList() {
-        mockPackageList = getList("core.thread-safe.mock-package-name-contains", Lists.newArrayList("me.konsolas.aac"));
-    }
-    
-    public static boolean enableAsyncCatcher;
-    private static void enableAsyncCatcher() {
-        enableAsyncCatcher = getBoolean("core.thread-safe.async-catcher.enable", false);
     }
     
     public static boolean throwOnAsyncCaught;
@@ -283,5 +268,15 @@ public class AkarinGlobalConfig {
     public static boolean disableEndPortalCreate;
     private static void disableEndPortalCreate() {
         disableEndPortalCreate = getBoolean("alternative.disable-end-portal-create", false);
+    }
+    
+    public static int primaryThreadPriority;
+    private static void primaryThreadPriority() {
+        primaryThreadPriority = getInt("core.primary-thread-priority", 7);
+    }
+    
+    public static long playersInfoUpdateInterval;
+    private static void playersInfoUpdateInterval() {
+        playersInfoUpdateInterval = getSeconds(getString("core.tick-rate.players-info-update-interval", "30s")) * 10;
     }
 }
