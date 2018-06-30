@@ -185,16 +185,6 @@ public class AkarinGlobalConfig {
         keepAliveTimeout = getSeconds(getString("core.keep-alive-response-timeout", "30s")) * 1000;
     }
     
-    public static int asyncLightingThreads;
-    private static void asyncLightingThreads() {
-        asyncLightingThreads = getInt("core.async-lighting.executor-threads", 2);
-    }
-    
-    public static boolean asyncLightingWorkStealing;
-    private static void asyncLightingWorkStealing() {
-        asyncLightingWorkStealing = getBoolean("core.async-lighting.use-work-stealing", false);
-    }
-    
     public static boolean throwOnAsyncCaught;
     private static void throwOnAsyncCaught() {
         throwOnAsyncCaught = getBoolean("core.thread-safe.async-catcher.throw-on-caught", true);
@@ -278,5 +268,15 @@ public class AkarinGlobalConfig {
     public static long playersInfoUpdateInterval;
     private static void playersInfoUpdateInterval() {
         playersInfoUpdateInterval = getSeconds(getString("core.tick-rate.players-info-update-interval", "30s")) * 10;
+    }
+    
+    public static long versionUpdateInterval;
+    private static void versionUpdateInterval() {
+        versionUpdateInterval = getSeconds(getString("alternative.version-update-interval", "3600s")) * 1000; // 1 hour
+    }
+    
+    public static boolean sendLightOnlyChunkSection;
+    private static void sendLightOnlyChunkSection() {
+        sendLightOnlyChunkSection = getBoolean("core.send-light-only-chunk-sections", true);
     }
 }

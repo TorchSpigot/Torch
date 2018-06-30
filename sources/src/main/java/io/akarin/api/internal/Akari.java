@@ -39,7 +39,7 @@ public abstract class Akari {
         }
     }
     
-    private static class AssignableFactory implements ThreadFactory {
+    public static class AssignableFactory implements ThreadFactory {
         @Override
         public Thread newThread(Runnable run) {
             Thread thread = new AssignableThread(run);
@@ -79,6 +79,12 @@ public abstract class Akari {
             t.printStackTrace();
             return null;
         }
+    }
+    
+    private static final String serverVersion = Akari.class.getPackage().getImplementationVersion();
+    
+    public static String getServerVersion() {
+        return serverVersion + " (MC: " + MinecraftServer.getServer().getVersion() + ")";
     }
     
     /*
