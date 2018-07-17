@@ -20,11 +20,9 @@ import org.bukkit.Server; // CraftBukkit
 import org.bukkit.craftbukkit.util.CraftMagicNumbers; // Paper
 
 /**
- * <b>Akarin Changes Note</b><br>
- * <br>
- * 1) Add volatile to fields<br>
- * 2) Add OBFHELPER<br>
- * @author cakoyo
+ * Akarin Changes Note
+ * 1) Add volatile to fields (async lighting)
+ * 2) Expose private methods (async lighting)
  */
 public class Chunk {
 
@@ -71,7 +69,7 @@ public class Chunk {
             return removed;
         }
     }
-    final PaperLightingQueue.LightingQueue lightingQueue = new PaperLightingQueue.LightingQueue(this);
+    public final PaperLightingQueue.LightingQueue lightingQueue = new PaperLightingQueue.LightingQueue(this); // Akarin - public
     // Paper end
     private volatile boolean done; // Akarin - volatile
     private volatile boolean lit; // Akarin - volatile
@@ -682,7 +680,9 @@ public class Chunk {
         entity.ac = k;
         entity.ad = this.locZ;
         this.entitySlices[k].add(entity);
-        // Paper start - update count
+        // Paper start
+        entity.setCurrentChunk(this);
+        entityCounts.increment(entity.entityKeyString);
         if (entity instanceof EntityItem) {
             itemCounts[k]++;
         } else if (entity instanceof IInventory) {
@@ -704,10 +704,6 @@ public class Chunk {
                 this.entityCount.adjustOrPutValue( creatureType.a(), 1, 1 );
             }
         }
-        // Paper start
-        entity.setCurrentChunk(this);
-        entityCounts.increment(entity.entityKeyString);
-        // Paper end
         // Spigot end
     }
 
@@ -725,8 +721,10 @@ public class Chunk {
             i = this.entitySlices.length - 1;
         }
 
-        if (!this.entitySlices[i].remove(entity)) { return; } // Paper
-        // Paper start - update counts
+        // Paper start
+        if (!this.entitySlices[i].remove(entity)) { return; }
+        entity.setCurrentChunk(null);
+        entityCounts.decrement(entity.entityKeyString);
         if (entity instanceof EntityItem) {
             itemCounts[i]--;
         } else if (entity instanceof IInventory) {
@@ -748,10 +746,6 @@ public class Chunk {
                 this.entityCount.adjustValue( creatureType.a(), -1 );
             }
         }
-        // Paper start
-        entity.setCurrentChunk(null);
-        entityCounts.decrement(entity.entityKeyString);
-        // Paper end
         // Spigot end
     }
 
@@ -1344,8 +1338,7 @@ public class Chunk {
         this.h(false);
     }
 
-    public void checkLightSide(EnumDirection direction) { a(direction); } // Akarin - OBFHELPER
-    private void a(EnumDirection enumdirection) {
+    public void a(EnumDirection enumdirection) { // Akarin - private -> public
         if (this.done) {
             int i;
 

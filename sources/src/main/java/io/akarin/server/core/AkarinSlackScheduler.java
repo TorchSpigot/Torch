@@ -20,7 +20,6 @@ public class AkarinSlackScheduler extends Thread {
     
     public static void boot() {
         Singleton.instance.setName("Akarin Slack Scheduler Thread");
-        Singleton.instance.setPriority(MIN_PRIORITY);
         Singleton.instance.setDaemon(true);
         Singleton.instance.start();
         Akari.logger.info("Slack scheduler service started");
@@ -45,7 +44,8 @@ public class AkarinSlackScheduler extends Thread {
             // Time update, from MinecraftServer#D
             if (++updateTime >= AkarinGlobalConfig.timeUpdateInterval) {
                 for (EntityPlayer player : server.getPlayerList().players) {
-                    player.playerConnection.sendPacket(new PacketPlayOutUpdateTime(player.world.getTime(), player.getPlayerTime(), player.world.getGameRules().getBoolean("doDaylightCycle"))); // Add support for per player time
+                    // Add support for per player time
+                    player.playerConnection.sendPacket(new PacketPlayOutUpdateTime(player.world.getTime(), player.getPlayerTime(), player.world.getGameRules().getBoolean("doDaylightCycle")));
                 }
                 updateTime = 0;
             }
@@ -70,12 +70,13 @@ public class AkarinSlackScheduler extends Thread {
                         conn.setPendingPing(true);
                         conn.setLastPing(currentTime);
                         conn.setKeepAliveID(currentTime);
-                        conn.sendPacket(new PacketPlayOutKeepAlive(conn.getKeepAliveID()));
+                        conn.sendPacket(new PacketPlayOutKeepAlive(conn.getKeepAliveID())); // 15s lagg you should stop your server
                     }
                 }
             }
             
             // Force hardcore difficulty, from WorldServer#doTick
+            if (AkarinGlobalConfig.forceHardcoreDifficulty)
             for (WorldServer world : server.worlds) {
                 if (world.getWorldData().isHardcore() && world.getDifficulty() != EnumDifficulty.HARD) {
                     world.getWorldData().setDifficulty(EnumDifficulty.HARD);
@@ -84,11 +85,11 @@ public class AkarinSlackScheduler extends Thread {
             
             // Update player info, from PlayerList#tick
             if (++resendPlayersInfo > AkarinGlobalConfig.playersInfoUpdateInterval) {
-                for (EntityPlayer target : server.getPlayerList().players) {
-                    target.playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.UPDATE_LATENCY, Iterables.filter(server.getPlayerList().players, new Predicate<EntityPlayer>() {
+                for (EntityPlayer player : server.getPlayerList().players) {
+                    player.playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.UPDATE_LATENCY, Iterables.filter(server.getPlayerList().players, new Predicate<EntityPlayer>() {
                         @Override
-                        public boolean apply(EntityPlayer input) {
-                            return target.getBukkitEntity().canSee(input.getBukkitEntity());
+                        public boolean apply(EntityPlayer each) {
+                            return player.getBukkitEntity().canSee(each.getBukkitEntity());
                         }
                     })));
                 }

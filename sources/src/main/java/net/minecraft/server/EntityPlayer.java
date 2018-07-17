@@ -2,6 +2,7 @@ package net.minecraft.server;
 
 import com.google.common.collect.Lists;
 import com.mojang.authlib.GameProfile;
+
 import io.netty.buffer.Unpooled;
 import java.util.ArrayDeque; // Paper
 import java.util.ArrayList;
@@ -31,10 +32,9 @@ import org.bukkit.inventory.MainHand;
 // CraftBukkit end
 
 /**
- * <b>Akarin Changes Note</b><br>
- * <br>
- * 1) Add volatile to fields<br>
- * @author cakoyo
+ * Akarin Changes Note
+ * 1) Add volatile to fields (time update)
+ * 2) Add lock to player track (safety issue)
  */
 public class EntityPlayer extends EntityHuman implements ICrafting {
 
@@ -745,7 +745,9 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         if (entity instanceof EntityPlayer) {
             WorldServer worldServer = (WorldServer) entity.getWorld();
             worldServer.tracker.untrackEntity(this);
+            worldServer.tracker.entriesLock.lock(); // Akarin
             worldServer.tracker.track(this);
+            worldServer.tracker.entriesLock.unlock(); // Akarin
         }
         // Paper end
 

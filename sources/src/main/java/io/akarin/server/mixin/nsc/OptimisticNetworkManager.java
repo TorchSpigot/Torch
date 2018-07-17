@@ -1,14 +1,14 @@
 package io.akarin.server.mixin.nsc;
 
 import java.util.Queue;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import io.akarin.api.internal.collections.CheckedConcurrentLinkedQueue;
+import com.googlecode.concurentlocks.ReentrantReadWriteUpdateLock;
+
+import io.akarin.api.internal.utils.CheckedConcurrentLinkedQueue;
 import io.netty.channel.Channel;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
@@ -21,12 +21,13 @@ import net.minecraft.server.PacketPlayOutMapChunk;
 public abstract class OptimisticNetworkManager {
     @Shadow public Channel channel;
     @Shadow(aliases = "i") @Final private Queue<NetworkManager.QueuedPacket> packets;
-    @Shadow(aliases = "j") @Final private ReentrantReadWriteLock queueLock;
+    @Shadow(aliases = "j") @Final private ReentrantReadWriteUpdateLock queueLock;
     
     @Shadow public abstract Queue<NetworkManager.QueuedPacket> getPacketQueue();
     @Shadow public abstract void dispatchPacket(Packet<?> packet, GenericFutureListener<? extends Future<? super Void>>[] genericFutureListeners);
     
-    private static final QueuedPacket SIGNAL_PACKET = new QueuedPacket(null, null);
+    @SuppressWarnings("unchecked")
+    private static final QueuedPacket SIGNAL_PACKET = new QueuedPacket(null);
     
     @Overwrite // PAIL: trySendQueue
     private boolean m() {
@@ -35,7 +36,7 @@ public abstract class OptimisticNetworkManager {
                 return true;
             }
 
-            this.queueLock.readLock().lock();
+            this.queueLock.updateLock().lock();
             try {
                 while (!this.packets.isEmpty()) {
                     NetworkManager.QueuedPacket packet = ((CheckedConcurrentLinkedQueue<QueuedPacket>) getPacketQueue()).poll(item -> {
@@ -51,7 +52,7 @@ public abstract class OptimisticNetworkManager {
                     }
                 }
             } finally {
-                this.queueLock.readLock().unlock();
+                this.queueLock.updateLock().unlock();
             }
             
         }

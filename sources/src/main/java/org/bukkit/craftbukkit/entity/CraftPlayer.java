@@ -76,10 +76,8 @@ import org.bukkit.scoreboard.Scoreboard;
 import javax.annotation.Nullable;
 
 /**
- * <b>Akarin Changes Note</b><br>
- * <br>
- * 1) Make hidden-players-set concurrent<br>
- * @author cakoyo
+ * Akarin Changes Note
+ * 1) Make hidden players thread-safe (safety issue)
  */
 @DelegateDeserialization(CraftOfflinePlayer.class)
 public class CraftPlayer extends CraftHumanEntity implements Player {
@@ -1161,7 +1159,9 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
 
         EntityTrackerEntry entry = tracker.trackedEntities.get(other.getId());
         if (entry != null && !entry.trackedPlayers.contains(getHandle())) {
+            tracker.entriesLock.lock(); // Akarin
             entry.updatePlayer(getHandle());
+            tracker.entriesLock.unlock(); // Akarin
         }
     }
     // Paper start

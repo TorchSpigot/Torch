@@ -62,12 +62,11 @@ import co.aikar.timings.MinecraftTimings; // Paper
 // CraftBukkit end
 
 /**
- * <b>Akarin Changes Note</b><br>
- * <br>
- * 1) Add volatile to fields<br>
- * 2) Expose private members<br>
- * 3) Migrated keep alive packet handling to service thread<br>
- * @author cakoyo
+ * Akarin Changes Note
+ * 1) Add volatile to fields (slack service)
+ * 2) Expose private members (slack service)
+ * 3) Removed keep-alive codes (slack service)
+ * 4) Accessible keep-alive limit (feature, compatibility)
  */
 public class PlayerConnection implements PacketListenerPlayIn, ITickable {
 
@@ -914,7 +913,8 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
             double d3 = d0 * d0 + d1 * d1 + d2 * d2;
 
             if (d3 > 36.0D) {
-                this.sendPacket(new PacketPlayOutBlockChange(worldserver, blockposition)); // Paper - Fix block break desync
+                if (worldserver.isChunkLoaded(blockposition.getX() >> 4, blockposition.getZ() >> 4, true)) // Paper - Fix block break desync - Don't send for unloaded chunks
+                    this.sendPacket(new PacketPlayOutBlockChange(worldserver, blockposition)); // Paper - Fix block break desync
                 return;
             } else if (blockposition.getY() >= this.minecraftServer.getMaxBuildHeight()) {
                 return;
@@ -1685,6 +1685,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
                     }
 
                     if (event.isCancelled()) {
+                        this.player.updateInventory(this.player.activeContainer); // Paper - Refresh player inventory
                         return;
                     }
                     // CraftBukkit end

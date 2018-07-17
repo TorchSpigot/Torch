@@ -60,7 +60,6 @@ public abstract class MixinMinecraftServer {
             TileEntityHopper.skipHopperEvents = world.paperConfig.disableHopperMoveEvents || InventoryMoveItemEvent.getHandlerList().getRegisteredListeners().length == 0;
         }
         AkarinSlackScheduler.boot();
-        
     }
     
     @Overwrite
@@ -119,7 +118,7 @@ public abstract class MixinMinecraftServer {
         }
         
         for (WorldServer world : this.worlds) {
-            executor.take();
+            if (world.getWorld().getKeepSpawnInMemory()) executor.take();
             this.server.getPluginManager().callEvent(new WorldLoadEvent(world.getWorld()));
         }
         
@@ -216,6 +215,9 @@ public abstract class MixinMinecraftServer {
             WorldServer world = worlds.get(i);
             synchronized (((IMixinLockProvider) world).lock()) {
                 tickWorld(world);
+                
+                world.getTracker().updatePlayers();
+                world.explosionDensityCache.clear(); // Paper - Optimize explosions
             }
         }
         
@@ -238,9 +240,6 @@ public abstract class MixinMinecraftServer {
         for (int i = 0; i < worlds.size(); ++i) {
             WorldServer world = worlds.get(i);
             tickUnsafeSync(world);
-            
-            world.getTracker().updatePlayers();
-            world.explosionDensityCache.clear(); // Paper - Optimize explosions
         }
         
         MinecraftTimings.connectionTimer.startTiming();

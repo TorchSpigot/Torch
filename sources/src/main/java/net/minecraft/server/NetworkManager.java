@@ -1,8 +1,9 @@
 package net.minecraft.server;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.googlecode.concurentlocks.ReentrantReadWriteUpdateLock;
 
-import io.akarin.api.internal.collections.CheckedConcurrentLinkedQueue;
+import io.akarin.api.internal.utils.CheckedConcurrentLinkedQueue;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -31,11 +32,11 @@ import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
 /**
- * <b>Akarin Changes Note</b><br>
- * <br>
- * 1) Add volatile to fields<br>
- * 2) Expose private members<br>
- * @author cakoyo
+ * Akarin Changes Note
+ * 1) Add volatile to fields (nsc)
+ * 2) Expose private members (nsc)
+ * 3) Changes lock type to updatable lock (compatibility)
+ * 4) Removes unneed array creation (performance)
  */
 public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
 
@@ -75,7 +76,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
     };
     private final EnumProtocolDirection h;
     private final Queue<NetworkManager.QueuedPacket> i = new CheckedConcurrentLinkedQueue<NetworkManager.QueuedPacket>(); private final Queue<NetworkManager.QueuedPacket> getPacketQueue() { return this.i; } // Paper - Anti-Xray - OBFHELPER // Akarin
-    private final ReentrantReadWriteLock j = new ReentrantReadWriteLock();
+    private final ReentrantReadWriteUpdateLock j = new ReentrantReadWriteUpdateLock(); // Akarin - use update lock
     public Channel channel;
     // Spigot Start // PAIL
     public SocketAddress l;
@@ -165,7 +166,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
             this.j.writeLock().lock();
 
             try {
-                this.i.add(new NetworkManager.QueuedPacket(packet, new GenericFutureListener[0]));
+                this.i.add(new NetworkManager.QueuedPacket(packet)); // Akarin - remove fake listener creation
             } finally {
                 this.j.writeLock().unlock();
             }

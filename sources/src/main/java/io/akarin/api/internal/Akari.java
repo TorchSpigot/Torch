@@ -6,6 +6,7 @@ import java.util.Queue;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.google.common.collect.Queues;
@@ -36,6 +37,9 @@ public abstract class Akari {
     public static class AssignableThread extends Thread {
         public AssignableThread(Runnable run) {
             super(run);
+        }
+        public AssignableThread() {
+            super();
         }
     }
     
